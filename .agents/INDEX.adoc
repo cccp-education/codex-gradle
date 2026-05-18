@@ -5,11 +5,11 @@ _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents (Regle 4bis)
 
-_Derniere mise a jour_ : 2026-05-12
-_Session terminee_ : 020 ✅ — Code Review Globale (audit passif)
-_Session precedente_ : 018 ✅ (CDX-12 Tests integration pgvector end-to-end TERMINÉ)
-_Session en cours_ : 021 — (a definir)
-_Prochaine session_ : 021 — CDX-13 exposition REST via engine N3
+_Derniere mise a jour_ : 2026-05-19
+_Session terminee_ : 021 ✅ — EPIC K K-1 Renommage taxonomie (10 extract→collect/transform/deploy, codexPipeline supprimé)
+_Session precedente_ : 020 ✅ (Code Review Globale — audit passif)
+_Session en cours_ : 022 — CDX-13 exposition REST via engine N3
+_Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
 
 '''
 == REGLES ABSOLUES (resume)
@@ -45,6 +45,9 @@ _Prochaine session_ : 021 — CDX-13 exposition REST via engine N3
 | 016 | 2026-05-11 | impl | CDX-10 codex-epub — extraction EPUB via Tika → AsciiDoc (70/70 PASS) | ✅
 | 017 | 2026-05-11 | integration | CDX-11 codexEngine — piping codexRetrieve → engine N3 (75/75 PASS) | ✅
 | 018 | 2026-05-12 | test | CDX-12 Tests integration pgvector end-to-end (79/79 PASS) | ✅
+| 019 | 2026-05-12 | impl | EPIC D Uniformisation Build (Java 25→24 + kotlinx.serialization DocNode) | ✅
+| 020 | 2026-05-12 | review | Code Review Globale (audit passif) | ✅
+| 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy, codexPipeline supprimé) | ✅
 |===
 
 '''
@@ -68,6 +71,8 @@ _Prochaine session_ : 021 — CDX-13 exposition REST via engine N3
 | CDX-10 | Task `extractEpubStructure` — extraction EPUB via Tika → AsciiDoc hiérarchique (h1-h6, code, inline) | ✅ TERMINE | P3
 | CDX-11 | Integration engine N3 : piping codexRetrieve → assembleCompositeContext (CodexVectorStore + tâche composite) | ✅ TERMINE | P2
 | CDX-12 | Tests integration pgvector end-to-end + batching ONNX + tâche composite codexPipeline auto-détection PDF/EPUB (79/79 PASS) | ✅ TERMINE | P2
+| K-1 | Renommage taxonomie (10 tasks: extract→collect, asciiDocToJsonLdd→transformToJsonLdd, etc.) + migration package dev.cheroliv.codex → cccp.education.codex | ✅ TERMINE | P0
+| CDX-13 | Exposition REST via engine N3 | 🔴 EN COURS | P1
 |===
 
 '''
@@ -86,8 +91,8 @@ _Prochaine session_ : 021 — CDX-13 exposition REST via engine N3
 | `settings.gradle.kts` | ✅ rootProject + include doc-pipeline
 | `buildSrc/` | ✅ Convention plugin + catalog buildSrc
 | `doc-pipeline/build.gradle.kts` | ✅ Dependances + publication
-| `doc-pipeline/src/main/` | ✅ CodexPlugin.kt + CodexExtension.kt + LicenseZoneDetector.kt + ExtractTextTask.kt + ExtractBookStructureTask.kt + ExtractEpubStructureTask.kt + AsciiDocToJsonLddTask.kt + ImportBookSqlTask.kt + ConvertToMarkdownTask.kt + ChunkDocumentTask.kt + ExportKnowledgeBaseTask.kt + CodexIngestTask.kt + CodexRetrieveTask.kt + CodexPipelineTask.kt + DocNode.kt + FontStyle.kt + store/CodexVectorStore.kt
-| `doc-pipeline/src/test/` | ✅ CodexPluginTest.kt (4) + LicenseZoneDetectorTest.kt (7) + ExtractTextTaskTest.kt (3) + ExtractBookStructureTaskTest.kt (10) + ExtractEpubStructureTaskTest.kt (6) + AsciiDocToJsonLddTaskTest.kt (4) + ImportBookSqlTaskTest.kt (4) + ConvertToMarkdownTaskTest.kt (10) + ChunkDocumentTaskTest.kt (11) + ExportKnowledgeBaseTaskTest.kt (9) + CodexRetrieveTaskTest.kt (2) + store/CodexVectorStoreTest.kt (5) + CodexIngestRetrieveIT.kt (4) — 79/79 PASS
+| `doc-pipeline/src/main/` | ✅ CodexPlugin.kt + CodexExtension.kt + LicenseZoneDetector.kt + store/CodexVectorStore.kt + 13 tâches dans tasks/ (AsciiDocToJsonLddTask, ChunkDocumentTask, CodexIngestTask, CodexPipelineTask, CodexRetrieveTask, ConvertToMarkdownTask, DocNode, ExportKnowledgeBaseTask, ExtractBookStructureTask, ExtractEpubStructureTask, ExtractTextTask, FontStyle, ImportBookSqlTask) — package `cccp.education.codex`
+| `doc-pipeline/src/test/` | ✅ LicenseZoneDetectorTest.kt (7) + ExtractTextTaskTest.kt (3) + ExtractBookStructureTaskTest.kt (10) + ExtractEpubStructureTaskTest.kt (6) + AsciiDocToJsonLddTaskTest.kt (4) + ImportBookSqlTaskTest.kt (4) + ConvertToMarkdownTaskTest.kt (10) + ChunkDocumentTaskTest.kt (11) + ExportKnowledgeBaseTaskTest.kt (9) + CodexRetrieveTaskTest.kt (2) + store/CodexVectorStoreTest.kt (5) + CodexIngestRetrieveIT.kt (4) — package `cccp.education.codex`
 |===
 
 '''

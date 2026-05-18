@@ -179,3 +179,16 @@ avec ::vector cast (embedding inline). Connexion unique coroutine. Alignement do
 (refacto batching), `CodexPlugin.kt` (11e tache), `gradle/libs.versions.toml` (testcontainers),
 `doc-pipeline/build.gradle.kts` (deps), `018-cdx12-tests-integration-pgvector.adoc` (rapport).
 *Build* : ✅ `./gradlew :doc-pipeline:test` BUILD SUCCESSFUL. 79/79 PASS. API engine N3 inchangee.
+
+'''
+== K-1 — Renommage Taxonomie (Collect/Transform/Deploy) (2026-05-19)
+
+*Session* : 021
+*Type* : refactoring (taxonomie)
+*Détail* : Application taxonomie unifiée EPIC K. 10 tâches renommées selon verbes
+COLLECTER/TRANSFORMER/DÉPLOYER. Migration package dev.cheroliv.codex → cccp.education.codex.
+Suppression codexPipeline (redondant avec transformCorpusToPdf). GroupId com.cheroliv → education.cccp.
+Plugin ID com.cheroliv.codex.doc-pipeline → codex.doc-pipeline.
+*Renommages* : collectText, collectBookStructure, collectEpubStructure, transformToJsonLdd,
+collectBookSql, transformToMarkdown, transformChunk, deployKnowledgeBase, collectIngest, collectRetrieve.
+*Build* : ✅ `./gradlew :doc-pipeline:compileKotlin` BUILD OK (hors readme plugin non publié).

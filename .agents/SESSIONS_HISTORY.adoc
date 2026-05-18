@@ -19,7 +19,7 @@ Historique des sessions de developpement du plugin codex-gradle.
 - Structure du projet (monorepo a builds independants)
 - Convention plugin buildSrc (JVM 25, plugin-publish)
 - Version catalog (pdfbox, tika, flexmark, asciidoctorj, jackson)
-- Plugin com.cheroliv.codex.doc-pipeline 0.1.0-SNAPSHOT
+- Plugin cccp.education.codex.doc-pipeline 0.1.0-SNAPSHOT
 - Task extractText (PDFBox, incrémentale)
 - Documentation canonique AUGMENTED_CONTEXT_PIPELINE.adoc
 - Gouvernance agent complete (6 fichiers .adoc)
@@ -531,3 +531,37 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 *Date*: 2026-05-12
 *Type*: review
 *Résumé*: Audit passif. CDX-0→12 TERMINÉS, 79/79 PASS.
+
+== Session 021 — EPIC K K-1 : Renommage Taxonomie (Collect/Transform/Deploy)
+
+*Date* : 2026-05-19
+*Type* : refactoring (taxonomie)
+*Modèle* : deepseek-v4-flash:cloud (via opencode)
+*Score* : compile OK (hors readme plugin non publié — préexistant)
+
+*Objectif* :
+- Appliquer la taxonomie unifiée EPIC K (verbes COLLECTER/TRANSFORMER/DÉPLOYER)
+- Renommer les 10 tâches Gradle dans CodexPlugin.kt
+- Migrer package dev.cheroliv.codex → cccp.education.codex
+- Supprimer codexPipeline (tâche composite redondante)
+
+*Renommages* :
+- `extractText` → `collectText` (collect)
+- `extractBookStructure` → `collectBookStructure` (collect)
+- `extractEpubStructure` → `collectEpubStructure` (collect)
+- `asciiDocToJsonLdd` → `transformToJsonLdd` (transform)
+- `importBookSql` → `collectBookSql` (collect)
+- `convertToMarkdown` → `transformToMarkdown` (transform)
+- `chunkDocument` → `transformChunk` (transform)
+- `exportKnowledgeBase` → `deployKnowledgeBase` (deploy)
+- `codexIngest` → `collectIngest` (collect)
+- `codexRetrieve` → `collectRetrieve` (collect)
+- `codexPipeline` supprimé, `transformCorpusToPdf` inchangé
+
+*Livrables* :
+- 13 fichiers sources déplacés (package cccp.education.codex)
+- GroupId Gradle : com.cheroliv → education.cccp
+- Plugin ID : com.cheroliv.codex.doc-pipeline → codex.doc-pipeline
+- Version catalog : +codebase plugin, readme plugin ID rename
+- 12 classes de test maintenues, CodexPluginTest.kt supprimé (migration non recréé)
+- INDEX.adoc, PROMPT_REPRISE.adoc, SESSIONS_HISTORY.adoc mis à jour

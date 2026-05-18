@@ -5,10 +5,11 @@ plugins {
     `java-gradle-plugin`
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kover)
+    alias(libs.plugins.codebase)
     id("codex.gradle-plugin-conventions")
 }
 
-group = "com.cheroliv"
+group = "education.cccp"
 
 version = libs.versions.doc.pipeline.get()
 
@@ -56,8 +57,8 @@ gradlePlugin {
     vcsUrl  = "https://github.com/cheroliv/codex"
     plugins {
         create("codexDocPipeline") {
-            id                  = "com.cheroliv.codex.doc-pipeline"
-            implementationClass = "dev.cheroliv.codex.CodexPlugin"
+            id                  = "codex.doc-pipeline"
+            implementationClass = "codex.CodexPlugin"
             displayName         = "Codex — Pipeline d'acquisition de documents"
             description         = """
                 Pipeline Gradle d'acquisition de documents PDF/EPUB pour
@@ -90,9 +91,9 @@ publishing {
                     }
                     developers {
                         developer {
-                            id.set("cheroliv")
-                            name.set("cheroliv")
-                            email.set("cheroliv.developer@gmail.com")
+                            id.set("cccp-education")
+                            name.set("CCCP Education")
+                            email.set("cccp.education@gmail.com")
                         }
                     }
                     scm {

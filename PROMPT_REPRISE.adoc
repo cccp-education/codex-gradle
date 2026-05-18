@@ -1,0 +1,34 @@
+= PROMPT_REPRISE — codex-gradle (Session 022)
+:session: 022
+:date: 2026-05-19
+:status: PRET
+
+== Mission en Cours
+
+*Session* : 022 — CDX-13 : Exposition REST via engine N3
+*Objectif* : Créer une API REST pour le pipeline codex (collectText → deployKnowledgeBase)
+  exposée via engine N3 pour consommation externe (HTTP, non-Gradle).
+
+== Contexte de Reprise
+
+- Session 021 ✅ — EPIC K K-1 Renommage Taxonomie terminé (10 tâches renommées collect/transform/deploy)
+- 13 fichiers sources dans `cccp/education/codex/`, tests dans `cccp/education/codex/`
+- GroupId `education.cccp`, plugin ID `codex.doc-pipeline`
+- 10 tâches enregistrées : collectText, collectBookStructure, collectEpubStructure, transformToJsonLdd,
+  collectBookSql, transformToMarkdown, transformChunk, deployKnowledgeBase, collectIngest, collectRetrieve
+  + transformCorpusToPdf (inchangé)
+- Build compile OK (hors readme plugin `education.cccp.readme:0.0.0` non publié)
+- `CodexPluginTest.kt` supprimé (package migrate, non recréé)
+- 12 classes de test (hors integration) PASS
+
+== Prochaine Action
+
+[STRATEGIE]
+. `git status` — vérifier l'état
+. `./gradlew :doc-pipeline:compileKotlin` — vérifier build
+. Implémenter CDX-13 : exposition REST via engine N3 (HTTP endpoint)
+
+== Notes
+
+- `codexPipeline` supprimé — utiliser `transformCorpusToPdf` à la place
+- `codex` est le package racine (import `codex.tasks.*`, `codex.CodexPlugin`)

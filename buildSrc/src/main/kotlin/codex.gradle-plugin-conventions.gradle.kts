@@ -7,7 +7,7 @@ plugins {
     kotlin("jvm")
 }
 
-group = "com.cheroliv"
+group = "education.cccp"
 
 kotlin {
     compilerOptions {

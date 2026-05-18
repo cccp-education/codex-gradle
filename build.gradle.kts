@@ -1,1 +1,1 @@
-plugins { alias(libs.plugins.readme) }
+ plugins { alias(libs.plugins.readme) }

@@ -2,6 +2,7 @@
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
 doc-pipeline = "0.1.0-SNAPSHOT"
 readme = "0.0.0"
+codebase = "0.0.1"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
 kotlin = "2.3.20"
@@ -74,4 +75,5 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "plugin-publish" }
-readme = { id = "com.cheroliv.readme", version.ref = "readme" }
+readme = { id = "education.cccp.readme", version.ref = "readme" }
+codebase = { id = "education.cccp.codebase", version.ref = "codebase" }

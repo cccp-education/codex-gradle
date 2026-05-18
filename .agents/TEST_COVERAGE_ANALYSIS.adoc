@@ -1,12 +1,11 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-05-12
-:session: 018
+:date: 2026-05-19
+:session: 021
 
-== Couverture par Classe (79 tests, 13 classes)
+== Couverture par Classe (tests packages cccp.education.codex)
 
 |===
 | Classe | Tests | Statut
-| `CodexPluginTest` | 4 | ✅ 11 taches + types + groupe codex + extension zone
 | `LicenseZoneDetectorTest` | 7 | ✅ OSS/CSS/UNKNOWN detection + Apache-2.0/PROPRIETARY mapping
 | `ExtractTextTaskTest` | 3 | ✅ Simple PDF, multi-ligne, empty PDF
 | `ExtractBookStructureTaskTest` | 10 | ✅ Bold/Italic/Monospace/Normal/BoldItalic detection, Headers+code block, Empty PDF
@@ -21,21 +20,21 @@
 | `CodexIngestRetrieveIT` | 4 | ✅ End-to-end pgvector, Batching batchSize=1, Pipeline auto-detect PDF, Empty chunks
 |===
 
-== Couverture des Taches (11 taches enregistrees)
+== Couverture des Taches (11 taches enregistrees — taxonomie collect/transform/deploy)
 
 |===
-| Tache | Classe | Testee
-| `extractText` | ExtractTextTask | ✅ 3 tests
-| `extractBookStructure` | ExtractBookStructureTask | ✅ 10 tests
-| `extractEpubStructure` | ExtractEpubStructureTask | ✅ 6 tests
-| `asciiDocToJsonLdd` | AsciiDocToJsonLddTask | ✅ 4 tests
-| `importBookSql` | ImportBookSqlTask | ✅ 4 tests
-| `convertToMarkdown` | ConvertToMarkdownTask | ✅ 10 tests
-| `chunkDocument` | ChunkDocumentTask | ✅ 11 tests
-| `exportKnowledgeBase` | ExportKnowledgeBaseTask | ✅ 9 tests
-| `codexIngest` | CodexIngestTask | ✅ 4 tests (integration pgvector)
-| `codexRetrieve` | CodexRetrieveTask | ✅ 2 + 4 tests (integration pgvector)
-| `codexPipeline` | CodexPipelineTask | ✅ 1 test (auto-detect PDF format)
+| Tache | Groupe | Classe | Testee
+| `collectText` | collect | ExtractTextTask | ✅ 3 tests
+| `collectBookStructure` | collect | ExtractBookStructureTask | ✅ 10 tests
+| `collectEpubStructure` | collect | ExtractEpubStructureTask | ✅ 6 tests
+| `transformToJsonLdd` | transform | AsciiDocToJsonLddTask | ✅ 4 tests
+| `collectBookSql` | collect | ImportBookSqlTask | ✅ 4 tests
+| `transformToMarkdown` | transform | ConvertToMarkdownTask | ✅ 10 tests
+| `transformChunk` | transform | ChunkDocumentTask | ✅ 11 tests
+| `deployKnowledgeBase` | deploy | ExportKnowledgeBaseTask | ✅ 9 tests
+| `collectIngest` | collect | CodexIngestTask | ✅ 4 tests (integration pgvector)
+| `collectRetrieve` | collect | CodexRetrieveTask | ✅ 2 + 4 tests (integration pgvector)
+| `transformCorpusToPdf` | transform | CodexPipelineTask | ✅ 1 test (auto-detect PDF format)
 |===
 
 == Infrastructure de test
@@ -45,4 +44,4 @@
 - slf4j 2.0.17 + logback 1.5.32 pour logs propres
 
 [.text-right]
-*Analyse mise a jour le 12 mai 2026 — Session 018 CDX-12.*
+*Analyse mise a jour le 19 mai 2026 — Session 021 EPIC K K-1.*
