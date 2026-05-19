@@ -565,3 +565,20 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Version catalog : +codebase plugin, readme plugin ID rename
 - 12 classes de test maintenues, CodexPluginTest.kt supprimé (migration non recréé)
 - INDEX.adoc, PROMPT_REPRISE.adoc, SESSIONS_HISTORY.adoc mis à jour
+
+'''
+== Session 022 — EPIC K K-5 Documentation — INDEX.adoc synchronise taxonomie 4 verbes + metadata.json + convention over config. EPIC K ferme (K-0→K-5).
+
+*Date* : 2026-05-19
+*Type* : documentation
+*Modèle* : deepseek-v4-flash:cloud (via opencode)
+*Score* : ✅
+
+*Objectif* :
+- Documentation finale EPIC K — synchronisation INDEX.adoc avec taxonomie unifiée
+- Vérification 4 verbes (GENERER/COLLECTER/TRANSFORMER/DÉPLOYER) dans tous les boroughs
+
+*Livrables* :
+- INDEX.adoc mis à jour (11 boroughs)
+- TAXONOMIE_WORKSPACE.adoc finalisé
+- AGENTS.adoc mis à jour

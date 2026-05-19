@@ -5,11 +5,10 @@ _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents (Regle 4bis)
 
-_Derniere mise a jour_ : 2026-05-19
-_Session terminee_ : 021 ✅ — EPIC K K-1 Renommage taxonomie (10 extract→collect/transform/deploy, codexPipeline supprimé)
-_Session precedente_ : 020 ✅ (Code Review Globale — audit passif)
-_Session en cours_ : 022 — CDX-13 exposition REST via engine N3
-_Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
+_Derniere mise a jour_ : 2026-05-19 (K-5 terminé)
+_Session terminee_ : 022 ✅ — EPIC K K-5 Documentation (EPIC K fermé, K-0→K-5 terminés)
+_Session precedente_ : 021 ✅ — EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy, codexPipeline supprimé)
+_Session en cours_ : 023 — CDX-13 exposition REST via engine N3
 
 '''
 == REGLES ABSOLUES (resume)
@@ -20,6 +19,20 @@ _Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
 === 4. Codex est le contrat — types partages dans codex/
 === 5. DAG N2 — importable par N3 engine, jamais importe N3
 === 6. PROCEDURE DE FIN DE SESSION — 6 ETAPES OBLIGATOIRES
+
+'''
+== EPIC K — Taxonomie Workspace
+
+[cols="1,3,2,3", options="header"]
+|===
+| Phase | Livrable | Statut | Boroughs
+| K-0 | Document Jardin Secret — TAXONOMIE_WORKSPACE.adoc | ✅ 2026-05-18 | Workspace root
+| K-1 | Renommage 4 verbes (collect/transform/generate/deploy) | ✅ 2026-05-19 | Codex + 6 autres N2
+| K-2 | Format pivot — Metadata.kt | ✅ 2026-05-19 | Codex
+| K-3 | Configuration par domaine — CodexExtension | ✅ 2026-05-18 | Codex
+| K-4 | Convention over configuration SPG→SPD | ✅ 2026-05-19 | Newark
+| K-5 | Documentation — MàJ INDEX.adoc boroughs | ✅ TERMINE (2026-05-19) | Gouvernance
+|===
 
 '''
 == Sessions
@@ -48,6 +61,7 @@ _Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
 | 019 | 2026-05-12 | impl | EPIC D Uniformisation Build (Java 25→24 + kotlinx.serialization DocNode) | ✅
 | 020 | 2026-05-12 | review | Code Review Globale (audit passif) | ✅
 | 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy, codexPipeline supprimé) | ✅
+| 022 | 2026-05-19 | doc | EPIC K K-5 Documentation — Mise à jour INDEX.adoc + EPIC K fermé (K-0→K-5 terminés) | ✅
 |===
 
 '''
@@ -71,6 +85,8 @@ _Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
 | CDX-10 | Task `extractEpubStructure` — extraction EPUB via Tika → AsciiDoc hiérarchique (h1-h6, code, inline) | ✅ TERMINE | P3
 | CDX-11 | Integration engine N3 : piping codexRetrieve → assembleCompositeContext (CodexVectorStore + tâche composite) | ✅ TERMINE | P2
 | CDX-12 | Tests integration pgvector end-to-end + batching ONNX + tâche composite codexPipeline auto-détection PDF/EPUB (79/79 PASS) | ✅ TERMINE | P2
+| EPIC K-01 | Renommage taxonomie — collect/transform/generate | ✅ TERMINE | P0
+| EPIC K-02 | Format pivot — Metadata.kt | ✅ TERMINE | P0
 | K-1 | Renommage taxonomie (10 tasks: extract→collect, asciiDocToJsonLdd→transformToJsonLdd, etc.) + migration package dev.cheroliv.codex → cccp.education.codex | ✅ TERMINE | P0
 | CDX-13 | Exposition REST via engine N3 | 🔴 EN COURS | P1
 |===
@@ -105,3 +121,5 @@ _Prochaine session_ : 022 — CDX-13 exposition REST via engine N3
 | `waiter-gradle` | N2 | Pair — consommateur du plugin waiter-plugin (pattern foundry/OSS standard)
 | `training-gradle` | N2 | Pair — extraction datasets pedagogiques AFNOR/REAC
 |===
+
+Voir aussi : `TAXONOMIE_WORKSPACE.adoc` (racine workspace) pour l'ontologie complete.

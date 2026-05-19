@@ -20,6 +20,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import cccp.education.codex.Metadata as CodexMetadata
 import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
@@ -80,6 +81,14 @@ abstract class CodexPipelineTask : DefaultTask() {
         logger.lifecycle("[codex] transformCorpusToPdf : ${file.name} (format=$format) → ${output.name}")
 
         logger.lifecycle("[codex] ✓ transformCorpusToPdf termine — ${chunks.size} chunks, format=$format")
+
+        val codexMetadata = CodexMetadata.forBrooklyn(
+            type = "pipeline",
+            model = "onnx-local",
+            sessions = 1,
+            dependencies = listOf("queens")
+        )
+        CodexMetadata.writeTo(output.parentFile, codexMetadata)
     }
 
     private fun extractPdf(pdfFile: java.io.File): String {
