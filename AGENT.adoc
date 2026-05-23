@@ -97,7 +97,7 @@ livresque. Codex est le sens de la lecture du pipeline.
 | `build.gradle.kts` | ✅ Squelette (readme + conventions)
 | `settings.gradle.kts` | ✅ rootProject.name = "codex-gradle"
 | `buildSrc/` | ✅ Convention plugin + version catalog
-| `doc-pipeline/build.gradle.kts` | ✅ Plugin cccp.education.codex.doc-pipeline
+| `doc-pipeline/build.gradle.kts` | ✅ Plugin education.cccp.codex.doc-pipeline
 | `doc-pipeline/src/` | ✅ CodexPlugin.kt + ExtractTextTask.kt + ExtractBookStructureTask.kt
 |===
 

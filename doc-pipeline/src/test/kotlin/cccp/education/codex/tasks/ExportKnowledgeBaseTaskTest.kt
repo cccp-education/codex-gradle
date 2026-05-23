@@ -96,7 +96,7 @@ class ExportKnowledgeBaseTaskTest {
         task.export()
 
         val mdContent = outputDir.resolve("overlapbook").resolve("knowledge-base.md").readText()
-        assertTrue(mdContent.contains("_Suite :"), "Should contain overlap hint")
+        assertTrue(mdContent.contains("_Suite :") || mdContent.contains("_Continued:"), "Should contain overlap hint")
     }
 
     @Test

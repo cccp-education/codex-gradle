@@ -13,19 +13,19 @@ class LicenseZoneDetectorTest {
         )
         assertEquals(
             LicenseZone.OSS,
-            LicenseZoneDetector.detect("C:\\Users\\dev\\foundry\\OSS\\codex-gradle")
+            LicenseZoneDetector.detect("C:\\Users\\dev\\foundry\\public\\codex-gradle")
         )
     }
 
     @Test
-    fun `detects CSS zone from foundry CSS path`() {
+    fun `detects CSS zone from foundry private path`() {
         assertEquals(
             LicenseZone.CSS,
             LicenseZoneDetector.detect("/home/user/foundry/private/internal-tool")
         )
         assertEquals(
             LicenseZone.CSS,
-            LicenseZoneDetector.detect("C:\\Projects\\foundry\\CSS\\secret-project")
+            LicenseZoneDetector.detect("C:\\Projects\\foundry\\private\\secret-project")
         )
     }
 

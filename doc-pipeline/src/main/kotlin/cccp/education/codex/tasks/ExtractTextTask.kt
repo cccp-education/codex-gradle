@@ -8,6 +8,15 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Extracts raw text from a PDF file using PDFBox.
+ *
+ * Strips all formatting and produces plain text sorted by position.
+ * This is the simplest extraction mode — no structure or hierarchy is preserved.
+ *
+ * @property pdfFile input PDF file
+ * @property outputFile output plain text file
+ */
 abstract class ExtractTextTask : DefaultTask() {
 
     @get:InputFile
@@ -32,6 +41,6 @@ abstract class ExtractTextTask : DefaultTask() {
             output.writeText(rawText)
         }
 
-        logger.lifecycle("[codex] ✓ Extraction terminée — ${output.length()} octets")
+        logger.lifecycle("[codex] ✓ collectText done — ${output.length()} bytes")
     }
 }

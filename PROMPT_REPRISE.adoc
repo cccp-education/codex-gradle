@@ -1,34 +1,27 @@
-= PROMPT_REPRISE — codex-gradle (Session 022)
-:session: 022
-:date: 2026-05-19
+= PROMPT_REPRISE — Session 027 (a venir)
+:session: 027
+:date: 2026-05-22
 :status: PRET
+:max-lines: 70
 
-== Mission en Cours
+== Mission
 
-*Session* : 022 — CDX-13 : Exposition REST via engine N3
-*Objectif* : Créer une API REST pour le pipeline codex (collectText → deployKnowledgeBase)
-  exposée via engine N3 pour consommation externe (HTTP, non-Gradle).
+Prochain EPIC disponible
 
-== Contexte de Reprise
+== Contexte fin de session 026
 
-- Session 021 ✅ — EPIC K K-1 Renommage Taxonomie terminé (10 tâches renommées collect/transform/deploy)
-- 13 fichiers sources dans `cccp/education/codex/`, tests dans `cccp/education/codex/`
-- GroupId `education.cccp`, plugin ID `codex.doc-pipeline`
-- 10 tâches enregistrées : collectText, collectBookStructure, collectEpubStructure, transformToJsonLdd,
-  collectBookSql, transformToMarkdown, transformChunk, deployKnowledgeBase, collectIngest, collectRetrieve
-  + transformCorpusToPdf (inchangé)
-- Build compile OK (hors readme plugin `education.cccp.readme:0.0.0` non publié)
-- `CodexPluginTest.kt` supprimé (package migrate, non recréé)
-- 12 classes de test (hors integration) PASS
+- Investigation Kover offline instrumentation : pas possible en Kover 0.9.1
+- Limitation documentee : ProjectBuilder + classloader separe non instrumentable
+- 102/105 tests PASS, BUILD SUCCESSFUL
+- Kover : 77.5% line (stable)
 
-== Prochaine Action
+== Prochaines priorites
 
-[STRATEGIE]
-. `git status` — vérifier l'état
-. `./gradlew :doc-pipeline:compileKotlin` — vérifier build
-. Implémenter CDX-13 : exposition REST via engine N3 (HTTP endpoint)
+- Nouvel EPIC a definir (CDX-13 suspendu, doc faite, tests couverts)
+- Option : upgrade Kover 1.x (risque breaking change)
+- Option : nouveau EPIC cross-borough
 
-== Notes
+== Pre-requis
 
-- `codexPipeline` supprimé — utiliser `transformCorpusToPdf` à la place
-- `codex` est le package racine (import `codex.tasks.*`, `codex.CodexPlugin`)
+- `./gradlew :doc-pipeline:compileKotlin` — verifier build
+- `./gradlew :doc-pipeline:test` — verification regression

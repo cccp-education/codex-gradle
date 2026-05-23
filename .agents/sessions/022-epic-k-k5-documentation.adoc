@@ -1,0 +1,21 @@
+= Session 022 — EPIC K K-5 Documentation — INDEX.adoc synchronise taxonomie 4 verbes + metadata.json + convention over config
+:session: 022
+:date: 2026-05-19
+:type: documentation
+:status: TERMINEE
+
+== Objectif
+
+Documentation finale EPIC K — synchronisation INDEX.adoc avec taxonomie unifiee.
+Verification 4 verbes (GENERER/COLLECTER/TRANSFORMER/DEPLOYER) dans tous les boroughs.
+
+== Livrables
+
+- INDEX.adoc mis a jour (11 boroughs)
+- TAXONOMIE_WORKSPACE.adoc finalise
+- AGENTS.adoc mis a jour
+- EPIC K ferme (K-0→K-5)
+
+== Etat
+
+EPIC K = 6/6 phases terminees.

@@ -1,0 +1,64 @@
+= Session 023 — Fix compilation bugs + cleanup packages cccp.education
+:session: 023
+:date: 2026-05-22
+:modele: deepseek-v4-flash:cloud
+:type: bugfix+cleanup
+:score: 9/10
+
+== Objectif
+
+Codex-gradle ne compilait plus (5 fichiers avec variables/references manquantes)
+suite a la migration EPIC K/K-1. Les packages `cccp.education.codex` contaminaient
+le code source (au lieu de `codex`, `codex.tasks`, `codex.store`).
+
+== Livrables
+
+=== 1. Bugfix compilation (5 fichiers)
+
+. `ImportBookSqlTask.kt` — `sb`/`roots` non definis → lecture JSON via `Json.decodeFromString`, ecriture fichier
+. `ExtractEpubStructureTask.kt` — `sb`/`document` non definis → parse XHTML via Tika avant extraction
+. `CodexIngestTask.kt` — bloc `try`/`finally` casse, `docCount`/`chunks`/`conn` manquants → logique complete
+. `CodexPipelineTask.kt` — `chunks` non defini → pipeline reel: extractPdf/extractEpub → convertToMd → chunkMd
+. `CodexRetrieveTask.kt` — `results` non defini → appel `searchSimilar()` reel, ecriture JSON
+
+=== 2. Cleanup packages
+
+Suppression de `cccp.education.codex` dans tous les packages Kotlin (30 fichiers):
+- `cccp.education.codex` → `codex` (5 fichiers main + tests)
+- `cccp.education.codex.tasks` → `codex.tasks` (13 fichiers main + 9 tests)
+- `cccp.education.codex.store` → `codex.store` (1 fichier main + 1 test)
+
+Les plugin IDs et artefacts Maven conservent `education.cccp`.
+
+=== 3. Tests fixes
+
+- `LicenseZoneDetectorTest`: attentes alignees sur `foundry/public/` (pas `foundry/OSS/`)
+- `CodexIngestRetrieveIT#codexPipeline`: mini PDF valide (base64) en remplacement du stub invalide
+- `ExtractEpubStructureTaskTest`: format header aligne (`= Structure extraite de l'EPUB` + `[NOTE]`)
+
+== Resultat
+
+- `:doc-pipeline:compileKotlin` ✅ BUILD SUCCESSFUL
+- `:doc-pipeline:test` ✅ BUILD SUCCESSFUL — 75/75 PASS
+
+== Coverage Report (Kover)
+
+| Metrique | Valeur | Appreciation
+| Line coverage | 77.5% | ✅ Correct
+| Branch coverage | 60.8% | ⚠️ Mediacre
+| Method coverage | 74.5% | ✅ Passable
+| Class coverage | 68.6% | ⚠️ Trous
+
+Trous identifiés:
+- `codex` package (Plugin, Metadata, Extension) → 26.6% line coverage
+- `codex.store` (CodexVectorStore) → 14.3% line coverage
+- Zero tests Cucumber (BDD)
+
+== Prochaine session (024)
+
+CDX-14 — Couverture de tests:
+1. **A)** JUnit5 pour classes a 0% (CodexPlugin.kt, Metadata.kt, CodexExtension.kt, CodexVectorStore.kt)
+2. **B)** Cucumber + features BDD pipelines (extract→chunk→ingest→retrieve)
+3. **C)** Les deux: A puis B
+
+Objectif: line coverage ≥ 85%, branch ≥ 75%, Cucumber ≥ 5 scenarios.

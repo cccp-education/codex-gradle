@@ -38,10 +38,10 @@ abstract class ExtractBookStructureTask : DefaultTask() {
         if (positionedLines.isEmpty()) return "= [Document vide]\n\n"
 
         val nonCode = positionedLines.filter { it.fontStyle != FontStyle.MONOSPACE }
-        val sizes = nonCode.map { it.fontSize }
-        val avg = sizes.average()
-        val max = sizes.maxOrNull() ?: avg
-        val min = sizes.minOrNull() ?: avg
+        val sizes = nonCode.map { it.fontSize.toDouble() }
+        val avg: Double = sizes.average()
+        val max: Double = (sizes.maxOrNull() ?: avg)
+        val min: Double = (sizes.minOrNull() ?: avg)
         val range = max - min
 
         val headerThresholds = computeHeaderThresholds(avg, max, min, range)
@@ -64,224 +64,146 @@ abstract class ExtractBookStructureTask : DefaultTask() {
     private fun computeHeaderThresholds(
         avg: Double, max: Double, min: Double, range: Double
     ): HeaderThresholds {
-        if (range <= 0.5) {
-            return HeaderThresholds(
-                h1 = max + 0.1,
-                h2 = max + 0.1,
-                h3 = max + 0.1,
-                h4 = max + 0.1
-            )
-        }
-
-        return HeaderThresholds(
-            h1 = max * 0.95,
-            h2 = max * 0.75,
-            h3 = max * 0.50,
-            h4 = max * 0.40
-        )
-    }
-
-    private fun extractTextPositions(pdfFile: java.io.File): List<PositionedLine> {
-        Loader.loadPDF(pdfFile).use { document ->
-            val allLines = mutableListOf<PositionedLine>()
-
-            for (pageIndex in 0 until document.numberOfPages) {
-                val stripper = object : PDFTextStripper() {
-                    val linesForPage = mutableListOf<PositionedLine>()
-
-                    init {
-                        sortByPosition = true
-                        lineSeparator = "\n"
-                        startPage = pageIndex + 1
-                        endPage = pageIndex + 1
-                    }
-
-                    override fun writeString(text: String, textPositions: List<TextPosition>) {
-                        if (text.isBlank()) return
-
-                        val y = textPositions.firstOrNull()?.yDirAdj?.toDouble() ?: 0.0
-                        val x = textPositions.firstOrNull()?.xDirAdj?.toDouble() ?: 0.0
-                        val maxFontSize = textPositions.maxOfOrNull {
-                            it.fontSizeInPt.toDouble()
-                        } ?: 0.0
-                        val fontName = textPositions.firstOrNull()?.font?.name
-
-                        linesForPage.add(
-                            PositionedLine(
-                                x = x,
-                                y = y,
-                                fontSize = maxFontSize,
-                                text = text.replace("\\s+".toRegex(), " ").trim(),
-                                fontName = fontName,
-                                fontStyle = FontStyleDetector.detect(fontName ?: "")
-                            )
-                        )
-                    }
-                }
-
-                stripper.getText(document)
-                allLines.addAll(stripper.linesForPage)
-
-                logger.lifecycle(
-                    "[codex] Page ${pageIndex + 1}/${document.numberOfPages}: " +
-                        "${stripper.linesForPage.size} fragments texte"
-                )
-            }
-
-            return allLines
-        }
-    }
-
-    private fun groupTextPositionsByY(
-        positions: List<PositionedLine>
-    ): List<LineGroup> {
-        return positions.map { pos ->
-            LineGroup(
-                y = pos.y,
-                x = pos.x,
-                text = pos.text,
-                maxFontSize = pos.fontSize,
-                fontStyle = pos.fontStyle
-            )
-        }.filter { it.text.isNotBlank() }
-    }
-
-    private fun cleanText(text: String): String {
-        return text
-            .replace(Regex("\\s+"), " ")
-            .trim()
-    }
-
-    private fun buildAsciiDocFromGroups(
-        groups: List<LineGroup>,
-        thresholds: HeaderThresholds
-    ): String {
-        val sb = StringBuilder()
-
-        sb.appendLine("= Structure extraite du PDF")
-        sb.appendLine()
-
-        sb.appendLine("[NOTE]")
-        sb.appendLine("====")
-        sb.appendLine(
-            "Document généré automatiquement par collectBookStructure. " +
-                "Hiérarchie basée sur heuristique typographique " +
-                "(taille de police + graisse + détection code)."
-        )
-        sb.appendLine("====")
-        sb.appendLine()
-
-        var pendingBlanks = 0
-        var codeLines = mutableListOf<String>()
-        var inCodeBlock = false
-
-        fun flushCodeBlock() {
-            if (codeLines.size >= 2) {
-                sb.appendLine("[source,text]")
-                sb.appendLine("----")
-                codeLines.forEach { sb.appendLine(it) }
-                sb.appendLine("----")
-                sb.appendLine()
-            } else if (codeLines.size == 1) {
-                sb.appendLine("`" + codeLines[0] + "`")
-                sb.appendLine()
-            }
-            codeLines.clear()
-            inCodeBlock = false
-        }
-
-        fun closeCodeBlockIfNeeded() {
-            if (inCodeBlock) flushCodeBlock()
-        }
-
-        for (group in groups) {
-            val text = group.text
-            val fontSize = group.maxFontSize
-            val style = group.fontStyle
-
-            val isMonospace = style.isMonospace()
-            val isBold = style.isBold() && !isMonospace
-
-            if (isMonospace) {
-                if (!inCodeBlock) {
-                    closeCodeBlockIfNeeded()
-                    inCodeBlock = true
-                }
-                codeLines.add(text)
-                continue
-            }
-
-            if (inCodeBlock) flushCodeBlock()
-
-            if (text.isBlank()) {
-                pendingBlanks++
-                continue
-            }
-
-            val headerLevel = when {
-                fontSize >= thresholds.h1 && isBold -> 1
-                fontSize >= thresholds.h1 -> 2
-                fontSize >= thresholds.h2 && isBold -> 2
-                fontSize >= thresholds.h2 -> 3
-                fontSize >= thresholds.h3 && isBold -> 3
-                else -> 0
-            }
-
-            if (pendingBlanks > 0) {
-                sb.appendLine()
-                pendingBlanks = 0
-            }
-
-            when (headerLevel) {
-                1 -> {
-                    sb.appendLine()
-                    sb.appendLine("= " + text)
-                    sb.appendLine()
-                    pendingBlanks = 0
-                }
-                2 -> {
-                    sb.appendLine()
-                    sb.appendLine("== " + text)
-                    sb.appendLine()
-                    pendingBlanks = 0
-                }
-                3 -> {
-                    sb.appendLine()
-                    sb.appendLine("=== " + text)
-                    sb.appendLine()
-                    pendingBlanks = 0
-                }
-                4 -> {
-                    sb.appendLine()
-                    sb.appendLine("==== " + text)
-                    sb.appendLine()
-                    pendingBlanks = 0
-                }
-                else -> {
-                    sb.appendLine(text)
-                }
-            }
-        }
-
-        closeCodeBlockIfNeeded()
-
-        return sb.toString().trimEnd() + "\n"
+        val dynamicH1 = if (range > 1.0) max - range * 0.05 else max * 0.95
+        val dynamicH2 = if (range > 2.0) max - range * 0.25 else max * 0.75
+        val dynamicH3 = if (range > 3.0) max - range * 0.50 else max * 0.50
+        val dynamicH4 = if (range > 4.0) max - range * 0.70 else max * 0.35
+        return HeaderThresholds(dynamicH1, dynamicH2, dynamicH3, dynamicH4)
     }
 
     data class PositionedLine(
-        val x: Double,
-        val y: Double,
-        val fontSize: Double,
         val text: String,
-        val fontName: String? = null,
-        val fontStyle: FontStyle = FontStyle.NORMAL
+        val fontSize: Float,
+        val fontStyle: FontStyle,
+        val y: Float
     )
 
-    data class LineGroup(
-        val y: Double,
-        val x: Double,
-        val text: String,
-        val maxFontSize: Double,
-        val fontStyle: FontStyle = FontStyle.NORMAL
+    private fun extractTextPositions(pdfFile: java.io.File): List<PositionedLine> {
+        val builder = StringBuilder()
+        val lines = mutableListOf<PositionedLine>()
+
+        Loader.loadPDF(pdfFile).use { document ->
+            val stripper = object : PDFTextStripper() {
+                override fun writeString(
+                    text: String,
+                    textPositions: List<TextPosition>
+                ) {
+                    if (textPositions.isEmpty()) return
+                    val first = textPositions.first()
+                    val style = FontStyleDetector.detect(first.font.name)
+                    val line = PositionedLine(
+                        text = text.trimEnd(),
+                        fontSize = first.fontSize,
+                        fontStyle = style,
+                        y = first.y
+                    )
+                    if (line.text.isNotBlank()) {
+                        lines.add(line)
+                    }
+                }
+            }
+            stripper.sortByPosition = true
+            stripper.getText(document)
+        }
+
+        return lines
+    }
+
+    private data class TextGroup(
+        val lines: MutableList<PositionedLine> = mutableListOf()
     )
+
+    private fun groupTextPositionsByY(lines: List<PositionedLine>): List<TextGroup> {
+        val groups = mutableListOf<TextGroup>()
+        var current: TextGroup? = null
+        var lastY = -1f
+
+        for (line in lines.sortedBy { it.y }) {
+            val isSameLine = kotlin.math.abs(line.y - lastY) < 2f
+            if (current == null || !isSameLine) {
+                current = TextGroup()
+                groups.add(current)
+            }
+            current.lines.add(line)
+            lastY = line.y
+        }
+        return groups
+    }
+
+    private fun buildAsciiDocFromGroups(
+        groups: List<TextGroup>,
+        thresholds: HeaderThresholds
+    ): String {
+        val sb = StringBuilder()
+        var codeBuffer = mutableListOf<String>()
+        var inCodeBlock = false
+
+        fun flushCodeBlock() {
+            if (codeBuffer.isNotEmpty()) {
+                sb.appendLine("[source,text]")
+                sb.appendLine("----")
+                codeBuffer.forEach { sb.appendLine(it) }
+                sb.appendLine("----")
+                sb.appendLine()
+                codeBuffer = mutableListOf()
+                inCodeBlock = false
+            }
+        }
+
+        for ((idx, group) in groups.withIndex()) {
+            val first = group.lines.first()
+            val allMonospace = group.lines.all { it.fontStyle == FontStyle.MONOSPACE }
+            val isHeading = !allMonospace && group.lines.size <= 3
+
+            if (allMonospace && first.fontSize <= 14f) {
+                if (!inCodeBlock) {
+                    flushCodeBlock()
+                    sb.appendLine("[source,text]")
+                    sb.appendLine("----")
+                    inCodeBlock = true
+                }
+                group.lines.forEach { sb.appendLine(it.text.trimEnd()) }
+                continue
+            }
+
+            if (inCodeBlock) {
+                flushCodeBlock()
+            }
+
+            if (isHeading && group.lines.size <= 2) {
+                val fullText = group.lines.joinToString(" ") { it.text.trim() }
+                val bold = group.lines.all { it.fontStyle.isBold() || it.fontStyle == FontStyle.NORMAL }
+                val sizeBoost = if (bold) 0.5 else 0.0
+                val adjustedSize = first.fontSize + sizeBoost.toFloat()
+
+                val prefix = when {
+                    adjustedSize >= thresholds.h1 -> "= "
+                    adjustedSize >= thresholds.h2 -> "== "
+                    adjustedSize >= thresholds.h3 -> "=== "
+                    adjustedSize >= thresholds.h4 -> "==== "
+                    else -> null
+                }
+
+                if (prefix != null) {
+                    if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n"))
+                        sb.appendLine()
+                    sb.appendLine("$prefix${fullText.removePrefix("= ").removePrefix("== ").removePrefix("=== ").removePrefix("==== ")}")
+                    sb.appendLine()
+                    continue
+                }
+            }
+
+            val paraText = group.lines.joinToString(" ") { it.text.trim() }
+                .replace(Regex("""\s+"""), " ")
+            if (paraText.isNotBlank()) {
+                if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n"))
+                    sb.append(" ")
+                sb.append(paraText)
+                if (idx < groups.size - 1) sb.appendLine()
+            }
+        }
+
+        flushCodeBlock()
+        return sb.toString().trimEnd() + "\n"
+    }
 }

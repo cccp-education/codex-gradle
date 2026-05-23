@@ -16,6 +16,12 @@ import reactor.core.publisher.Flux
  *
  * Decoupled from Gradle tasks — usable by engine N3 and any JVM consumer.
  * Manages its own ONNX embedding model and R2DBC pgvector connection.
+ *
+ * @property host PostgreSQL host (default: "localhost")
+ * @property port PostgreSQL port (default: 5432)
+ * @property database database name (default: "codex")
+ * @property username PostgreSQL username (default: "codex")
+ * @property password PostgreSQL password (default: "codex")
  */
 class CodexVectorStore(
     private val host: String = "localhost",
@@ -26,9 +32,24 @@ class CodexVectorStore(
 ) {
     private val model: AllMiniLmL6V2EmbeddingModel by lazy { AllMiniLmL6V2EmbeddingModel() }
 
+    /**
+     * Synchronous wrapper for [search]. Runs the coroutine-based search
+     * in a [runBlocking] scope.
+     *
+     * @param query the search query text
+     * @param topK number of results to return (default: 10)
+     * @return list of [RetrieveResult] ordered by similarity descending
+     */
     fun searchBlocking(query: String, topK: Int = 10): List<RetrieveResult> =
         runBlocking { search(query, topK) }
 
+    /**
+     * Performs a semantic search against pgvector using cosine similarity.
+     *
+     * @param query the search query text
+     * @param topK number of results to return (default: 10)
+     * @return list of [RetrieveResult] ordered by similarity descending
+     */
     suspend fun search(query: String, topK: Int = 10): List<RetrieveResult> {
         val embedding = computeEmbedding(query)
         val factory = buildConnectionFactory()

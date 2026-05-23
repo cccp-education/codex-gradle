@@ -17,6 +17,22 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Vectorizes document chunks with ONNX AllMiniLmL6V2 and stores them in pgvector.
+ *
+ * Reads a JSON file containing a list of [DocumentChunk], groups them by source
+ * document, computes 384-dimensional embeddings via ONNX, and persists both
+ * documents and chunks in PostgreSQL pgvector tables (`codex_documents`,
+ * `codex_chunks`) using R2DBC.
+ *
+ * @property chunksFile input JSON chunks file
+ * @property pgHost PostgreSQL host
+ * @property pgPort PostgreSQL port
+ * @property pgDatabase PostgreSQL database name
+ * @property pgUser PostgreSQL username
+ * @property pgPassword PostgreSQL password
+ * @property batchSize number of chunks per batch (default: 32)
+ */
 abstract class CodexIngestTask : DefaultTask() {
 
     @get:InputFile abstract val chunksFile: RegularFileProperty
@@ -37,8 +53,18 @@ abstract class CodexIngestTask : DefaultTask() {
 
         logger.lifecycle("[codex] collectIngest : ${input.name} → pgvector ($host:$port/$db)")
 
-        logger.lifecycle("[codex] ✓ collectIngest — $docCount docs, ${chunks.size} chunks")
-        } finally { conn.close().awaitFirstOrNull() }
+        val json = Json { ignoreUnknownKeys = true }
+        val chunks = json.decodeFromString<List<DocumentChunk>>(input.readText())
+
+        val factory = createFactory(host, port, db, user, pass)
+        val conn = factory.create().awaitFirst()
+        try {
+            initSchema(factory)
+            val docCount = ingestChunks(conn, chunks)
+            logger.lifecycle("[codex] ✓ collectIngest — $docCount docs, ${chunks.size} chunks")
+        } finally {
+            conn.close().awaitFirstOrNull()
+        }
     }
 
     private fun createFactory(host: String, port: Int, db: String, user: String, pass: String): ConnectionFactory =

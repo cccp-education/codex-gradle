@@ -20,7 +20,8 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import cccp.education.codex.Metadata as CodexMetadata
+import codex.LicenseZoneDetector
+import codex.Metadata as CodexMetadata
 import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
@@ -80,6 +81,17 @@ abstract class CodexPipelineTask : DefaultTask() {
 
         logger.lifecycle("[codex] transformCorpusToPdf : ${file.name} (format=$format) → ${output.name}")
 
+        val adocContent = when (format) {
+            "PDF" -> extractPdf(file)
+            "EPUB" -> extractEpub(file)
+            else -> throw IllegalArgumentException("Format non supporté: $format")
+        }
+        val mdContent = convertToMd(adocContent)
+        val license = licenseName.orNull ?: LicenseZoneDetector.detect(file.absolutePath).name
+        val chunks = chunkMd(mdContent, file.name, license)
+
+        output.writeText(adocContent)
+
         logger.lifecycle("[codex] ✓ transformCorpusToPdf termine — ${chunks.size} chunks, format=$format")
 
         val codexMetadata = CodexMetadata.forBrooklyn(
@@ -105,8 +117,8 @@ abstract class CodexPipelineTask : DefaultTask() {
                         val fs = textPositions.maxOfOrNull { it.fontSizeInPt.toDouble() } ?: 0.0
                         val fn = textPositions.firstOrNull()?.font?.name
                         linesForPage.add(ExtractBookStructureTask.PositionedLine(
-                            x, y, fs, text.replace("\\s+".toRegex(), " ").trim(), fn,
-                            FontStyleDetector.detect(fn ?: "")
+                            text.replace("\\s+".toRegex(), " ").trim(), fs.toFloat(),
+                            FontStyleDetector.detect(fn ?: ""), y.toFloat()
                         ))
                     }
                 }
@@ -120,7 +132,7 @@ abstract class CodexPipelineTask : DefaultTask() {
     private fun buildPdfAdoc(lines: List<ExtractBookStructureTask.PositionedLine>): String {
         if (lines.isEmpty()) return "= [Document vide]\n\n"
         val nonCode = lines.filter { it.fontStyle != FontStyle.MONOSPACE }
-        val sizes = nonCode.map { it.fontSize }
+        val sizes = nonCode.map { it.fontSize.toDouble() }
         val max = sizes.maxOrNull() ?: 0.0
         val min = sizes.minOrNull() ?: 0.0
         val range = max - min
@@ -156,7 +168,7 @@ abstract class CodexPipelineTask : DefaultTask() {
             if (isMono) { if (!inCode) { flush(); inCode = true }; codeLines.add(line.text); continue }
             if (inCode) flush()
             if (line.text.isBlank()) { pending++; continue }
-            val lvl = when { line.fontSize >= h1 && isBold -> 1; line.fontSize >= h1 -> 2; line.fontSize >= h2 && isBold -> 2; line.fontSize >= h2 -> 3; line.fontSize >= h3 && isBold -> 3; else -> 0 }
+            val lvl = when { line.fontSize.toDouble() >= h1 && isBold -> 1; line.fontSize.toDouble() >= h1 -> 2; line.fontSize.toDouble() >= h2 && isBold -> 2; line.fontSize.toDouble() >= h2 -> 3; line.fontSize.toDouble() >= h3 && isBold -> 3; else -> 0 }
             if (pending > 0) { sb.appendLine(); pending = 0 }
             when (lvl) { 1 -> { sb.appendLine(); sb.appendLine("= ${line.text}"); sb.appendLine(); pending = 0 }; 2 -> { sb.appendLine(); sb.appendLine("== ${line.text}"); sb.appendLine(); pending = 0 }; 3 -> { sb.appendLine(); sb.appendLine("=== ${line.text}"); sb.appendLine(); pending = 0 }; else -> sb.appendLine(line.text) }
         }

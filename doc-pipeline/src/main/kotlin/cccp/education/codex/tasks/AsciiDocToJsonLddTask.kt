@@ -14,6 +14,16 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
+/**
+ * Converts AsciiDoc documents to the JSON LDD (Logical Document Description) format.
+ *
+ * Uses the AsciidoctorJ AST parser to traverse the document structure and
+ * produce a tree of [LddNode] objects representing the logical hierarchy
+ * (sections, paragraphs, nested children).
+ *
+ * @property adocFile input AsciiDoc file
+ * @property jsonFile output JSON LDD file
+ */
 abstract class AsciiDocToJsonLddTask : DefaultTask() {
 
     companion object {
@@ -36,7 +46,7 @@ abstract class AsciiDocToJsonLddTask : DefaultTask() {
 
         val json = buildJsonLdd(input)
         output.writeText(json)
-        logger.lifecycle("[codex] Done - JSON LDD : ${json.length} octets")
+        logger.lifecycle("[codex] Done - JSON LDD : ${json.length} bytes")
     }
 
     private fun buildJsonLdd(adoc: File): String {

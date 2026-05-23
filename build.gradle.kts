@@ -1,1 +1,1 @@
- plugins { alias(libs.plugins.readme) }
+// readme plugin retiré temporairement — réintégration ultérieure

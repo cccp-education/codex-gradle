@@ -5,10 +5,10 @@ _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents (Regle 4bis)
 
-_Derniere mise a jour_ : 2026-05-19 (K-5 terminé)
-_Session terminee_ : 022 ✅ — EPIC K K-5 Documentation (EPIC K fermé, K-0→K-5 terminés)
-_Session precedente_ : 021 ✅ — EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy, codexPipeline supprimé)
-_Session en cours_ : 023 — CDX-13 exposition REST via engine N3
+_Derniere mise a jour_ : 2026-05-22 (Session 026)
+_Session terminee_ : 026 ✅ — Investigation Kover offline instrumentation (limitation documentee)
+_Session precedente_ : 025 ✅ — KDoc API documentation (18 classes)
+_Session en cours_ : 027 — Disponible
 
 '''
 == REGLES ABSOLUES (resume)
@@ -17,22 +17,8 @@ _Session en cours_ : 023 — CDX-13 exposition REST via engine N3
 === 2. PAS DE publishToMavenLocal automatique
 === 3. SECRETS via configuration/ — jamais en dur dans build.gradle.kts
 === 4. Codex est le contrat — types partages dans codex/
-=== 5. DAG N2 — importable par N3 engine, jamais importe N3
+=== 5. DAG N2 — importable par N3 runner-gradle, jamais importe N3
 === 6. PROCEDURE DE FIN DE SESSION — 6 ETAPES OBLIGATOIRES
-
-'''
-== EPIC K — Taxonomie Workspace
-
-[cols="1,3,2,3", options="header"]
-|===
-| Phase | Livrable | Statut | Boroughs
-| K-0 | Document Jardin Secret — TAXONOMIE_WORKSPACE.adoc | ✅ 2026-05-18 | Workspace root
-| K-1 | Renommage 4 verbes (collect/transform/generate/deploy) | ✅ 2026-05-19 | Codex + 6 autres N2
-| K-2 | Format pivot — Metadata.kt | ✅ 2026-05-19 | Codex
-| K-3 | Configuration par domaine — CodexExtension | ✅ 2026-05-18 | Codex
-| K-4 | Convention over configuration SPG→SPD | ✅ 2026-05-19 | Newark
-| K-5 | Documentation — MàJ INDEX.adoc boroughs | ✅ TERMINE (2026-05-19) | Gouvernance
-|===
 
 '''
 == Sessions
@@ -41,27 +27,31 @@ _Session en cours_ : 023 — CDX-13 exposition REST via engine N3
 | # | Date | Type | Sujet | Score
 | 0 | 2026-05-06 | init | Bootstrap gouvernance agent codex + scaffold plugin | —
 | 001 | 2026-05-07 | design | JSON LDD, SQL LMD, Cartographie Ontologique | —
-| 002 | 2026-05-07 | design | Séparation des Concerns & Bouclage | —
+| 002 | 2026-05-07 | design | Separation des Concerns & Bouclage | —
 | 003 | 2026-05-07 | design | Le Vrai MVP : Boucle d'Autonomie | —
-| 004 | 2026-05-07 | chore | Migration chemins foundry/ → foundry/OSS/ (granularisation OSS/CSS) | —
+| 004 | 2026-05-07 | chore | Migration chemins foundry/ → foundry/OSS/ | —
 | 005 | 2026-05-09 | impl | CDX-1b asciiDocToJsonLdd via AsciidoctorJ AST | —
 | 006 | 2026-05-10 | impl | CDX-1c importBookSql — JSON LDD → DDL + INSERT PostgreSQL | —
-| 007 | 2026-05-10 | impl | CDX-2 — détection typographique → hiérarchie multi-niveaux + code | —
-| 008 | 2026-05-10 | impl | CDX-3 — convertToMarkdown (AsciiDoc → Markdown) | —
-| 009 | 2026-05-10 | impl | CDX-4 — chunkDocument (chunking sémantique par section) | —
-| 010 | 2026-05-10 | impl | CDX-5 — exportKnowledgeBase (JSON-L/Markdown/AsciiDoc export) | —
-| 011 | 2026-05-10 | impl | CDX-6 — arborescence OSS/CSS + routing licence | —
-| 012 | 2026-05-10 | test | CDX-7 — Tests unitaires + integration (62/62 PASS) | ✅
-| 013 | 2026-05-10 | impl | CDX-8 — codexIngest ONNX → pgvector R2DBC | ✅
-| 014 | 2026-05-11 | impl | CDX-9 codexRetrieve — recherche sémantique cosine similarity | ✅
+| 007 | 2026-05-10 | impl | CDX-2 detection typographique → hierarchie multi-niveaux + code | —
+| 008 | 2026-05-10 | impl | CDX-3 convertToMarkdown (AsciiDoc → Markdown) | —
+| 009 | 2026-05-10 | impl | CDX-4 chunkDocument (chunking semantique par section) | —
+| 010 | 2026-05-10 | impl | CDX-5 exportKnowledgeBase (JSON-L/Markdown/AsciiDoc export) | —
+| 011 | 2026-05-10 | impl | CDX-6 arborescence OSS/CSS + routing licence | —
+| 012 | 2026-05-10 | test | CDX-7 Tests unitaires + integration (62/62 PASS) | ✅
+| 013 | 2026-05-10 | impl | CDX-8 codexIngest ONNX → pgvector R2DBC | ✅
+| 014 | 2026-05-11 | impl | CDX-9 codexRetrieve — recherche semantique cosine similarity | ✅
 | 015 | 2026-05-11 | ci/cd | CDX-CI — GitHub Actions test.yml (JDK 24, publishToMavenLocal + check) | ✅
 | 016 | 2026-05-11 | impl | CDX-10 codex-epub — extraction EPUB via Tika → AsciiDoc (70/70 PASS) | ✅
-| 017 | 2026-05-11 | integration | CDX-11 codexEngine — piping codexRetrieve → engine N3 (75/75 PASS) | ✅
+| 017 | 2026-05-11 | integration | CDX-11 codexEngine — piping codexRetrieve → runner-gradle N3 (75/75 PASS) | ✅
 | 018 | 2026-05-12 | test | CDX-12 Tests integration pgvector end-to-end (79/79 PASS) | ✅
 | 019 | 2026-05-12 | impl | EPIC D Uniformisation Build (Java 25→24 + kotlinx.serialization DocNode) | ✅
 | 020 | 2026-05-12 | review | Code Review Globale (audit passif) | ✅
-| 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy, codexPipeline supprimé) | ✅
-| 022 | 2026-05-19 | doc | EPIC K K-5 Documentation — Mise à jour INDEX.adoc + EPIC K fermé (K-0→K-5 terminés) | ✅
+| 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy) | ✅
+| 022 | 2026-05-19 | doc | EPIC K K-5 Documentation — Mise a jour INDEX.adoc | ✅
+| **023** | **2026-05-22** | **bugfix+cleanup** | **Fix compilation bugs (5 fichiers) + cleanup packages** | **9/10**
+| **024** | **2026-05-22** | **test** | **CDX-14 Couverture tests (A) JUnit5 + (B) Cucumber — 105/105 PASS, 5 features Cucumber** | **✅**
+| **025** | **2026-05-22** | **doc** | **KDoc API documentation (18 classes, ~200 lignes)** | **✅**
+| **026** | **2026-05-22** | **investigate** | **Kover offline instrumentation — limitation documentee (Kover 0.9.1)** | **✅**
 |===
 
 '''
@@ -70,56 +60,35 @@ _Session en cours_ : 023 — CDX-13 exposition REST via engine N3
 |===
 | EPIC | Description | Statut | Priorite
 | CDX-0 | Bootstrap gouvernance agent codex | ✅ TERMINE | P0
-| CDX-1a | Task `extractBookStructure` — PDFBox PDFStreamEngine → AsciiDoc structuré (224 lignes, typo heuristic, LineGroup) | ✅ TERMINE | P0
-| CDX-1b | Task `asciiDocToJsonLdd` — AST AsciidoctorJ → JSON LDD | ✅ TERMINE | P0
-| CDX-1c | Task `importBookSql` — JSON LDD → DDL + INSERT PostgreSQL | ✅ TERMINE | P0
-| CDX-2 | Détection typographique → hiérarchie multi-niveaux + blocs de code | ✅ TERMINE | P0
-| CDX-3 | Task `convertToMarkdown` avec blocs de code | ✅ TERMINE | P0
-| CDX-4 | Task `chunkDocument` — stratégie sémantique | ✅ TERMINE | P0
-| CDX-5 | Task `exportKnowledgeBase` — JSON-L / Markdown / AsciiDoc | ✅ TERMINE | P1
-| CDX-6 | Intégration arborescence OSS/CSS + routing licence | ✅ TERMINE | P1
-| CDX-7 | Tests unitaires + intégration (62/62 PASS, 9 classes de test) | ✅ TERMINE | P1
-| CDX-8 | Task `codexIngest` — ONNX → pgvector R2DBC (schema codex_documents/codex_chunks, vector(384)) | ✅ TERMINE | P2
-| CDX-9 | Task `codexRetrieve` — cosine similarity dans pgvector → corpus requêtable | ✅ TERMINE | P2
-| CDX-CI | GitHub Actions CI/CD — `.github/workflows/test.yml`, JDK 24, publishToMavenLocal + check | ✅ TERMINE | P2
-| CDX-10 | Task `extractEpubStructure` — extraction EPUB via Tika → AsciiDoc hiérarchique (h1-h6, code, inline) | ✅ TERMINE | P3
-| CDX-11 | Integration engine N3 : piping codexRetrieve → assembleCompositeContext (CodexVectorStore + tâche composite) | ✅ TERMINE | P2
-| CDX-12 | Tests integration pgvector end-to-end + batching ONNX + tâche composite codexPipeline auto-détection PDF/EPUB (79/79 PASS) | ✅ TERMINE | P2
-| EPIC K-01 | Renommage taxonomie — collect/transform/generate | ✅ TERMINE | P0
-| EPIC K-02 | Format pivot — Metadata.kt | ✅ TERMINE | P0
-| K-1 | Renommage taxonomie (10 tasks: extract→collect, asciiDocToJsonLdd→transformToJsonLdd, etc.) + migration package dev.cheroliv.codex → cccp.education.codex | ✅ TERMINE | P0
-| CDX-13 | Exposition REST via engine N3 | 🔴 EN COURS | P1
+| CDX-1a | Task extractBookStructure — PDFBox → AsciiDoc | ✅ TERMINE | P0
+| CDX-1b | Task asciiDocToJsonLdd — AST AsciidoctorJ → JSON LDD | ✅ TERMINE | P0
+| CDX-1c | Task importBookSql — JSON LDD → DDL + INSERT PostgreSQL | ✅ TERMINE | P0
+| CDX-2 | Detection typographique → hierarchie multi-niveaux + blocs de code | ✅ TERMINE | P0
+| CDX-3 | Task convertToMarkdown avec blocs de code | ✅ TERMINE | P0
+| CDX-4 | Task chunkDocument — strategie semantique | ✅ TERMINE | P0
+| CDX-5 | Task exportKnowledgeBase — JSON-L / Markdown / AsciiDoc | ✅ TERMINE | P1
+| CDX-6 | Integration arborescence OSS/CSS + routing licence | ✅ TERMINE | P1
+| CDX-7 | Tests unitaires + integration (62/62 PASS, 9 classes de test) | ✅ TERMINE | P1
+| CDX-8 | Task codexIngest — ONNX → pgvector R2DBC (schema codex_documents/codex_chunks, vector(384)) | ✅ TERMINE | P2
+| CDX-9 | Task codexRetrieve — cosine similarity dans pgvector → corpus requetable | ✅ TERMINE | P2
+| CDX-CI | GitHub Actions CI/CD — test.yml JDK 24 | ✅ TERMINE | P2
+| CDX-10 | Task extractEpubStructure — EPUB via Tika → AsciiDoc | ✅ TERMINE | P3
+| CDX-11 | Integration runner-gradle N3 : codexRetrieve → assembleCompositeContext | ✅ TERMINE | P2
+...
+| CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU | P1
+| CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
+| EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
 |===
 
 '''
 == Fichiers Associes
 
 |===
-| Fichier | Etat
-| `AGENT.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `.agents/INDEX.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `.agents/PROMPT_REPRISE.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `.agents/SESSION_PROCEDURE.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `.agents/SESSION_CHECKLIST.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `.agents/SESSIONS_HISTORY.adoc` | ✅ Cree (bootstrap 2026-05-06)
-| `AUGMENTED_CONTEXT_PIPELINE.adoc` | ✅ Spec canonique
-| `build.gradle.kts` | ✅ Plugin readme
-| `settings.gradle.kts` | ✅ rootProject + include doc-pipeline
-| `buildSrc/` | ✅ Convention plugin + catalog buildSrc
-| `doc-pipeline/build.gradle.kts` | ✅ Dependances + publication
-| `doc-pipeline/src/main/` | ✅ CodexPlugin.kt + CodexExtension.kt + LicenseZoneDetector.kt + store/CodexVectorStore.kt + 13 tâches dans tasks/ (AsciiDocToJsonLddTask, ChunkDocumentTask, CodexIngestTask, CodexPipelineTask, CodexRetrieveTask, ConvertToMarkdownTask, DocNode, ExportKnowledgeBaseTask, ExtractBookStructureTask, ExtractEpubStructureTask, ExtractTextTask, FontStyle, ImportBookSqlTask) — package `cccp.education.codex`
-| `doc-pipeline/src/test/` | ✅ LicenseZoneDetectorTest.kt (7) + ExtractTextTaskTest.kt (3) + ExtractBookStructureTaskTest.kt (10) + ExtractEpubStructureTaskTest.kt (6) + AsciiDocToJsonLddTaskTest.kt (4) + ImportBookSqlTaskTest.kt (4) + ConvertToMarkdownTaskTest.kt (10) + ChunkDocumentTaskTest.kt (11) + ExportKnowledgeBaseTaskTest.kt (9) + CodexRetrieveTaskTest.kt (2) + store/CodexVectorStoreTest.kt (5) + CodexIngestRetrieveIT.kt (4) — package `cccp.education.codex`
+| Fichier | Role | Type
+| `AGENT.adoc` | Directives completes | EAGER
+| `PROMPT_REPRISE.adoc` | Mission session en cours | EAGER
+| `.agents/SESSIONS_HISTORY.adoc` | Historique des sessions | EAGER
+| `.agents/TEST_COVERAGE_ANALYSIS.adoc` | Analyse couverture tests | LAZY
+| `.agents/archives/` | Archives taches | LAZY
+| `.agents/sessions/` | Archives par session | LAZY
 |===
-
-'''
-== Dependances Inter-Projets (DAG N2)
-
-|===
-| Projet importe | Niveau | Usage dans codex
-| `graphify-gradle` | N0 | Knowledge graph pour extraction d'entités depuis les chunks
-| `codebase-gradle` | N1 | Templates `.agents/`, modèle métier SQL/DDD
-| `waiter-gradle` | N2 | Pair — consommateur du plugin waiter-plugin (pattern foundry/OSS standard)
-| `training-gradle` | N2 | Pair — extraction datasets pedagogiques AFNOR/REAC
-|===
-
-Voir aussi : `TAXONOMIE_WORKSPACE.adoc` (racine workspace) pour l'ontologie complete.

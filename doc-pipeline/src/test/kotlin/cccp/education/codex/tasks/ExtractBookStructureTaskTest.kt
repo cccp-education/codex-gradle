@@ -88,7 +88,8 @@ class ExtractBookStructureTaskTest {
         task.extract()
 
         assertTrue(outputFile.exists())
-        assertTrue(outputFile.readText().contains("[Document vide]"))
+        assertTrue(outputFile.readText().contains("[Empty document]") ||
+            outputFile.readText().contains("[Document vide]"))
     }
 
     @Test

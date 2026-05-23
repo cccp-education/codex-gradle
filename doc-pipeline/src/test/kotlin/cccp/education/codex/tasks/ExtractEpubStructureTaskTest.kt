@@ -108,7 +108,8 @@ class ExtractEpubStructureTaskTest {
 
         assertTrue(outputFile.exists())
         val content = outputFile.readText()
-        assertTrue(content.contains("Structure extraite de l'EPUB") || content.contains("EPUB vide"))
+        assertTrue(content.contains("Structure extraite de l'EPUB") || content.contains("EPUB vide") ||
+            content.contains("Extracted EPUB structure") || content.contains("Empty EPUB"))
     }
 
     @Test

@@ -192,3 +192,34 @@ Plugin ID com.cheroliv.codex.doc-pipeline → codex.doc-pipeline.
 *Renommages* : collectText, collectBookStructure, collectEpubStructure, transformToJsonLdd,
 collectBookSql, transformToMarkdown, transformChunk, deployKnowledgeBase, collectIngest, collectRetrieve.
 *Build* : ✅ `./gradlew :doc-pipeline:compileKotlin` BUILD OK (hors readme plugin non publié).
+
+'''
+== CDX-14a — Fix bugs compilation + cleanup packages (2026-05-22)
+
+*Session* : 023
+*Type* : bugfix + cleanup
+*Détail* :
+- ImportBookSqlTask : `sb`/`roots` non definis → lecture JSON, ecriture fichier
+- ExtractEpubStructureTask : `sb`/`document` non definis → parse XHTML via Tika
+- CodexIngestTask : bloc try/finally casse, variables manquantes → logique complete
+- CodexPipelineTask : `chunks` non defini → pipeline extract→convert→chunk
+- CodexRetrieveTask : `results` non defini → appel searchSimilar() reel
+- Nettoyage packages : `cccp.education.codex` → `codex`/`codex.tasks`/`codex.store` (30 fichiers)
+*Build* : ✅ `./gradlew :doc-pipeline:compileKotlin` BUILD SUCCESSFUL
+*Tests* : ✅ `./gradlew :doc-pipeline:test` 75/75 PASS
+*Kover* : 77.5% line, 60.8% branch
+
+'''
+== CDX-14 — Couverture tests (A JUnit5 + B Cucumber + C Kover analysis) (2026-05-22)
+
+*Session* : 024
+*Type* : test
+*Détail* :
+A) 24 nouveaux tests JUnit5 : CodexPluginTest (8), CodexExtensionTest (4), MetadataTest (7),
+   CodexVectorStoreTest étendu (+5 : computeEmbedding 384-dim, buildConnectionFactory)
+B) 5 features Cucumber (7 scénarios) : extract→chunk, chunk→ingest, ingest→retrieve,
+   auto-detect PDF/EPUB, license zone detection. PipelineSteps.kt glue code.
+   Dépendances Cucumber 7.21.0 ajoutées (version catalog + build.gradle.kts)
+C) Kover : 77.5% line, 60.8% branch — stable (ProjectBuilder non instrumentable)
+*Fichiers* : 10 créés + 4 modifiés
+*Build* : ✅ `./gradlew :doc-pipeline:test` BUILD SUCCESSFUL. 105/105 PASS.

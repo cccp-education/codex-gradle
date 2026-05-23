@@ -9,9 +9,10 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.io.FileInputStream
+import javax.xml.parsers.DocumentBuilderFactory
 
 abstract class ExtractEpubStructureTask : DefaultTask() {
 
@@ -28,118 +29,83 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
 
         logger.lifecycle("[codex] collectEpubStructure : ${input.name} → ${output.name}")
 
-        sb.appendLine("Document généré automatiquement par collectEpubStructure.")
-        sb.appendLine("====")
-        sb.appendLine()
-
-        val body = findElement(document.documentElement, "body")
-        if (body != null) {
-            traverseChildren(body, sb)
-        }
-
-        return sb.toString().trimEnd() + "\n"
+        val adocContent = buildAsciiDoc(input)
+        output.writeText(adocContent)
+        logger.lifecycle(
+            "[codex] ✓ EPUB structure done — ${adocContent.lines().size} AsciiDoc lines"
+        )
     }
 
-    private fun extractXhtmlViaTika(epubFile: java.io.File): String {
-        val parser = AutoDetectParser()
+    private fun buildAsciiDoc(epubFile: java.io.File): String {
+        val xhtmlContent = extractXhtml(epubFile)
+        return convertXhtmlToAsciiDoc(xhtmlContent)
+    }
+
+    private fun extractXhtml(file: java.io.File): String {
         val handler = ToXMLContentHandler()
-        val metadata = Metadata()
-        val context = ParseContext()
-
-        epubFile.inputStream().use { stream ->
-            parser.parse(stream, handler, metadata, context)
+        val parser = AutoDetectParser()
+        FileInputStream(file).use { input ->
+            parser.parse(input, handler, Metadata(), ParseContext())
         }
-
         return handler.toString()
     }
 
-    private fun parseXhtml(content: String): org.w3c.dom.Document {
+    private fun convertXhtmlToAsciiDoc(xhtml: String): String {
         val factory = DocumentBuilderFactory.newInstance()
-        factory.isNamespaceAware = true
         val builder = factory.newDocumentBuilder()
-        return builder.parse(content.byteInputStream())
+        val doc = builder.parse(xhtml.byteInputStream())
+        val sb = StringBuilder()
+
+        traverse(doc.documentElement, sb, 0)
+        return sb.toString()
     }
 
-    private fun findElement(node: Node, tagName: String): Element? {
-        if (node.nodeType == Node.ELEMENT_NODE) {
-            val element = node as Element
-            if (element.localName.equals(tagName, ignoreCase = true)) return element
-            val children = element.childNodes
-            for (i in 0 until children.length) {
-                val found = findElement(children.item(i), tagName)
-                if (found != null) return found
-            }
-        }
-        return null
-    }
-
-    private fun traverseChildren(element: Element, sb: StringBuilder) {
-        val children = element.childNodes
-        for (i in 0 until children.length) {
-            traverseNode(children.item(i), sb)
-        }
-    }
-
-    private fun traverseNode(node: Node, sb: StringBuilder) {
+    private fun traverse(node: Node, sb: StringBuilder, depth: Int) {
         when (node.nodeType) {
             Node.ELEMENT_NODE -> {
-                val element = node as Element
-                val tagName = element.localName.lowercase()
-
-                when (tagName) {
-                    "h1" -> {
-                        sb.appendLine()
-                        sb.appendLine("= " + element.textContent.trim())
-                        sb.appendLine()
-                    }
-                    "h2" -> {
-                        sb.appendLine()
-                        sb.appendLine("== " + element.textContent.trim())
-                        sb.appendLine()
-                    }
-                    "h3" -> {
-                        sb.appendLine()
-                        sb.appendLine("=== " + element.textContent.trim())
-                        sb.appendLine()
-                    }
-                    "h4" -> {
-                        sb.appendLine()
-                        sb.appendLine("==== " + element.textContent.trim())
-                        sb.appendLine()
-                    }
-                    "h5" -> {
-                        sb.appendLine()
-                        sb.appendLine("===== " + element.textContent.trim())
-                        sb.appendLine()
-                    }
-                    "h6" -> {
-                        sb.appendLine()
-                        sb.appendLine("====== " + element.textContent.trim())
-                        sb.appendLine()
+                val el = node as Element
+                when (el.tagName.lowercase()) {
+                    "h1" -> sb.appendLine("= ${el.textContent.trim()}")
+                    "h2" -> sb.appendLine("== ${el.textContent.trim()}")
+                    "h3" -> sb.appendLine("=== ${el.textContent.trim()}")
+                    "h4" -> sb.appendLine("==== ${el.textContent.trim()}")
+                    "h5" -> sb.appendLine("===== ${el.textContent.trim()}")
+                    "h6" -> sb.appendLine("====== ${el.textContent.trim()}")
+                    "p" -> {
+                        val content = buildInlineContent(el)
+                        if (content.isNotBlank()) sb.appendLine(content)
                     }
                     "pre" -> {
-                        val code = element.textContent.trimEnd()
-                        if (code.isNotBlank()) {
+                        val content = el.textContent.trim()
+                        if (content.isNotBlank()) {
                             sb.appendLine("[source,text]")
                             sb.appendLine("----")
-                            code.lines().forEach { line -> sb.appendLine(line) }
+                            sb.appendLine(content)
                             sb.appendLine("----")
-                            sb.appendLine()
                         }
                     }
-                    "p", "div" -> {
-                        val line = buildInlineContent(element)
-                        if (line.isNotBlank()) {
-                            sb.appendLine(line)
+                    "ul", "ol" -> {
+                        sb.appendLine()
+                        for (child in el.childNodes()) {
+                            if (child is Element && child.tagName.lowercase() == "li") {
+                                val content = buildInlineContent(child)
+                                sb.appendLine("* $content")
+                            }
+                        }
+                        sb.appendLine()
+                    }
+                    "blockquote" -> {
+                        for (child in el.childNodes()) {
+                            if (child is Element && child.tagName.lowercase() == "p") {
+                                sb.appendLine("[NOTE]")
+                                sb.appendLine("==== ${buildInlineContent(child)}")
+                                sb.appendLine()
+                            }
                         }
                     }
-                    else -> traverseChildren(element, sb)
-                }
-            }
-            Node.TEXT_NODE -> {
-                val text = node.textContent.trim()
-                if (text.isNotBlank()) {
-                    sb.appendLine(text)
+                    else -> {
+                        for (child in el.childNodes()) traverse(child, sb, depth + 1)
+                    }
                 }
             }
         }
@@ -147,35 +113,32 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
 
     private fun buildInlineContent(element: Element): String {
         val sb = StringBuilder()
-        val children = element.childNodes
-        for (i in 0 until children.length) {
-            appendInlineNode(children.item(i), sb)
+        for (child in element.childNodes()) {
+            when (child.nodeType) {
+                Node.TEXT_NODE -> sb.append(child.textContent)
+                Node.ELEMENT_NODE -> {
+                    val el = child as Element
+                    when (el.tagName.lowercase()) {
+                        "em", "i" -> sb.append("_${el.textContent}_")
+                        "strong", "b" -> sb.append("*${el.textContent}*")
+                        "code" -> sb.append("``${el.textContent}``")
+                        "a" -> {
+                            val href = el.getAttribute("href")
+                            sb.append("${el.textContent}[$href]")
+                        }
+                        "br" -> sb.append(" +\n")
+                        "span" -> sb.append(el.textContent)
+                        else -> sb.append(el.textContent)
+                    }
+                }
+            }
         }
         return sb.toString().trim()
     }
 
-    private fun appendInlineNode(node: Node, sb: StringBuilder) {
-        when (node.nodeType) {
-            Node.TEXT_NODE -> sb.append(node.textContent)
-            Node.ELEMENT_NODE -> {
-                val element = node as Element
-                val tagName = element.localName.lowercase()
-                when (tagName) {
-                    "code" -> sb.append("`" + element.textContent + "`")
-                    "em", "i" -> sb.append("_" + element.textContent + "_")
-                    "strong", "b" -> sb.append("*" + element.textContent + "*")
-                    "a" -> sb.append(element.textContent)
-                    "br" -> {} // intentional no-op
-                    else -> appendInlineChildren(element, sb)
-                }
-            }
-        }
-    }
+    private fun Element.childNodes(): List<Node> =
+        (0 until this.childNodes.length).map { this.childNodes.item(it) }
 
-    private fun appendInlineChildren(element: Element, sb: StringBuilder) {
-        val children = element.childNodes
-        for (i in 0 until children.length) {
-            appendInlineNode(children.item(i), sb)
-        }
-    }
+    private fun Node.childNodes(): List<Node> =
+        (0 until this.childNodes.length).map { this.childNodes.item(it) }
 }

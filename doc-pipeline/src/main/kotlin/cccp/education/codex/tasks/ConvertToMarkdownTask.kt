@@ -6,6 +6,16 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Converts AsciiDoc documents to Markdown format.
+ *
+ * Preserves document hierarchy (headings), code blocks, tables, images,
+ * admonitions, links, lists, and inline formatting (bold, italic, code).
+ * Line-by-line conversion approach for predictable output.
+ *
+ * @property adocFile input AsciiDoc file
+ * @property markdownFile output Markdown file
+ */
 abstract class ConvertToMarkdownTask : DefaultTask() {
 
     @get:InputFile
@@ -24,7 +34,7 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
         val markdown = buildMarkdown(input)
         output.writeText(markdown)
         logger.lifecycle(
-            "[codex] ✓ Conversion Markdown — ${markdown.lines().size} lignes, ${markdown.length} octets"
+            "[codex] ✓ Markdown done — ${markdown.lines().size} lines, ${markdown.length} bytes"
         )
     }
 
