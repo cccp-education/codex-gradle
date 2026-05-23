@@ -4,6 +4,7 @@ import codex.tasks.AsciiDocToJsonLddTask
 import codex.tasks.ChunkDocumentTask
 import codex.tasks.CodexIngestTask
 import codex.tasks.CodexPipelineTask
+import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.ExportKnowledgeBaseTask
@@ -14,6 +15,34 @@ import codex.tasks.ImportBookSqlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+/**
+ * Gradle plugin for unstructured document acquisition and transformation.
+ *
+ * Registers 11 tasks organized into 3 unified taxonomy groups:
+ *
+ * **COLLECT group**:
+ * - `collectText` — raw text extraction from PDF
+ * - `collectBookStructure` — hierarchical structure extraction from PDF
+ * - `collectEpubStructure` — EPUB structure extraction
+ * - `collectBookSql` — DDL/INSERT PostgreSQL generation
+ * - `collectIngest` — ONNX vectorization + pgvector storage
+ * - `collectRetrieve` — cosine similarity semantic search
+ *
+ * **GENERATE group**:
+ * - `generateCompositeContext` — semantic search via CodexVectorStore → composite-context.json
+ *
+ * **TRANSFORM group**:
+ * - `transformToJsonLdd` — AsciiDoc → JSON LDD
+ * - `transformToMarkdown` — AsciiDoc → Markdown
+ * - `transformChunk` — semantic section chunking
+ * - `transformCorpusToPdf` — composite pipeline auto-detecting PDF/EPUB
+ *
+ * **DEPLOY group**:
+ * - `deployKnowledgeBase` — multi-format export (JSON-L, Markdown, AsciiDoc)
+ *
+ * Configures a [CodexExtension] for pgvector connection parameters.
+ * Automatically detects the license zone ([LicenseZoneDetector]) at load time.
+ */
 class CodexPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
@@ -136,6 +165,17 @@ class CodexPlugin : Plugin<Project> {
             it.pgUser.convention(extension.pgvectorUser)
             it.pgPassword.convention(extension.pgvectorPassword)
             it.batchSize.convention("32")
+        }
+
+        project.tasks.register(
+            "generateCompositeContext",
+            CodexCompositeContextTask::class.java
+        ) {
+            it.group = "generate"
+            it.description = "Semantic search via CodexVectorStore → composite-context.json (runner-compatible)"
+            it.query.set(project.providers.gradleProperty("query").orElse("architecture du workspace"))
+            it.topK.set(project.providers.gradleProperty("topK").orElse("10"))
+            it.outputFile.set(project.layout.buildDirectory.file("codex/composite-context.json"))
         }
     }
 }
