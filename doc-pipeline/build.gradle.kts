@@ -30,6 +30,9 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
     implementation(libs.jackson.dataformat.yaml)
 
+    // koog Agentic Orchestrator
+    implementation(libs.koog.agents)
+
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
     implementation(libs.langchain4j.minilm)
@@ -49,6 +52,12 @@ dependencies {
     testRuntimeOnly(libs.slf4j.api)
     testImplementation(libs.junit.jupiter)
     testImplementation(gradleTestKit())
+
+    // Cucumber BDD
+    testImplementation(libs.cucumber.java)
+    testImplementation(libs.cucumber.java8)
+    testRuntimeOnly(libs.cucumber.junit.platform.engine)
+
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -136,8 +145,15 @@ java {
 kover {
     reports {
         total {
-            xml { onCheck = true }
-            html { onCheck = true }
+            xml { onCheck = false }
+            html { onCheck = false }
         }
     }
 }
+
+// NOTE: Kover 0.9.8 does not support offline instrumentation (same limitation as 0.9.1).
+// Gradle TestKit (ProjectBuilder) loads plugin bytecode in a separate
+// classloader that the on-fly agent cannot intercept.
+// This means tests for CodexPlugin, CodexExtension etc. pass but
+// their coverage is not counted by Kover.
+// Upgrade to Kover 1.x+ for offline instrumentation support (when released).

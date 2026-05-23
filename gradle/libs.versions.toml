@@ -3,6 +3,7 @@
 doc-pipeline = "0.1.0-SNAPSHOT"
 readme = "0.0.0"
 codebase = "0.0.1"
+koog = "0.8.0"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
 kotlin = "2.3.20"
@@ -25,13 +26,14 @@ r2dbc-postgresql = "1.0.7.RELEASE"
 kotlinx-coroutines = "1.9.0"
 
 # ── Coverage ───────────────────────────────────────────────────────────────────
-kover = "0.9.1"
+kover = "0.9.8"
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 junit-jupiter = "5.12.2"
 junit-platform = "1.12.2"
 testcontainers = "1.21.4"
 docker-java = "3.7.0"
+cucumber = "7.21.0"
 
 [libraries]
 # ── Kotlin ────────────────────────────────────────────────────────────────────
@@ -58,6 +60,9 @@ r2dbc-spi = { module = "io.r2dbc:r2dbc-spi", version = "1.0.0.RELEASE" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
 
+# ── koog Agentic Orchestrator ──────────────────────────────────────────────────
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
@@ -69,6 +74,11 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 testcontainers-junit5 = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.32" }
+
+# ── Cucumber BDD ──────────────────────────────────────────────────────────────
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+cucumber-java8 = { module = "io.cucumber:cucumber-java8", version.ref = "cucumber" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
