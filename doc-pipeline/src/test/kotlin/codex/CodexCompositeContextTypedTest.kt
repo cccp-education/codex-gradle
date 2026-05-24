@@ -1,9 +1,9 @@
 package codex
 
-import cccp.vibecoding.contracts.context.ChannelBudget
-import cccp.vibecoding.contracts.context.CompositeContext
-import cccp.vibecoding.contracts.context.CompositeContextConfig
-import cccp.vibecoding.contracts.context.ContextChannel
+import education.cccp.contracts.context.ChannelBudget
+import education.cccp.contracts.context.CompositeContext
+import education.cccp.contracts.context.CompositeContextConfig
+import education.cccp.contracts.context.ContextChannel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue

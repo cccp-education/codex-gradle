@@ -10,8 +10,12 @@ plugins {
 }
 
 group = "education.cccp"
-
 version = libs.versions.doc.pipeline.get()
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
 
 dependencies {
     implementation(libs.kotlin.stdlib)
@@ -32,6 +36,9 @@ dependencies {
 
     // koog Agentic Orchestrator
     implementation(libs.koog.agents)
+
+    // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
+    implementation("education.cccp:codebase-contracts:0.1.0")
 
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
