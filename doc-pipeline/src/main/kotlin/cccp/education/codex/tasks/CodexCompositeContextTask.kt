@@ -1,5 +1,9 @@
 package codex.tasks
 
+import cccp.vibecoding.contracts.context.ChannelBudget
+import cccp.vibecoding.contracts.context.CompositeContext
+import cccp.vibecoding.contracts.context.CompositeContextConfig
+import cccp.vibecoding.contracts.context.ContextChannel
 import codex.Metadata
 import codex.store.CodexVectorStore
 import kotlinx.serialization.encodeToString
@@ -33,6 +37,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val store = CodexVectorStore()
         val results = store.searchBlocking(q, k)
 
+        // ── JSON compatible N3/N4 (inchangé) ──
         val entries = results.map { r ->
             mapOf(
                 "source" to "codex",
@@ -53,15 +58,63 @@ abstract class CodexCompositeContextTask : DefaultTask() {
             "count" to entries.size
         )
 
+        // ── EPIC 3 : typed ContextChannel.Docs + CompositeContext ──
+        val docsContent = results.joinToString("\n\n") { r ->
+            "[${r.sourceDocument} / ${r.sectionPath}] (similarity=${"%.3f".format(r.similarity)})\n${r.chunkText}"
+        }
+        val docsChannel = ContextChannel.Docs(docsContent)
+
+        val config = CompositeContextConfig(
+            totalTokenBudget = 8000,
+            budgetEagerLazy = 0.40,
+            budgetRag = 0.30,
+            budgetGraphify = 0.20,
+            budgetDocs = 0.10,
+            budgetOverhead = 0.0
+        )
+        val budget = ChannelBudget.fromConfig(config)
+
+        val typedCompositeContext = CompositeContext(
+            eagerSection = "",
+            ragSection = "",
+            graphifySection = "",
+            docsSection = budget.applyBudget(listOf(docsChannel)).first().content,
+            config = config
+        )
+
+        // ── Écriture JSON compatible (N3/N4 existant) ──
         val output = outputFile.asFile.get()
         output.parentFile.mkdirs()
         output.writeText(Json { prettyPrint = true }.encodeToString(composite))
+
+        // ── Écriture vibecoding typed context (EPIC 3) ──
+        val typedFile = java.io.File(output.parentFile, "composite-context-vibecoding.json")
+        val vibecodingJson = mapOf(
+            "source" to "brooklyn",
+            "query" to q,
+            "topK" to k,
+            "docsSection" to typedCompositeContext.docsSection,
+            "budget" to mapOf(
+                "totalTokenBudget" to config.totalTokenBudget,
+                "eager" to config.budgetEagerLazy,
+                "rag" to config.budgetRag,
+                "graphify" to config.budgetGraphify,
+                "docs" to config.budgetDocs
+            ),
+            "count" to entries.size
+        )
+        typedFile.writeText(Json { prettyPrint = true }.encodeToString(vibecodingJson))
 
         Metadata.writeTo(
             output.parentFile,
             Metadata.forBrooklyn(type = "composite-context", sessions = entries.size)
         )
 
-        logger.lifecycle("[codex] generateCompositeContext — {} entries → {}", entries.size, output.absolutePath)
+        logger.lifecycle(
+            "[codex] generateCompositeContext — {} entries, docsSection={} tokens → {}",
+            entries.size,
+            ContextChannel.estimateTokens(typedCompositeContext.docsSection),
+            output.absolutePath
+        )
     }
 }
