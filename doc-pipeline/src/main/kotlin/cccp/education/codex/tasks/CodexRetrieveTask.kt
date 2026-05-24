@@ -17,6 +17,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import reactor.core.publisher.Flux
 
 /**
@@ -57,6 +58,7 @@ data class RetrieveResult(
  * @property pgPassword PostgreSQL password
  * @property outputFile JSON output file
  */
+@DisableCachingByDefault(because = "ONNX pgvector search (R2DBC) — external dependencies, non-cacheable")
 abstract class CodexRetrieveTask : DefaultTask() {
 
     @get:Input

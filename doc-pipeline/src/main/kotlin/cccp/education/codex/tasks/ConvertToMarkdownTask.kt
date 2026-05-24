@@ -4,7 +4,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Converts AsciiDoc documents to Markdown format.
@@ -16,9 +19,11 @@ import org.gradle.api.tasks.TaskAction
  * @property adocFile input AsciiDoc file
  * @property markdownFile output Markdown file
  */
+@DisableCachingByDefault(because = "AsciiDoc → Markdown conversion — pure computation, non-cacheable")
 abstract class ConvertToMarkdownTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val adocFile: RegularFileProperty
 
     @get:OutputFile

@@ -5,7 +5,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -19,9 +22,11 @@ import java.io.File
  * @property jsonFile input JSON LDD file
  * @property sqlFile output SQL script file
  */
+@DisableCachingByDefault(because = "JSON LDD → SQL DDL/INSERT — non-cacheable")
 abstract class ImportBookSqlTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val jsonFile: RegularFileProperty
 
     @get:OutputFile

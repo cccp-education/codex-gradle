@@ -11,7 +11,10 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Aggregates document chunks into a multi-format knowledge base.
@@ -24,9 +27,11 @@ import org.gradle.api.tasks.TaskAction
  * @property chunksFile input JSON file containing a list of [DocumentChunk]
  * @property outputDir output directory for the three knowledge base files
  */
+@DisableCachingByDefault(because = "Knowledge base JSON-LD/Markdown/AsciiDoc export — non-cacheable")
 abstract class ExportKnowledgeBaseTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val chunksFile: RegularFileProperty
 
     @get:OutputDirectory

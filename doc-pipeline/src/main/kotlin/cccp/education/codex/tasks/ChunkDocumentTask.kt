@@ -9,7 +9,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.security.MessageDigest
 
 /**
@@ -52,6 +55,7 @@ data class DocumentChunk(
  * @property chunksFile output JSON file containing the list of [DocumentChunk]
  * @property licenseName license tag to apply to all chunks
  */
+@DisableCachingByDefault(because = "Markdown chunking — pure computation, non-cacheable")
 abstract class ChunkDocumentTask : DefaultTask() {
 
     private data class Section(
@@ -62,6 +66,7 @@ abstract class ChunkDocumentTask : DefaultTask() {
     )
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val markdownFile: RegularFileProperty
 
     @get:OutputFile

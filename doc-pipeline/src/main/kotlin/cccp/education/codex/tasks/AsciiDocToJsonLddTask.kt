@@ -11,7 +11,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -24,6 +27,7 @@ import java.io.File
  * @property adocFile input AsciiDoc file
  * @property jsonFile output JSON LDD file
  */
+@DisableCachingByDefault(because = "AsciidoctorJ AST parsing — external process, non-cacheable")
 abstract class AsciiDocToJsonLddTask : DefaultTask() {
 
     companion object {
@@ -32,6 +36,7 @@ abstract class AsciiDocToJsonLddTask : DefaultTask() {
     }
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val adocFile: RegularFileProperty
 
     @get:OutputFile

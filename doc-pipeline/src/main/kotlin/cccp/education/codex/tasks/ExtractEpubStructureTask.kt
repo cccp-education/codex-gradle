@@ -8,15 +8,20 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.FileInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
+@DisableCachingByDefault(because = "Apache Tika EPUB extraction — external process, non-cacheable")
 abstract class ExtractEpubStructureTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val epubFile: RegularFileProperty
 
     @get:OutputFile

@@ -19,7 +19,10 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import codex.LicenseZoneDetector
 import codex.Metadata as CodexMetadata
 import java.security.MessageDigest
@@ -37,9 +40,11 @@ data class PipelineResult(
     val output: String
 )
 
+@DisableCachingByDefault(because = "PDF/Tika/ONNX extraction pipeline — external processes, non-cacheable")
 abstract class CodexPipelineTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceFile: RegularFileProperty
 
     @get:Optional

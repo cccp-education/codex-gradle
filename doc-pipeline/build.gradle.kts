@@ -1,3 +1,21 @@
+// ── buildscript resolutionStrategy ────────────────────────────────────────────────
+// Gradle 9.5.1 pinne org.jetbrains:annotations:13.0 (Kotlin embedded) en strictly.
+// Mais koog-agents (26.0.2-1 via utils-jvm), flexmark (24.0.1), coroutines (23.0.0)
+// et d'autres transitives demandent des versions > 13.0 en classpath.
+// Les annotations JetBrains sont @Retention(CLASS) : compatibles binairement.
+// On force la version la plus haute pour satisfaire toutes les contraintes.
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains:annotations:26.0.2-1")
+        }
+    }
+}
+
 plugins {
     `java-library`
     signing
@@ -35,7 +53,11 @@ dependencies {
     implementation(libs.jackson.dataformat.yaml)
 
     // koog Agentic Orchestrator
-    implementation(libs.koog.agents)
+    implementation(libs.koog.agents) {
+        // Exclusion nécessaire : koog annotions 26.0.2-1 vs Kotlin embedded 13.0
+        // Gradle 9.5.1 strict conflict — même pattern que codebase-plugin
+        exclude(group = "org.jetbrains", module = "annotations")
+    }
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
     implementation("education.cccp:codebase-contracts:0.1.0")

@@ -15,7 +15,9 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "pgvector RAG + LLM call — external dependencies, non-cacheable")
 abstract class CodexCompositeContextTask : DefaultTask() {
 
     @get:Input

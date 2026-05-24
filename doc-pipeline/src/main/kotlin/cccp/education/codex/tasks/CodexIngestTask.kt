@@ -15,7 +15,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Vectorizes document chunks with ONNX AllMiniLmL6V2 and stores them in pgvector.
@@ -33,9 +36,12 @@ import org.gradle.api.tasks.TaskAction
  * @property pgPassword PostgreSQL password
  * @property batchSize number of chunks per batch (default: 32)
  */
+@DisableCachingByDefault(because = "ONNX embeddings + pgvector (R2DBC) — external dependencies, non-cacheable")
 abstract class CodexIngestTask : DefaultTask() {
 
-    @get:InputFile abstract val chunksFile: RegularFileProperty
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val chunksFile: RegularFileProperty
     @get:Input abstract val pgHost: Property<String>
     @get:Input abstract val pgPort: Property<String>
     @get:Input abstract val pgDatabase: Property<String>
