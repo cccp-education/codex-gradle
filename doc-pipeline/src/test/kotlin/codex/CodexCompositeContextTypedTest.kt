@@ -1,9 +1,9 @@
 package codex
 
-import education.cccp.contracts.context.ChannelBudget
-import education.cccp.contracts.context.CompositeContext
-import education.cccp.contracts.context.CompositeContextConfig
-import education.cccp.contracts.context.ContextChannel
+import contracts.context.ChannelBudget
+import contracts.context.CompositeContext
+import contracts.context.CompositeContextConfig
+import contracts.context.ContextChannel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue

@@ -1,9 +1,9 @@
 package codex.tasks
 
-import education.cccp.contracts.context.ChannelBudget
-import education.cccp.contracts.context.CompositeContext
-import education.cccp.contracts.context.CompositeContextConfig
-import education.cccp.contracts.context.ContextChannel
+import contracts.context.ChannelBudget
+import contracts.context.CompositeContext
+import contracts.context.CompositeContextConfig
+import contracts.context.ContextChannel
 import codex.Metadata
 import codex.store.CodexVectorStore
 import kotlinx.serialization.encodeToString
