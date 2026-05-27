@@ -44,13 +44,13 @@ importBookSql, convertToMarkdown, chunkDocument, **exportKnowledgeBase**.
 
 |===
 | Fichier | Action | Lignes
-| `doc-pipeline/src/main/kotlin/.../ExportKnowledgeBaseTask.kt` | Créé | 215
-| `doc-pipeline/src/main/kotlin/.../CodexPlugin.kt` | Modifié (+import +register) | 78
+| `codex-plugin/src/main/kotlin/.../ExportKnowledgeBaseTask.kt` | Créé | 215
+| `codex-plugin/src/main/kotlin/.../CodexPlugin.kt` | Modifié (+import +register) | 78
 |===
 
 == Vérification
 
-* `./gradlew :doc-pipeline:compileKotlin` → BUILD SUCCESSFUL (0 warnings)
+* `./gradlew :codex-plugin:compileKotlin` → BUILD SUCCESSFUL (0 warnings)
 * Zéro secret détecté
 * Tests non lancés (règle : pas de test sans permission)
 

@@ -6,7 +6,7 @@
 == Contexte
 
 Code review globale des 8 boroughs. Codex-gradle audité en lecture seule :
-`doc-pipeline/build.gradle.kts`, `CodexPlugin.kt`, tous les `*Task.kt`, `*TaskTest.kt`.
+`codex-plugin/build.gradle.kts`, `CodexPlugin.kt`, tous les `*Task.kt`, `*TaskTest.kt`.
 Aucune modification de code. Codex est le borough le plus mature : CDX-0→12 TERMINÉS,
 11 tâches Gradle, 79/79 tests PASS, 13 classes de test, Kover activé, CI présente.
 

@@ -20,7 +20,7 @@ Implémenter CDX-1b : parser un `.adoc` structuré → JSON LDD via l'AST Asciid
 
 == État
 
-✅ Compile OK — `./gradlew :doc-pipeline:compileKotlin` BUIL SUCCESSFUL.
+✅ Compile OK — `./gradlew :codex-plugin:compileKotlin` BUIL SUCCESSFUL.
 Le JSON LDD produit est la structure hiérarchique de base (title/level/children/paragraphs),
 conformément à la spec CDX-1b (entités/code_blocks/cross_references → CDX-4 enrichJsonLdd).
 

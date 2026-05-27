@@ -12,9 +12,9 @@ des tailles et graisses de police dans le flux PDF (PDFBox `writeString` + `Text
 
 == Livrables
 
-=== 1. Fix split-brain buildSrc/ ↔ doc-pipeline/
+=== 1. Fix split-brain buildSrc/ ↔ codex-plugin/
 
-* `AsciiDocToJsonLddTask` et `ImportBookSqlTask` migrées de `buildSrc/` → `doc-pipeline/`
+* `AsciiDocToJsonLddTask` et `ImportBookSqlTask` migrées de `buildSrc/` → `codex-plugin/`
 * `DocNode` extrait dans `DocNode.kt` (top-level shared)
 * Duplicats `ExtractTextTask` et `ExtractBookStructureTask` supprimés de `buildSrc/`
 * Convention plugin `buildSrc/` nettoyé (plus d'enregistrement direct de tâches)
@@ -60,14 +60,14 @@ des tailles et graisses de police dans le flux PDF (PDFBox `writeString` + `Text
 
 |===
 | Fichier | Action | Lignes
-| `doc-pipeline/src/main/kotlin/.../AsciiDocToJsonLddTask.kt` | Créé (migré) | 128
-| `doc-pipeline/src/main/kotlin/.../ImportBookSqlTask.kt` | Créé (migré) | 268
-| `doc-pipeline/src/main/kotlin/.../DocNode.kt` | Créé | 10
-| `doc-pipeline/src/main/kotlin/.../FontStyle.kt` | Créé | 43
-| `doc-pipeline/src/main/kotlin/.../ExtractBookStructureTask.kt` | Refacto | 287
-| `doc-pipeline/src/main/kotlin/.../CodexPlugin.kt` | Modifié | 45
+| `codex-plugin/src/main/kotlin/.../AsciiDocToJsonLddTask.kt` | Créé (migré) | 128
+| `codex-plugin/src/main/kotlin/.../ImportBookSqlTask.kt` | Créé (migré) | 268
+| `codex-plugin/src/main/kotlin/.../DocNode.kt` | Créé | 10
+| `codex-plugin/src/main/kotlin/.../FontStyle.kt` | Créé | 43
+| `codex-plugin/src/main/kotlin/.../ExtractBookStructureTask.kt` | Refacto | 287
+| `codex-plugin/src/main/kotlin/.../CodexPlugin.kt` | Modifié | 45
 | `buildSrc/src/main/kotlin/codex.gradle-plugin-conventions.gradle.kts` | Nettoyé | 40
-| `doc-pipeline/src/test/.../ExtractBookStructureTaskTest.kt` | Créé | 288
+| `codex-plugin/src/test/.../ExtractBookStructureTaskTest.kt` | Créé | 288
 | `buildSrc/.../ExtractTextTask.kt` | Supprimé | —
 | `buildSrc/.../ExtractBookStructureTask.kt` | Supprimé | —
 | `buildSrc/.../AsciiDocToJsonLddTask.kt` | Supprimé | —
@@ -76,8 +76,8 @@ des tailles et graisses de police dans le flux PDF (PDFBox `writeString` + `Text
 
 == Vérification
 
-* `./gradlew :doc-pipeline:compileKotlin` → BUILD SUCCESSFUL
-* `./gradlew :doc-pipeline:test` → 10/10 PASS
+* `./gradlew :codex-plugin:compileKotlin` → BUILD SUCCESSFUL
+* `./gradlew :codex-plugin:test` → 10/10 PASS
 * Zéro secret détecté
 * Zéro commit effectué
 

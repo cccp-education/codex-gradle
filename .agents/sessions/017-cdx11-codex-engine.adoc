@@ -17,14 +17,14 @@ alimente le vecteur composite du RAG.
 == Livrables
 
 === 1. CodexVectorStore.kt — Contrat d'interface publique
-- `doc-pipeline/src/main/kotlin/dev/cheroliv/codex/store/CodexVectorStore.kt`
+- `codex-plugin/src/main/kotlin/dev/cheroliv/codex/store/CodexVectorStore.kt`
 - Service JVM indépendant de Gradle, réutilisable par engine N3
 - API : `searchBlocking(query, topK)` et `search(query, topK)` suspend
 - Même logique de recherche cosine similarity que `CodexRetrieveTask`
 - ONNX AllMiniLmL6V2 intégré, R2DBC pgvector, zéro dépendance Gradle
 
 === 2. CodexVectorStoreTest.kt — Tests unitaires (5 tests)
-- `doc-pipeline/src/test/kotlin/dev/cheroliv/codex/store/CodexVectorStoreTest.kt`
+- `codex-plugin/src/test/kotlin/dev/cheroliv/codex/store/CodexVectorStoreTest.kt`
 - Instantiation avec paramètres custom, défauts, contrat RetrieveResult intact,
   présence méthodes searchBlocking/search
 
@@ -56,8 +56,8 @@ alimente le vecteur composite du RAG.
 
 |===
 | Fichier | Action
-| `codex-gradle/doc-pipeline/src/main/kotlin/dev/cheroliv/codex/store/CodexVectorStore.kt` | Créé
-| `codex-gradle/doc-pipeline/src/test/kotlin/dev/cheroliv/codex/store/CodexVectorStoreTest.kt` | Créé
+| `codex-gradle/codex-plugin/src/main/kotlin/dev/cheroliv/codex/store/CodexVectorStore.kt` | Créé
+| `codex-gradle/codex-plugin/src/test/kotlin/dev/cheroliv/codex/store/CodexVectorStoreTest.kt` | Créé
 | `engine/build.gradle.kts` | Modifié (+assembleCompositeContext)
 | `engine/engine.sh` | Modifié (+assemble command)
 |===

@@ -27,14 +27,14 @@ Nom choisi pour le recru : *Codex*.
 . Scaffold du projet `foundry/codex-gradle/` (monorepo a builds independants)
 . Convention plugin `codex.gradle-plugin-conventions` (buildSrc, JVM 25)
 . Version catalog: pdfbox 3.0.4, tika 3.1.0, flexmark 0.64.8, asciidoctorj 3.0.0
-. Plugin `cccp.education.codex.doc-pipeline` (version 0.1.0-SNAPSHOT)
+. Plugin `education.cccp.codex.doc-pipeline` 0.1.0-SNAPSHOT (plugin ID conserve, repertoire codex-plugin)
 . Task `extractText` (PDFBox, incrémentale, InputFile/OutputFile)
 . Specification canonique `AUGMENTED_CONTEXT_PIPELINE.adoc` (1806 lignes) — fusion
   de la version initiale + enrichissement section Codex (pattern monorepo documente)
 . Gouvernance agent complete : AGENT.adoc, INDEX, PROMPT_REPRISE, SESSION_PROCEDURE,
   SESSION_CHECKLIST, SESSIONS_HISTORY
 . Mise a jour des references dans `PIPELINE_MENTAL_MAP.adoc`
-. Compilation reussie : `./gradlew :doc-pipeline:compileKotlin` → BUILD SUCCESSFUL
+. Compilation reussie : `./gradlew :codex-plugin:compileKotlin` → BUILD SUCCESSFUL
 
 '''
 == Decisions cles

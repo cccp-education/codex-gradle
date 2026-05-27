@@ -5,7 +5,7 @@
 . [ ] PROMPT_REPRISE injecte par opencode — ne pas lire localement
 . [ ] Lire `AGENT.adoc` — regles absolues
 . [ ] Verifier l'etat git (`git status`) — branche, fichiers modifies
-. [ ] Verifier que le build compile (`./gradlew :doc-pipeline:compileKotlin`)
+. [ ] Verifier que le build compile (`./gradlew :codex-plugin:compileKotlin`)
 
 == Pendant la session
 

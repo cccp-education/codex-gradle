@@ -38,8 +38,8 @@ Les plugin IDs et artefacts Maven conservent `education.cccp`.
 
 == Resultat
 
-- `:doc-pipeline:compileKotlin` ✅ BUILD SUCCESSFUL
-- `:doc-pipeline:test` ✅ BUILD SUCCESSFUL — 75/75 PASS
+- `:codex-plugin:compileKotlin` ✅ BUILD SUCCESSFUL
+- `:codex-plugin:test` ✅ BUILD SUCCESSFUL — 75/75 PASS
 
 == Coverage Report (Kover)
 

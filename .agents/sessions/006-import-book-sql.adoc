@@ -32,12 +32,12 @@ SQL validé : hiérarchie `book → documents (parent_id) → paragraphs (doc_id
 == Problèmes rencontrés
 
 - Bug compteur de doc réinitialisé entre les roots → correction en passant `Pair<Int, Int>` en retour de `traverseForInsert`
-- Split-brain buildSrc/doc-pipeline persistant (non corrigé — hors scope CDX-1c)
+- Split-brain buildSrc/codex-plugin persistant (non corrigé — hors scope CDX-1c)
 
 == Build
 
 ```
-./gradlew :doc-pipeline:compileKotlin → BUILD SUCCESSFUL
+./gradlew :codex-plugin:compileKotlin → BUILD SUCCESSFUL
 ./gradlew buildSrc:compileKotlin → BUILD SUCCESSFUL
 ./gradlew tasks --group codex → 4 tâches affichées
 ```

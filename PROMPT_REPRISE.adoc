@@ -23,5 +23,5 @@ Prochain EPIC disponible
 
 == Pre-requis
 
-- `./gradlew :doc-pipeline:compileKotlin` — verifier build
-- `./gradlew :doc-pipeline:test` — verification regression
+- `./gradlew :codex-plugin:compileKotlin` — verifier build
+- `./gradlew :codex-plugin:test` — verification regression

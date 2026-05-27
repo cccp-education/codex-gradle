@@ -12,7 +12,7 @@ et les stocker dans pgvector via R2DBC (connexion reactive PostgreSQL).
 == Livrables
 
 - `gradle/libs.versions.toml` — versions LangChain4j 1.12.2/beta22, R2DBC 1.0.7, coroutines 1.9.0
-- `doc-pipeline/build.gradle.kts` — dependencies langchain4j, langchain4j-minilm, r2dbc-postgresql, r2dbc-pool, r2dbc-spi, kotlinx-coroutines-core/reactive
+- `codex-plugin/build.gradle.kts` — dependencies langchain4j, langchain4j-minilm, r2dbc-postgresql, r2dbc-pool, r2dbc-spi, kotlinx-coroutines-core/reactive
 - `CodexExtension.kt` — 5 nouvelles proprietes pgvector (host, port, database, user, password)
 - `CodexIngestTask.kt` (188 lignes) — tache Gradle reactive :
   * Schema pgvector : `codex_documents` + `codex_chunks` avec `vector(384)`

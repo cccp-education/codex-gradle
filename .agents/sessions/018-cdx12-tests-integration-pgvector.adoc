@@ -49,7 +49,7 @@ Pas de changement d'API -> engine N3 inchange.
 | `CodexPluginTest.kt` | 10->11 taches
 | `CodexIngestRetrieveIT.kt` | NOUVEAU — 4 tests pgvector reel
 | `gradle/libs.versions.toml` | testcontainers, docker-java, slf4j/logback
-| `doc-pipeline/build.gradle.kts` | Deps testcontainers + docker-java
+| `codex-plugin/build.gradle.kts` | Deps testcontainers + docker-java
 | `.agents/INDEX.adoc` | Roadmap CDX-12
 | `SESSIONS_HISTORY.adoc` | Entree session 018
 | `AGENTS.adoc` (racine) | Brooklyn session 018

@@ -13,13 +13,13 @@ Historique des sessions de developpement du plugin codex-gradle.
 *Objectif* :
 - Creer le projet Gradle codex-gradle dans foundry/
 - Mettre en place la gouvernance agent (.agents/)
-- Scaffolder le plugin doc-pipeline avec extractText
+- Scaffolder le plugin codex-plugin avec extractText
 
 *Livrables* :
 - Structure du projet (monorepo a builds independants)
 - Convention plugin buildSrc (JVM 25, plugin-publish)
 - Version catalog (pdfbox, tika, flexmark, asciidoctorj, jackson)
-- Plugin cccp.education.codex.doc-pipeline 0.1.0-SNAPSHOT
+- Plugin education.cccp.codex.doc-pipeline 0.1.0-SNAPSHOT (plugin ID conserve)
 - Task extractText (PDFBox, incrémentale)
 - Documentation canonique AUGMENTED_CONTEXT_PIPELINE.adoc
 - Gouvernance agent complete (6 fichiers .adoc)
@@ -167,7 +167,7 @@ Historique des sessions de developpement du plugin codex-gradle.
 - Parser JSON maison sans kotlinx-serialization : DocNode simple suffisant pour le format LDD actuel
 - Pas d'execution JDBC directe — fichier SQL autonome executable via `psql -f`
 - Bug compteur de doc resolu (retour Pair<Int, Int> dans traverseForInsert)
-- Split-brain buildSrc/doc-pipeline documente mais non corrige (hors scope CDX-1c)
+- Split-brain buildSrc/codex-plugin documente mais non corrige (hors scope CDX-1c)
 
 '''
 == Session 007 — CDX-2 : détection typographique → hiérarchie multi-niveaux + blocs de code
@@ -180,14 +180,14 @@ Historique des sessions de developpement du plugin codex-gradle.
 *Objectif* :
 - Détection de la hiérarchie des titres via analyse des tailles et graisses de police PDF
 - Détection de blocs de code via fonte monospace
-- Résoudre le split-brain buildSrc/ ↔ doc-pipeline/
+- Résoudre le split-brain buildSrc/ ↔ codex-plugin/
 
 *Livrables* :
 - `FontStyleDetector` + `FontStyle` enum (NORMAL, BOLD, ITALIC, BOLD_ITALIC, MONOSPACE)
 - Hiérarchie h1/h2/h3 basée sur max-font-size ratios (95%/75%/50%) + bold bonus
 - Blocs de code : 2+ lignes monospace → [source,text] + ----, 1 ligne → backticks
 - `writeString` remplace `processTextPosition` → texte reconstruit proprement
-- Split-brain résolu : 4 tasks migrées de buildSrc/ vers doc-pipeline/
+- Split-brain résolu : 4 tasks migrées de buildSrc/ vers codex-plugin/
 - 4 tâches codex enregistrées dans CodexPlugin
 - `ExtractBookStructureTaskTest.kt` (288 lignes, 10 tests) : 10/10 PASS
 
@@ -349,7 +349,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
   vector(384), groupement par sourceDocument, computeEmbedding via AllMiniLmL6V2EmbeddingModel
 - `CodexExtension.kt` etendu : 5 proprietes pgvector (host, port, database, user, password)
 - `gradle/libs.versions.toml` : LangChain4j, R2DBC, coroutines
-- `doc-pipeline/build.gradle.kts` : dependances ONNX + R2DBC
+- `codex-plugin/build.gradle.kts` : dependances ONNX + R2DBC
 - `CodexPlugin.kt` : registration codexIngest + conventions par defaut
 - `CodexPluginTest.kt` : 7→8 taches, 62/62 PASS
 
@@ -409,17 +409,17 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 
 *Objectif* :
 - Créer le workflow GitHub Actions .github/workflows/test.yml pour CI/CD de codex-gradle
-- `./gradlew check` sur `:doc-pipeline`, JDK 24, avec `publishToMavenLocal` préalable
+- `./gradlew check` sur `:codex-plugin`, JDK 24, avec `publishToMavenLocal` préalable
 
 *Livrables* :
 - `.github/workflows/test.yml` : trigger push/PR main/master, JDK 24 Temurin, ubuntu-latest, 15min
 - `./gradlew publishToMavenLocal` (préalable — plugin requis par le build)
-- `./gradlew :doc-pipeline:check` (compile + test + Kover coverage)
+- `./gradlew :codex-plugin:check` (compile + test + Kover coverage)
 - Build compile OK
 
 *Decisions cles* :
 - `publishToMavenLocal` obligatoire car le convention plugin buildSrc/ est dépendance du build
-- `:doc-pipeline:check` suffisant pour CI (compile + test + Kover coverage)
+- `:codex-plugin:check` suffisant pour CI (compile + test + Kover coverage)
 - Pattern standard repris de graphify-gradle, engine, quizz-benchmark
 
 '''
@@ -433,7 +433,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 *Objectif* :
 - Implémenter l'extraction EPUB dans le pipeline codex-gradle
 - Réutiliser Tika pour parser l'EPUB et mapper XHTML → AsciiDoc structuré
-- Intégrer dans doc-pipeline sans module séparé (Tika déjà présent)
+- Intégrer dans codex-plugin sans module séparé (Tika déjà présent)
 
 *Livrables* :
 - `ExtractEpubStructureTask.kt` (202 lignes) : Tika AutoDetectParser + DOM XHTML parsing,
@@ -454,7 +454,7 @@ PDF/EPUB → extractBookStructure/extractEpubStructure (.adoc) → asciiDocToJso
 Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅ | CDX-5 ✅ | CDX-6 ✅ | CDX-7 ✅ | CDX-8 ✅ | CDX-9 ✅ | CDX-10 ✅
 
 *Decisions cles* :
-- Pas de module codex-epub/ séparé — intégration directe dans doc-pipeline
+- Pas de module codex-epub/ séparé — intégration directe dans codex-plugin
 - DOM parsing XHTML (pas regex) — robuste aux namespaces, imbrications, CDATA
 - buildInlineContent() préserve le contexte textuel autour des <code> inline
 - EPUB synthétique valide en test (mimetype première entrée ZIP, META-INF, OEBPS)
@@ -512,7 +512,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `CodexPlugin.kt` : registration codexPipeline (11e tache) + batchSize convention
 - `CodexPluginTest.kt` : 10→11 taches, 75 PASS maintenu
 - `gradle/libs.versions.toml` : testcontainers 1.21.4, docker-java 3.7.0, slf4j/logback
-- `doc-pipeline/build.gradle.kts` : testcontainers bom + docker-java runtimeOnly
+- `codex-plugin/build.gradle.kts` : testcontainers bom + docker-java runtimeOnly
 - `.agents/INDEX.adoc`, `PROMPT_REPRISE.adoc` mis a jour
 
 *Correction de bug* :
@@ -561,7 +561,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 *Livrables* :
 - 13 fichiers sources déplacés (package cccp.education.codex)
 - GroupId Gradle : com.cheroliv → education.cccp
-- Plugin ID : com.cheroliv.codex.doc-pipeline → codex.doc-pipeline
+- Plugin ID : com.cheroliv.codex.doc-pipeline → codex.doc-pipeline (conserve)
 - Version catalog : +codebase plugin, readme plugin ID rename
 - 12 classes de test maintenues, CodexPluginTest.kt supprimé (migration non recréé)
 - INDEX.adoc, PROMPT_REPRISE.adoc, SESSIONS_HISTORY.adoc mis à jour
@@ -583,9 +583,9 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - 5 bugs compilation fixes (variables/references manquantes dans du code stub apres migration EPIC K)
 - Packages nettoyés (30 fichiers .kt : 18 main + 12 test)
 - Tests fixes (LicenseZoneDetectorTest, CodexIngestRetrieveIT, ExtractEpubStructureTaskTest)
-- `./gradlew :doc-pipeline:compileKotlin` ✅ BUILD SUCCESSFUL
-- `./gradlew :doc-pipeline:test` ✅ 75/75 PASS
-- `./gradlew :doc-pipeline:koverHtmlReport` ✅ — 77.5% line, 60.8% branch
+- `./gradlew :codex-plugin:compileKotlin` ✅ BUILD SUCCESSFUL
+- `./gradlew :codex-plugin:test` ✅ 75/75 PASS
+- `./gradlew :codex-plugin:koverHtmlReport` ✅ — 77.5% line, 60.8% branch
 - Session archive 023-fix-compilation-packages.adoc
 - PROMPT_REPRISE.adoc mis a jour pour session 024 (CDX-14 couverture A+B)
 
@@ -689,3 +689,23 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Option A : Upgrade Kover 1.x (risque breaking change)
 - Option B : Accepter la limitation (102/105 tests PASS)
 - Option C : Tests d'intégration via `gradle-runner` au lieu de ProjectBuilder
+
+'''
+== Session 027 — Renommage doc-pipeline → codex-plugin + Pattern Borough
+
+*Date* : 2026-05-27
+*Type* : refactor
+*Modele* : deepseek-v4-pro (via opencode orchestreur)
+*Score* : 10/10
+
+*Objectif* :
+- Aligner le nom du module sur le pattern standard des boroughs foundry (codex-plugin)
+- Renommer toutes les references (code, CI, docs, catalogues consommateurs)
+
+*Livrables* :
+- Renommage repertoire `doc-pipeline/` → `codex-plugin/`
+- MAJ settings.gradle.kts (include), libs.versions.toml (alias), CI (test.yml)
+- MAJ massive ~35 fichiers .adoc (sessions, AGENT, PROMPT_REPRISE, SESSION_CHECKLIST)
+- MAJ catalogue codebase-gradle consommateur (2 TOML + build.gradle.kts)
+- Plugin ID public `codex.doc-pipeline` conserve
+- Compilation OK (verifiee)

@@ -9,7 +9,7 @@
 - Implémenter l'extraction EPUB dans le pipeline codex-gradle
 - Réutiliser Tika (déjà en dépendance) pour parser l'EPUB et extraire le XHTML
 - Produire un `.adoc` structuré à partir des balises `<h1>`-`<h6>`, `<pre>`, `<code>`
-- Intégrer dans `doc-pipeline` sans module séparé (Tika déjà présent)
+- Intégrer dans `codex-plugin` sans module séparé (Tika déjà présent)
 
 *Livrables* :
 - `ExtractEpubStructureTask.kt` (202 lignes) : tâche Gradle abstraite
@@ -40,7 +40,7 @@ PDF/EPUB → extractBookStructure/extractEpubStructure (.adoc) → asciiDocToJso
                                                                        → codexRetrieve (cosine similarity)
 
 *Decisions cles* :
-- Pas de module `codex-epub/` séparé — Tika est déjà dans les dépendances, intégration directe dans `doc-pipeline`
+- Pas de module `codex-epub/` séparé — Tika est déjà dans les dépendances, intégration directe dans `codex-plugin`
 - Approche DOM (pas regex) pour le parsing XHTML — robuste aux namespaces, imbrications, CDATA
 - `buildInlineContent()` pour préserver le contexte textuel autour des `<code>` inline
 - EPUB synthétique valide en test (mimetype en première entrée ZIP, META-INF/container.xml, OEBPS/opf + spine)

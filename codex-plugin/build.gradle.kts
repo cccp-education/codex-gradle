@@ -28,7 +28,7 @@ plugins {
 }
 
 group = "education.cccp"
-version = libs.versions.doc.pipeline.get()
+version = libs.versions.codex.plugin.get()
 
 repositories {
     mavenLocal()

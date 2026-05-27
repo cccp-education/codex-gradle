@@ -43,22 +43,22 @@ METHOD: 75.5% (108/143)   — +1%
 
 == Fichiers créés (7 fichiers)
 
-- `doc-pipeline/src/test/kotlin/codex/CodexPluginTest.kt`
-- `doc-pipeline/src/test/kotlin/codex/CodexExtensionTest.kt`
-- `doc-pipeline/src/test/kotlin/codex/MetadataTest.kt`
-- `doc-pipeline/src/test/kotlin/codex/bdd/PipelineSteps.kt`
-- `doc-pipeline/src/test/resources/features/extract-chunk-pipeline.feature`
-- `doc-pipeline/src/test/resources/features/chunk-ingest-pipeline.feature`
-- `doc-pipeline/src/test/resources/features/ingest-retrieve-pipeline.feature`
-- `doc-pipeline/src/test/resources/features/pipeline-auto-detect.feature`
-- `doc-pipeline/src/test/resources/features/license-zone-detection.feature`
-- `doc-pipeline/src/test/resources/junit-platform.properties`
-- `doc-pipeline/src/test/resources/logback-test.xml`
+- `codex-plugin/src/test/kotlin/codex/CodexPluginTest.kt`
+- `codex-plugin/src/test/kotlin/codex/CodexExtensionTest.kt`
+- `codex-plugin/src/test/kotlin/codex/MetadataTest.kt`
+- `codex-plugin/src/test/kotlin/codex/bdd/PipelineSteps.kt`
+- `codex-plugin/src/test/resources/features/extract-chunk-pipeline.feature`
+- `codex-plugin/src/test/resources/features/chunk-ingest-pipeline.feature`
+- `codex-plugin/src/test/resources/features/ingest-retrieve-pipeline.feature`
+- `codex-plugin/src/test/resources/features/pipeline-auto-detect.feature`
+- `codex-plugin/src/test/resources/features/license-zone-detection.feature`
+- `codex-plugin/src/test/resources/junit-platform.properties`
+- `codex-plugin/src/test/resources/logback-test.xml`
 
 == Fichiers modifiés (4 fichiers)
 
-- `doc-pipeline/src/test/kotlin/codex/store/CodexVectorStoreTest.kt` (63→138 lignes, +5 tests)
-- `doc-pipeline/build.gradle.kts` (dépendances Cucumber)
+- `codex-plugin/src/test/kotlin/codex/store/CodexVectorStoreTest.kt` (63→138 lignes, +5 tests)
+- `codex-plugin/build.gradle.kts` (dépendances Cucumber)
 - `gradle/libs.versions.toml` (version cucumber + librairies)
 - `.agents/TEST_COVERAGE_ANALYSIS.adoc` (mise à jour session 024)
 

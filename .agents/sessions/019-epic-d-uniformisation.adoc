@@ -24,5 +24,5 @@
 
 == Build
 
-- :doc-pipeline:compileKotlin ✅
-- :doc-pipeline:compileTestKotlin ✅
+- :codex-plugin:compileKotlin ✅
+- :codex-plugin:compileTestKotlin ✅

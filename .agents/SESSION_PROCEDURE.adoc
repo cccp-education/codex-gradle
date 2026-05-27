@@ -20,7 +20,7 @@ git status
 grep -r "TOKEN\|SECRET\|PASSWORD\|API_KEY" foundry/codex-gradle/ --include="*.kts" --include="*.properties"
 
 # Verifier que le build compile
-./gradlew :doc-pipeline:compileKotlin
+./gradlew :codex-plugin:compileKotlin
 ----
 
 == Rappels

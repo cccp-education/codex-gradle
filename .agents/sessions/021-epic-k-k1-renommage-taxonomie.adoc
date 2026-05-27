@@ -35,7 +35,7 @@ Appliquer la taxonomie unifiée (EPIC K, K-1) sur codex-gradle :
 - Package sources : `dev.cheroliv.codex.*` → `cccp.education.codex.*` (package racine nu `codex.*` via fichier)
 - Package tests : idem
 - GroupId Gradle : `com.cheroliv` → `education.cccp`
-- Plugin ID : `com.cheroliv.codex.doc-pipeline` → `codex.doc-pipeline`
+- Plugin ID : `com.cheroliv.codex.doc-pipeline` → `codex.doc-pipeline` (conserve)
 - Version catalog : ajout `codebase` plugin + rename `readme` plugin ID
 - 13 fichiers sources déplacés (suppression + création), ~4655 lignes delta
 - Build compile OK (hors readme plugin `education.cccp.readme:0.0.0` non publié — problème préexistant)
@@ -59,7 +59,7 @@ Appliquer la taxonomie unifiée (EPIC K, K-1) sur codex-gradle :
 *build* :
 - `build.gradle.kts` — whitespace (inchangé fonctionnellement)
 - `buildSrc/.../codex.gradle-plugin-conventions.gradle.kts` — groupId `education.cccp`
-- `doc-pipeline/build.gradle.kts` — groupId, plugin ID, developer info, +codebase plugin
+- `codex-plugin/build.gradle.kts` — groupId, plugin ID, developer info, +codebase plugin
 - `gradle/libs.versions.toml` — +codebase version, readme plugin ID rename
 
 == Prochaine session

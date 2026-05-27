@@ -38,16 +38,16 @@ Accessible par les builds consommateurs du plugin.
 
 |===
 | Fichier | Action | Lignes
-| `doc-pipeline/src/main/kotlin/.../LicenseZoneDetector.kt` | Créé | 20
-| `doc-pipeline/src/main/kotlin/.../CodexExtension.kt` | Créé | 7
-| `doc-pipeline/src/main/kotlin/.../CodexPlugin.kt` | Modifié | 82
-| `doc-pipeline/src/main/kotlin/.../ChunkDocumentTask.kt` | Modifié | 228
+| `codex-plugin/src/main/kotlin/.../LicenseZoneDetector.kt` | Créé | 20
+| `codex-plugin/src/main/kotlin/.../CodexExtension.kt` | Créé | 7
+| `codex-plugin/src/main/kotlin/.../CodexPlugin.kt` | Modifié | 82
+| `codex-plugin/src/main/kotlin/.../ChunkDocumentTask.kt` | Modifié | 228
 |===
 
 == Vérification
 
-* `./gradlew :doc-pipeline:compileKotlin` → BUILD SUCCESSFUL (0 warnings)
-* `./gradlew :doc-pipeline:compileTestKotlin` → BUILD SUCCESSFUL
+* `./gradlew :codex-plugin:compileKotlin` → BUILD SUCCESSFUL (0 warnings)
+* `./gradlew :codex-plugin:compileTestKotlin` → BUILD SUCCESSFUL
 * Zéro secret détecté
 
 == Pipeline codex — État consolidé

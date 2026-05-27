@@ -1,0 +1,34 @@
+= Session 027 — Renommage doc-pipeline → codex-plugin + Mise en conformité Pattern Borough
+:session: 027
+:date: 2026-05-27
+:status: TERMINE
+
+== Contexte
+
+Le module de plugin codex-gradle s'appelait `doc-pipeline/` au lieu de `codex-plugin/`,
+contrairement au pattern standard de tous les autres boroughs
+(codebase-plugin/, planner-plugin/, graphify-plugin/, training-plugin/...).
+
+== Actions
+
+1. ✅ Renommage `doc-pipeline/` → `codex-plugin/` (mv)
+2. ✅ MAJ `settings.gradle.kts` : `include("codex-plugin")`
+3. ✅ MAJ `gradle/libs.versions.toml` : alias `codex-plugin`
+4. ✅ MAJ `.github/workflows/test.yml` : `:codex-plugin:check`
+5. ✅ MAJ `codex-plugin/build.gradle.kts` : `libs.versions.codex.plugin.get()`
+6. ✅ MAJ massive docs (~35 fichiers .adoc) : tous les `:doc-pipeline:` → `:codex-plugin:`
+7. ✅ Plugin ID `codex.doc-pipeline` conservé (identité publique Gradle Portal)
+
+== Fichiers modifies
+
+- `settings.gradle.kts`
+- `gradle/libs.versions.toml`
+- `.github/workflows/test.yml`
+- `codex-plugin/build.gradle.kts` (ex-doc-pipeline)
+- Tous les `.adoc` dans `.agents/` (AGENT, PROMPT_REPRISE, SESSION_CHECKLIST, ~30 sessions)
+- `AGENT.adoc` (racine)
+
+== Justification
+
+Alignement sur le pattern standard des boroughs foundry/public/.
+Le repertoire physique reflete desormais le nom du borough : codex-plugin dans codex-gradle.

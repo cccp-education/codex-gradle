@@ -22,19 +22,19 @@ Améliorations du pipeline de documentation dans codex-gradle pour mieux gérer 
 
 == Fichiers modifiés
 
-- doc-pipeline/build.gradle.kts
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/AsciiDocToJsonLddTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ChunkDocumentTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/CodexCompositeContextTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/CodexIngestTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/CodexPipelineTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/CodexRetrieveTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ConvertToMarkdownTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ExportKnowledgeBaseTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ExtractBookStructureTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ExtractEpubStructureTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ExtractTextTask.kt
-- doc-pipeline/src/main/kotlin/cccp/education/codex/tasks/ImportBookSqlTask.kt
+- codex-plugin/build.gradle.kts
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/AsciiDocToJsonLddTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ChunkDocumentTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexCompositeContextTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexIngestTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexPipelineTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexRetrieveTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ConvertToMarkdownTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExportKnowledgeBaseTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractBookStructureTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractEpubStructureTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractTextTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ImportBookSqlTask.kt
 
 == Justification
 

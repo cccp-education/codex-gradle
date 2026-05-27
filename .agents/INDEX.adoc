@@ -5,10 +5,10 @@ _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents (Regle 4bis)
 
-_Derniere mise a jour_ : 2026-05-22 (Session 026)
-_Session terminee_ : 026 ✅ — Investigation Kover offline instrumentation (limitation documentee)
-_Session precedente_ : 025 ✅ — KDoc API documentation (18 classes)
-_Session en cours_ : 027 — Disponible
+_Derniere mise a jour_ : 2026-05-27 (Session 027)
+_Session terminee_ : 027 ✅ — Renommage doc-pipeline → codex-plugin + Mise en conformite Pattern Borough
+_Session precedente_ : 026 ✅ — Investigation Kover offline instrumentation (limitation documentee)
+_Session en cours_ : 028 — Disponible
 
 '''
 == REGLES ABSOLUES (resume)

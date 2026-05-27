@@ -38,7 +38,7 @@ une feature de Kover 1.x. Les solutions possibles :
 
 == Fichiers modifiés
 
-- `doc-pipeline/build.gradle.kts` : commentaire documentant la limitation
+- `codex-plugin/build.gradle.kts` : commentaire documentant la limitation
 
 == Résultat du build
 

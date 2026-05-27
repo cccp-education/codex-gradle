@@ -31,13 +31,13 @@ Conversion ligne à ligne avec préservation :
 
 |===
 | Fichier | Action | Lignes
-| `doc-pipeline/src/main/kotlin/.../ConvertToMarkdownTask.kt` | Créé | 173
-| `doc-pipeline/src/main/kotlin/.../CodexPlugin.kt` | Modifié (+import +register) | 60
+| `codex-plugin/src/main/kotlin/.../ConvertToMarkdownTask.kt` | Créé | 173
+| `codex-plugin/src/main/kotlin/.../CodexPlugin.kt` | Modifié (+import +register) | 60
 |===
 
 == Vérification
 
-* `./gradlew :doc-pipeline:compileKotlin` → BUILD SUCCESSFUL
+* `./gradlew :codex-plugin:compileKotlin` → BUILD SUCCESSFUL
 * Zéro secret détecté
 * Zéro commit effectué
 * Tests non lancés (règle : pas de test sans permission)

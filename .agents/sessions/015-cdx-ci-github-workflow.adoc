@@ -7,21 +7,21 @@
 
 *Objectif* :
 - Créer le workflow GitHub Actions .github/workflows/test.yml pour CI/CD de codex-gradle
-- `./gradlew check` sur le sous-projet `:doc-pipeline`
+- `./gradlew check` sur le sous-projet `:codex-plugin`
 - JDK 24, avec `publishToMavenLocal` préalable (le plugin est requis par le build)
 
 *Livrables* :
 - `.github/workflows/test.yml` : workflow CI standard
   - JDK 24 Temurin, ubuntu-latest, timeout 15min
   - `./gradlew publishToMavenLocal` (étape préalable obligatoire)
-  - `./gradlew :doc-pipeline:check` (compile + test + Kover coverage)
+  - `./gradlew :codex-plugin:check` (compile + test + Kover coverage)
 - Build compile OK, 0 warnings
 
 *Décisions clés* :
-- `publishToMavenLocal` requis car le build `doc-pipeline/build.gradle.kts` reference
+- `publishToMavenLocal` requis car le build `codex-plugin/build.gradle.kts` reference
   le convention plugin `codex.gradle-plugin-conventions` depuis buildSrc/
   (et potentiellement d'autres sous-projets futurs)
-- `:doc-pipeline:check` plutôt que `build` : suffisant pour valider compile + tests + Kover
+- `:codex-plugin:check` plutôt que `build` : suffisant pour valider compile + tests + Kover
 - Pattern standard repris de graphify-gradle, engine, quizz-benchmark
 
 *Prochaine session* :
