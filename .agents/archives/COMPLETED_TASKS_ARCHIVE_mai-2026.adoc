@@ -223,3 +223,17 @@ B) 5 features Cucumber (7 scénarios) : extract→chunk, chunk→ingest, ingest�
 C) Kover : 77.5% line, 60.8% branch — stable (ProjectBuilder non instrumentable)
 *Fichiers* : 10 créés + 4 modifiés
 *Build* : ✅ `./gradlew :codex-plugin:test` BUILD SUCCESSFUL. 105/105 PASS.
+
+'''
+== OCR-0 — Contrats partages OcrRequest/OcrResult/OcrConfig (2026-05-30)
+
+*Session* : 027
+*Type* : implementation
+*Detail* : Creation des 3 data classes de contrat OCR dans package codex.ocr :
+- OcrRequest : ByteArray imageData + format + language + prompt, equals/hashCode sur ByteArray
+- OcrResult : structuredText AsciiDoc + confidence + language + metadata Map
+- OcrConfig : provider/model/maxTokens/temperature
+Pattern Metadata.kt suivi : ObjectMapper Jackson + companion fromFile/writeTo + factory.
+*Build* : ✅ `./gradlew :codex-plugin:compileKotlin` BUILD SUCCESSFUL
+*Tests* : ❌ Aucun test ecrit (TDD non respecte) — session 028
+*Dette* : 3 tests preexistants en echec non investigues, publishToMavenLocal non execute (Regle 2)

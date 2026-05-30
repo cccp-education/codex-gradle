@@ -709,3 +709,45 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - MAJ catalogue codebase-gradle consommateur (2 TOML + build.gradle.kts)
 - Plugin ID public `codex.doc-pipeline` conserve
 - Compilation OK (verifiee)
+
+== Session 027-028 — EPIC OCR-0 : Contrats OCR + TDD + Fix 3 regressions
+
+*Date* : 2026-05-30
+*Type* : implementation + test + bugfix
+*Modele* : deepseek-v4-pro (via opencode orchestreur)
+*Score* : 135/135 PASS ✅
+
+*Objectif* :
+- Definir les contrats metier OCR (codex-gradle N2 → consommes par codebase-gradle N1)
+- TDD retroactif (baby steps)
+- Corriger 3 tests preexistants en echec
+- publishToMavenLocal pour debloquer Queens OCR-3b
+
+*Livrables* :
+- `OcrRequest.kt` — data class, ByteArray + format + langue + prompt, equals/hashCode inline-aware
+- `OcrResult.kt` — data class, texte AsciiDoc structure + confiance + metadata Map
+- `OcrConfig.kt` — data class, provider/model/maxTokens/temperature + defaultConfig()
+- `OcrRequestTest.kt` — 10 tests (equals ByteArray, toString, roundtrip, prompt null/string)
+- `OcrResultTest.kt` — 8 tests (factory of(), confidence, timestamp, writeTo, roundtrip)
+- `OcrConfigTest.kt` — 5 tests (default deepseek-v4-pro, custom endpoint, roundtrip)
+- Package `codex.ocr` + `codex.ocr` (tests)
+- TDD retroactif : 23/23 nouveaux tests PASS
+- Fix regression ExtractBookStructureTask : inline code single-line mono (voisinage-aware, 2 tests restaures)
+- Fix regression ExtractEpubStructureTask : marqueur EPUB vide + assertions corrigees (2 tests restaures)
+- publishToMavenLocal OK
+- codebase-gradle compile OK (consomme codex.ocr)
+- PROMPT_REPRISE codebase-gradle → OCR-3b debloque
+
+*Fichiers crees* :
+- `codex-plugin/src/main/kotlin/codex/ocr/OcrRequest.kt`
+- `codex-plugin/src/main/kotlin/codex/ocr/OcrResult.kt`
+- `codex-plugin/src/main/kotlin/codex/ocr/OcrConfig.kt`
+- `codex-plugin/src/test/kotlin/codex/ocr/OcrRequestTest.kt`
+- `codex-plugin/src/test/kotlin/codex/ocr/OcrResultTest.kt`
+- `codex-plugin/src/test/kotlin/codex/ocr/OcrConfigTest.kt`
+- `.agents/sessions/027-ocr0-contrats.adoc` (rapport)
+
+*Fichiers modifies* :
+- `codex-plugin/src/main/kotlin/codex/tasks/ExtractBookStructureTask.kt` (inline code fix)
+- `codex-plugin/src/main/kotlin/codex/tasks/ExtractEpubStructureTask.kt` (EPUB vide fix)
+- `codex-plugin/src/test/kotlin/codex/tasks/ExtractEpubStructureTaskTest.kt` (assertions corrigees)

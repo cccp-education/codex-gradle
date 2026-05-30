@@ -43,7 +43,8 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
 
     private fun buildAsciiDoc(epubFile: java.io.File): String {
         val xhtmlContent = extractXhtml(epubFile)
-        return convertXhtmlToAsciiDoc(xhtmlContent)
+        val result = convertXhtmlToAsciiDoc(xhtmlContent)
+        return result.ifBlank { "EPUB vide" }
     }
 
     private fun extractXhtml(file: java.io.File): String {

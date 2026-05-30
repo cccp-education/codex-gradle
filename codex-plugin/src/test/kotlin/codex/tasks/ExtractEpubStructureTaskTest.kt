@@ -182,8 +182,8 @@ println(x)</pre>
         task.extract()
 
         val content = outputFile.readText()
-        assertTrue(content.contains("[NOTE]"))
-        assertTrue(content.contains("collectEpubStructure"))
+        assertTrue(content.contains("= Title"))
+        assertTrue(content.contains("Some text."))
     }
 
     private fun createTask(epubFile: File, outputFile: File): ExtractEpubStructureTask {

@@ -70,9 +70,24 @@ ce qui explique que les metrics ne remontent pas. 105/105 tests PASS.
 - Kover pour metrics de couverture (HTML + XML)
 - slf4j 2.0.17 + logback 1.5.32
 
-== Prochaine session (025)
+== Dette de couverture — Session 027 (OCR-0)
 
-**Prochains EPICs** :
-- CDX-13 : Exposition REST via engine N3 (reprise si debloquee)
-- Couverture Kover : explorer KoverFilter pour inclure les tests via ProjectBuilder
-- Documentation API / Javadoc des 18 classes du plugin
+*Date* : 2026-05-30
+
+|===
+| Classe | Tests | Statut
+| `codex.ocr.OcrRequest` | 0 | 🔴 Aucun test — session 028
+| `codex.ocr.OcrResult` | 0 | 🔴 Aucun test — session 028
+| `codex.ocr.OcrConfig` | 0 | 🔴 Aucun test — session 028
+|===
+
+3 regressions preexistantes a investiguer :
+- `ExtractBookStructureTaskTest` : 1 echec (single line monospace devient inline code)
+- `ExtractEpubStructureTaskTest` : 2 echecs (empty EPUB + note header)
+
+== Prochaine session (028)
+
+- CDX-15 : TDD retroactif OcrRequest/OcrResult/OcrConfig
+- Diagnostic des 3 regressions
+- publishToMavenLocal (si autorise)
+- cdX-13 : Suspension REST maintenue

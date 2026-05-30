@@ -1,27 +1,37 @@
-= PROMPT_REPRISE — Session 027 (a venir)
-:session: 027
-:date: 2026-05-22
+= PROMPT_REPRISE — Session 028 : CDX-15 Couverture tests OCR + Fix 3 regressions
+:session: 028
+:date: 2026-05-30
 :status: PRET
-:max-lines: 70
+:max-lines: 40
 
-== Mission
+== Quick Start
 
-Prochain EPIC disponible
+```
+cd /home/cheroliv/workspace/foundry/public/codex-gradle
+./gradlew :codex-plugin:compileKotlin   # compile OK
+./gradlew :codex-plugin:test            # 3 echecs preexistants a investiguer
+```
 
-== Contexte fin de session 026
+== Contexte
 
-- Investigation Kover offline instrumentation : pas possible en Kover 0.9.1
-- Limitation documentee : ProjectBuilder + classloader separe non instrumentable
-- 102/105 tests PASS, BUILD SUCCESSFUL
-- Kover : 77.5% line (stable)
+Session 027 a produit 3 data classes OCR (OcrRequest/OcrResult/OcrConfig)
+dans `codex.ocr` — sans tests. Compile OK.
 
-== Prochaines priorites
+== Fichiers a traiter
 
-- Nouvel EPIC a definir (CDX-13 suspendu, doc faite, tests couverts)
-- Option : upgrade Kover 1.x (risque breaking change)
-- Option : nouveau EPIC cross-borough
+- `codex-plugin/src/test/kotlin/codex/ocr/` — creer les 3 classes de test
+- `codex-plugin/src/test/kotlin/codex/tasks/ExtractBookStructureTaskTest.kt` — investiguer echec
+- `codex-plugin/src/test/kotlin/codex/tasks/ExtractEpubStructureTaskTest.kt` — investiguer 2 echecs
 
-== Pre-requis
+== Objectif
 
-- `./gradlew :codex-plugin:compileKotlin` — verifier build
-- `./gradlew :codex-plugin:test` — verification regression
+- TDD retroactif : tests unitaires OcrRequest/OcrResult/OcrConfig
+- Diagnostiquer les 3 echecs preexistants
+- Atteindre 108/108 PASS (ou moins, selon diagnostic)
+- Demander permission publishToMavenLocal en fin de session
+
+== References
+
+- `codex/Metadata.kt` — pattern a suivre pour les tests (writeTo/fromFile)
+- `codex/MetadataTest.kt` — pattern de test existant
+- `.agents/sessions/027-ocr0-contrats.adoc` — rapport session precedente

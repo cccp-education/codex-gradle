@@ -161,6 +161,13 @@ abstract class ExtractBookStructureTask : DefaultTask() {
             val isHeading = !allMonospace && group.lines.size <= 3
 
             if (allMonospace && first.fontSize <= 14f) {
+                val prevIsMono = idx > 0 && groups[idx - 1].lines.all { it.fontStyle == FontStyle.MONOSPACE }
+                val nextIsMono = idx < groups.size - 1 && groups[idx + 1].lines.all { it.fontStyle == FontStyle.MONOSPACE }
+                if (group.lines.size == 1 && !prevIsMono && !nextIsMono) {
+                    flushCodeBlock()
+                    sb.append("`${group.lines.first().text.trimEnd()}`")
+                    continue
+                }
                 if (!inCodeBlock) {
                     flushCodeBlock()
                     sb.appendLine("[source,text]")
