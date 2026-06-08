@@ -1,0 +1,49 @@
+= Backlog — Brooklyn (codex-gradle)
+:description: Backlog de publication Maven Central — EPIC PUB
+:date: 2026-06-08
+:toc: left
+:sectnums:
+
+_Source : configuration/EPIC_PUB.adoc (Session 096)_
+
+'''
+== EPIC PUB — Publication Maven Central
+
+Plugin N2 de pipeline documentaire (Asciidoctor → PDF). VAGUE 4 (plugins metier).
+
+=== PUB-3.09 — codex-plugin
+**Priorite** : P0
+**Estimation** : 1 pt
+**Dependances** : PUB-0 et PUB-1 complets (DNS TXT + GPG)
+
+. `cd foundry/public/codex-gradle && ./gradlew publish closeAndRelease`
+. Artefact : `education.cccp:codex-plugin`
+. Verifier sur https://central.sonatype.com/artifact/education.cccp/codex-plugin
+
+=== PUB-2.2 — Mise a jour commentaire relocation dans build.gradle.kts
+**Priorite** : P1
+**Estimation** : 1 pt
+**Dependances** : Aucune
+
+Dans le `build.gradle.kts` de codex-plugin, remplacer le commentaire :
+
+```kotlin
+// RELOCATION : prepare la migration du groupId education.cccp →
+// <futur-domaine>. Activer avec -Prem relocationGroup="io.github.cccp-education"
+```
+
+Par :
+
+```kotlin
+// RELOCATION : garde comme echappatoire future.
+// Activable avec -Prem relocationGroup="<futur-namespace>"
+```
+
+'''
+== EPIC PUB-5 — Verification
+
+=== PUB-5.1 — Verifier Maven Central
+
+| Artefact | URL |
+|---|---|
+| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin |
