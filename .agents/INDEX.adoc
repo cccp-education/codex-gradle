@@ -3,9 +3,10 @@
 
 _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
-_DAG_ : N2 — Plugin Gradle d'acquisition de documents (Regle 4bis)
+_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
+_Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-05-30 (Session 027-028)
+_Derniere mise a jour_ : 2026-06-08 (Architecture boundary review Codex↔Document)
 _Session terminee_ : 027-028 ✅ — OCR-0 contrats + TDD 23 tests + 3 regressions corrigees (135/135 PASS, publishToMavenLocal OK)
 _Session precedente_ : 026 ✅ — Investigation Kover offline instrumentation (limitation documentee)
 _Session en cours_ : 027-028 ✅ — CLOTUREE — Queens OCR-3b debloque
@@ -19,6 +20,7 @@ _Session en cours_ : 027-028 ✅ — CLOTUREE — Queens OCR-3b debloque
 === 4. Codex est le contrat — types partages dans codex/
 === 5. DAG N2 — importable par N3 runner-gradle, jamais importe N3
 === 6. PROCEDURE DE FIN DE SESSION — 6 ETAPES OBLIGATOIRES
+=== 7. BOUNDARY DOCUMENT — Codex READ + RAG, Document WRITE + PUBLISH (parallele N2, pas de dependance directe)
 
 '''
 == Sessions
@@ -52,6 +54,7 @@ _Session en cours_ : 027-028 ✅ — CLOTUREE — Queens OCR-3b debloque
 | **024** | **2026-05-22** | **test** | **CDX-14 Couverture tests (A) JUnit5 + (B) Cucumber — 105/105 PASS, 5 features Cucumber** | **✅**
 | **025** | **2026-05-22** | **doc** | **KDoc API documentation (18 classes, ~200 lignes)** | **✅**
 | **026** | **2026-05-22** | **investigate** | **Kover offline instrumentation — limitation documentee (Kover 0.9.1)** | **✅**
+| — | 2026-06-08 | review | Architecture boundary review Codex↔Document — boundary READ+RAG vs WRITE+PUBLISH | ✅
 |===
 
 '''

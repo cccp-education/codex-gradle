@@ -2,9 +2,10 @@
 :toc:
 
 _Date de creation_ : 2026-05-06
-_Derniere mise a jour_ : 2026-05-06
-_Projet_ : `foundry/codex-gradle/`
-_DAG_ : N2 — Plugin Gradle d'acquisition de documents (conformement a la Regle 4bis)
+_Derniere mise a jour_ : 2026-06-08 (Architecture boundary review Codex↔Document)
+_Projet_ : `foundry/public/codex-gradle/`
+_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (conformement a la Regle 4bis)
+_Boundary_ : Codex = READ + RAG, Document = WRITE + PUBLISH. Les deux sont paralleles N2, pas empiles.
 
 '''
 == Regle 1 — COMMITS/GIT : INTERDICTION FORMELLE sans permission explicite
@@ -49,11 +50,14 @@ Pas de module doc-extractor separe — `codex` est le contrat.
 '''
 == Regle 4bis — DAG : N2, publiable
 
-*IMPORTABLE par* : N3 engine/ (`assembleCompositeContext` → RAG pgvector enrichi)
+*IMPORTABLE par* : N3 runner-gradle (`assembleCompositeContext` → RAG pgvector enrichi)
 *IMPORTE* : N0 graphify-gradle (knowledge graph pour extraction d'entités)
 *Importe aussi* : `office/books-collection/` (source PDFs, jamais modifié)
 *Publie* : MavenLocal + Sonatype (Apache 2.0)
-*NE JAMAIS IMPORTER* : N3 engine/ (dependance cyclique interdite)
+*NE JAMAIS IMPORTER* : N3 runner-gradle (dependance cyclique interdite)
+*NE JAMAIS IMPORTER document-gradle* : Codex et Document sont paralleles en N2.
+  Codex = READ + RAG, Document = WRITE + PUBLISH. Aucune dependance directe.
+  Les deux exposent leur output a runner-gradle (N3) via metadata.json.
 
 '''
 == Mission
@@ -61,14 +65,21 @@ Pas de module doc-extractor separe — `codex` est le contrat.
 Industrialiser l'acquisition de documents non-structurés (PDF, EPUB) pour alimenter
 la base de connaissance du pipeline d'augmentation de contexte :
 
-- `extractText` — extraction du texte brut structuré depuis un PDF
-  avec détection des titres via taille de police, blocs de code via fonte monospace
-- `convertToMarkdown` — conversion vers Markdown propre avec hiérarchie
-- `chunkDocument` — découpage sémantique par section
-- `exportKnowledgeBase` — export vers JSON-L / Markdown / AsciiDoc
+- `collectBookStructure` — extraction hierarchique PDF→AsciiDoc avec detection typographique
+- `collectEpubStructure` — extraction EPUB via Tika → AsciiDoc structure
+- `transformToMarkdown` — conversion AsciiDoc vers Markdown
+- `transformChunk` — decoupage semantique par section
+- `deployKnowledgeBase` — export vers JSON-L / Markdown / AsciiDoc
+- `collectIngest` — vectorisation ONNX → pgvector
+- `collectRetrieve` — recherche semantique cosine similarity
+- `generateCompositeContext` — composite-context.json pour N3 runner-gradle
 
 Sans Codex, le pipeline d'augmentation de contexte est borgne sur la connaissance
 livresque. Codex est le sens de la lecture du pipeline.
+
+*Ce que Codex ne fait PAS* : la conversion multi-format vers HTML/PDF/EPUB/DocBook/ManPage.
+C'est le role de document-gradle (New Orleans), le pair N2 WRITE + PUBLISH.
+Codex exporte en knowledge base (JSON-LD) pour le RAG, pas pour la publication stagiaire.
 
 '''
 == Portefeuille Transverse — Relations avec les autres agents
@@ -76,10 +87,11 @@ livresque. Codex est le sens de la lecture du pipeline.
 |===
 | Projet | Niveau DAG | Relation
 | `graphify-gradle` | N0 | Fournit le knowledge graph pour extraction d'entités
-| `codebase-gradle` | N1 | Modèle métier SQL/DDD, templates .agents/
-| `engine/` | N3 | Consommateur final — RAG pgvector enrichi par codex
-| `plantuml-gradle` | N2 | Pair — diagrammes de la chaîne documentaire
-| `office/` | Zone 2 | Source des PDFs (`books-collection/`), jamais modifié
+| `codebase-gradle` | N1 | Modele metier SQL/DDD, contrats ContextChannel/CompositeContext (contexts-contracts)
+| `runner-gradle` | N3 | Consommateur final — RAG pgvector enrichi par codex via assembleCompositeContext
+| `document-gradle` (New Orleans) | N2 | *Pair parallele* — Codex READ + RAG, Document WRITE + PUBLISH. Pas de dependance directe. Un meme AsciiDoc source est consommable par les deux. Voir `.agents/ARCHITECTURE_BOUNDARY.adoc`.
+| `plantuml-gradle` | N2 | Pair — diagrammes de la chaine documentaire
+| `office/` | Zone 2 | Source des PDFs (`books-collection/`), jamais modifie
 |===
 
 '''

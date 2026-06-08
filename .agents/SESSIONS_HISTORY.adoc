@@ -751,3 +751,30 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `codex-plugin/src/main/kotlin/codex/tasks/ExtractBookStructureTask.kt` (inline code fix)
 - `codex-plugin/src/main/kotlin/codex/tasks/ExtractEpubStructureTask.kt` (EPUB vide fix)
 - `codex-plugin/src/test/kotlin/codex/tasks/ExtractEpubStructureTaskTest.kt` (assertions corrigees)
+
+'''
+== Architecture Boundary Review — Codex↔Document (2026-06-08)
+
+*Date* : 2026-06-08
+*Type* : review
+*Score* : ✅
+
+*Objectif* :
+- Clarifier la boundary entre codex-gradle (Brooklyn) et document-gradle (New Orleans)
+- Symetrie documentaire : codex documente sa relation avec document
+
+*Decision* :
+- *Codex = READ + RAG* : ingestion documents existants (PDF/EPUB), extraction structure,
+  vectorisation, recherche semantique
+- *Document = WRITE + PUBLISH* : generation AsciiDoc assistee par IA,
+  conversion multi-format (HTML/PDF/EPUB/DocBook/ManPage) via AsciidoctorJ direct
+- Les deux boroughs N2 sont *paralleles, pas empiles*
+- *Pas de dependance directe* entre codex et document
+- Un meme AsciiDoc source est consommable par les deux :
+  codex le vectorise pour le RAG, document le convertit pour le livrable stagiaire
+- AsciidoctorJ est une dependance directe de chaque plugin (pas de compileOnly croise)
+
+*Livrables* :
+- `AGENT.adoc` mis a jour : Regle 4bis etendue, mission clarifiee, portefeuille transverse
+- `.agents/INDEX.adoc` mis a jour : DAG precis READ+RAG, Regle 7 Boundary Document
+- `.agents/SESSIONS_HISTORY.adoc` : cette entree
