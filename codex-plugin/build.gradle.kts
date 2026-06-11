@@ -60,7 +60,7 @@ dependencies {
     }
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
-    implementation("education.cccp:codebase-contracts:0.1.0")
+    implementation("education.cccp:codebase-contracts:0.0.1")
 
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
@@ -95,7 +95,7 @@ gradlePlugin {
     vcsUrl  = "https://github.com/cheroliv/codex"
     plugins {
         create("codexDocPipeline") {
-            id                  = "codex.doc-pipeline"
+            id                  = "education.cccp.codex"
             implementationClass = "codex.CodexPlugin"
             displayName         = "Codex — Pipeline d'acquisition de documents"
             description         = """
@@ -116,62 +116,49 @@ gradlePlugin {
 publishing {
     publications {
         withType<MavenPublication> {
-            if (name == "pluginMaven") {
-                pom {
-                    name.set(gradlePlugin.plugins.getByName("codexDocPipeline").displayName)
-                    description.set(gradlePlugin.plugins.getByName("codexDocPipeline").description)
-                    url.set(gradlePlugin.website.get())
-                    licenses {
-                        license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        }
+            pom {
+                name.set(gradlePlugin.plugins.getByName("codexDocPipeline").displayName)
+                description.set(gradlePlugin.plugins.getByName("codexDocPipeline").description)
+                url.set(gradlePlugin.website.get())
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
-                    developers {
-                        developer {
-                            id.set("cccp-education")
-                            name.set("CCCP Education")
-                            email.set("cccp.education@gmail.com")
-                        }
+                }
+                developers {
+                    developer {
+                        id.set("cccp-education")
+                        name.set("CCCP Education")
+                        email.set("cccp.education@gmail.com")
                     }
-                    scm {
-                        connection.set(gradlePlugin.vcsUrl.get())
-                        developerConnection.set(gradlePlugin.vcsUrl.get())
-                        url.set(gradlePlugin.vcsUrl.get())
-                    }
-                    // RELOCATION : prépare la migration du groupId éducation.cccp →
-                    // <futur-domaine>. Activer avec -Prem relocationGroup="io.github.cccp-education"
-                    // Effet : injecte <distributionManagement><relocation><groupId>...</groupId></relocation>
-                    // dans le POM publié. Les consommateurs existants seront redirigés automatiquement
-                    // vers le nouveau groupId lors de la prochaine màj de dépendance.
-                    project.findProperty("relocationGroup")?.let { targetGroup ->
-                        withXml {
-                            val pom = asElement()
-                            val doc = pom.ownerDocument
-                            val distMgmt = doc.createElement("distributionManagement")
-                            val relocation = doc.createElement("relocation")
-                            relocation.appendChild(doc.createElement("groupId")).also { it.textContent = targetGroup.toString() }
-                            relocation.appendChild(doc.createElement("artifactId")).also { it.textContent = project.name }
-                            distMgmt.appendChild(relocation)
-                            pom.appendChild(distMgmt)
-                        }
+                }
+                scm {
+                    connection.set(gradlePlugin.vcsUrl.get())
+                    developerConnection.set(gradlePlugin.vcsUrl.get())
+                    url.set(gradlePlugin.vcsUrl.get())
+                }
+                // RELOCATION : prépare la migration du groupId éducation.cccp →
+                // <futur-domaine>. Activer avec -Prem relocationGroup="io.github.cccp-education"
+                // Effet : injecte <distributionManagement><relocation><groupId>...</groupId></relocation>
+                // dans le POM publié. Les consommateurs existants seront redirigés automatiquement
+                // vers le nouveau groupId lors de la prochaine màj de dépendance.
+                project.findProperty("relocationGroup")?.let { targetGroup ->
+                    withXml {
+                        val pom = asElement()
+                        val doc = pom.ownerDocument
+                        val distMgmt = doc.createElement("distributionManagement")
+                        val relocation = doc.createElement("relocation")
+                        relocation.appendChild(doc.createElement("groupId")).also { it.textContent = targetGroup.toString() }
+                        relocation.appendChild(doc.createElement("artifactId")).also { it.textContent = project.name }
+                        distMgmt.appendChild(relocation)
+                        pom.appendChild(distMgmt)
                     }
                 }
             }
         }
     }
     repositories {
-        maven {
-            name = "sonatype"
-            url = (if (version.toString().endsWith("-SNAPSHOT"))
-                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            else
-                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"))
-            credentials {
-                username = project.findProperty("ossrhUsername") as? String
-                password = project.findProperty("ossrhPassword") as? String
-            }
-        }
         mavenCentral()
     }
 }

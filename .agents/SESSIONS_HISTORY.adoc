@@ -753,6 +753,30 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `codex-plugin/src/test/kotlin/codex/tasks/ExtractEpubStructureTaskTest.kt` (assertions corrigees)
 
 '''
+== Session 029 — Publication Maven Central 0.0.1
+
+*Date* : 2026-06-11
+*Type* : ops
+*Modele* : deepseek-v4-pro (via opencode)
+*Score* : 10/10
+
+*Objectif* :
+- Publier codex-plugin:0.0.1 sur Maven Central via nmcp
+
+*Livrables* :
+- Version 0.1.0-SNAPSHOT → 0.0.1 hardcodée
+- codebase-contracts:0.1.0 → 0.0.1 dans libs.versions.toml
+- Migration Sonatype OSSRH → nmcp (settings.gradle.kts créé)
+- POM étendu sur `withType<MavenPublication>` (nom, description, licence, developer, SCM)
+- Repository `mavenCentral()` (pas staging Sonatype)
+- Publication codex-plugin:0.0.1 : ✅ SUCCÈS
+
+*Decisions cles* :
+- nmcp 1.5.0 pour publication automatique Central Portal
+- Version hardcodée 0.0.1 (règle AGENTS.adoc : pas via catalogue)
+- Toutes les dépendances `implementation` doivent être des releases (pas de -SNAPSHOT)
+
+'''
 == Architecture Boundary Review — Codex↔Document (2026-06-08)
 
 *Date* : 2026-06-08

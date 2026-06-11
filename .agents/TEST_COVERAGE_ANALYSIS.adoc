@@ -85,9 +85,13 @@ ce qui explique que les metrics ne remontent pas. 105/105 tests PASS.
 - `ExtractBookStructureTaskTest` : 1 echec (single line monospace devient inline code)
 - `ExtractEpubStructureTaskTest` : 2 echecs (empty EPUB + note header)
 
-== Prochaine session (028)
+== Prochaine session (030)
 
 - CDX-15 : TDD retroactif OcrRequest/OcrResult/OcrConfig
 - Diagnostic des 3 regressions
 - publishToMavenLocal (si autorise)
 - cdX-13 : Suspension REST maintenue
+
+== Session 029 — Publication Maven Central (aucun test modifie)
+
+Aucun test modifié. Publication ops uniquement (version, nmcp, POM).

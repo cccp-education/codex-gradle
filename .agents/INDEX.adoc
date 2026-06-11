@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-06-08 (Architecture boundary review Codex↔Document)
-_Session terminee_ : 027-028 ✅ — OCR-0 contrats + TDD 23 tests + 3 regressions corrigees (135/135 PASS, publishToMavenLocal OK)
-_Session precedente_ : 026 ✅ — Investigation Kover offline instrumentation (limitation documentee)
-_Session en cours_ : 027-028 ✅ — CLOTUREE — Queens OCR-3b debloque
+_Derniere mise a jour_ : 2026-06-11 (Publication Maven Central 0.0.1)
+_Session terminee_ : 029 ✅ — Publication Maven Central codex-plugin:0.0.1 (nmcp, POM étendu, codebase-contracts 0.0.1)
+_Session precedente_ : 027-028 ✅ — OCR-0 contrats + TDD 23 tests + 3 regressions corrigees
+_Session en cours_ : 030 — CDX-15 Couverture tests OCR
 
 '''
 == REGLES ABSOLUES (resume)
@@ -81,6 +81,7 @@ _Session en cours_ : 027-028 ✅ — CLOTUREE — Queens OCR-3b debloque
 | CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU | P1
 | CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
 | EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
+| EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
 |===
 
 '''

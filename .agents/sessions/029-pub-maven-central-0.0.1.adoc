@@ -1,0 +1,35 @@
+= Session 029 — Publication Maven Central 0.0.1
+:session: 029
+:date: 2026-06-11
+:type: ops
+:score: 10/10
+
+== Objectif
+
+Publier codex-plugin:0.0.1 sur Maven Central via nmcp.
+
+== Changements
+
+. **Version** : 0.1.0-SNAPSHOT → 0.0.1 (hardcodée dans build.gradle.kts)
+. **codebase-contracts** : 0.1.0 → 0.0.1 dans libs.versions.toml (dépendance N0 doit être release)
+. **Migration Sonatype OSSRH → nmcp** :
+  - Suppression ancien bloc `sonatype` dans build.gradle.kts
+  - Création `settings.gradle.kts` avec plugin `com.gradleup.nmcp` version 1.5.0
+  - Configuration `nmcpSettings { centralPortal { username/password depuis ~/.gradle/gradle.properties, publishingType = "AUTOMATIC" } }`
+. **POM étendu** : `withType<MavenPublication>` (pas seulement `pluginMaven`) — nom, description, licence Apache 2.0, developer cccp-education, SCM
+. **Repository** : `mavenCentral()` (pas l'ancien staging Sonatype)
+
+== Procédure nmcp
+
+[source,shell]
+----
+./gradlew publishAggregationToCentralPortal --no-daemon
+----
+
+== Résultat
+
+Publication codex-plugin:0.0.1 sur Maven Central : ✅ SUCCÈS
+
+== Prochaine session
+
+030 : CDX-15 Couverture tests OCR

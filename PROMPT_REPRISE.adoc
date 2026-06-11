@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Session 028 : CDX-15 Couverture tests OCR + Fix 3 regressions
-:session: 028
-:date: 2026-05-30
+= PROMPT_REPRISE — Session 030 : CDX-15 Couverture tests OCR
+:session: 030
+:date: 2026-06-11
 :status: PRET
 :max-lines: 40
 
@@ -9,29 +9,22 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle
 ./gradlew :codex-plugin:compileKotlin   # compile OK
-./gradlew :codex-plugin:test            # 3 echecs preexistants a investiguer
+./gradlew :codex-plugin:test            # 135/135 PASS
 ```
 
 == Contexte
 
-Session 027 a produit 3 data classes OCR (OcrRequest/OcrResult/OcrConfig)
-dans `codex.ocr` — sans tests. Compile OK.
-
-== Fichiers a traiter
-
-- `codex-plugin/src/test/kotlin/codex/ocr/` — creer les 3 classes de test
-- `codex-plugin/src/test/kotlin/codex/tasks/ExtractBookStructureTaskTest.kt` — investiguer echec
-- `codex-plugin/src/test/kotlin/codex/tasks/ExtractEpubStructureTaskTest.kt` — investiguer 2 echecs
+Session 029 TERMINEE — Publication Maven Central codex-plugin:0.0.1 réussie via nmcp.
+Version 0.0.1 hardcodée, codebase-contracts corrigé en 0.0.1, POM étendu.
 
 == Objectif
 
-- TDD retroactif : tests unitaires OcrRequest/OcrResult/OcrConfig
-- Diagnostiquer les 3 echecs preexistants
-- Atteindre 108/108 PASS (ou moins, selon diagnostic)
-- Demander permission publishToMavenLocal en fin de session
+- CDX-15 : TDD rétroactif OcrRequest/OcrResult/OcrConfig (3 classes sans tests)
+- Diagnostiquer les 3 régressions préexistantes si nécessaire
+- publishToMavenLocal si nécessaire
 
 == References
 
-- `codex/Metadata.kt` — pattern a suivre pour les tests (writeTo/fromFile)
-- `codex/MetadataTest.kt` — pattern de test existant
-- `.agents/sessions/027-ocr0-contrats.adoc` — rapport session precedente
+- `.agents/sessions/027-ocr0-contrats.adoc` — rapport session OCR-0
+- `codex/ocr/` — 3 data classes à tester
+- `codex/Metadata.kt` — pattern à suivre pour les tests (writeTo/fromFile)
