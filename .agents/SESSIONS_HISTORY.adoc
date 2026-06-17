@@ -832,4 +832,29 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Commentaire documentant le `resolutionStrategy { force("org.jetbrains:annotations:26.0.2-1") }`
 - 135/135 PASS, BUILD SUCCESSFUL
 
-*Prochaine session* : 031 — CDX-15 Couverture tests OCR
+'''
+== Session 031 — Infra cleanup (buildSrc, eachDependency, koog 1.0.0 entamé)
+
+*Date* : 2026-06-17
+*Type* : chore+infra
+*Modèle* : deepseek-v4-flash:free (via opencode)
+*Score* : 🟡 PARTIEL (build codex OK, koog 1.0.0 non migré)
+
+*Objectif* :
+- Nettoyer buildSrc de codex-gradle (inliner la convention plugin)
+- Supprimer le `eachDependency` redondant de codebase-plugin
+- Mettre à jour koog 0.8.0 → 1.0.0
+
+*Problèmes* :
+- `eachDependency` dans codebase-plugin était redondant : la contrainte `annotations:13.0` vient du plugin `kotlin.jvm` + `java-library`, pas du `eachDependency`.
+- `force("org.jetbrains:annotations:26.0.2-1")` dans codex est **nécessaire** car Gradle 9.5.1 embedded Kotlin pinne lui-même `annotations:{strictly 13.0}`.
+- koog 1.0.0 supprime `forwardTo` — 4 fichiers impactés dans codebase-plugin, migration reportée session 032.
+
+*Livrables* :
+- `buildSrc/` supprimé de codex-gradle (convention inlinée dans codex-plugin/build.gradle.kts)
+- `eachDependency` retiré de codebase-plugin/build.gradle.kts
+- `validateDependencies` assoupli (log au lieu de require == "13.0")
+- koog version passée `0.8.0` → `1.0.0` dans workspace-bom, codex, codebase
+- `koog-agents` exclude retiré de codex (redondant avec force())
+
+*Prochaine session* : 032 — Migration koog 1.0.0 (forwardTo → replacement API)

@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-06-17 (Fix Gradle build + plugin ID)
-_Session terminee_ : 030 ✅ — Fix plugin ID + buildscript Gradle 9.x (135/135 PASS)
-_Session precedente_ : 029 ✅ — Publication Maven Central codex-plugin:0.0.1
-_Session en cours_ : 031 — CDX-15 Couverture tests OCR
+_Derniere mise a jour_ : 2026-06-17 (Infra cleanup + koog 1.0.0 entamé)
+_Session terminee_ : 031 🟡 — Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé)
+_Session precedente_ : 030 ✅ — Fix plugin ID + buildscript Gradle 9.x
+_Session en cours_ : 032 — Migration koog 1.0.0 (forwardTo → replacement API)
 
 '''
 == REGLES ABSOLUES (resume)
@@ -56,6 +56,7 @@ _Session en cours_ : 031 — CDX-15 Couverture tests OCR
 | **026** | **2026-05-22** | **investigate** | **Kover offline instrumentation — limitation documentee (Kover 0.9.1)** | **✅**
 | — | 2026-06-08 | review | Architecture boundary review Codex↔Document — boundary READ+RAG vs WRITE+PUBLISH | ✅
 | **030** | **2026-06-17** | **bugfix+build** | **Fix plugin ID + buildscript Gradle 9.x — 135/135 PASS** | **✅**
+| **031** | **2026-06-17** | **chore+infra** | **Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé)** | **🟡**
 |===
 
 '''

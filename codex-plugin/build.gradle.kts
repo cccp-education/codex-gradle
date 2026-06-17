@@ -3,17 +3,18 @@ plugins {
     signing
     `maven-publish`
     `java-gradle-plugin`
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
-    id("org.jetbrains.kotlinx.kover") version "0.9.8"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.plugin.publish)
+    alias(libs.plugins.kover)
     id("education.cccp.codebase") version "0.0.1"
-    id("codex.gradle-plugin-conventions")
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
-// Gradle 9.x strictly pins org.jetbrains:annotations:13.0 (Kotlin embedded).
-// codebase-plugin:0.0.1 ajoute aussi sa propre contrainte 13.0.
-// Les transitives (koog 26.0.2-1, flexmark 24.0.1, coroutines 23.0.0, testcontainers 17.0.0)
-// imposent toutes > 13.0. Sans force(), conflit irrésoluble → build fail.
+// Gradle 9.x pinne org.jetbrains:annotations:{strictly 13.0} via son Kotlin embed.
+// codebase-plugin ne contraint plus annotations depuis la republo 0.0.2 locale,
+// mais Gradle impose toujours 13.0 → les transitives (koog 26.0.2-1, flexmark 24.0.1)
+// sont bloquées. force() est la seule parade.
 buildscript {
     configurations.all {
         resolutionStrategy {
@@ -28,6 +29,7 @@ version = libs.versions.codex.plugin.get()
 repositories {
     mavenLocal()
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
@@ -48,11 +50,7 @@ dependencies {
     implementation(libs.jackson.dataformat.yaml)
 
     // koog Agentic Orchestrator
-    implementation(libs.koog.agents) {
-        // Exclusion nécessaire : koog annotions 26.0.2-1 vs Kotlin embedded 13.0
-        // Gradle 9.5.1 strict conflict — même pattern que codebase-plugin
-        exclude(group = "org.jetbrains", module = "annotations")
-    }
+    implementation(libs.koog.agents)
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
     implementation("education.cccp:codebase-contracts:0.0.1")
@@ -155,6 +153,10 @@ publishing {
     }
     repositories {
         mavenCentral()
+        maven {
+            name = "localRepo"
+            url = uri(rootProject.layout.buildDirectory.dir("local-repo"))
+        }
     }
 }
 
@@ -165,9 +167,24 @@ signing {
     useGpgCmd()
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
+        freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+    jvmToolchain(24)
+}
+
 java {
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
     withJavadocJar()
     withSourcesJar()
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    testLogging { events("FAILED", "SKIPPED") }
 }
 
 kover {
