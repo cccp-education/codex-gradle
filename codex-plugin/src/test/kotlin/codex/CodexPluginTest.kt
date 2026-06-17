@@ -22,7 +22,7 @@ class CodexPluginTest {
     @Test
     fun `plugin applies successfully and registers extension`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val extension = project.extensions.findByName("codex")
         assertNotNull(extension)
@@ -32,7 +32,7 @@ class CodexPluginTest {
     @Test
     fun `plugin registers all 10 tasks with correct types`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         // collect tasks (5)
         val collectText = project.tasks.findByName("collectText")
@@ -85,7 +85,7 @@ class CodexPluginTest {
     @Test
     fun `collectText task has correct group and description`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val task = project.tasks.findByName("collectText")
         assertNotNull(task)
@@ -96,7 +96,7 @@ class CodexPluginTest {
     @Test
     fun `transformToJsonLdd task has correct group and description`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val task = project.tasks.findByName("transformToJsonLdd")
         assertNotNull(task)
@@ -107,7 +107,7 @@ class CodexPluginTest {
     @Test
     fun `deployKnowledgeBase task has correct group and description`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val task = project.tasks.findByName("deployKnowledgeBase")
         assertNotNull(task)
@@ -118,7 +118,7 @@ class CodexPluginTest {
     @Test
     fun `plugin sets pgvector conventions on ingest task`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val ingestTask = project.tasks.findByName("collectIngest") as CodexIngestTask
         assertEquals("localhost", ingestTask.pgHost.get())
@@ -132,7 +132,7 @@ class CodexPluginTest {
     @Test
     fun `plugin sets pgvector conventions on retrieve task`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val retrieveTask = project.tasks.findByName("collectRetrieve") as CodexRetrieveTask
         assertEquals("10", retrieveTask.topK.get())

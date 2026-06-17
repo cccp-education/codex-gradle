@@ -802,3 +802,34 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `AGENT.adoc` mis a jour : Regle 4bis etendue, mission clarifiee, portefeuille transverse
 - `.agents/INDEX.adoc` mis a jour : DAG precis READ+RAG, Regle 7 Boundary Document
 - `.agents/SESSIONS_HISTORY.adoc` : cette entree
+
+== Session 030 — Fix plugin ID + buildscript Gradle 9.x
+
+*Date* : 2026-06-17
+*Type* : bugfix+build
+*Modèle* : deepseek-v4-flash:free (via opencode)
+*Score* : 135/135 PASS ✅
+
+*Objectif* :
+- Diagnostiquer et corriger les 8 échecs tests UnknownPluginException
+- Corriger l'erreur de configuration Gradle 9.5.1 (Unresolved reference 'libs')
+- Nettoyer le bloc buildscript de ses repositories redondants
+
+*Problèmes* :
+- Plugin ID désynchronisé : `build.gradle.kts` déclare `id = "education.cccp.codex"` mais les tests
+  utilisaient `project.plugins.apply("codex.doc-pipeline")` → 8 UnknownPluginException
+- `buildscript {}` placé avant `plugins {}` : Gradle 9.5.1 exige `plugins {}` en première déclaration
+  pour activer le pré-traitement DSL spécial. Sinon, fallback sur `project.plugins {}` (déprécié)
+  et `alias(libs.plugins.*)` non résolu.
+- `org.jetbrains:annotations:{strictly 13.0}` imposé par Kotlin embedded + codebase-plugin:0.0.1
+  → conflit avec transitives (koog 26.0.2-1, flexmark 24.0.1, coroutines 23.0.0)
+
+*Livrables* :
+- 3 fichiers modifiés : `codex-plugin/build.gradle.kts`, `CodexPluginTest.kt`, `CodexExtensionTest.kt`
+- `plugins {}` déplacé avant `buildscript {}`
+- `alias(libs.plugins.*)` remplacé par `id("...") version "..."` explicite
+- `repositories` supprimés du `buildscript {}` (redondants avec pluginManagement)
+- Commentaire documentant le `resolutionStrategy { force("org.jetbrains:annotations:26.0.2-1") }`
+- 135/135 PASS, BUILD SUCCESSFUL
+
+*Prochaine session* : 031 — CDX-15 Couverture tests OCR

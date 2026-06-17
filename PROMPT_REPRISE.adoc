@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Session 030 : CDX-15 Couverture tests OCR
-:session: 030
-:date: 2026-06-11
+= PROMPT_REPRISE — Session 031 : CDX-15 Couverture tests OCR
+:session: 031
+:date: 2026-06-17
 :status: PRET
 :max-lines: 40
 
@@ -14,8 +14,11 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle
 
 == Contexte
 
-Session 029 TERMINEE — Publication Maven Central codex-plugin:0.0.1 réussie via nmcp.
-Version 0.0.1 hardcodée, codebase-contracts corrigé en 0.0.1, POM étendu.
+Session 030 TERMINEE — Fix build infrastructure :
+- Plugin ID synchronisé entre build.gradle.kts et tests (education.cccp.codex)
+- plugins {} déplacé avant buildscript {} pour compatibilité Gradle 9.5.1
+- buildscript { resolutionStrategy { force("org.jetbrains:annotations:26.0.2-1") } } conservé
+  (contrainte stricte Kotlin embedded 13.0 vs transitives koog/flexmark/coroutines)
 
 == Objectif
 

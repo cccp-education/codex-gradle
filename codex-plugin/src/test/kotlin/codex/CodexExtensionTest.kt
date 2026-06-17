@@ -50,7 +50,7 @@ class CodexExtensionTest {
     @Test
     fun `plugin applies defaults to extension`() {
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("codex.doc-pipeline")
+        project.plugins.apply("education.cccp.codex")
 
         val extension = project.extensions.findByName("codex") as CodexExtension
         assertEquals("localhost", extension.pgvectorHost.get())

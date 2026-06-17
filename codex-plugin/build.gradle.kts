@@ -1,30 +1,25 @@
-// ── buildscript resolutionStrategy ────────────────────────────────────────────────
-// Gradle 9.5.1 pinne org.jetbrains:annotations:13.0 (Kotlin embedded) en strictly.
-// Mais koog-agents (26.0.2-1 via utils-jvm), flexmark (24.0.1), coroutines (23.0.0)
-// et d'autres transitives demandent des versions > 13.0 en classpath.
-// Les annotations JetBrains sont @Retention(CLASS) : compatibles binairement.
-// On force la version la plus haute pour satisfaire toutes les contraintes.
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-    configurations.all {
-        resolutionStrategy {
-            force("org.jetbrains:annotations:26.0.2-1")
-        }
-    }
-}
-
 plugins {
     `java-library`
     signing
     `maven-publish`
     `java-gradle-plugin`
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.codebase)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
+    id("org.jetbrains.kotlinx.kover") version "0.9.8"
+    id("education.cccp.codebase") version "0.0.1"
     id("codex.gradle-plugin-conventions")
+}
+
+// ── buildscript resolutionStrategy ────────────────────────────────────────────────
+// Gradle 9.x strictly pins org.jetbrains:annotations:13.0 (Kotlin embedded).
+// codebase-plugin:0.0.1 ajoute aussi sa propre contrainte 13.0.
+// Les transitives (koog 26.0.2-1, flexmark 24.0.1, coroutines 23.0.0, testcontainers 17.0.0)
+// imposent toutes > 13.0. Sans force(), conflit irrésoluble → build fail.
+buildscript {
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains:annotations:26.0.2-1")
+        }
+    }
 }
 
 group = "education.cccp"

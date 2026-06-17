@@ -85,13 +85,20 @@ ce qui explique que les metrics ne remontent pas. 105/105 tests PASS.
 - `ExtractBookStructureTaskTest` : 1 echec (single line monospace devient inline code)
 - `ExtractEpubStructureTaskTest` : 2 echecs (empty EPUB + note header)
 
-== Prochaine session (030)
+== Session 029 — Publication Maven Central (aucun test modifie)
+
+Aucun test modifié. Publication ops uniquement (version, nmcp, POM).
+
+== Session 030 — Fix plugin ID + buildscript Gradle 9.x (aucun test OCR ajoute)
+
+Aucun test OCR ajouté. Infrastructure build uniquement :
+- Plugin ID synchronisé : `education.cccp.codex` dans build.gradle.kts et tests
+- `plugins {}` déplacé avant `buildscript {}` (Gradle 9.5.1)
+- Tests toujours 135/135 PASS
+
+== Prochaine session (031)
 
 - CDX-15 : TDD retroactif OcrRequest/OcrResult/OcrConfig
 - Diagnostic des 3 regressions
 - publishToMavenLocal (si autorise)
-- cdX-13 : Suspension REST maintenue
-
-== Session 029 — Publication Maven Central (aucun test modifie)
-
-Aucun test modifié. Publication ops uniquement (version, nmcp, POM).
+- CDX-13 : Suspension REST maintenue
