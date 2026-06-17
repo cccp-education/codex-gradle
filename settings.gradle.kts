@@ -8,4 +8,4 @@ pluginManagement {
 
 rootProject.name = "codex-gradle"
 
-include("codex-plugin")
+

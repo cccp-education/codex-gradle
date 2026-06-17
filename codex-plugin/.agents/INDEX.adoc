@@ -1,0 +1,101 @@
+= INDEX — codex-gradle
+:toc:
+
+_Regles absolues_ : voir `AGENT.adoc`
+_Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
+_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
+_Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
+
+_Derniere mise a jour_ : 2026-06-17 (Fix Gradle 9 build standalone sub-build)
+_Session terminee_ : 032 ✅ — Fix Gradle 9 build (standalone sub-build + codebase 0.0.2)
+_Session precedente_ : 031 🟡 — Infra cleanup
+_Session en cours_ : 033 — Migration koog 1.0.0 (forwardTo → replacement API)
+
+'''
+== REGLES ABSOLUES (resume)
+
+=== 1. COMMITS/GIT — INTERDICTION FORMELLE sans permission
+=== 2. PAS DE publishToMavenLocal automatique
+=== 3. SECRETS via configuration/ — jamais en dur dans build.gradle.kts
+=== 4. Codex est le contrat — types partages dans codex/
+=== 5. DAG N2 — importable par N3 runner-gradle, jamais importe N3
+=== 6. PROCEDURE DE FIN DE SESSION — 6 ETAPES OBLIGATOIRES
+=== 7. BOUNDARY DOCUMENT — Codex READ + RAG, Document WRITE + PUBLISH (parallele N2, pas de dependance directe)
+
+'''
+== Sessions
+
+|===
+| # | Date | Type | Sujet | Score
+| 0 | 2026-05-06 | init | Bootstrap gouvernance agent codex + scaffold plugin | —
+| 001 | 2026-05-07 | design | JSON LDD, SQL LMD, Cartographie Ontologique | —
+| 002 | 2026-05-07 | design | Separation des Concerns & Bouclage | —
+| 003 | 2026-05-07 | design | Le Vrai MVP : Boucle d'Autonomie | —
+| 004 | 2026-05-07 | chore | Migration chemins foundry/ → foundry/OSS/ | —
+| 005 | 2026-05-09 | impl | CDX-1b asciiDocToJsonLdd via AsciidoctorJ AST | —
+| 006 | 2026-05-10 | impl | CDX-1c importBookSql — JSON LDD → DDL + INSERT PostgreSQL | —
+| 007 | 2026-05-10 | impl | CDX-2 detection typographique → hierarchie multi-niveaux + code | —
+| 008 | 2026-05-10 | impl | CDX-3 convertToMarkdown (AsciiDoc → Markdown) | —
+| 009 | 2026-05-10 | impl | CDX-4 chunkDocument (chunking semantique par section) | —
+| 010 | 2026-05-10 | impl | CDX-5 exportKnowledgeBase (JSON-L/Markdown/AsciiDoc export) | —
+| 011 | 2026-05-10 | impl | CDX-6 arborescence OSS/CSS + routing licence | —
+| 012 | 2026-05-10 | test | CDX-7 Tests unitaires + integration (62/62 PASS) | ✅
+| 013 | 2026-05-10 | impl | CDX-8 codexIngest ONNX → pgvector R2DBC | ✅
+| 014 | 2026-05-11 | impl | CDX-9 codexRetrieve — recherche semantique cosine similarity | ✅
+| 015 | 2026-05-11 | ci/cd | CDX-CI — GitHub Actions test.yml (JDK 24, publishToMavenLocal + check) | ✅
+| 016 | 2026-05-11 | impl | CDX-10 codex-epub — extraction EPUB via Tika → AsciiDoc (70/70 PASS) | ✅
+| 017 | 2026-05-11 | integration | CDX-11 codexEngine — piping codexRetrieve → runner-gradle N3 (75/75 PASS) | ✅
+| 018 | 2026-05-12 | test | CDX-12 Tests integration pgvector end-to-end (79/79 PASS) | ✅
+| 019 | 2026-05-12 | impl | EPIC D Uniformisation Build (Java 25→24 + kotlinx.serialization DocNode) | ✅
+| 020 | 2026-05-12 | review | Code Review Globale (audit passif) | ✅
+| 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy) | ✅
+| 022 | 2026-05-19 | doc | EPIC K K-5 Documentation — Mise a jour INDEX.adoc | ✅
+| **023** | **2026-05-22** | **bugfix+cleanup** | **Fix compilation bugs (5 fichiers) + cleanup packages** | **9/10**
+| **024** | **2026-05-22** | **test** | **CDX-14 Couverture tests (A) JUnit5 + (B) Cucumber — 105/105 PASS, 5 features Cucumber** | **✅**
+| **025** | **2026-05-22** | **doc** | **KDoc API documentation (18 classes, ~200 lignes)** | **✅**
+| **026** | **2026-05-22** | **investigate** | **Kover offline instrumentation — limitation documentee (Kover 0.9.1)** | **✅**
+| — | 2026-06-08 | review | Architecture boundary review Codex↔Document — boundary READ+RAG vs WRITE+PUBLISH | ✅
+| **030** | **2026-06-17** | **bugfix+build** | **Fix plugin ID + buildscript Gradle 9.x — 135/135 PASS** | **✅**
+| **031** | **2026-06-17** | **chore+infra** | **Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé)** | **🟡**
+| **032** | **2026-06-17** | **bugfix+build** | **Fix Gradle 9 build — standalone sub-build + codebase 0.0.2** | **✅**
+|===
+
+'''
+== Roadmap — Etat Actuel
+
+|===
+| EPIC | Description | Statut | Priorite
+| CDX-0 | Bootstrap gouvernance agent codex | ✅ TERMINE | P0
+| CDX-1a | Task extractBookStructure — PDFBox → AsciiDoc | ✅ TERMINE | P0
+| CDX-1b | Task asciiDocToJsonLdd — AST AsciidoctorJ → JSON LDD | ✅ TERMINE | P0
+| CDX-1c | Task importBookSql — JSON LDD → DDL + INSERT PostgreSQL | ✅ TERMINE | P0
+| CDX-2 | Detection typographique → hierarchie multi-niveaux + blocs de code | ✅ TERMINE | P0
+| CDX-3 | Task convertToMarkdown avec blocs de code | ✅ TERMINE | P0
+| CDX-4 | Task chunkDocument — strategie semantique | ✅ TERMINE | P0
+| CDX-5 | Task exportKnowledgeBase — JSON-L / Markdown / AsciiDoc | ✅ TERMINE | P1
+| CDX-6 | Integration arborescence OSS/CSS + routing licence | ✅ TERMINE | P1
+| CDX-7 | Tests unitaires + integration (62/62 PASS, 9 classes de test) | ✅ TERMINE | P1
+| CDX-8 | Task codexIngest — ONNX → pgvector R2DBC (schema codex_documents/codex_chunks, vector(384)) | ✅ TERMINE | P2
+| CDX-9 | Task codexRetrieve — cosine similarity dans pgvector → corpus requetable | ✅ TERMINE | P2
+| CDX-CI | GitHub Actions CI/CD — test.yml JDK 24 | ✅ TERMINE | P2
+| CDX-10 | Task extractEpubStructure — EPUB via Tika → AsciiDoc | ✅ TERMINE | P3
+| CDX-11 | Integration runner-gradle N3 : codexRetrieve → assembleCompositeContext | ✅ TERMINE | P2
+...
+| CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU | P1
+| CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
+| EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
+| EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
+|===
+
+'''
+== Fichiers Associes
+
+|===
+| Fichier | Role | Type
+| `AGENT.adoc` | Directives completes | EAGER
+| `PROMPT_REPRISE.adoc` | Mission session en cours | EAGER
+| `.agents/SESSIONS_HISTORY.adoc` | Historique des sessions | EAGER
+| `.agents/TEST_COVERAGE_ANALYSIS.adoc` | Analyse couverture tests | LAZY
+| `.agents/archives/` | Archives taches | LAZY
+| `.agents/sessions/` | Archives par session | LAZY
+|===

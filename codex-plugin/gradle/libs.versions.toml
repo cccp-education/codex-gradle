@@ -1,0 +1,87 @@
+[versions]
+# ── Versions du plugin Codex ──────────────────────────────────────────────────
+codex-plugin = "0.0.1"
+codebase = "0.0.2"
+koog = "1.0.0"
+
+# ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
+kotlin = "2.3.20"
+plugin-publish = "1.3.1"
+
+# ── PDF/Extraction ────────────────────────────────────────────────────────────
+pdfbox = "3.0.4"
+tika = "3.1.0"
+flexmark = "0.64.8"
+asciidoctorj = "3.0.0"
+
+# ── Sérialisation ─────────────────────────────────────────────────────────────
+jackson = "2.18.2"
+kotlinx-serial = "1.7.3"
+
+# ── RAG/Embedding — ONNX pgvector ──────────────────────────────────────────────
+langchain4j = "1.14.1"
+langchain4j-beta = "1.14.1-beta24"
+r2dbc-postgresql = "1.0.7.RELEASE"
+kotlinx-coroutines = "1.9.0"
+
+# ── Coverage ───────────────────────────────────────────────────────────────────
+kover = "0.9.8"
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+junit-jupiter = "5.12.2"
+junit-platform = "1.12.2"
+testcontainers = "1.21.4"
+docker-java = "3.7.0"
+cucumber = "7.21.0"
+
+[libraries]
+# ── Kotlin ────────────────────────────────────────────────────────────────────
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
+
+# ── PDF/Extraction ────────────────────────────────────────────────────────────
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
+tika-parsers-standard = { module = "org.apache.tika:tika-parsers-standard-package", version.ref = "tika" }
+flexmark-all = { module = "com.vladsch.flexmark:flexmark-all", version.ref = "flexmark" }
+asciidoctorj = { module = "org.asciidoctor:asciidoctorj", version.ref = "asciidoctorj" }
+
+# ── Sérialisation ─────────────────────────────────────────────────────────────
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serial" }
+
+# ── RAG/Embedding — ONNX pgvector ──────────────────────────────────────────────
+langchain4j = { module = "dev.langchain4j:langchain4j", version.ref = "langchain4j" }
+langchain4j-minilm = { module = "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2", version.ref = "langchain4j-beta" }
+r2dbc-postgresql = { module = "org.postgresql:r2dbc-postgresql", version.ref = "r2dbc-postgresql" }
+r2dbc-pool = { module = "io.r2dbc:r2dbc-pool", version = "1.0.2.RELEASE" }
+r2dbc-spi = { module = "io.r2dbc:r2dbc-spi", version = "1.0.0.RELEASE" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
+
+# ── koog Agentic Orchestrator ──────────────────────────────────────────────────
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+docker-java-core = { module = "com.github.docker-java:docker-java-core", version.ref = "docker-java" }
+docker-java-transport-httpclient5 = { module = "com.github.docker-java:docker-java-transport-httpclient5", version.ref = "docker-java" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-junit5 = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.32" }
+
+# ── Cucumber BDD ──────────────────────────────────────────────────────────────
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+cucumber-java8 = { module = "io.cucumber:cucumber-java8", version.ref = "cucumber" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "plugin-publish" }
+codebase = { id = "education.cccp.codebase", version.ref = "codebase" }

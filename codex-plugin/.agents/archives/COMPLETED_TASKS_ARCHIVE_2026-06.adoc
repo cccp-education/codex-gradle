@@ -1,0 +1,38 @@
+= COMPLETED_TASKS_ARCHIVE — Juin 2026
+
+'''
+== EPIC PUB — Publication Maven Central codex-plugin:0.0.1 (2026-06-11)
+
+*Session* : 029
+*Type* : ops
+*Detail* : Publication codex-plugin:0.0.1 sur Maven Central via nmcp.
+- Version 0.1.0-SNAPSHOT → 0.0.1 hardcodée dans build.gradle.kts
+- codebase-contracts:0.1.0 → 0.0.1 dans libs.versions.toml
+- Migration Sonatype OSSRH → nmcp : settings.gradle.kts créé avec plugin com.gradleup.nmcp 1.5.0
+- POM étendu sur withType<MavenPublication> (nom, description, licence Apache 2.0, developer cccp-education, SCM)
+- Repository mavenCentral() remplace ancien staging Sonatype
+- Publication réussie : `./gradlew publishAggregationToCentralPortal --no-daemon`
+*Build* : ✅ publishAggregationToCentralPortal BUILD SUCCESSFUL
+
+'''
+== Fix plugin ID + buildscript Gradle 9.x (2026-06-17)
+
+*Session* : 030
+*Type* : bugfix+build
+*Detail* : Correction des 8 UnknownPluginException et de l'erreur Unresolved reference 'libs'.
+- Plugin ID synchronisé : `education.cccp.codex` dans code + tests
+- `plugins {}` déplacé avant `buildscript {}` (prérequis Gradle 9.5.1)
+- `alias(libs.plugins.*)` → `id("...") version "..."` explicite
+- `resolutionStrategy { force("org.jetbrains:annotations:26.0.2-1") }` documenté
+*Build* : ✅ 135/135 PASS, BUILD SUCCESSFUL
+
+'''
+== Fix Gradle 9 build standalone sub-build (2026-06-17)
+
+*Session* : 032
+*Type* : bugfix+build
+*Detail* : Architecture build standalone pour codex-plugin + version catalog.
+- `include("codex-plugin")` supprimé de settings racine
+- `codex-plugin/gradle/libs.versions.toml` créé
+- `codebase` bumpé 0.0.1 → 0.0.2 (incompatibilité binaire ToolRegistry)
+*Build* : ✅ BUILD SUCCESSFUL

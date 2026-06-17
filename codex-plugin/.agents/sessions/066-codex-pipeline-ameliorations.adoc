@@ -1,0 +1,41 @@
+= Session 066 — Améliorations pipeline documentation Codex
+:session: 066
+:date: 2026-05-25
+:status: TERMINÉ
+
+== Résumé
+
+Améliorations du pipeline de documentation dans codex-gradle pour mieux gérer les différentes étapes de traitement des documents.
+
+== Actions réalisées
+
+1. ✅ Mise à jour du build.gradle.kts pour les dépendances
+2. ✅ Ajout de fonctionnalités dans les tâches du pipeline de documentation
+3. ✅ Amélioration de la gestion des documents AsciiDoc, EPUB et Markdown
+
+== Détails techniques
+
+- Mise à jour des dépendances dans build.gradle.kts
+- Amélioration de la tâche AsciiDocToJsonLddTask pour mieux gérer la conversion
+- Ajout de fonctionnalités dans les tâches de traitement de documents
+- Optimisation du traitement des livres et documents électroniques
+
+== Fichiers modifiés
+
+- codex-plugin/build.gradle.kts
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/AsciiDocToJsonLddTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ChunkDocumentTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexCompositeContextTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexIngestTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexPipelineTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/CodexRetrieveTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ConvertToMarkdownTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExportKnowledgeBaseTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractBookStructureTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractEpubStructureTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ExtractTextTask.kt
+- codex-plugin/src/main/kotlin/cccp/education/codex/tasks/ImportBookSqlTask.kt
+
+== Justification
+
+Ces améliorations sont nécessaires pour mieux supporter le traitement des documents dans le cadre du vibecoding, notamment pour l'ingestion de contenu dans le système RAG.

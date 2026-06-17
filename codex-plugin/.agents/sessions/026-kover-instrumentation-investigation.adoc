@@ -1,0 +1,53 @@
+= Session 026 — KoverFilter / Investigation instrumentation offline
+:session: 026
+:date: 2026-05-22
+:type: investigate
+:status: DOCUMENTE
+:project: codex-gradle
+
+== Objectif
+
+Configurer Kover pour capturer les tests via ProjectBuilder (Gradle TestKit)
+qui, par défaut, charge le plugin dans un classloader séparé non instrumenté.
+
+== Investigation
+
+=== Problème
+
+Kover 0.9.1 utilise l'instrumentation ON_FLY (Java agent).
+`ProjectBuilder` lance un classloader Gradle séparé pour exécuter le plugin
+sous test — cet agent ne peut pas intercepter ce classloader.
+
+=== Tentatives
+
+1. **Bloc `instrumentation { useOffline() }`** — API inexistante dans Kover 0.9.1
+   (compilation error: Unresolved reference 'instrumentation')
+2. **`useJacoco()`** — idem, API non exposée dans cette version
+3. **Inspection du JAR Kover 0.9.1** — seuls des classes de bas niveau
+   (`JvmOnFlyInstrumenter`) disponibles. Pas d'offline instrumentation.
+
+=== Conclusion
+
+**Limitation intrinsèque de Kover 0.9.1.** L'instrumentation offline est
+une feature de Kover 1.x. Les solutions possibles :
+
+- Option A : Mettre à jour Kover vers 1.x (risque de breaking changes)
+- Option B : Accepter la limitation (102/105 tests PASS, coverage réelle >77.5%)
+- Option C : Ajouter un test d'intégration séparé qui exécute le vrai
+  plugin via `gradle-runner` au lieu de `ProjectBuilder`
+
+== Fichiers modifiés
+
+- `codex-plugin/build.gradle.kts` : commentaire documentant la limitation
+
+== Résultat du build
+
+- Compilation : ✅ BUILD SUCCESSFUL
+- Tests : ✅ 102/105 PASS (3 échecs préexistants)
+- Kover : toujours 77.5% line (inchangé, attendu)
+
+== Prochaine session (027)
+
+- Au choix : accepter limitation et passer à autre chose,
+  ou Kover 1.x upgrade (risqué),
+  ou nouveau EPIC

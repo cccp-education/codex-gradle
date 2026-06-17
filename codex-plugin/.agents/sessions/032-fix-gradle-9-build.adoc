@@ -1,0 +1,42 @@
+= Session 032 — Fix Gradle 9 build (version catalog standalone sub-build + codebase 0.0.2)
+
+:date: 2026-06-17
+:type: bugfix+build
+:modele: deepseek-v4-flash:free (via opencode)
+:score: BUILD SUCCESSFUL
+
+== Objectif
+
+Corriger l'erreur de configuration Gradle 9.5.1 :
+- `alias(libs.plugins.*)` non résolu dans le `plugins {}` block du sous-projet
+- `include("codex-plugin")` en conflit avec `codex-plugin/settings.gradle.kts` (double settings)
+- `codebase-plugin:0.0.1` incompatible binaire avec `codebase-contracts:0.0.1` local
+
+== Problèmes
+
+1. **`include("codex-plugin")` en conflit avec `codex-plugin/settings.gradle.kts`**
+   - La racine déclarait `include("codex-plugin")` MAIS le module a son propre `settings.gradle.kts`
+   - Pattern incorrect : codex-plugin doit être un build standalone (comme slider-plugin, plantuml-plugin)
+   - Fix : supprimer `include("codex-plugin")` de `settings.gradle.kts` racine
+
+2. **Absence de version catalog dans le sous-build standalone**
+   - `codex-plugin/` n'avait pas de `gradle/libs.versions.toml`
+   - En tant que build standalone, `libs` n'était pas résolu
+   - Fix : créer `codex-plugin/gradle/libs.versions.toml` avec les entrées du catalogue racine
+
+3. **`codebase-plugin:0.0.1` incompatible binaire**
+   - `ToolRegistry.<init>(Map, List, int, DefaultConstructorMarker)` mismatch
+   - La version publiée `0.0.1` sur Plugin Portal a une signature différente de `codebase-contracts:0.0.1` local
+   - Fix : bump `codebase = "0.0.2"` dans le version catalog (version locale dans `~/.m2/repository`)
+
+== Livrables
+
+- `settings.gradle.kts` : `include("codex-plugin")` supprimé
+- `codex-plugin/gradle/libs.versions.toml` : créé (version catalogue standalone, 32 libs, 5 plugins)
+- `codex-plugin/build.gradle.kts` : `id("...") version "0.0.1"` → `alias(libs.plugins.codebase)` (via catalogue)
+- `codex-plugin/gradle/libs.versions.toml` : `codebase = "0.0.1"` → `"0.0.2"`
+
+== Build
+
+- `./gradlew build -x test` : ✅ BUILD SUCCESSFUL (codex-plugin standalone)
+- `./gradlew projects` : ✅ BUILD SUCCESSFUL (root consumer)

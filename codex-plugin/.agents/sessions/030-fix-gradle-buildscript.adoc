@@ -1,0 +1,40 @@
+= Session 030 — Fix plugin ID + buildscript Gradle 9.x
+:session: 030
+:date: 2026-06-17
+:type: bugfix+build
+:score: 135/135 PASS
+
+== Objectif
+
+Diagnostiquer et corriger les 8 échecs tests sur codex-plugin (UnknownPluginException)
++ erreur de configuration Gradle 9.5.1 (Unresolved reference 'libs').
+
+== Problèmes identifiés
+
+. **Plugin ID désynchronisé** : `build.gradle.kts` déclare `id = "education.cccp.codex"`
+  mais les tests appellent `project.plugins.apply("codex.doc-pipeline")` → 8 UnknownPluginException
+. **buildscript {} avant plugins {}** : Gradle 9.5.1 exige `plugins {}` en première déclaration.
+  `buildscript {}` avant cassait le pré-traitement DSL → `alias(libs.plugins.*)` non résolu
+. **Contrainte stricte annotations:13.0** : Kotlin embedded impose `org.jetbrains:annotations:{strictly 13.0}`
+  + `codebase-plugin:0.0.1` publie la même contrainte. Les transitives (koog 26.0.2-1, flexmark 24.0.1,
+  coroutines 23.0.0, testcontainers 17.0.0) imposent > 13.0 → conflit insoluble sans `force()`.
+
+== Changements
+
+. `codex-plugin/build.gradle.kts` :
+  - Déplacement `plugins {}` avant `buildscript {}`
+  - Remplacement `alias(libs.plugins.*)` par `id("...") version "..."` explicite
+  - Nettoyage `repositories` redondants dans `buildscript {}`
+  - Commentaire documentant le `resolutionStrategy { force(...) }`
+. `CodexPluginTest.kt` : `"codex.doc-pipeline"` → `"education.cccp.codex"` (8 occurrences)
+. `CodexExtensionTest.kt` : idem (1 occurrence)
+
+== État
+
+- Compile : ✅ BUILD SUCCESSFUL
+- Tests : ✅ 135/135 PASS
+- Plugin ID synchronisé entre build.gradle.kts et les tests
+
+== Prochaine session
+
+031 : CDX-15 TDD rétroactif OcrRequest/OcrResult/OcrConfig

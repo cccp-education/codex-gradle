@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.plugin.publish)
     alias(libs.plugins.kover)
-    id("education.cccp.codebase") version "0.0.1"
+    alias(libs.plugins.codebase)
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
