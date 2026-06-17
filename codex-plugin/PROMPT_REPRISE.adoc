@@ -1,0 +1,36 @@
+= PROMPT_REPRISE — Session 033 : Migration koog 1.0.0 (forwardTo → replacement API)
+:session: 033
+:date: 2026-06-17
+:status: PRET
+:max-lines: 40
+
+== Quick Start
+
+```
+cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
+../gradlew build -x test   # compile OK
+../gradlew test            # 135/135 PASS
+```
+
+== Contexte
+
+Session 032 TERMINEE — Fix Gradle 9 build :
+- `include("codex-plugin")` supprimé de settings racine (build standalone)
+- `codex-plugin/gradle/libs.versions.toml` créé (catalogue standalone)
+- `codebase` bumpé `0.0.1` → `0.0.2` (incompatibilité binaire ToolRegistry)
+- `.agents/` gouvernance déplacé dans `codex-plugin/.agents/`
+- Build compile OK
+
+== Objectif
+
+- Remplacer `forwardTo` par l'API koog 1.0.0 dans les 4 fichiers impactés :
+  `KoogAugmentedContextGraph.kt`, `KoogPlanningOrchestrator.kt`,
+  `MultiChannelContextGraph.kt`, `VibecodingGraph.kt`
+- Compiler codebase-plugin avec koog 1.0.0 → publishToMavenLocal
+- Compiler codex-plugin → vérifier build complet
+
+== References
+
+- `.agents/sessions/032-fix-gradle-9-build.adoc`
+- https://docs.koog.ai/agents/graph-based-agents/ — API koog 1.0.0 graph DSL
+- koog 1.0.0 changelog : `forwardTo` removed, use `edge(from, to)`
