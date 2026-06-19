@@ -26,13 +26,10 @@ buildscript {
 group = "education.cccp"
 version = libs.versions.codex.plugin.get()
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    gradlePluginPortal()
-}
-
 dependencies {
+    // Import BOM
+    implementation(platform("education.cccp:workspace-bom:0.0.1"))
+
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.serialization.json)
 
@@ -64,7 +61,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.reactive)
 
-    testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers.core)
     testImplementation(libs.testcontainers.junit5)
     testImplementation(libs.testcontainers.postgresql)
@@ -84,8 +80,8 @@ dependencies {
 }
 
 gradlePlugin {
-    website = "https://github.com/cheroliv/codex"
-    vcsUrl  = "https://github.com/cheroliv/codex"
+    website = "https://cccp.education/"
+    vcsUrl  = "https://github.com/cccp-education/codex"
     plugins {
         create("codexDocPipeline") {
             id                  = "education.cccp.codex"
@@ -123,7 +119,7 @@ publishing {
                     developer {
                         id.set("cccp-education")
                         name.set("CCCP Education")
-                        email.set("cccp.education@gmail.com")
+                        email.set("cccp.edu@gmail.com")
                     }
                 }
                 scm {
