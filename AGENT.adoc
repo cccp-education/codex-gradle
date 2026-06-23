@@ -60,6 +60,31 @@ Pas de module doc-extractor separe — `codex` est le contrat.
   Les deux exposent leur output a runner-gradle (N3) via metadata.json.
 
 '''
+== Regle 5 — Non-Répétition des Opérations Coûteuses — Loi de l'Économie d'Encre
+
+*PRINCIPE* : Une opération coûteuse (LLM, embedding, inférence cloud, extraction OCR) qui a déjà produit un résultat *valide et persistant* NE DOIT PAS être ré-exécutée sur la même entrée. Le résultat existant est la vérité ; le re-calcul est un gaspillage de tokens/crédits API/temps de build. L'IA n'est pas un générateur idempotent gratuit — c'est un service metered. Répéter une vectorisation, un embedding, une extraction LLM déjà validée sur une entrée identique consomme du token sans produire de nouvelle connaissance. L'économie d'encre est la condition de viabilité économique du pipeline agentique MVP0.
+
+*RÈGLE* :
+. Avant toute opération coûteuse, **vérifier l'existence d'un artefact résultat** (embeddings stockés en pgvector, `composite-context.json`, `*.json` généré, cache disque).
+. Si l'artefact existe et couvre l'entrée demandée → **réutiliser sans ré-invoquer**.
+. Seul le **delta** (fichiers source modifiés, vecteurs absents, sections nouvelles) doit être calculé — jamais l'ensemble.
+. Ne **jamais écraser** un résultat validé par un re-calcul identique. L'écrasement est un symptôme de non-idempotence économique.
+. L'invalidation est **explicite et ciblée** (fichier source modifié, hash changé), jamais globale par défaut.
+
+*ANTI-PATTERNS SPÉCIFIQUES CODEX* :
+. *Re-embedding global* : re-vectoriser tout le corpus PDF/EPUB parce qu'un seul fichier source a été édité. Coût × N fichiers × N exécutions.
+. *Ré-extraction OCR systématique* : relancer le LLM sur un PDF déjà OCRisé dont le `OcrResult.structuredText` est persistant et valide.
+. *Cache-busting silencieux* : un `writeText()` qui écrase `composite-context.json` avant même d'avoir lu l'existant.
+. *Ré-ingestion inconditionnelle* : `collectIngest` rejoué sur tout `books-collection/` sans comparer les hash sources avec les vecteurs déjà stockés.
+
+*PROTECTION* :
+. Lecture avant écriture : charger `composite-context.json` existant avant de le régénérer ; comparer hash sources vs vecteurs stockés avant `collectIngest`.
+. Delta vectoriel : ingérer uniquement les fichiers dont le hash diffère de celui stocké en pgvector metadata.
+. `DisableCachingByDefault` ne dispense pas de l'idempotence applicative — Gradle ne sait pas ce qu'est un "embedding déjà valide", seul le domaine le sait.
+
+*RÉFÉRENCE* : Source canonique de la loi — `bakery-gradle/bakery-plugin/AGENT.adoc` section "Non-Répétition des Opérations Coûteuses — Loi de l'Économie d'Encre" (Session 153). Portée transverse : 10 boroughs LLM metered (bakery i18n, codex RAG, training SPG/SPD, capsule TTS, plantuml diagrammes, readme, document, agile, ticket, review). Potentiel 50-80% d'économie LLM sur le pipeline MVP0 complet.
+
+'''
 == Mission
 
 Industrialiser l'acquisition de documents non-structurés (PDF, EPUB) pour alimenter
