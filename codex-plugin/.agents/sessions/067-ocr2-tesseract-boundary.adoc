@@ -1,0 +1,40 @@
+= Session 067 — EPIC OCR-2 Tesseract fallback (boundary codex↔codebase)
+:date: 2026-06-23
+:borough: Brooklyn — codex-gradle (N2, READ + RAG)
+:session_conjointe: codebase-gradle session 159
+
+== Mission
+
+Implémenter le fallback Tesseract (OCR sans IA) dans codex-gradle,
+en respectant le boundary : codex détient les engines OCR documentaires
+(READ), codebase orchestre la fallback chain LLM via un adapter.
+
+== Items livrés
+
+* `codex.ocr.OcrEngine` — interface `process(OcrRequest): OcrResult`
+* `codex.ocr.TesseractOcrEngine` — CLI tesseract wrapper via ProcessBuilder, best-effort (ne jette pas), mapping langues ISO→tesseract
+* Côté codebase : `CodexOcrEngineAdapter` wrap `OcrEngine` → `VisionProvider`, fallback chain Gemini → Ollama → Tesseract
+
+== Fichiers créés
+
+* `main/kotlin/codex/ocr/OcrEngine.kt` — interface contrat OCR
+* `main/kotlin/codex/ocr/TesseractOcrEngine.kt` — implémentation CLI tesseract
+* `test/kotlin/codex/ocr/TesseractOcrEngineTest.kt` — 5 tests JUnit5
+
+== Tests
+
+[cols="2,2"]
+|===
+| Suite | Résultat
+| TesseractOcrEngineTest (5 JUnit5) | ✅ PASS
+|===
+
+== Publication
+
+* `publishToMavenLocal` 0.0.1 — codebase-gradle consomme `codex-plugin:0.0.1`
+
+== Boundary architecturale
+
+* codex-gradle (Brooklyn N2) = READ + RAG → détient engines OCR documentaires (sans IA)
+* codebase-gradle (Queens N1) = LLM providers → adapte via `CodexOcrEngineAdapter`
+* Le boundary est strict : codex expose `OcrEngine`, codebase wrap dans `VisionProvider`

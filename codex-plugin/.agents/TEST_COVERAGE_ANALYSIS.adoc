@@ -1,8 +1,27 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-05-22
-:session: 024
+:date: 2026-06-23
+:session: 067
 
-== Metrics Kover (apres session 024 — CDX-14)
+== Session 067 — TesseractOcrEngineTest (5 tests JUnit5)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/ocr/TesseractOcrEngineTest.kt` | 5 JUnit5 | ✅ PASS
+|===
+
+Tests :
+. `TesseractOcrEngine implements OcrEngine`
+. `processes minimal image without throwing`
+. `returns empty result on tesseract failure`
+. `maps language codes to tesseract format`
+. `returns result with sourceFormat from request`
+
+Note : Tesseract 5.3.4 installé sur le système de test. Tests utilisent
+un PNG 1x1 minimal (sans texte) — vérifient le plumbing sans crash, pas
+l'extraction de texte réelle.
+
+== Metrics Kover (après session 024 — CDX-14)
 
 Rapport HTML : `build/reports/kover/html/index.html`
 

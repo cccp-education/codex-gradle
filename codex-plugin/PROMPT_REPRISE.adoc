@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Session 033 : Migration koog 1.0.0 (forwardTo → replacement API)
-:session: 033
-:date: 2026-06-17
+= PROMPT_REPRISE — Session 068 : CDX-15 TDD rétroactif OCR (suite)
+:session: 068
+:date: 2026-06-23
 :status: PRET
 :max-lines: 40
 
@@ -9,28 +9,25 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK
-../gradlew test            # 135/135 PASS
+../gradlew test            # 140/140 PASS (135 + 5 TesseractOcrEngine)
 ```
 
 == Contexte
 
-Session 032 TERMINEE — Fix Gradle 9 build :
-- `include("codex-plugin")` supprimé de settings racine (build standalone)
-- `codex-plugin/gradle/libs.versions.toml` créé (catalogue standalone)
-- `codebase` bumpé `0.0.1` → `0.0.2` (incompatibilité binaire ToolRegistry)
-- `.agents/` gouvernance déplacé dans `codex-plugin/.agents/`
-- Build compile OK
+Session 067 TERMINEE — EPIC OCR-2 Tesseract fallback :
+- `codex.ocr.OcrEngine` interface + `TesseractOcrEngine` (CLI wrapper)
+- Boundary codex↔codebase harmonisé : codex engines OCR, codebase adapter
+- `publishToMavenLocal` 0.0.1 (codebase consomme)
+- 5 tests JUnit5 PASS
 
 == Objectif
 
-- Remplacer `forwardTo` par l'API koog 1.0.0 dans les 4 fichiers impactés :
-  `KoogAugmentedContextGraph.kt`, `KoogPlanningOrchestrator.kt`,
-  `MultiChannelContextGraph.kt`, `VibecodingGraph.kt`
-- Compiler codebase-plugin avec koog 1.0.0 → publishToMavenLocal
-- Compiler codex-plugin → vérifier build complet
+- CDX-15 TDD rétroactif OCR : couverture tests sur contrats existants
+  (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028)
+- Vérifier régression globale : 140/140 PASS
+- Si CDX-15 déjà couvert, attaquer EPIC suivant (voir INDEX.adoc roadmap)
 
 == References
 
-- `.agents/sessions/032-fix-gradle-9-build.adoc`
-- https://docs.koog.ai/agents/graph-based-agents/ — API koog 1.0.0 graph DSL
-- koog 1.0.0 changelog : `forwardTo` removed, use `edge(from, to)`
+- `.agents/sessions/067-ocr2-tesseract-boundary.adoc`
+- `codex/ocr/OcrEngine.kt` + `TesseractOcrEngine.kt`

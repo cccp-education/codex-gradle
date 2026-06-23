@@ -877,3 +877,23 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `codex-plugin/gradle/libs.versions.toml` : créé (catalogue standalone)
 - `codex-plugin/build.gradle.kts` : id() version → alias(libs.plugins.codebase)
 - `codebase` bumpé 0.0.1 → 0.0.2 dans le catalogue
+
+'''
+== Session 067 — EPIC OCR-2 Tesseract fallback (boundary codex↔codebase)
+
+*Date* : 2026-06-23
+*Type* : impl + boundary
+*Session conjointe* : codebase-gradle session 159
+
+*Objectif* :
+- Implémenter le fallback Tesseract (OCR sans IA) dans codex-gradle
+- Respecter le boundary : codex détient engines OCR documentaires (READ), codebase orchestre LLM
+
+*Livrables* :
+- `codex/ocr/OcrEngine.kt` : interface `process(OcrRequest): OcrResult`
+- `codex/ocr/TesseractOcrEngine.kt` : CLI tesseract wrapper (ProcessBuilder, best-effort, mapping langues)
+- `test/codex/ocr/TesseractOcrEngineTest.kt` : 5 tests JUnit5 PASS
+- `publishToMavenLocal` 0.0.1 (codebase consomme via CodexOcrEngineAdapter)
+- Boundary harmonisé : codex = engines OCR purs, codebase = adapter → VisionProvider
+
+*Résultat* : ✅ EPIC OCR-2 Tesseract fallback TERMINÉ

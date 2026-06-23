@@ -1,6 +1,22 @@
 = COMPLETED_TASKS_ARCHIVE — Juin 2026
 
 '''
+== Session 067 — EPIC OCR-2 Tesseract fallback (2026-06-23)
+
+*Session* : 067
+*Type* : impl + boundary
+*Session conjointe* : codebase-gradle session 159
+
+*Fichiers créés* :
+- `codex/ocr/OcrEngine.kt` — interface `process(OcrRequest): OcrResult`
+- `codex/ocr/TesseractOcrEngine.kt` — CLI tesseract wrapper (ProcessBuilder, best-effort, mapping langues ISO→tesseract)
+- `test/codex/ocr/TesseractOcrEngineTest.kt` — 5 tests JUnit5 PASS
+
+*Publication* : publishToMavenLocal 0.0.1 (codebase consomme via CodexOcrEngineAdapter)
+
+*Boundary* : codex (Brooklyn N2) détient engines OCR documentaires (READ), codebase (Queens N1) adapte via CodexOcrEngineAdapter → VisionProvider. Fallback chain : Gemini → Ollama → Tesseract.
+
+'''
 == EPIC PUB — Publication Maven Central codex-plugin:0.0.1 (2026-06-11)
 
 *Session* : 029
