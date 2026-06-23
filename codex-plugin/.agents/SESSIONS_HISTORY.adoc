@@ -897,3 +897,35 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Boundary harmonisé : codex = engines OCR purs, codebase = adapter → VisionProvider
 
 *Résultat* : ✅ EPIC OCR-2 Tesseract fallback TERMINÉ
+
+'''
+== Session 068 — README multilingues i18n (10 langues × consumer + plugin)
+
+*Date* : 2026-06-24
+*Type* : documentation (i18n)
+*Modèle* : glm-5.2:cloud (via opencode)
+*Score* : ✅ 20 fichiers créés
+
+*Objectif* :
+- Créer des README multilingues (10 langues) pour les deux audiences de codex-gradle :
+  consumer guide (`README.consommateurs/`) et plugin internals (`README.plugin/`)
+- Langues : EN, FR, ES, PT, ZH, HI, BN, AR, UR, RU
+
+*Livrables* :
+- *20 fichiers README créés* (10 langues × 2 audiences)
+- 4 badges par fichier : Maven Central, Gradle Plugin Portal, CI, License
+- Markers version 0.0.1 / build / tests / coverage (Kover 0.9.8)
+- Switcher i18n 10 langues (EN | FR | ES | PT | ZH | HI | BN | AR | UR | RU)
+- Support RTL pour AR (arabe) et UR (ourdou) — scripts RTL natifs
+- Master EN marqué `<!-- master source -->`, translations `<!-- translated from README.md rev 0.0.1 -->`
+- Aucune modification de code — documentation uniquement
+
+*Décisions clés* :
+- 2 audiences distinctes : consumer (public-facing, pipeline métier) vs plugin internals (contributor-facing, build/CI/dépendances)
+- Pas de README à la racine codex-gradle/ — les deux README vivent en sous-dossiers
+- Alignement EPIC i18n-contracts MEMPHIS (N0) + BKY-I18N Bushwick
+- *Note* : master EN `README.md` porte un switcher tronqué à 2 langues (EN | FR) ;
+  les versions traduites portent le switcher complet à 10 langues. Alignement EN
+  à prévoir en session ultérieure.
+
+*Résultat* : ✅ EPIC README-I18N TERMINÉ

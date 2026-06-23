@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Session 068 : CDX-15 TDD rétroactif OCR (suite)
-:session: 068
-:date: 2026-06-23
+= PROMPT_REPRISE — Session 069 : CDX-15 TDD rétroactif OCR + alignement README EN
+:session: 069
+:date: 2026-06-24
 :status: PRET
 :max-lines: 40
 
@@ -14,20 +14,26 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 
 == Contexte
 
-Session 067 TERMINEE — EPIC OCR-2 Tesseract fallback :
-- `codex.ocr.OcrEngine` interface + `TesseractOcrEngine` (CLI wrapper)
-- Boundary codex↔codebase harmonisé : codex engines OCR, codebase adapter
-- `publishToMavenLocal` 0.0.1 (codebase consomme)
-- 5 tests JUnit5 PASS
+Session 068 TERMINEE — README multilingues i18n :
+- 20 fichiers README créés (10 langues × consumer + plugin)
+- Badges Maven Central/Plugin Portal/CI/License
+- Switcher i18n 10 langues, AR/UR RTL
+- `README.consommateurs/` (consumer) + `README.plugin/` (plugin internals)
+- *Note* : master EN `README.md` porte un switcher tronqué (EN | FR) — à aligner
 
-== Objectif
+== Objectifs (au choix)
 
-- CDX-15 TDD rétroactif OCR : couverture tests sur contrats existants
-  (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028)
-- Vérifier régression globale : 140/140 PASS
-- Si CDX-15 déjà couvert, attaquer EPIC suivant (voir INDEX.adoc roadmap)
+1. *CDX-15 TDD rétroactif OCR* : couverture tests sur contrats OCR existants
+   (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028). Vérifier 140/140 PASS.
+2. *Alignement switcher EN* : corriger `README.consommateurs/README.md` et
+   `README.plugin/README.md` (master EN) pour porter le switcher complet 10 langues
+   (actuellement tronqué à EN | FR).
+3. Si CDX-15 déjà couvert, attaquer EPIC suivant (voir INDEX.adoc roadmap).
+   CDX-13 (REST exposition) reste 🔴 SUSPENDU.
 
 == References
 
+- `.agents/sessions/068-readme-i18n.adoc`
 - `.agents/sessions/067-ocr2-tesseract-boundary.adoc`
+- `README.consommateurs/` + `README.plugin/` (20 fichiers)
 - `codex/ocr/OcrEngine.kt` + `TesseractOcrEngine.kt`

@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-06-23 (EPIC OCR-2 Tesseract fallback — boundary codex↔codebase)
-_Session terminee_ : 067 ✅ — OcrEngine + TesseractOcrEngine (CLI tesseract wrapper), 5 tests JUnit5, publishToMavenLocal 0.0.1
-_Session precedente_ : 032 ✅ — Fix Gradle 9 build (standalone sub-build + codebase 0.0.2)
-_Session en cours_ : 068 — CDX-15 TDD rétroactif OCR (suite)
+_Derniere mise a jour_ : 2026-06-24 (README multilingues i18n — 10 langues × consumer + plugin)
+_Session terminee_ : 068 ✅ — 20 README multilingues (10 langues × consumer + plugin), badges Maven Central/Portal/CI/License, switcher i18n 10 langues, AR/UR RTL
+_Session precedente_ : 067 ✅ — OcrEngine + TesseractOcrEngine (CLI tesseract wrapper), 5 tests JUnit5, publishToMavenLocal 0.0.1
+_Session en cours_ : 069 — (à définir) CDX-15 TDD rétroactif OCR ou EPIC suivant
 
 '''
 == REGLES ABSOLUES (resume)
@@ -59,6 +59,7 @@ _Session en cours_ : 068 — CDX-15 TDD rétroactif OCR (suite)
 | **031** | **2026-06-17** | **chore+infra** | **Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé)** | **🟡**
 | **032** | **2026-06-17** | **bugfix+build** | **Fix Gradle 9 build — standalone sub-build + codebase 0.0.2** | **✅**
 | **067** | **2026-06-23** | **impl+boundary** | **EPIC OCR-2 Tesseract fallback — OcrEngine + TesseractOcrEngine, boundary codex↔codebase harmonisé, 5 tests JUnit5, publishToMavenLocal 0.0.1** | **✅**
+| **068** | **2026-06-24** | **doc+i18n** | **README multilingues — 20 fichiers (10 langues × consumer + plugin), badges Maven Central/Plugin Portal/CI/License, switcher i18n, AR/UR RTL** | **✅**
 |===
 
 '''
@@ -87,6 +88,7 @@ _Session en cours_ : 068 — CDX-15 TDD rétroactif OCR (suite)
 | EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
 | EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
 | EPIC OCR-2 | Tesseract fallback — OcrEngine + TesseractOcrEngine (boundary codex↔codebase) | ✅ TERMINE (session 067) | P1
+| EPIC README-I18N | README multilingues (10 langues × consumer + plugin) | ✅ TERMINE (session 068) | P2
 |===
 
 '''

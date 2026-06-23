@@ -1,0 +1,106 @@
+= Session 068 — README multilingues i18n (10 langues × consumer + plugin)
+
+*Date* : 2026-06-24
+*Type* : documentation (i18n)
+*Modèle* : glm-5.2:cloud (via opencode)
+*Score* : ✅ 20 fichiers créés
+
+== Objectif
+
+Créer des README multilingues (10 langues) pour les deux audiences de codex-gradle :
+- *Consumer guide* (`README.consommateurs/`) — orienté utilisateur du plugin
+- *Plugin internals* (`README.plugin/`) — orienté développeur/contributeur
+
+Langues cibles (10) : EN, FR, ES, PT, ZH, HI, BN, AR, UR, RU.
+
+== Livrables
+
+*20 fichiers README créés* :
+
+=== README.consommateurs/ (10 fichiers)
+
+| Fichier | Langue | RTL |
+|---|---|---|
+| `README.md` | English (master) | non |
+| `README.fr.md` | Français | non |
+| `README.es.md` | Español | non |
+| `README.pt.md` | Português | non |
+| `README.zh.md` | 中文 | non |
+| `README.hi.md` | हिन्दी | non |
+| `README.bn.md` | বাংলা | non |
+| `README.ar.md` | العربية | **oui** |
+| `README.ur.md` | اردو | **oui** |
+| `README.ru.md` | Русский | non |
+
+=== README.plugin/ (10 fichiers)
+
+Mêmes 10 langues, contenu orienté développeur (module layout, registered tasks,
+N0 contracts, key dependencies, test matrix, JVM tuning, build commands,
+CI pipeline, NMCP publication, contributing, architecture docs).
+
+== Caractéristiques techniques
+
+=== Badges (4 par fichier)
+
+- **Maven Central** : `img.shields.io/maven-central/v/education.cccp/codex-plugin`
+- **Gradle Plugin Portal** : `img.shields.io/gradle-plugin-portal/v/education.cccp.codex`
+- **CI** : `img.shields.io/github/actions/workflow/status/cheroliv/codex-gradle/test.yml`
+- **License** : `img.shields.io/github/license/cheroliv/codex-gradle`
+
+=== Markers de version
+
+- **Version** : `0.0.1` (hardcodée, publiée Maven Central session 029)
+- **Group** : `education.cccp`
+- **Plugin ID** : `education.cccp.codex`
+- **Toolchain** : Java 24 · Kotlin 2.3.20 · Gradle 9.5.1 · plugin-publish 1.3.1
+- **Build** : `./gradlew build -x test` (compile) · `./gradlew :codex-plugin:check` (tests)
+- **Coverage** : Kover 0.9.8 on-fly (limitation ProjectBuilder documentée)
+
+=== Switcher i18n (10 langues)
+
+Chaque fichier contient un switcher de navigation vers les 10 langues :
+
+----
+🌐 Languages: **EN** | [Français](README.fr.md) | [Español](README.es.md) |
+[Português](README.pt.md) | [中文](README.zh.md) | [हिन्दी](README.hi.md) |
+[বাংলা](README.bn.md) | [العربية](README.ar.md) | [اردو](README.ur.md) |
+[Русский](README.ru.md)
+----
+
+*Note* : le master `README.md` (EN) dans `README.plugin/` et `README.consommateurs/`
+affiche actuellement un switcher tronqué à 2 langues (EN | FR). Les versions
+traduites (ar, fr, etc.) portent le switcher complet à 10 langues. Le master EN
+devra être aligné sur le switcher complet dans une session ultérieure.
+
+=== Support RTL (Arabe + Urdu)
+
+Les fichiers `README.ar.md` et `README.ur.md` sont en scripts RTL
+(arabe/ourdou). Le contenu est intégralement traduit (titres, descriptions,
+tables, commandes commentées). Aucun markup `dir="rtl"` HTML explicite —
+le rendu Markdown GitHub gère le sens automatiquement par script Unicode.
+
+== Décisions clés
+
+- *2 audiences distinctes* : consumer guide (public-facing, focus pipeline
+  métier) vs plugin internals (contributor-facing, focus build/CI/dépendances)
+- *Master EN* marqué `<!-- master source — other languages are translations of this file -->`
+- *Translations* marquées `<!-- translated from README.md rev 0.0.1 -->`
+- *Pas de fichier README à la racine* `codex-gradle/` — les deux README vivent
+  dans des sous-dossiers (`README.consommateurs/`, `README.plugin/`)
+- *Aucune modification de code* — documentation uniquement
+- *Pas de commit* — règle AGENTS.adoc (permission explicite requise)
+
+== Impact
+
+- Visibilité internationale du plugin sur GitHub + Maven Central + Plugin Portal
+- 10 langues couvrent ~70 % des développeurs JVM mondiaux (EN, ZH, HI, ES, FR,
+  PT, AR, RU, BN, UR)
+- AR + UR = accès marché MENA + Asie du Sud
+- Alignement avec l'EPIC i18n-contracts MEMPHIS (N0) et BKY-I18N Bushwick
+
+== Références
+
+- `README.consommateurs/*.md` (10 fichiers)
+- `README.plugin/*.md` (10 fichiers)
+- `BACKLOG.adoc` — EPIC PUB (publication Maven Central 0.0.1 terminé session 029)
+- `codex-plugin/.agents/INDEX.adoc` — roadmap + statut EPICs
