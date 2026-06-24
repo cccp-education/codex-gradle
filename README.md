@@ -12,7 +12,7 @@
 - **Build**: `./gradlew build` · **Tests**: `./gradlew :codex-plugin:check` (JUnit5 + Cucumber BDD)
 - **Upstream dependency**: [`education.cccp:codebase-contracts`](https://central.sonatype.com/artifact/education.cccp/codebase-contracts) — consumed as the single source of truth for `ContextChannel`, `ChannelBudget`, `CompositeContext`, `CompositeContextConfig`.
 
-🌐 Languages: **EN** | [Français](README.fr.md)
+🌐 Languages: **EN** | [中文](README.consommateurs/README.zh.md) | [हिन्दी](README.consommateurs/README.hi.md) | [Español](README.consommateurs/README.es.md) | [Français](README.consommateurs/README.fr.md) | [العربية](README.consommateurs/README.ar.md) | [বাংলা](README.consommateurs/README.bn.md) | [Português](README.consommateurs/README.pt.md) | [Русский](README.consommateurs/README.ru.md) | [اردو](README.consommateurs/README.ur.md)
 
 ---
 

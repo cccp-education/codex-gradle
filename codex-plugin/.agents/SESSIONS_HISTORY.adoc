@@ -929,3 +929,24 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
   à prévoir en session ultérieure.
 
 *Résultat* : ✅ EPIC README-I18N TERMINÉ
+
+'''
+== Session 069 — Architecture README Plugin + Consommateur
+
+*Date* : 2026-06-24
+*Type* : refactor README
+*Score* : 8/10
+
+*Objectif* :
+- Réorganiser les README selon l'architecture « Plugin Indépendant + Racine
+  Consommateur » (article 0124)
+
+*Livrables* :
+- `README.plugin/` déplacé de la racine vers `codex-plugin/README.plugin/`
+- `README.md` (master EN plugin) remonté à la racine de `codex-plugin/`
+- `README.consommateurs/README.md` (consumer guide EN) remonté à la racine du borough
+- Liens i18n recréés : `README.plugin/README.{lang}.md` (plugin) +
+  `README.consommateurs/README.{lang}.md` (consumer), 10 langues
+- Aucune modification de code Kotlin
+
+*Résultat* : ✅ Architecture README Plugin + Consommateur déployée
