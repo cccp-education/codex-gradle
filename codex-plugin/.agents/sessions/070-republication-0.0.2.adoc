@@ -1,0 +1,24 @@
+= Session 070 — codex-plugin 0.0.2 (re-publication Central)
+:date: 2026-06-25
+:epic: EPIC PUB
+
+== Contexte
+
+codex-plugin:0.0.1 sur Central ne contient pas OcrEngine/TesseractOcrEngine
+(ajoutés session 067 EPIC OCR-2, jamais re-publié). Codebase-gradle CI cassée
+car importe ces symboles depuis codex-plugin.
+
+== Action
+
+. Bump `codex-plugin/gradle/libs.versions.toml` : 0.0.1 → 0.0.2
+. `publishToMavenLocal` OK
+. `publishAggregationToCentralPortal` OK (déploiement 1635796b)
+
+== Fichier modifié
+
+. `codex-plugin/gradle/libs.versions.toml` (version 0.0.2)
+
+== Prochaine session (071)
+
+. CDX-15 TDD rétroactif OCR (suspendu)
+. Vérifier propagation Central codex-plugin:0.0.2

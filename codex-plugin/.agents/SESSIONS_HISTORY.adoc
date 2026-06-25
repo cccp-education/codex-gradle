@@ -950,3 +950,25 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Aucune modification de code Kotlin
 
 *Résultat* : ✅ Architecture README Plugin + Consommateur déployée
+
+'''
+== Session 070 — Re-publication codex-plugin 0.0.2
+
+*Date* : 2026-06-25
+*Type* : ops publication
+*Score* : 8/10
+
+*Objectif* :
+- Re-publier codex-plugin sur Maven Central avec symboles OCR manquants
+
+*Contexte* :
+- codex-plugin:0.0.1 (Central) ne contient pas OcrEngine/TesseractOcrEngine
+  (ajoutés session 067 EPIC OCR-2, jamais re-publié)
+- Codebase-gradle CI cassée car importe ces symboles depuis codex-plugin
+
+*Livrables* :
+- Bump `codex-plugin/gradle/libs.versions.toml` : 0.0.1 → 0.0.2
+- `publishToMavenLocal` OK
+- `publishAggregationToCentralPortal` OK (déploiement 1635796b)
+
+*Résultat* : ✅ codex-plugin:0.0.2 publié sur Central (en propagation)

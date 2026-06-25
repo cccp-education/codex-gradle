@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-06-24 (Architecture README Plugin + Consommateur)
-_Session terminee_ : 069 ✅ — Architecture README Plugin + Consommateur (déplacement README.plugin → codex-plugin/, README.consommateurs → racine, liens i18n recréés)
-_Session precedente_ : 068 ✅ — 20 README multilingues (10 langues × consumer + plugin), badges Maven Central/Portal/CI/License, switcher i18n 10 langues, AR/UR RTL
-_Session en cours_ : 070 — (à définir) CDX-15 TDD rétroactif OCR ou EPIC suivant
+_Derniere mise a jour_ : 2026-06-25 (Re-publication codex-plugin 0.0.2 sur Central)
+_Session terminee_ : 070 ✅ — Re-publication codex-plugin 0.0.2 (OcrEngine/TesseractOcrEngine manquants en 0.0.1). Bump libs.versions.toml + publishAggregationToCentralPortal (déploiement 1635796b).
+_Session precedente_ : 069 ✅ — Architecture README Plugin + Consommateur (déplacement README.plugin → codex-plugin/, README.consommateurs → racine, liens i18n recréés)
+_Session en cours_ : 071 — Vérifier propagation Central codex-plugin:0.0.2 + CDX-15 TDD rétroactif OCR (suspendu)
 
 '''
 == REGLES ABSOLUES (resume)
