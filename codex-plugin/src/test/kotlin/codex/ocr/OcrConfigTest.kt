@@ -9,10 +9,10 @@ import java.io.File
 class OcrConfigTest {
 
     @Test
-    fun `defaultConfig returns deepseek-v4-pro with temperature zero`() {
+    fun `defaultConfig returns gpt-oss:120b-cloud with temperature zero`() {
         val config = OcrConfig.defaultConfig()
         assertEquals("ollama", config.provider)
-        assertEquals("deepseek-v4-pro:latest", config.model)
+        assertEquals("gpt-oss:120b-cloud", config.model)
         assertEquals(4096, config.maxTokens)
         assertEquals(0.0, config.temperature)
         assertEquals(null, config.endpoint)
@@ -47,8 +47,8 @@ class OcrConfigTest {
     @Test
     fun `fromFile roundtrip preserves all fields`(@TempDir tempDir: File) {
         val original = OcrConfig(
-            provider = "deepseek-v4-pro",
-            model = "deepseek-v4-pro:cloud",
+            provider = "ollama",
+            model = "gpt-oss:120b-cloud",
             maxTokens = 8192,
             temperature = 0.1,
             endpoint = "https://api.corp.com/llm",

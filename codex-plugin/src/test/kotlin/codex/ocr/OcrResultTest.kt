@@ -15,13 +15,13 @@ class OcrResultTest {
             text = "= Title\n\nContent paragraph.",
             confidence = 0.95,
             language = "fr",
-            model = "deepseek-v4-pro:latest",
+            model = "gpt-oss:120b-cloud",
             metadata = mapOf("page" to "1", "source" to "scan-001")
         )
         assertEquals("= Title\n\nContent paragraph.", result.structuredText)
         assertEquals(0.95, result.confidence)
         assertEquals("fr", result.language)
-        assertEquals("deepseek-v4-pro:latest", result.model)
+        assertEquals("gpt-oss:120b-cloud", result.model)
         assertEquals(mapOf("page" to "1", "source" to "scan-001"), result.metadata)
     }
 
@@ -65,7 +65,7 @@ class OcrResultTest {
             text = "= Chapter 1\nContent.",
             confidence = 0.99,
             language = "fr",
-            model = "deepseek-v4-pro:latest"
+            model = "gpt-oss:120b-cloud"
         )
         val file = OcrResult.writeTo(tempDir, result)
         assertTrue(file.exists())
@@ -81,7 +81,7 @@ class OcrResultTest {
             language = "en",
             sourceFormat = "image/tiff",
             generatedAt = "2026-05-30T12:00:00Z",
-            model = "deepseek-v4-pro:cloud",
+            model = "gpt-oss:120b-cloud",
             metadata = mapOf("dpi" to "300", "rotation" to "0")
         )
         OcrResult.writeTo(tempDir, original)

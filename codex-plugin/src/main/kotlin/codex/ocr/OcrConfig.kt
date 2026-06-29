@@ -12,8 +12,8 @@ import java.io.File
  * The config file lives in the project directory (e.g. `ocr-config.json`)
  * and is read at Gradle task execution time.
  *
- * @property provider LLM/OCR provider identifier (e.g. "deepseek-v4-pro", "openai", "ollama")
- * @property model concrete model name at the provider (e.g. "deepseek-v4-pro:latest")
+ * @property provider LLM/OCR provider identifier (e.g. "ollama", "openai")
+ * @property model concrete model name at the provider (e.g. "gpt-oss:120b-cloud")
  * @property maxTokens maximum output tokens for the LLM call
  * @property temperature sampling temperature [0.0, 2.0]
  * @property endpoint optional custom API endpoint (defaults to provider's standard)
@@ -61,13 +61,13 @@ data class OcrConfig(
         }
 
         /**
-         * Returns the default OCR config for local deepseek via Ollama.
+         * Returns the default OCR config for local Ollama.
          *
-         * @return [OcrConfig] pointing at deepseek-v4-pro with temperature 0
+         * @return [OcrConfig] pointing at gpt-oss:120b-cloud with temperature 0
          */
         fun defaultConfig(): OcrConfig = OcrConfig(
             provider = "ollama",
-            model = "deepseek-v4-pro:latest",
+            model = "gpt-oss:120b-cloud",
             maxTokens = 4096,
             temperature = 0.0,
             endpoint = null,
