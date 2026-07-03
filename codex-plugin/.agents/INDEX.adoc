@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-06-25 (Re-publication codex-plugin 0.0.2 sur Central)
-_Session terminee_ : 070 ✅ — Re-publication codex-plugin 0.0.2 (OcrEngine/TesseractOcrEngine manquants en 0.0.1). Bump libs.versions.toml + publishAggregationToCentralPortal (déploiement 1635796b).
-_Session precedente_ : 069 ✅ — Architecture README Plugin + Consommateur (déplacement README.plugin → codex-plugin/, README.consommateurs → racine, liens i18n recréés)
-_Session en cours_ : 071 — Vérifier propagation Central codex-plugin:0.0.2 + CDX-15 TDD rétroactif OCR (suspendu)
+_Derniere mise a jour_ : 2026-07-03 (CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1)
+_Session terminee_ : 071 ✅ — CNV-6 Migration : convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS, BUILD SUCCESS. CNV-6 terminé.
+_Session precedente_ : 070 ✅ — Re-publication codex-plugin 0.0.2 (OcrEngine/TesseractOcrEngine manquants en 0.0.1)
+_Session en cours_ : 072 — Vérifier propagation Central codex-plugin:0.0.2 + CDX-15 TDD rétroactif OCR (suspendu)
 
 '''
 == REGLES ABSOLUES (resume)
@@ -27,6 +27,7 @@ _Session en cours_ : 071 — Vérifier propagation Central codex-plugin:0.0.2 + 
 
 |===
 | # | Date | Type | Sujet | Score
+| 071 | 2026-07-03 | dev | CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS | ✅ TERMINE
 | 0 | 2026-05-06 | init | Bootstrap gouvernance agent codex + scaffold plugin | —
 | 001 | 2026-05-07 | design | JSON LDD, SQL LMD, Cartographie Ontologique | —
 | 002 | 2026-05-07 | design | Separation des Concerns & Bouclage | —

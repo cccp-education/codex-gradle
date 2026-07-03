@@ -1,13 +1,10 @@
 plugins {
-    `java-library`
-    signing
-    `maven-publish`
-    `java-gradle-plugin`
-    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.plugin.publish)
     alias(libs.plugins.kover)
     alias(libs.plugins.codebase)
+    id("education.cccp.build.gradle-plugin") version "0.0.1"
+    id("education.cccp.build.publishing") version "0.0.1"
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
@@ -102,48 +99,16 @@ gradlePlugin {
     }
 }
 
+publishingConventions {
+    publicationType = "PLUGIN"
+}
+
 publishing {
     publications {
         withType<MavenPublication> {
             pom {
                 name.set(gradlePlugin.plugins.getByName("codexDocPipeline").displayName)
                 description.set(gradlePlugin.plugins.getByName("codexDocPipeline").description)
-                url.set(gradlePlugin.website.get())
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("cccp-education")
-                        name.set("CCCP Education")
-                        email.set("cccp.edu@gmail.com")
-                    }
-                }
-                scm {
-                    connection.set(gradlePlugin.vcsUrl.get())
-                    developerConnection.set(gradlePlugin.vcsUrl.get())
-                    url.set(gradlePlugin.vcsUrl.get())
-                }
-                // RELOCATION : prépare la migration du groupId éducation.cccp →
-                // <futur-domaine>. Activer avec -Prem relocationGroup="io.github.cccp-education"
-                // Effet : injecte <distributionManagement><relocation><groupId>...</groupId></relocation>
-                // dans le POM publié. Les consommateurs existants seront redirigés automatiquement
-                // vers le nouveau groupId lors de la prochaine màj de dépendance.
-                project.findProperty("relocationGroup")?.let { targetGroup ->
-                    withXml {
-                        val pom = asElement()
-                        val doc = pom.ownerDocument
-                        val distMgmt = doc.createElement("distributionManagement")
-                        val relocation = doc.createElement("relocation")
-                        relocation.appendChild(doc.createElement("groupId")).also { it.textContent = targetGroup.toString() }
-                        relocation.appendChild(doc.createElement("artifactId")).also { it.textContent = project.name }
-                        distMgmt.appendChild(relocation)
-                        pom.appendChild(distMgmt)
-                    }
-                }
             }
         }
     }
@@ -156,31 +121,10 @@ publishing {
     }
 }
 
-signing {
-    if (System.getenv("CI") != "true" && !version.toString().endsWith("-SNAPSHOT")) {
-        sign(publishing.publications)
-    }
-    useGpgCmd()
-}
-
 kotlin {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
-    jvmToolchain(24)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_24
-    targetCompatibility = JavaVersion.VERSION_24
-    withJavadocJar()
-    withSourcesJar()
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-    testLogging { events("FAILED", "SKIPPED") }
 }
 
 kover {

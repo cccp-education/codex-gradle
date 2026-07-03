@@ -3,6 +3,27 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 071 — CNV-6 Migration
+
+*Date* : 2026-07-03
+*Type* : dev
+*Score* : 9/10
+
+*Objectif* :
+- Appliquer les convention plugins education.cccp.build.* v0.0.1 (CNV-6)
+  sur codex-plugin, migration vers le pattern bakery.
+
+*Livrables* :
+- build.gradle.kts 200→139 lignes (-61)
+- Convention plugins appliquées : education.cccp.build.gradle-plugin 0.0.1
+  + education.cccp.build.publishing 0.0.1
+- Variantes gardées : buildscript annotations force, freeCompilerArgs
+  -Xjsr305=strict, kover, kotlin.serialization
+- compileKotlin SUCCESS, BUILD SUCCESS
+- CNV-6 terminé
+
+'''
+
 == Session 0 — Bootstrap gouvernance agent + scaffold
 
 *Date* : 2026-05-06

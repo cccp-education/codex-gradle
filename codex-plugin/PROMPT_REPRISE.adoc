@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 070
-:session: 070
-:date: 2026-06-24
+= PROMPT_REPRISE — Codex — Session 071
+:session: 071
+:date: 2026-07-03
 :status: PRET
 :max-lines: 40
 
@@ -12,23 +12,25 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew test            # 140/140 PASS (135 + 5 TesseractOcrEngine)
 ```
 
-== Session 069 terminée — Architecture README Plugin + Consommateur
+== Session 071 terminée — CNV-6 Migration
 
-Déplacement README.plugin → codex-plugin/README.plugin/ (README.md master
-remonté à racine plugin). Déplacement README.consommateurs → racine borough.
-Liens i18n recréés (10 langues).
+Convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery
+gradle-plugin + publishing). build.gradle.kts 200→139 lignes (-61).
+Variantes gardées : buildscript annotations force, freeCompilerArgs
+-Xjsr305=strict, kover, kotlin.serialization. compileKotlin SUCCESS, BUILD
+SUCCESS. CNV-6 terminé.
 
-== Objectifs (au choix)
+== Prochaine session — 072
 
-1. *CDX-15 TDD rétroactif OCR* : couverture tests sur contrats OCR existants
-   (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028). Vérifier 140/140 PASS.
-2. *Alignement switcher EN* : corriger `README.md` (master EN) pour porter le
+1. *Vérifier propagation Central codex-plugin:0.0.2* (session 070).
+2. *CDX-15 TDD rétroactif OCR* : couverture tests sur contrats OCR existants
+   (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028). Vérifier
+   140/140 PASS.
+3. *Alignement switcher EN* : corriger `README.md` (master EN) pour porter le
    switcher complet 10 langues (actuellement tronqué à EN | FR).
-3. Si CDX-15 déjà couvert, attaquer EPIC suivant (voir INDEX.adoc roadmap).
-   CDX-13 (REST exposition) reste 🔴 SUSPENDU.
+4. CDX-13 (REST exposition) reste 🔴 SUSPENDU.
 
 == References
 
-- `.agents/sessions/069-readme-architecture-plugin-consommateur.adoc`
-- `README.consommateurs/` + `codex-plugin/README.plugin/` (20 fichiers)
-- `codex/ocr/OcrEngine.kt` + `TesseractOcrEngine.kt`
+- `.agents/sessions/071-cnv-6-migration.adoc`
+- `build.gradle.kts` (139 lignes, convention plugins)
