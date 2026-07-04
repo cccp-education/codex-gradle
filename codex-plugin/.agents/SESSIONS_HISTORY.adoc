@@ -993,3 +993,42 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - `publishAggregationToCentralPortal` OK (déploiement 1635796b)
 
 *Résultat* : ✅ codex-plugin:0.0.2 publié sur Central (en propagation)
+
+'''
+
+== Session 072 — CDX-13 OCR Pipeline (DOC-11 alignement)
+
+*Date* : 2026-07-04
+*Type* : impl + test (baby-step TDD/BDD)
+*Score* : 9/10
+
+*Objectif* :
+- Améliorer CDX-13 (OCR) en parallèle de DOC-11 (document-gradle Pipeline Livre)
+- DOC-11 consomme l'OCR de codex : photos → OCR → AsciiDoc → publication
+
+*Contexte* :
+- Avant : seul TesseractOcrEngine (local, texte brut) existait
+- Il manquait : moteur LLM (Ollama vision), pipeline fallback, task collectOcr
+
+*Livrables* :
+- 5 nouvelles classes domaine OCR :
+  * OllamaChatClient (port/interface) — abstraction HTTP Ollama
+  * HttpOllamaChatClient (adapter) — java.net.http.HttpClient, `/api/chat`
+  * LlmOcrEngine — OCR LLM (gpt-oss:120b-cloud) → AsciiDoc structuré
+  * OcrPipeline — fallback chain LLM → Tesseract
+  * CollectOcrTask — task Gradle `collectOcr` (dossier images → AsciiDoc multi-pages)
+- Wiring plugin : CodexExtension +4 propriétés (ollamaHost, ollamaPort, ollamaModel, ocrLanguage)
+- Defaults : localhost:11437, gpt-oss:120b-cloud, fr (plage rotation 11437-11465)
+- Tests (+32) : 22 unit + 5 functional + 5 cucumber
+  * LlmOcrEngineTest (6), OcrPipelineTest (6), HttpOllamaChatClientTest (5),
+    CollectOcrTaskTest (5), ocr-pipeline.feature (5 scénarios), OcrPipelineSteps (18 steps)
+- Fix : OcrConfigTest.kt:12 nom test contenant `:` illégal (renommé)
+- 167/167 PASS, BUILD SUCCESSFUL, build -x test OK
+
+*Méthode* : baby-step agile software craftsmanship
+- DDD : ubiquitous language (OcrEngine, OcrPipeline, LlmOcrEngine, OllamaChatClient, CollectOcrTask)
+- TDD : Red → Green → Refactor, 1 test à la fois
+- BDD : Cucumber .feature en amont (scénarios métier DOC-11) → step definitions
+- Port/Adapter : OllamaChatClient = port, HttpOllamaChatClient = adapter, LlmOcrEngine = domaine pur
+
+*Résultat* : ✅ EPIC OCR-3 TERMINÉ — CDX-13 pipeline OCR domaine livré, exposition N3 suspendue (DOC-11 bookPipeline)

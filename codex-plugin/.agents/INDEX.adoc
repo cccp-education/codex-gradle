@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-07-03 (CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1)
-_Session terminee_ : 071 ✅ — CNV-6 Migration : convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS, BUILD SUCCESS. CNV-6 terminé.
-_Session precedente_ : 070 ✅ — Re-publication codex-plugin 0.0.2 (OcrEngine/TesseractOcrEngine manquants en 0.0.1)
-_Session en cours_ : 072 — Vérifier propagation Central codex-plugin:0.0.2 + CDX-15 TDD rétroactif OCR (suspendu)
+_Derniere mise a jour_ : 2026-07-04 (CDX-13 OCR Pipeline — LlmOcrEngine + OcrPipeline + collectOcr task, DOC-11 alignement)
+_Session terminee_ : 072 ✅ — CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages, consommable par document-gradle DOC-11). 167 tests (+32 : 22 unit + 5 functional + 5 cucumber). BUILD SUCCESSFUL, build -x test OK. Méthode baby-step TDD/BDD.
+_Session precedente_ : 071 ✅ — CNV-6 Migration : convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS, BUILD SUCCESS. CNV-6 terminé.
+_Session en cours_ : 073 — Vérifier propagation Central codex-plugin:0.0.2 + tests intégration réelle Ollama (assumeTrue) + persistance OcrResult (cache disque hash)
 
 '''
 == REGLES ABSOLUES (resume)
@@ -27,7 +27,6 @@ _Session en cours_ : 072 — Vérifier propagation Central codex-plugin:0.0.2 + 
 
 |===
 | # | Date | Type | Sujet | Score
-| 071 | 2026-07-03 | dev | CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS | ✅ TERMINE
 | 0 | 2026-05-06 | init | Bootstrap gouvernance agent codex + scaffold plugin | —
 | 001 | 2026-05-07 | design | JSON LDD, SQL LMD, Cartographie Ontologique | —
 | 002 | 2026-05-07 | design | Separation des Concerns & Bouclage | —
@@ -51,16 +50,18 @@ _Session en cours_ : 072 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | 020 | 2026-05-12 | review | Code Review Globale (audit passif) | ✅
 | 021 | 2026-05-19 | refact | EPIC K K-1 Renommage taxonomie (10 collect/transform/deploy) | ✅
 | 022 | 2026-05-19 | doc | EPIC K K-5 Documentation — Mise a jour INDEX.adoc | ✅
-| **023** | **2026-05-22** | **bugfix+cleanup** | **Fix compilation bugs (5 fichiers) + cleanup packages** | **9/10**
-| **024** | **2026-05-22** | **test** | **CDX-14 Couverture tests (A) JUnit5 + (B) Cucumber — 105/105 PASS, 5 features Cucumber** | **✅**
-| **025** | **2026-05-22** | **doc** | **KDoc API documentation (18 classes, ~200 lignes)** | **✅**
-| **026** | **2026-05-22** | **investigate** | **Kover offline instrumentation — limitation documentee (Kover 0.9.1)** | **✅**
+| 023 | 2026-05-22 | bugfix+cleanup | Fix compilation bugs (5 fichiers) + cleanup packages | 9/10
+| 024 | 2026-05-22 | test | CDX-14 Couverture tests (A) JUnit5 + (B) Cucumber — 105/105 PASS, 5 features Cucumber | ✅
+| 025 | 2026-05-22 | doc | KDoc API documentation (18 classes, ~200 lignes) | ✅
+| 026 | 2026-05-22 | investigate | Kover offline instrumentation — limitation documentee (Kover 0.9.1) | ✅
 | — | 2026-06-08 | review | Architecture boundary review Codex↔Document — boundary READ+RAG vs WRITE+PUBLISH | ✅
-| **030** | **2026-06-17** | **bugfix+build** | **Fix plugin ID + buildscript Gradle 9.x — 135/135 PASS** | **✅**
-| **031** | **2026-06-17** | **chore+infra** | **Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé)** | **🟡**
-| **032** | **2026-06-17** | **bugfix+build** | **Fix Gradle 9 build — standalone sub-build + codebase 0.0.2** | **✅**
-| **067** | **2026-06-23** | **impl+boundary** | **EPIC OCR-2 Tesseract fallback — OcrEngine + TesseractOcrEngine, boundary codex↔codebase harmonisé, 5 tests JUnit5, publishToMavenLocal 0.0.1** | **✅**
-| **068** | **2026-06-24** | **doc+i18n** | **README multilingues — 20 fichiers (10 langues × consumer + plugin), badges Maven Central/Plugin Portal/CI/License, switcher i18n, AR/UR RTL** | **✅**
+| 030 | 2026-06-17 | bugfix+build | Fix plugin ID + buildscript Gradle 9.x — 135/135 PASS | ✅
+| 031 | 2026-06-17 | chore+infra | Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé) | 🟡
+| 032 | 2026-06-17 | bugfix+build | Fix Gradle 9 build — standalone sub-build + codebase 0.0.2 | ✅
+| 067 | 2026-06-23 | impl+boundary | EPIC OCR-2 Tesseract fallback — OcrEngine + TesseractOcrEngine, boundary codex↔codebase harmonisé, 5 tests JUnit5, publishToMavenLocal 0.0.1 | ✅
+| 068 | 2026-06-24 | doc+i18n | README multilingues — 20 fichiers (10 langues × consumer + plugin), badges Maven Central/Plugin Portal/CI/License, switcher i18n, AR/UR RTL | ✅
+| **071** | **2026-07-03** | **dev** | **CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS** | **✅ TERMINE**
+| **072** | **2026-07-04** | **impl+test** | **CDX-13 OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr → AsciiDoc, DOC-11 alignement), 167 tests (+32), baby-step TDD/BDD** | **✅ TERMINE**
 |===
 
 '''
@@ -84,11 +85,12 @@ _Session en cours_ : 072 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | CDX-10 | Task extractEpubStructure — EPUB via Tika → AsciiDoc | ✅ TERMINE | P3
 | CDX-11 | Integration runner-gradle N3 : codexRetrieve → assembleCompositeContext | ✅ TERMINE | P2
 ...
-| CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU | P1
+| CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU (pipeline OCR domaine livré session 072, exposition N3 avec DOC-11 bookPipeline) | P1
 | CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
 | EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
 | EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
 | EPIC OCR-2 | Tesseract fallback — OcrEngine + TesseractOcrEngine (boundary codex↔codebase) | ✅ TERMINE (session 067) | P1
+| EPIC OCR-3 | LLM OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback) + collectOcr task (DOC-11 alignement) | ✅ TERMINE (session 072) | P1
 | EPIC README-I18N | README multilingues (10 langues × consumer + plugin) | ✅ TERMINE (session 068) | P2
 |===
 

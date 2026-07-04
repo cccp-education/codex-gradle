@@ -1,6 +1,59 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-06-23
-:session: 067
+:date: 2026-07-04
+:session: 072
+
+== Session 072 — CDX-13 OCR Pipeline (+32 tests, 167/167 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/ocr/LlmOcrEngineTest.kt` | 6 JUnit5 | ✅ PASS (fake OllamaChatClient)
+| `test/codex/ocr/OcrPipelineTest.kt` | 6 JUnit5 | ✅ PASS (fallback chain)
+| `test/codex/ocr/HttpOllamaChatClientTest.kt` | 5 JUnit5 | ✅ PASS (mock server JDK)
+| `test/codex/tasks/CollectOcrTaskTest.kt` | 5 JUnit5 | ✅ PASS (ProjectBuilder)
+| `test/resources/features/ocr-pipeline.feature` | 5 Cucumber | ✅ PASS (18 steps)
+|===
+
+Nouveaux tests détaillés :
+
+*LlmOcrEngineTest* (6) :
+. `LlmOcrEngine implements OcrEngine`
+. `process returns OcrResult with structured AsciiDoc text from LLM response`
+. `process returns empty result when LLM response is blank`
+. `process returns empty result when client throws`
+. `process uses custom prompt when provided in request`
+. `process encodes image as base64 in Ollama chat payload`
+
+*OcrPipelineTest* (6) :
+. `OcrPipeline returns LLM result when LLM succeeds`
+. `OcrPipeline falls back to Tesseract when LLM returns empty text`
+. `OcrPipeline falls back to next engine when LLM confidence is zero`
+. `OcrPipeline returns empty result when all engines fail`
+. `OcrPipeline with single engine returns that engine result`
+. `OcrPipeline metadata records which engine won`
+
+*HttpOllamaChatClientTest* (5) :
+. `chat sends POST to api chat endpoint and returns message content`
+. `chat throws on non 2xx response`
+. `chat supports legacy response field when message missing`
+. `chat uses config endpoint when provided`
+. `chat payload contains model and images fields`
+
+*CollectOcrTaskTest* (5) :
+. `plugin registers collectOcr task with correct type`
+. `collectOcr task has correct group and description`
+. `collectOcr task inherits Ollama conventions from extension`
+. `collectOcr task produces empty output when no images found`
+. `extension exposes ollama and ocr properties`
+
+*ocr-pipeline.feature* (5 scénarios) :
+. `LLM OCR engine produces structured AsciiDoc from image`
+. `OCR pipeline falls back to Tesseract when LLM fails`
+. `OCR pipeline returns empty result when all engines fail`
+. `collectOcr task concatenates pages into a single AsciiDoc document`
+. `collectOcr task produces empty output when no images found`
+
+Fix : `OcrConfigTest.kt:12` — nom test contenant `:` illégal Kotlin (renommé).
 
 == Session 067 — TesseractOcrEngineTest (5 tests JUnit5)
 

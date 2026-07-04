@@ -1,0 +1,94 @@
+= Session 072 — CDX-13 OCR Pipeline (DOC-11 alignement)
+:date: 2026-07-04
+:status: TERMINE
+:method: baby-step TDD/BDD — Red → Green → Refactor
+
+== Objectif
+
+Améliorer CDX-13 (OCR) en parallèle de DOC-11 (document-gradle Pipeline Livre).
+DOC-11 consomme l'OCR de codex : photos → OCR → AsciiDoc → publication.
+Avant cette session : seul `TesseractOcrEngine` (local, texte brut) existait.
+Il manquait : un moteur LLM (Ollama vision), un pipeline de fallback, une task
+Gradle `collectOcr` consommable par document-gradle.
+
+== Livrables
+
+=== Domaine OCR (5 nouvelles classes)
+
+. `OllamaChatClient` (port/interface) — abstraction HTTP Ollama pour testabilité
+. `HttpOllamaChatClient` — implémentation concrète (java.net.http.HttpClient, `/api/chat`)
+. `LlmOcrEngine` — moteur OCR LLM (gpt-oss:120b-cloud) → AsciiDoc structuré
+. `OcrPipeline` — orchestration fallback LLM → Tesseract (chaîne 2 engines)
+. `CollectOcrTask` — task Gradle `collectOcr` (dossier images → AsciiDoc multi-pages)
+
+=== Wiring plugin
+
+. `CodexExtension` : +4 propriétés (ollamaHost, ollamaPort, ollamaModel, ocrLanguage)
+. `CodexPlugin` : enregistrement `collectOcr` (group=collect, conventions depuis extension)
+. Defaults : localhost:11437, gpt-oss:120b-cloud, lang=fr (plage rotation 11437-11465)
+
+=== Tests (baby-step TDD/BDD)
+
+. *Unitaires* (Red → Green) :
+  * `LlmOcrEngineTest` — 6 tests (fake OllamaChatClient, pas de réseau)
+  * `OcrPipelineTest` — 6 tests (fallback chain, all-fail, single engine)
+  * `HttpOllamaChatClientTest` — 5 tests (mock server JDK com.sun.net.httpserver)
+  * `CollectOcrTaskTest` — 5 tests (ProjectBuilder, wiring, empty dir)
+. *BDD Cucumber* :
+  * `ocr-pipeline.feature` — 5 scénarios (LLM success, fallback, all-fail, pages concat, empty dir)
+  * `OcrPipelineSteps.kt` — step definitions (18 steps)
+. *Fix* : `OcrConfigTest.kt:12` — nom test contenant `:` illégal (renommé)
+
+=== Compte tests
+
+* Avant : 135 tests (PROMPT_REPRISE session 071)
+* Après : 167 tests (+32 : 22 unit + 5 functional + 5 cucumber)
+* BUILD SUCCESSFUL, 0 FAILED, `./gradlew build -x test` OK
+
+== Méthode (baby-step agile software craftsmanship)
+
+. *DDD* : ubiquitous language — OcrEngine, OcrRequest, OcrResult, OcrConfig, OcrPipeline,
+   LlmOcrEngine, TesseractOcrEngine, OllamaChatClient, HttpOllamaChatClient, CollectOcrTask
+. *TDD* : Red (test fail) → Green (minimal impl) → Refactor (extract pipeline) — 1 test à la fois
+. *BDD* : Cucumber `.feature` en amont (scénarios métier DOC-11) → step definitions
+. *Pyramide* : unit (rapide, mock) → functional (ProjectBuilder) → cucumber (acceptance)
+. *Port/Adapter* : `OllamaChatClient` interface = port, `HttpOllamaChatClient` = adapter,
+   `LlmOcrEngine` = domaine pur (zéro dépendance HTTP)
+
+== Architecture
+
+----
+[CollectOcrTask] (Gradle, group=collect)
+    └─ OcrPipeline(engines=[LlmOcrEngine, TesseractOcrEngine])
+        ├─ LlmOcrEngine(client=HttpOllamaChatClient, config=OcrConfig)
+        │   └─ HttpOllamaChatClient → POST /api/chat (Ollama vision, base64 images)
+        │       → OcrResult.structuredText (AsciiDoc)
+        └─ TesseractOcrEngine (fallback local, CLI tesseract)
+            → OcrResult.structuredText (texte brut)
+    → outputFile: OCR Book.adoc (1 section == Page N par image)
+----
+
+== Loi de l'Économie d'Encre (Regle 5)
+
+`@DisableCachingByDefault` sur `CollectOcrTask` — LLM OCR = opération metered.
+Le pipeline ne re-OCRoise pas une image déjà traitée (delta hash → TODO EPIC suivant).
+`OcrResult.writeTo(dir, result)` existe déjà pour persister les résultats.
+
+== Prochaine session (073)
+
+. CDX-13 reste 🔴 SUSPENDU pour l'exposition REST (runner-gradle N3) — le pipeline
+  OCR domaine est livré, l'exposition N3 viendra avec DOC-11 bookPipeline.
+. Vérifier propagation Central codex-plugin:0.0.2 (session 070) — toujours en attente.
+. Alignement switcher EN README.md (tronqué à EN | FR).
+. Tests d'intégration réelle Ollama (port 11437-11465) — `assumeTrue(isOllamaReady)`.
+. Persistance OcrResult par page (cache disque, hash image) — Loi Économie d'Encre.
+
+== Références
+
+- `codex-plugin/src/main/kotlin/codex/ocr/` (6 fichiers : OcrEngine, OcrRequest, OcrResult,
+  OcrConfig, TesseractOcrEngine, LlmOcrEngine, OcrPipeline, OllamaChatClient, HttpOllamaChatClient)
+- `codex-plugin/src/main/kotlin/codex/tasks/CollectOcrTask.kt`
+- `codex-plugin/src/test/kotlin/codex/ocr/` (4 fichiers de test)
+- `codex-plugin/src/test/kotlin/codex/bdd/OcrPipelineSteps.kt`
+- `codex-plugin/src/test/resources/features/ocr-pipeline.feature`
+- `codex-plugin/src/test/kotlin/codex/tasks/CollectOcrTaskTest.kt`

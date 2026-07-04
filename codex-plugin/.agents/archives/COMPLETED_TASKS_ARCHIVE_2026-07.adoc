@@ -1,0 +1,69 @@
+= COMPLETED_TASKS_ARCHIVE — 2026-07
+:toc:
+
+== Session 072 — CDX-13 OCR Pipeline (DOC-11 alignement) — 2026-07-04
+
+*EPIC* : OCR-3 (LLM OCR Pipeline)
+*Score* : 9/10
+*Méthode* : baby-step TDD/BDD (Red → Green → Refactor)
+
+=== Tâches terminées
+
+. **OllamaChatClient** (port/interface) — abstraction HTTP Ollama pour testabilité
+. **HttpOllamaChatClient** (adapter) — java.net.http.HttpClient, `/api/chat` endpoint
+. **LlmOcrEngine** — OCR LLM (gpt-oss:120b-cloud) → AsciiDoc structuré (différent de Tesseract qui sort du texte brut)
+. **OcrPipeline** — orchestration fallback chain LLM → Tesseract (2 engines, best-effort)
+. **CollectOcrTask** — task Gradle `collectOcr` (dossier images → AsciiDoc multi-pages, consommable par document-gradle DOC-11)
+. **CodexExtension** — +4 propriétés (ollamaHost, ollamaPort, ollamaModel, ocrLanguage)
+. **CodexPlugin** — enregistrement `collectOcr` (group=collect, conventions depuis extension)
+. **BDD Cucumber** — `ocr-pipeline.feature` (5 scénarios) + `OcrPipelineSteps.kt` (18 steps)
+. **Fix** — `OcrConfigTest.kt:12` nom test contenant `:` illégal Kotlin
+
+=== Fichiers créés (11)
+
+* `codex-plugin/src/main/kotlin/codex/ocr/OllamaChatClient.kt`
+* `codex-plugin/src/main/kotlin/codex/ocr/HttpOllamaChatClient.kt`
+* `codex-plugin/src/main/kotlin/codex/ocr/LlmOcrEngine.kt`
+* `codex-plugin/src/main/kotlin/codex/ocr/OcrPipeline.kt`
+* `codex-plugin/src/main/kotlin/codex/tasks/CollectOcrTask.kt`
+* `codex-plugin/src/test/kotlin/codex/ocr/LlmOcrEngineTest.kt`
+* `codex-plugin/src/test/kotlin/codex/ocr/OcrPipelineTest.kt`
+* `codex-plugin/src/test/kotlin/codex/ocr/HttpOllamaChatClientTest.kt`
+* `codex-plugin/src/test/kotlin/codex/tasks/CollectOcrTaskTest.kt`
+* `codex-plugin/src/test/kotlin/codex/bdd/OcrPipelineSteps.kt`
+* `codex-plugin/src/test/resources/features/ocr-pipeline.feature`
+
+=== Fichiers modifiés (4)
+
+* `codex-plugin/src/main/kotlin/codex/CodexExtension.kt` (+4 propriétés OCR)
+* `codex-plugin/src/main/kotlin/codex/CodexPlugin.kt` (registre collectOcr)
+* `codex-plugin/src/test/kotlin/codex/ocr/OcrConfigTest.kt` (fix nom test)
+* `codex-plugin/.agents/INDEX.adoc` (session 072, EPIC OCR-3)
+
+=== Compte tests
+
+* Avant : 135 tests
+* Après : 167 tests (+32 : 22 unit + 5 functional + 5 cucumber)
+* BUILD SUCCESSFUL, `build -x test` OK, `validatePlugins` OK
+
+=== Architecture (port/adapter DDD)
+
+----
+[CollectOcrTask] (Gradle, group=collect)
+    └─ OcrPipeline(engines=[LlmOcrEngine, TesseractOcrEngine])
+        ├─ LlmOcrEngine(client=HttpOllamaChatClient, config=OcrConfig)
+        │   └─ HttpOllamaChatClient → POST /api/chat (Ollama vision, base64 images)
+        │       → OcrResult.structuredText (AsciiDoc)
+        └─ TesseractOcrEngine (fallback local, CLI tesseract)
+            → OcrResult.structuredText (texte brut)
+    → outputFile: OCR Book.adoc (1 section == Page N par image)
+----
+
+=== Conventions respectées
+
+* Plage ports Ollama : 11437-11465 (défaut 11437)
+* Modèle : gpt-oss:120b-cloud (AGENTS.adoc contrainte globale)
+* `@DisableCachingByDefault` sur CollectOcrTask (LLM metered, Loi Économie d'Encre)
+* `@Input`/`@Optional` sur toutes les propriétés task (validatePlugins OK)
+* Code en anglais, aucun commentaire/texte français dans le code source
+* Zéro secret/token/api key en dur

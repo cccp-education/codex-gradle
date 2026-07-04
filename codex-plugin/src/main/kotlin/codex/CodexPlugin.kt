@@ -6,6 +6,7 @@ import codex.tasks.CodexIngestTask
 import codex.tasks.CodexPipelineTask
 import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexRetrieveTask
+import codex.tasks.CollectOcrTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
@@ -27,6 +28,7 @@ import org.gradle.api.Project
  * - `collectBookSql` — DDL/INSERT PostgreSQL generation
  * - `collectIngest` — ONNX vectorization + pgvector storage
  * - `collectRetrieve` — cosine similarity semantic search
+ * - `collectOcr` — LLM OCR pipeline on image directory → AsciiDoc (consumed by DOC-11)
  *
  * **GENERATE group**:
  * - `generateCompositeContext` — semantic search via CodexVectorStore → composite-context.json
@@ -58,6 +60,10 @@ class CodexPlugin : Plugin<Project> {
         extension.pgvectorDatabase.convention("codex")
         extension.pgvectorUser.convention("codex")
         extension.pgvectorPassword.convention("codex")
+        extension.ollamaHost.convention("localhost")
+        extension.ollamaPort.convention("11437")
+        extension.ollamaModel.convention("gpt-oss:120b-cloud")
+        extension.ocrLanguage.convention("fr")
 
         project.tasks.register(
             "collectText",
@@ -176,6 +182,18 @@ class CodexPlugin : Plugin<Project> {
             it.query.set(project.providers.gradleProperty("query").orElse("architecture du workspace"))
             it.topK.set(project.providers.gradleProperty("topK").orElse("10"))
             it.outputFile.set(project.layout.buildDirectory.file("codex/composite-context.json"))
+        }
+
+        project.tasks.register(
+            "collectOcr",
+            CollectOcrTask::class.java
+        ) {
+            it.group = "collect"
+            it.description = "OCR pipeline (LLM Ollama → Tesseract fallback) sur un dossier d'images → AsciiDoc structuré (consommé par document-gradle DOC-11)"
+            it.ollamaHost.convention(extension.ollamaHost)
+            it.ollamaPort.convention(extension.ollamaPort)
+            it.model.convention(extension.ollamaModel)
+            it.language.convention(extension.ocrLanguage)
         }
     }
 }

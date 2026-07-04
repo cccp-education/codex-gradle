@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 071
-:session: 071
-:date: 2026-07-03
+= PROMPT_REPRISE — Codex — Session 073
+:session: 073
+:date: 2026-07-04
 :status: PRET
 :max-lines: 40
 
@@ -8,29 +8,40 @@
 
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
-../gradlew build -x test   # compile OK
-../gradlew test            # 140/140 PASS (135 + 5 TesseractOcrEngine)
+../gradlew build -x test   # compile OK, validatePlugins OK
+../gradlew test            # 167/167 PASS (135 + 6 Llm + 6 OcrPipeline + 5 Http + 5 CollectOcr + 10 Cucumber)
 ```
 
-== Session 071 terminée — CNV-6 Migration
+== Session 072 terminée — CDX-13 OCR Pipeline (DOC-11 alignement)
 
-Convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery
-gradle-plugin + publishing). build.gradle.kts 200→139 lignes (-61).
-Variantes gardées : buildscript annotations force, freeCompilerArgs
--Xjsr305=strict, kover, kotlin.serialization. compileKotlin SUCCESS, BUILD
-SUCCESS. CNV-6 terminé.
+LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback
+LLM→Tesseract) + HttpOllamaChatClient (port/adapter, java.net.http) +
+CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages). 167
+tests (+32 : 22 unit + 5 functional + 5 cucumber). Méthode baby-step
+TDD/BDD (Red→Green→Refactor). BUILD SUCCESSFUL, build -x test OK.
 
-== Prochaine session — 072
+Nouvelles classes domaine OCR : OllamaChatClient (port), HttpOllamaChatClient
+(adapter), LlmOcrEngine, OcrPipeline, CollectOcrTask. CodexExtension +4
+propriétés (ollamaHost, ollamaPort, ollamaModel, ocrLanguage). Defaults :
+localhost:11437, gpt-oss:120b-cloud, fr (plage rotation 11437-11465).
 
-1. *Vérifier propagation Central codex-plugin:0.0.2* (session 070).
-2. *CDX-15 TDD rétroactif OCR* : couverture tests sur contrats OCR existants
-   (OcrRequest/OcrResult/OcrConfig déjà testés session 027-028). Vérifier
-   140/140 PASS.
-3. *Alignement switcher EN* : corriger `README.md` (master EN) pour porter le
-   switcher complet 10 langues (actuellement tronqué à EN | FR).
-4. CDX-13 (REST exposition) reste 🔴 SUSPENDU.
+== Prochaine session — 073
+
+1. *Tests intégration réelle Ollama* : `assumeTrue(isOllamaReady(port))` sur
+   plage 11437-11465. Test d'intégration LlmOcrEngine avec vrai Ollama
+   (skip propre hors CI/local sans Ollama).
+2. *Persistance OcrResult par page* (cache disque, hash image) — Loi de
+   l'Économie d'Encre (Regle 5). Ne pas re-OCRoiser une image déjà traitée.
+3. *Vérifier propagation Central codex-plugin:0.0.2* (session 070) — toujours
+   en attente.
+4. *Alignement switcher EN* : corriger README.md (master EN) switcher 10 langues.
+5. CDX-13 exposition REST (runner-gradle N3) reste 🔴 SUSPENDU — viendra avec
+   DOC-11 bookPipeline côté document-gradle.
 
 == References
 
-- `.agents/sessions/071-cnv-6-migration.adoc`
-- `build.gradle.kts` (139 lignes, convention plugins)
+- `.agents/sessions/072-cdx13-ocr-pipeline.adoc`
+- `codex-plugin/src/main/kotlin/codex/ocr/` (9 fichiers : OcrEngine, OcrRequest,
+  OcrResult, OcrConfig, TesseractOcrEngine, LlmOcrEngine, OcrPipeline,
+  OllamaChatClient, HttpOllamaChatClient)
+- `codex-plugin/src/main/kotlin/codex/tasks/CollectOcrTask.kt`

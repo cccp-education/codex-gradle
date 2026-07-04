@@ -9,7 +9,7 @@ import java.io.File
 class OcrConfigTest {
 
     @Test
-    fun `defaultConfig returns gpt-oss:120b-cloud with temperature zero`() {
+    fun `defaultConfig returns gpt-oss 120b-cloud with temperature zero`() {
         val config = OcrConfig.defaultConfig()
         assertEquals("ollama", config.provider)
         assertEquals("gpt-oss:120b-cloud", config.model)

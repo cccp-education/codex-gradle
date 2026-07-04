@@ -4,12 +4,47 @@
 :toc: left
 :sectnums:
 
+_Dernière mise à jour : 2026-07-04 (session 072 — CDX-13 OCR Pipeline livré, EPIC OCR-3 TERMINÉ)_
+
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
 '''
 == EPIC PUB — Publication Maven Central
 
 Plugin N2 de pipeline documentaire (Asciidoctor → PDF). VAGUE 4 (plugins metier).
+
+== EPIC OCR-3 — LLM OCR Pipeline (DOC-11 alignement) ✅ TERMINÉ (session 072)
+
+. `LlmOcrEngine` — OCR LLM via Ollama vision (gpt-oss:120b-cloud) → AsciiDoc structuré
+. `OcrPipeline` — fallback chain LLM → Tesseract (chaîne 2 engines)
+. `HttpOllamaChatClient` — port/adapter HTTP (java.net.http.HttpClient, `/api/chat`)
+. `CollectOcrTask` — task Gradle `collectOcr` (dossier images → AsciiDoc multi-pages)
+. BDD Cucumber `ocr-pipeline.feature` — 5 scénarios (LLM success, fallback, all-fail, pages, empty)
+. 167 tests (+32 : 22 unit + 5 functional + 5 cucumber)
+
+=== US-CDX-13-1 — Persistance OcrResult (cache disque, hash image) — P1 (session 073)
+
+. *Valeur* : Loi de l'Économie d'Encre — ne pas re-OCRoiser une image déjà
+   traitée si son hash n'a pas changé. Économie de tokens LLM metered.
+. *Critères* :
+  - `OcrResult.writeTo(dir, result)` existe déjà (persist `ocr-result.json`)
+  - Avant OCR, comparer hash image source vs hash stocké dans `ocr-result.json`
+  - Si hash identique → réutiliser, skip LLM call
+  - Si hash différent → re-OCRoiser, écraser résultat
+
+=== US-CDX-13-2 — Tests intégration réelle Ollama (assumeTrue) — P2 (session 073)
+
+. *Valeur* : Valider le contrat HTTP réel avec Ollama sur plage 11437-11465.
+. *Critères* :
+  - `assumeTrue(isOllamaReady(port))` pour skip propre hors CI/local
+  - Test d'intégration `LlmOcrEngine` avec vrai Ollama
+  - Rotation ports 11437-11465 (AGENTS.adoc contrainte globale)
+
+=== US-CDX-13-3 — Exposition REST via runner-gradle N3 — 🔴 SUSPENDU
+
+. *Valeur* : Exposer le pipeline OCR via runner-gradle N3 pour consommation
+   HTTP par document-gradle DOC-11 bookPipeline.
+. *Statut* : Suspendu — viendra avec DOC-11 bookPipeline côté document-gradle.
 
 === PUB-3.09 — codex-plugin
 **Priorite** : P0
