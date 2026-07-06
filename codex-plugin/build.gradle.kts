@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.plugin.publish)
     alias(libs.plugins.kover)
     alias(libs.plugins.codebase)
-    id("education.cccp.build.gradle-plugin") version "0.0.1"
-    id("education.cccp.build.publishing") version "0.0.1"
+    id("education.cccp.build.gradle-plugin") version "0.0.2"
+    id("education.cccp.build.publishing") version "0.0.2"
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
