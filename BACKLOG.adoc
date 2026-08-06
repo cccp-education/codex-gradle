@@ -82,3 +82,32 @@ Par :
 | Artefact | URL |
 |---|---|
 | codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin |
+
+'''
+== 🔴 EPIC CDX-CR3 — Revue CR-GLOBALE-003 : Création de Contenu Solide
+
+_Source_ : `GLOBAL_CODE_REVIEW.adoc` (workspace root) — session CR-GLOBALE-003 (2026-08-04).
+_Focus_ : codex alimente document DOC-11 (bookPipeline) ; les bugs critiques bloquent la chaîne amont.
+
+[cols="1,3,2", options="header"]
+|===
+| EPIC | Description | Priorité
+
+| CDX-CR3-1
+| **SQL injection `CodexIngestTask.kt:118`** — `$chunkId` interpolé directement dans le SQL
+(`UPDATE codex_chunks SET embedding = '[$vec]'::vector WHERE id = $chunkId`). Parameterizer comme
+les autres requêtes (`$1`, `$2`). _(Rappel de CR-GLOBALE-002, toujours non fixé.)_
+| 🔴 P0
+
+| CDX-CR3-2
+| **`CodexCompositeContextTask` hardcode `localhost:5432`** — `CodexCompositeContextTask.kt:39`
+instancie `CodexVectorStore()` sans pgHost/pgPort lus de l'extension `codex`. Inutilisable hors localhost.
+Ajouter les propriétés de tâche + wiring depuis l'extension.
+| 🔴 P0
+
+| CDX-CR3-3
+| **`chunk_index` incorrect pour contenu dupliqué** — `CodexIngestTask.kt:110` : `chunks.indexOf(chunk)`
+retourne la première occurrence → deux chunks identiques reçoivent le même index. Utiliser un compteur
+parcouru, pas `indexOf`.
+| 🟠 P1
+|===
