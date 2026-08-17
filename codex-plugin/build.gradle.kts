@@ -25,7 +25,7 @@ version = libs.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.1"))
+    implementation(platform("education.cccp:workspace-bom:0.0.19"))
 
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.serialization.json)
@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.koog.agents)
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
-    implementation("education.cccp:codebase-contracts:0.0.1")
+    implementation("education.cccp:codebase-contracts:0.0.2")
 
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
