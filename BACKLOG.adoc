@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer TERMINÉ, +44 unit)_
+_Dernière mise à jour : 2026-08-19 (session 079 — CDX-3-1 domaine `codex.ontology` + `OntologyDeriver` object pur TERMINÉ, +13 unit)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -239,8 +239,8 @@ objects *calculés* (pas devinés). 3 requêtes archétypales SQL.
 | ✅ TERMINÉ (S-077)
 
 | CDX-3-1
-| Domaine `codex.ontology` + `OntologyMapping` + `BoundedContext`/`Aggregate`/`ValueObject` + `OntologyDeriver` object pur. ~12 unit.
-| 🟡 À FAIRE
+| Domaine `codex.ontology` + `OntologyMapping` + `BoundedContext`/`Aggregate`/`ValueObject` + `OntologyDeriver` object pur. 3 requêtes archétypales : bounded contexts (BFS connectivité FK), aggregates (CASCADE edges par racine, self-ref exclue), value objects (tables sans FK sortantes). LDD title nomme le bounded context. 13 unit tests.
+| ✅ TERMINÉ (S-079)
 
 | CDX-3-2
 | Tâche `deriveOntology` (groupe transform) + wiring `CodexPlugin`. ~4 functional.

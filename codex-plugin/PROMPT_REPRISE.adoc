@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 079
-:session: 079
+= PROMPT_REPRISE — Codex — Session 080
+:session: 080
 :date: 2026-08-19
 :status: PRET
 :max-lines: 45
@@ -9,47 +9,48 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 255/255 PASS (baseline préservée S-078)
+../gradlew test            # 268/268 PASS (baseline préservée S-079)
 ```
 
-== Session 078 terminée — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer
+== Session 079 terminée — CDX-3-1 Domaine codex.ontology + OntologyDeriver
 
-. *CDX-7-1 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
-. *FontStyleDetectorTest.kt* (nouveau, 32 unit) — characterization exhaustive
-  de l'objet existant : 12 mots-clés monospace, priorité mono>bold, 5 bold,
-  5 italic, combinaison BOLD_ITALIC, fallback NORMAL, case-insensitive,
-  helpers enum pour les 5 valeurs.
-. *TypographicAnalyzer extrait* de `ExtractBookStructureTask` — nouvel objet
-  pur `codex.tasks.TypographicAnalyzer` + `HeaderThresholds` data class
-  publique. `ExtractBookStructureTask` délègue (-11 lignes, +1 ligne).
-. *TypographicAnalyzerTest.kt* (nouveau, 12 unit) — 4 thresholds dynamiques
-  (large range), 4 fallbacks (range < 1/2/3/4 + zero), ordre h1>h2>h3>h4,
-  plafond max, range négative défensive.
-. *255 tests* 0 FAIL (baseline 211 → +44). Kover VERT, validatePlugins VERT.
+. *CDX-3-1 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
+. *Domaine `codex.ontology`* (12e) — 2 fichiers prod purs :
+  `OntologyMapping.kt` (4 data classes immutables) +
+  `OntologyDeriver.kt` (object pur 169 lignes, parsing SQL DDL par regex).
+. *3 requêtes archétypales* : bounded contexts (BFS connectivité FK),
+  aggregates (CASCADE edges par racine, self-ref exclue), value objects
+  (tables sans FK sortantes). LDD title nomme le bounded context.
+. *13 unit tests* (OntologyDeriverTest) — empty, extraction, FK-connected,
+  disconnected, CASCADE roots, dependents, no-CASCADE exclusion, VO
+  sans FK, VO exclut FK, columns, 3 vues, pure/déterministe, LDD naming.
+. *268 tests* 0 FAIL (baseline 255 → +13). Kover VERT, validatePlugins VERT.
 . *Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
 
-== Prochaine session — 079
+== Prochaine session — 080
 
-*Mission principale* : *CDX-3-1* (domaine `codex.ontology` + `OntologyDeriver`
-object pur ~12 unit) — premier domaine DDD nouveau du P1 corpus enrichment.
+*Mission principale* : *CDX-4-1* (domaine `codex.enrichment` +
+`JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver`
+adapter lit `graph.json`, ~15 unit) — 2e domaine pur du P1.
 
-. Baby-step TDD strict : RED (`OntologyDeriver` inexistant) → GREEN (objet pur
-  créé) → REFACTOR.
-. Types : `OntologyMapping` + `BoundedContext`/`Aggregate`/`ValueObject`
-  data classes immutables. `OntologyDeriver.derive(lddNodes, sqlScript)`.
-. 3 requêtes archétypales : bounded contexts (groupement FK), agrégats
-  (CASCADE), value objects (tables sans FK sortantes).
-. Domaine cible : `codex.ontology` (12e domaine codex, voir cadrage S-077).
+. Baby-step TDD strict : RED (`JsonLddEnricher` inexistant) → GREEN
+  (objet pur créé) → REFACTOR.
+. Types : `EnrichedLddNode` étend `LddNode` avec `ragChunks`/
+  `graphifyNodes`/`semanticDensity`/`entities`. `GraphifyFileResolver`
+  lit `graph.json` (pas de dépendance compile graphify).
+. Domaine cible : `codex.enrichment` (13e domaine codex, voir cadrage S-077).
 . Gate : aucune — nouveau domaine pur, pas de bump BOM.
 
 *Alternatives* :
-. *CDX-7-2* (`ConvertToMarkdownTask` chaîné ~5 unit) — si priorité couverture.
-. *CDX-4-1* (`codex.enrichment` + `JsonLddEnricher` ~15 unit) — si priorité RAG.
+. *CDX-5-1* (`codex.licence` + `PdfLicenseDetector` + `LicenseRouter`
+  ~10 unit) — si priorité routing licence.
+. *CDX-3-2* (tâche `deriveOntology` + wiring `CodexPlugin` ~4 functional)
+  — si priorité exposition Gradle.
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
-. CDX-3-1/4-1/5-1 (domaines purs) → tâches Gradle (CDX-3-2/4-2/5-2) →
-. câblage (CDX-4-3) → DSL (CDX-6-1/2) → tests chaînés (CDX-7-2/3/4) →
-. Cucumber BDD (CDX-3-3/4-4/5-3/6-3).
+. CDX-7-1 ✅ (S-078) → CDX-3-1 ✅ (S-079) → CDX-4-1/5-1 (domaines purs) →
+. tâches Gradle (CDX-3-2/4-2/5-2) → câblage (CDX-4-3) → DSL (CDX-6-1/2) →
+. tests chaînés (CDX-7-2/3/4) → Cucumber BDD (CDX-3-3/4-4/5-3/6-3).
 
 *Actions reportées* :
 . Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour débloquer
@@ -57,7 +58,7 @@ object pur ~12 unit) — premier domaine DDD nouveau du P1 corpus enrichment.
 
 == References
 
-- `.agents/sessions/078-cdx-7-1-typography-tests.adoc`
+- `.agents/sessions/079-cdx-3-1-ontology-deriver.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
 - `BACKLOG.adoc` § EPIC CDX-3/4/5/6/7 (US détaillées)
 - `build.gradle.kts:30` — BOM 0.0.23

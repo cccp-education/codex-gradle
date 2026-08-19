@@ -3,6 +3,45 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 079 — CDX-3-1 Domaine codex.ontology + OntologyDeriver
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-3 (deriveOntology P1-19)
+*US* : CDX-3-1
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*Objectif* :
+- Démarrer CDX-3-1 : domaine `codex.ontology` (12e) + `OntologyDeriver`
+  object pur. *Calculer* (pas deviner) la cartographie ontologique du
+  corpus livresque à partir du SQL LMD généré par `ImportBookSqlTask`.
+  3 requêtes archétypales : bounded contexts, aggregates, value objects.
+
+*Livrables* :
+- `OntologyMapping.kt` (nouveau, 54 lignes) — 4 data classes immutables :
+  `OntologyMapping`, `BoundedContext`, `Aggregate`, `ValueObject`.
+- `OntologyDeriver.kt` (nouveau, 169 lignes) — object pur déterministe :
+  `derive(lddNodes, sqlScript): OntologyMapping`. Parsing SQL DDL par
+  regex (CREATE TABLE + REFERENCES + ON DELETE CASCADE). BFS sur graphe
+  d'adjacence FK pour bounded contexts. CASCADE edges groupés par racine
+  pour aggregates (self-ref exclue). Tables sans FK sortantes pour value
+  objects. LDD title nomme le bounded context (fallback `bc_N`).
+- `OntologyDeriverTest.kt` (nouveau, 13 unit) — empty, extraction tables,
+  FK-connected (1 BC), disconnected (2 BCs), CASCADE roots, dependents,
+  no-CASCADE exclusion, VO sans FK, VO exclut FK, columns, 3 vues,
+  pure/déterministe, LDD naming.
+- 268 tests 0 FAIL (baseline 255 → +13). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+- Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+- 2 fichiers prod créés + 1 fichier test créé (zéro fichier existant modifié).
+- EPIC CDX-3 2/4 US (CDX-3-0 ✅, CDX-3-1 ✅, CDX-3-2/3 🟡 À FAIRE).
+
+*Prochaine session* : CDX-4-1 (domaine `codex.enrichment` +
+`JsonLddEnricher` + `GraphifyResolver` + `GraphifyFileResolver` ~15 unit)
+selon ordre d'exécution du cadrage S-077.
+
+'''
 == Session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer
 
 *Date* : 2026-08-19

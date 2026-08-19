@@ -136,3 +136,18 @@
 - BOM : 0.0.22 → 0.0.23 (bump consommateur, propagation Central)
 - Secrets : zéro
 - Régression : zéro
+
+=== CDX-3-1 — Domaine codex.ontology + OntologyDeriver (S-079)
+
+* Domaine `codex.ontology` (12e) créé — 2 fichiers prod purs :
+  `OntologyMapping.kt` (4 data classes immutables) + `OntologyDeriver.kt`
+  (object pur 169 lignes, parsing SQL DDL par regex).
+* 3 requêtes archétypales : bounded contexts (BFS connectivité FK),
+  aggregates (CASCADE edges par racine, self-ref exclue), value objects
+  (tables sans FK sortantes). LDD title nomme le bounded context.
+* `OntologyDeriverTest.kt` (nouveau, 13 unit) — couverture exhaustive.
+* Tests : 255 → 268 (+13 unit, 0 FAIL). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+* EPIC CDX-3 2/4 US (CDX-3-0 ✅, CDX-3-1 ✅, CDX-3-2/3 🟡 À FAIRE).
+* Baby-step TDD strict RED → GREEN → REFACTOR.

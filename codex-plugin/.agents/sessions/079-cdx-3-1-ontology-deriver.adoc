@@ -1,0 +1,124 @@
+= Session 079 — CDX-3-1 Domaine codex.ontology + OntologyDeriver
+:session: 079
+:date: 2026-08-19
+:type: dev
+:epic: CDX-3 (P1-19 deriveOntology)
+:us: CDX-3-1
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Démarrer *CDX-3-1* — premier domaine DDD nouveau du P1 corpus
+enrichment : `codex.ontology` + `OntologyDeriver` object pur. L'objectif
+est de *calculer* (pas deviner) la cartographie ontologique du corpus
+livresque à partir du SQL LMD généré par `ImportBookSqlTask`.
+
+3 requêtes archétypales (P1-19 spec) :
+. Bounded contexts  : groupements de tables liées par FK (connectivité).
+. Aggregates        : tables racines référencées via ON DELETE CASCADE
+                      + leurs entités dépendantes.
+. Value objects     : tables sans FK sortantes (pas de REFERENCES dans
+                      leur CREATE TABLE body).
+
+== Livrables
+
+=== Domaine `codex.ontology` (12e domaine codex)
+
+* `OntologyMapping.kt` (nouveau, 54 lignes) — 4 data classes immutables :
+  - `OntologyMapping(boundedContexts, aggregates, valueObjects)` —
+    résultat global de la dérivation.
+  - `BoundedContext(name, tables)` — composante connexe du graphe FK.
+  - `Aggregate(rootTable, dependentTables)` — table racine + dépendantes
+    via CASCADE.
+  - `ValueObject(table, columns)` — table sans FK sortantes + ses
+    colonnes.
+
+* `OntologyDeriver.kt` (nouveau, 169 lignes) — object pur déterministe :
+  - `derive(lddNodes, sqlScript): OntologyMapping` — point d'entrée.
+  - `parseTables(sql)` — extrait tables + colonnes via regex DDL
+    (`CREATE TABLE IF NOT EXISTS`).
+  - `parseOutgoingFks(sql)` — extrait FK sortantes par table
+    (`REFERENCES target`).
+  - `parseCascadeRoots(sql)` — extrait edges CASCADE (exclut self-ref
+    `documents.parent_id → documents`).
+  - `computeBoundedContexts` — BFS sur graphe d'adjacence FK (connectivité
+    bidirectionnelle), nommage depuis LDD title ou fallback `bc_N`.
+  - `computeAggregates` — regroupe CASCADE edges par table racine,
+    dependants triés.
+  - `computeValueObjects` — tables sans entrée dans `outgoingFks`.
+
+* `OntologyDeriverTest.kt` (nouveau, 13 unit) — couverture exhaustive :
+  - empty sql/nodes → empty mapping
+  - extraction noms de tables depuis CREATE TABLE
+  - bounded context groupe les tables FK-connectées (1 BC pour 3 tables)
+  - bounded contexts sépare les groupes déconnectés (2 BCs)
+  - aggregates identifie les tables racines CASCADE (book, documents)
+  - aggregates collecte les dépendantes (documents→book, paragraphs→documents)
+  - aggregates exclut FK sans ON DELETE CASCADE
+  - value objects identifie tables sans FK sortantes (book)
+  - value objects exclut tables avec REFERENCES (documents, paragraphs)
+  - value objects collecte les colonnes du CREATE TABLE body
+  - OntologyMapping expose les 3 vues (1 BC + 2 agg + 1 VO)
+  - derive est pur/déterministe (same input → same output)
+  - derive utilise lddNodes pour nommer le bounded context
+
+=== Métriques
+
+* Tests : 255 → 268 (+13 unit, 0 FAIL)
+* `check` : BUILD SUCCESSFUL, Kover VERT, validatePlugins VERT
+* Zéro bump BOM, zéro secret, zéro régression
+* Backward compat total — nouveau domaine pur, pas de modification
+  du pipeline existant
+* 2 fichiers prod créés + 1 fichier test créé (zéro fichier existant modifié)
+
+== Décisions architecturales
+
+. *Object pur* (pattern `OcrPipeline`/`LicenseZoneDetector`) — pas de
+  tâche Gradle dans cette US, `OntologyDeriver` est testable isolément.
+  Tâche `deriveOntology` (groupe transform) = US-CDX-3-2 ultérieure.
+. *Parsing SQL par regex* — le format DDL généré par `ImportBookSqlTask`
+  est déterministe et régulier. Regex `CREATE TABLE` + `REFERENCES` +
+  `ON DELETE CASCADE` suffit. Pas de parser SQL complet (overkill).
+. *Self-ref exclue des aggregates* — `documents.parent_id → documents`
+  est une FK CASCADE mais une table ne peut pas être sa propre dépendante.
+  Filtrage `if (fromTable != toTable)`.
+. *Bounded context naming* — utilise `lddNodes.first { level > 0 }.title`
+  (titre du livre) si disponible, fallback `bc_N`. Permet de nommer
+  humainement le context depuis le LDD.
+. *Value objects = tables sans FK sortantes* — définition simplifiée
+  (P1-19 spec). La notion "colonnes immutables" est une heuristique
+  ultérieure (CDX-3-2 ou affinage). Pour l'instant : pas de REFERENCES
+  dans le CREATE TABLE body → value object.
+
+== Enchaînement (ordre d'exécution du cadrage S-077)
+
+. CDX-7-1 ✅ (S-078) — tests FontStyleDetector/TypographicAnalyzer
+. *CDX-3-1* ✅ (S-079 — cette session) — domaine `codex.ontology` +
+  `OntologyDeriver`
+. CDX-4-1 🟡 — domaine `codex.enrichment` + `JsonLddEnricher`
+. CDX-5-1 🟡 — domaine `codex.licence` + `PdfLicenseDetector`/`LicenseRouter`
+. CDX-3-2 / CDX-4-2 / CDX-5-2 🟡 — tâches Gradle (functional tests)
+. CDX-4-3 🟡 — câblage canal Graphify dans `CodexCompositeContextTask`
+. CDX-6-1 / CDX-6-2 🟡 — routing licence DSL
+. CDX-7-2 / CDX-7-3 / CDX-7-4 🟡 — tests chaînés + intégration E2E
+. CDX-3-3 / CDX-4-4 / CDX-5-3 / CDX-6-3 🟡 — Cucumber BDD (dernier)
+
+== Prochaine session — 080
+
+*Mission principale* : *CDX-4-1* (domaine `codex.enrichment` +
+`JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver`
+adapter lit `graph.json`, ~15 unit) — 2e domaine pur du P1.
+
+*Alternative* : *CDX-5-1* (domaine `codex.licence` + `PdfLicenseDetector`
++ `LicenseRouter`, ~10 unit) — si priorité routing licence.
+
+== Références
+
+* `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-3
+* `BACKLOG.adoc` § EPIC CDX-3 (US-CDX-3-1 ✅ TERMINÉ)
+* `codex-plugin/src/main/kotlin/codex/ontology/OntologyMapping.kt`
+* `codex-plugin/src/main/kotlin/codex/ontology/OntologyDeriver.kt`
+* `codex-plugin/src/test/kotlin/codex/ontology/OntologyDeriverTest.kt`
+* `build.gradle.kts:30` — BOM 0.0.23
+* Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)
