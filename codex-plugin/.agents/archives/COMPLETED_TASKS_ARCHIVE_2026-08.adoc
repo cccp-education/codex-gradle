@@ -107,3 +107,32 @@
 - BOM : zéro bump (workspace-bom 0.0.22 inchangé)
 - Secrets : zéro
 - Régression : zéro (legacy outputFile backward compat)
+
+'''
+== Session 077 (2026-08-19) — Cadrage 5 EPICs P1 + BOM bump 0.0.23 + sync AGENTS racine
+
+=== A. Actions reportées S-076
+
+* Bump BOM 0.0.22 → 0.0.23 dans codex-plugin/build.gradle.kts:30 (propagation Central effective). Build + tests verts (211/211 PASS).
+* Sync AGENTS.adoc racine ligne 480 : "CDX-15 ✅ CADUQUE (jamais cadré, résidu résolu S-076)".
+* Entrée Brooklyn désynchronisée (s'arrêtait S-072) alignée sur état réel (S-073→S-076 : CDX-CR3, PUB-3.09, CDX-13-3, CDX-RC-04, pub 0.0.4).
+
+=== B. Cadrage 5 EPICs P1 « Enrichissement Croisé du Corpus » (gouvernance pure, zéro code, pattern S-057/S-063)
+
+* Document `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` créé (12 constats, 13 décisions).
+* CDX-3 `deriveOntology` (P1-19) — domaine `codex.ontology` 12e. 3 US (CDX-3-0 ✅, CDX-3-1/2/3 🟡).
+* CDX-4 `enrichJsonLdd` (P1-20) — domaine `codex.enrichment` 13e. 4 US (CDX-4-0 ✅, CDX-4-1/2/3/4 🟡).
+* CDX-5 `exportKnowledgeBase` routing (P1-21) — domaine `codex.licence` 14e. 3 US (CDX-5-0 ✅, CDX-5-1/2/3 🟡).
+* CDX-6 OSS/CSS routing (P1-22) — DSL `licenceRouting`. 3 US (CDX-6-0 ✅, CDX-6-1/2/3 🟡).
+* CDX-7 tests (P1-23) — FontStyleDetector/TypographicAnalyzer/SemanticChunker/E2E PDF. 4 US (CDX-7-0 ✅, CDX-7-1/2/3/4 🟡).
+* PLAN_GLOBAL.adoc 5 EPICs P1 ✅ Cadrés S-077.
+* BACKLOG.adoc 5 EPICs P1 ajoutés avec US détaillées.
+
+=== Métriques
+
+- Tests : 211 (baseline préservée — zéro code prod modifié)
+- Failures : 0
+- Code production modifié : 0 (gouvernance pure)
+- BOM : 0.0.22 → 0.0.23 (bump consommateur, propagation Central)
+- Secrets : zéro
+- Régression : zéro

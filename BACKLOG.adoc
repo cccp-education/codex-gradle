@@ -4,7 +4,9 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 076 — cadrage CDX-RC-04 pont RAG SessionMemoryContract + cleanup koog + BOM bump + clôtures session 031/CDX-15)_
+_Dernière mise à jour : 2026-08-19 (session 077 — cadrage 5 EPICs P1 CDX-3/4/5/6/7 + bump BOM 0.0.23 + sync AGENTS racine)_
+
+_Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
@@ -215,3 +217,163 @@ plutôt que TERMINÉ pour refléter l'absence de spécification exécutée.
 *Action* : corriger la mention AGENTS.adoc racine (ligne 480) lors de la
 prochaine synchronisation gouvernance racine — supprimer la mention
 "CDX-15 TDD rétroactif suspendu" ou la remplacer par "CDX-15 ✅ CADUQUE".
+
+*Action S-077* : ✅ FAIT — AGENTS.adoc racine ligne 480 corrigée
+("CDX-15 ✅ CADUQUE (jamais cadré, résidu résolu S-076)").
+
+'''
+== 🟡 EPIC CDX-3 — `deriveOntology` (P1-19) — Cadrage S-077
+
+_Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-19.
+_Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-3.
+
+SQL LMD → cartographie ontologique. Bounded contexts, agrégats, value
+objects *calculés* (pas devinés). 3 requêtes archétypales SQL.
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-3-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-3-1
+| Domaine `codex.ontology` + `OntologyMapping` + `BoundedContext`/`Aggregate`/`ValueObject` + `OntologyDeriver` object pur. ~12 unit.
+| 🟡 À FAIRE
+
+| CDX-3-2
+| Tâche `deriveOntology` (groupe transform) + wiring `CodexPlugin`. ~4 functional.
+| 🟡 À FAIRE
+
+| CDX-3-3
+| Cucumber BDD `codex_derive_ontology.feature` 3 scénarios `@ontology`. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+'''
+== 🟡 EPIC CDX-4 — `enrichJsonLdd` (P1-20) — Cadrage S-077
+
+_Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-20.
+_Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-4.
+
+Croisement JSON LDD + RAG pgvector + Knowledge Graph Graphify. Chaque
+section reçoit ses chunks RAG joints + nœuds Graphify résolus + densité
+sémantique. Peuple `DocumentChunk.entities` placeholder.
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-4-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-4-1
+| Domaine `codex.enrichment` + `JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver` adapter (lit `graph.json`, pas de dépendance compile graphify). ~15 unit.
+| 🟡 À FAIRE
+
+| CDX-4-2
+| Tâche `enrichJsonLdd` (groupe transform) + wiring `CodexPlugin`. ~5 functional.
+| 🟡 À FAIRE
+
+| CDX-4-3
+| Câblage canal Graphify dans `CodexCompositeContextTask` (`graphifySection` peuplé). ~3 unit.
+| 🟡 À FAIRE
+
+| CDX-4-4
+| Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios `@enrichment`. ~4 scénarios.
+| 🟡 À FAIRE
+|===
+
+'''
+== 🟡 EPIC CDX-5 — `exportKnowledgeBase` routing licence (P1-21) — Cadrage S-077
+
+_Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-21.
+_Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-5.
+
+JSON-L / Markdown / AsciiDoc vers `office/` ou `OSS/` selon licence.
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-5-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-5-1
+| Domaine `codex.licence` + `PdfLicenseDetector` (scanne PDF contenu) + `LicenseRouter`. `LicenseZoneDetector` existant inchangé. ~10 unit.
+| 🟡 À FAIRE
+
+| CDX-5-2
+| Tâche `deployKnowledgeBaseRouted` (groupe deploy). `ExportKnowledgeBaseTask` existant inchangé. ~4 functional.
+| 🟡 À FAIRE
+
+| CDX-5-3
+| Cucumber BDD `codex_export_routed.feature` 3 scénarios `@licence @routing`. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+'''
+== 🟡 EPIC CDX-6 — Intégration OSS/CSS + routing licence (P1-22) — Cadrage S-077
+
+_Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-22.
+_Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-6.
+
+PDF Apache/Creative Commons → `OSS/`, PDF copyright → `office/`.
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-6-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-6-1
+| `LicenseRouter` (CDX-5-1) implémente routing physique. Intégration `CodexPipelineTask` : `outputDir` selon `PdfLicenseDetector`. ~5 unit.
+| 🟡 À FAIRE
+
+| CDX-6-2
+| DSL `codex { licenceRouting = true }` + `CodexExtension` +1 property (default false). ~3 unit + ~3 functional.
+| 🟡 À FAIRE
+
+| CDX-6-3
+| Cucumber BDD `codex_licence_routing.feature` 3 scénarios `@licence @routing`. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+'''
+== 🟡 EPIC CDX-7 — Tests unitaires + intégration (P1-23) — Cadrage S-077
+
+_Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-23.
+_Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-7.
+
+ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
++ test intégration sur PDF canonique.
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-7-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-7-1
+| `FontStyleDetectorTest` + `TypographicAnalyzerTest` (extraction de `ExtractBookStructureTask`). ~8 unit.
+| 🟡 À FAIRE
+
+| CDX-7-2
+| `ConvertToMarkdownTaskTest` chaîné (sortie réelle `ExtractBookStructureTask`). ~5 unit.
+| 🟡 À FAIRE
+
+| CDX-7-3
+| `SemanticChunkerTest` (extrait de `ChunkDocumentTask`). Unification potentielle `CodexPipelineTask.chunkMd` (constat #7). ~7 unit.
+| 🟡 À FAIRE
+
+| CDX-7-4
+| `CodexPipelineIntegrationTest` E2E PDF canonique `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3 tests integration.
+| 🟡 À FAIRE
+|===

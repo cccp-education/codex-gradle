@@ -1,0 +1,277 @@
+= CADRAGE EPIC P1 — Enrichissement Croisé du Corpus (codex-gradle)
+
+:toc: macro
+:sectnums:
+:date: 2026-08-19
+:source: Session 077 (gouvernance pure, pattern S-057/S-063)
+
+toc::[]
+
+== Contexte — P1 Enrichissement Croisé du Corpus
+
+La section `[[p1-codex-enrichment]]` du `PLAN_GLOBAL.adoc` définit 5 EPICs
+P1 pour codex-gradle (Brooklyn N2) :
+
+ * *CDX-3 (ontologie) — `deriveOntology`* (P1-19) — SQL LMD → cartographie
+   ontologique. Bounded contexts, agrégats, value objects *calculés*.
+ * *CDX-4 (ontologie) — `enrichJsonLdd`* (P1-20) — Croisement JSON LDD + RAG
+   pgvector + Knowledge Graph Graphify.
+ * *CDX-5 (codex) — `exportKnowledgeBase`* (P1-21) — JSON-L / Markdown /
+   AsciiDoc vers `office/` ou `OSS/` selon licence.
+ * *CDX-6 — Intégration OSS/CSS + routing licence* (P1-22) — PDF Apache/CC →
+   `OSS/`, PDF copyright → `office/`.
+ * *CDX-7 — Tests unitaires + intégration* (P1-23) — ExtractTextTask,
+   TypographicAnalyzer, MarkdownConverter, SemanticChunker + test
+   intégration sur PDF canonique.
+
+Aucun de ces EPICs n'était présent dans l'INDEX/BACKLOG codex. Cette session
+cadre les 5 en baby-step DDD/TDD/BDD, zéro code modifié (gouvernance pure).
+
+== Audit — 12 constats
+
+[cols="1,3,3", options="header"]
+|===
+| # | Constat | Preuve
+
+| 1
+| `ImportBookSqlTask` génère DDL/INSERT mais aucune analyse ontologique
+| `ImportBookSqlTask.kt:36-99` — produit `CREATE TABLE book/documents/paragraphs` + `INSERT` hiérarchique. Aucune extraction de bounded context, agrégat, ou value object. Le SQL est *structurel* (tables physiques), pas *ontologique* (concepts métier).
+
+| 2
+| `LddNode`/`DocNode` modélisent la structure, pas la sémantique
+| `DocNode.kt:18-24` — `LddNode(title, level, type, text, children)`. Représente la hiérarchie documentaire (section/paragraphe), pas les entités métier. Aucun champ `concepts`, `aggregates`, `boundedContexts`.
+
+| 3
+| `DocumentChunk.entities` est un placeholder vide
+| `ChunkDocumentTask.kt:42` — `entities: List<String> = emptyList()` avec commentaire "placeholder for future extraction". Jamais peuplé. CDX-3/CDX-4 doivent combler ce gap.
+
+| 4
+| `ExportKnowledgeBaseTask` produit 3 formats mais sans routing licence
+| `ExportKnowledgeBaseTask.kt:41-75` — JSON-LD + Markdown + AsciiDoc dans `outputDir/$sourceDocument/`. Aucune distinction OSS/CSS — tout va dans `build/codex/knowledge-base/` quel que soit la licence du source.
+
+| 5
+| `LicenseZoneDetector` détecte OSS/CSS par chemin projet, pas par contenu PDF
+| `LicenseZoneDetector.kt:30-37` — `detect(projectDir)` regarde `/foundry/public/` vs `/foundry/private/`. Détecte la zone du *projet codex*, pas la licence du *PDF source* (qui peut être Apache/CC/copyright). Insuffisant pour CDX-6.
+
+| 6
+| `CodexCompositeContextTask` alloue 20% au canal Graphify mais reste vide
+| `CodexCompositeContextTask.kt:98,107` — `budgetGraphify = 0.20` + `graphifySection = ""`. Le canal Graphify est réservé dans le budget `CompositeContextConfig` mais jamais peuplé. Aucun appel à graphify-gradle. CDX-4 doit combler.
+
+| 7
+| `CodexPipelineTask` chunkMd est un duplicate de `ChunkDocumentTask.buildChunks`
+| `CodexPipelineTask.kt:296-328` — logique de chunking par heading dupliquée (`chunkMd` privé) vs `ChunkDocumentTask.buildChunks`. Pas DRY. CDX-7 (tests) doit couvrir les deux ou unifier.
+
+| 8
+| Aucun test d'intégration sur PDF canonique
+| `src/test/` — 32 fichiers test, 0 test E2E sur un vrai PDF de `office/books-collection/`. Les tests `ExtractTextTaskTest`/`ExtractBookStructureTaskTest` utilisent des PDFs de test synthétiques. CDX-7 doit ajouter un test d'intégration sur PDF canonique réel.
+
+| 9
+| `FontStyle`/`FontStyleDetector` existent mais pas testés isolément
+| `FontStyle.kt` — enum + detector extrait de `ExtractBookStructureTask`. Pas de test unitaire dédié au detector. CDX-7 doit couvrir.
+
+| 10
+| `ConvertToMarkdownTask` convertit AsciiDoc→Markdown mais pas testé sur AsciiDoc canonique
+| `ConvertToMarkdownTask.kt` + `ConvertToMarkdownTaskTest.kt` — tests existants mais sur fragments simples, pas sur sortie réelle de `ExtractBookStructureTask`. CDX-7 doit chaîner.
+
+| 11
+| `CompositeContextConfig` N0 (codebase-contracts) a 4 canaux mais codex n'en peuple qu'1
+| `CodexCompositeContextTask.kt:94-110` — seul `ContextChannel.Docs` est peuplé. `EagerLazy`, `Rag`, `Graphify` sont vides. CDX-4 enrichit `Graphify` (et `Rag` si chunks joints).
+
+| 12
+| graphify-gradle (N0) publie `graph.json` mais codex ne le consomme pas
+| `graphify-gradle` produit `graph.json` (nodes/edges/communities). `codex-gradle` ne lit pas ce fichier. Aucune dépendance `graphify` dans `build.gradle.kts`. CDX-4 doit câbler la consommation.
+|===
+
+== Décisions architecturales (cadrage S-077)
+
+. *Domaine `codex.ontology`* (nouveau, 12e — voir `codex.ocr` 11e, `codex.profile` 13e gated MEMPHIS). Contient les types ontologiques purs : `BoundedContext`, `Aggregate`, `ValueObject`, `OntologyMapping`. Mirror pattern `codex.ocr` (port + adapter + config).
+
+. *`deriveOntology` est un object pur* (pattern `OcrPipeline`/`LicenseZoneDetector`). Entrée : `List<LddNode>` (JSON LDD existant). Sortie : `OntologyMapping` (data class immutable). Pas de tâche Gradle dédiée initialement — c'est une étape du pipeline enrichi. Tâche `deriveOntology` (groupe `transform`) ajoutée si besoin standalone.
+
+. *3 requêtes archétypales SQL* (P1-19 spec) — `deriveOntology` analyse le SQL LMD généré par `ImportBookSqlTask` + le JSON LDD pour *calculer* (pas deviner) :
+ ** Bounded contexts → groupements de tables liées par FK.
+ ** Agrégats → tables racines avec leurs entités dépendantes (CASCADE).
+ ** Value objects → tables sans FK sortantes + colonnes immutables.
+
+. *Domaine `codex.enrichment`* (nouveau, 13e) pour CDX-4. Contient `JsonLddEnricher` (object pur) + `GraphifyResolver` (port) + `GraphifyFileResolver` (adapter lit `graph.json`). Pas de dépendance compile `graphify-gradle` — consommation par fichier `graph.json` (contrat N0, pas de couplage Gradle).
+
+. *`enrichJsonLdd` enrichit chaque `LddNode`* avec :
+ ** `ragChunks: List<DocumentChunk>` — chunks RAG joints par `sectionPath` (requête pgvector par section title).
+ ** `graphifyNodes: List<String>` — nœuds Graphify résolus par titre de section (match label → node id).
+ ** `semanticDensity: Double` — ratio `ragChunks.size / totalChunks` pour la section.
+ ** `entities: List<String>` — entités extraites du contenu (peuple `DocumentChunk.entities` placeholder).
+
+. *Domaine `codex.licence`* (nouveau, 14e) pour CDX-5/CDX-6. Extrait `LicenseZoneDetector` (existant) + ajoute `PdfLicenseDetector` (détecte licence du *contenu* PDF, pas du projet). `LicenseRouter` route la sortie vers `OSS/` ou `office/` selon licence détectée. Backward compat : `LicenseZoneDetector` inchangé (détection par chemin projet), `PdfLicenseDetector` est additive.
+
+. *`exportKnowledgeBase` étendu* — `ExportKnowledgeBaseTask` existant inchangé (output `build/codex/knowledge-base/`). Nouvelle tâche `deployKnowledgeBaseRouted` (groupe `deploy`) qui route vers `office/knowledge-base/` ou `OSS/knowledge-base/` selon `PdfLicenseDetector`. Backward compat total.
+
+. *CDX-6 routing licence* — `PdfLicenseDetector` scanne le PDF source pour :
+ ** Mention "Apache License 2.0" / "Apache-2.0" → OSS.
+ ** Mention "Creative Commons" / "CC-BY" / "CC0" → OSS.
+ ** Mention "©" / "Copyright" / "All rights reserved" → CSS (office/).
+ ** Aucune mention → fallback `LicenseZoneDetector.detect(projectDir)` (comportement actuel).
+
+. *CDX-7 tests* — 3 niveaux baby-step TDD/BDD :
+ ** Unit : `FontStyleDetectorTest`, `PdfLicenseDetectorTest`, `OntologyMappingTest`, `JsonLddEnricherTest`, `GraphifyFileResolverTest` (fakes, pas d'I/O).
+ ** Functional : `DeriveOntologyTaskTest`, `EnrichJsonLddTaskTest`, `DeployKnowledgeBaseRoutedTaskTest` (tasks Gradle réelles, ProjectBuilder).
+ ** Integration : `CodexPipelineIntegrationTest` — PDF canonique de `office/books-collection/` → pipeline complet → assertions sur chunks + ontology + enrichissement.
+
+. *Gate MEMPHIS* : CDX-4 `enrichJsonLdd` peut câbler le canal Graphify (`graphifySection`) sans bump BOM — `CompositeContextConfig` N0 (codebase-contracts 0.0.2) déjà en classpath. Pas de gate.
+
+. *Non-regression* : zéro impact sur le pipeline documentaire existant. Nouveaux domaines, nouvelles tâches, backward compat total. `LicenseZoneDetector` inchangé. `ExportKnowledgeBaseTask` inchangé.
+
+. *Zéro bump BOM* : tous les types N0 nécessaires (`ContextChannel`, `CompositeContext`, `CompositeContextConfig`, `ChannelBudget`) sont déjà publiés dans `codebase-contracts:0.0.2` (classpath codex).
+
+. *English only* — code, identifiants, commentaires, tests, features Gherkin (règle AGENTS.adoc).
+
+. *Méthode* : baby-step DDD/TDD/BDD strict (RED → GREEN → REFACTOR), 3 niveaux de tests (unit → functional → cucumber). Pattern S-057/S-063 pour le cadrage (gouvernance pure, zéro code).
+
+== EPIC CDX-3 — `deriveOntology` (P1-19)
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-3-0
+| **Cadrage EPIC** (gouvernance pure, cette session)
+| ✅ TERMINÉ (S-077)
+
+| CDX-3-1
+| **Domaine `codex.ontology` + `OntologyMapping` + `BoundedContext`/`Aggregate`/`ValueObject`** — data classes immutables. `OntologyDeriver` object pur `derive(lddNodes: List<LddNode>, sqlScript: String): OntologyMapping`. 3 requêtes archétypales : bounded contexts (groupement FK), agrégats (CASCADE), value objects (tables sans FK sortantes). ~12 unit tests.
+| 🟡 À FAIRE
+
+| CDX-3-2
+| **Tâche `deriveOntology`** (groupe `transform`) — `DeriveOntologyTask` consomme `jsonFile` (LDD) + `sqlFile` (ImportBookSql output) → `ontologyFile` (JSON). Wiring `CodexPlugin`. ~4 functional tests (ProjectBuilder).
+| 🟡 À FAIRE
+
+| CDX-3-3
+| **Cucumber BDD** `codex_derive_ontology.feature` — 3 scénarios `@ontology` (3 requêtes archétypales : bounded contexts calculés, agrégats identifiés, value objects isolés). Runner dédié `CodexOntologyCucumberRunner`. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+== EPIC CDX-4 — `enrichJsonLdd` (P1-20)
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-4-0
+| **Cadrage EPIC** (gouvernance pure, cette session)
+| ✅ TERMINÉ (S-077)
+
+| CDX-4-1
+| **Domaine `codex.enrichment` + `JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver` adapter** — `JsonLddEnricher.enrich(lddNodes, ragChunks, graphifyNodes): List<EnrichedLddNode>`. `EnrichedLddNode` étend `LddNode` avec `ragChunks`/`graphifyNodes`/`semanticDensity`/`entities`. `GraphifyFileResolver` lit `graph.json` (pas de dépendance compile graphify). ~15 unit tests.
+| 🟡 À FAIRE
+
+| CDX-4-2
+| **Tâche `enrichJsonLdd`** (groupe `transform`) — `EnrichJsonLddTask` consomme `jsonFile` (LDD) + `chunksFile` (chunks) + `graphifyFile` (graph.json) → `enrichedJsonFile`. Wiring `CodexPlugin`. Peuple `DocumentChunk.entities` placeholder. ~5 functional tests.
+| 🟡 À FAIRE
+
+| CDX-4-3
+| **Câblage canal Graphify dans `CodexCompositeContextTask`** — `graphifySection` peuplé depuis `enrichedJsonFile` (au lieu de `""`). `CompositeContext` N0 inchangé (le champ existe). Non-regression : fallback `""` si enrichissement absent. ~3 unit tests.
+| 🟡 À FAIRE
+
+| CDX-4-4
+| **Cucumber BDD** `codex_enrich_json_ldd.feature` — 4 scénarios `@enrichment` (RAG chunks joints par section, nœuds Graphify résolus, densité sémantique calculée, entities peuplées). Runner dédié `CodexEnrichmentCucumberRunner`. ~4 scénarios.
+| 🟡 À FAIRE
+|===
+
+== EPIC CDX-5 — `exportKnowledgeBase` routing licence (P1-21)
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-5-0
+| **Cadrage EPIC** (gouvernance pure, cette session)
+| ✅ TERMINÉ (S-077)
+
+| CDX-5-1
+| **Domaine `codex.licence` + `PdfLicenseDetector` + `LicenseRouter`** — `PdfLicenseDetector.detect(pdfFile): LicenseZone` scanne le PDF pour mentions Apache/CC/copyright. `LicenseRouter.route(zone, baseDir): File` retourne `OSS/knowledge-base/` ou `office/knowledge-base/`. `LicenseZoneDetector` existant inchangé. ~10 unit tests.
+| 🟡 À FAIRE
+
+| CDX-5-2
+| **Tâche `deployKnowledgeBaseRouted`** (groupe `deploy`) — `DeployKnowledgeBaseRoutedTask` étend `ExportKnowledgeBaseTask` : détecte licence PDF source → route output vers `OSS/` ou `office/`. Wiring `CodexPlugin`. `ExportKnowledgeBaseTask` existant inchangé (backward compat). ~4 functional tests.
+| 🟡 À FAIRE
+
+| CDX-5-3
+| **Cucumber BDD** `codex_export_routed.feature` — 3 scénarios `@licence @routing` (PDF Apache → OSS/, PDF copyright → office/, PDF unknown → fallback zone projet). Runner dédié `CodexLicenceCucumberRunner`. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+== EPIC CDX-6 — Intégration OSS/CSS + routing licence (P1-22)
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-6-0
+| **Cadrage EPIC** (gouvernance pure, cette session)
+| ✅ TERMINÉ (S-077)
+
+| CDX-6-1
+| **`LicenseZone` étendu + routing `office/` vs `OSS/`** — `LicenseZone` enum inchangé (OSS/CSS/UNKNOWN). `LicenseRouter` (CDX-5-1) implémente le routing physique. Intégration avec `CodexPipelineTask` : `outputDir` déterminé par `PdfLicenseDetector` au lieu de `build/` hardcoded. ~5 unit tests.
+| 🟡 À FAIRE
+
+| CDX-6-2
+| **DSL `codex { licenceRouting = true }`** — `CodexExtension` +1 property `licenceRouting: Property<Boolean>` (default `false`, backward compat). Si `true`, `CodexPipelineTask` route la sortie selon licence. Si `false`, comportement actuel (`build/codex/`). ~3 unit + ~3 functional tests.
+| 🟡 À FAIRE
+
+| CDX-6-3
+| **Cucumber BDD** `codex_licence_routing.feature` — 3 scénarios `@licence @routing` (routing enabled Apache → OSS/, routing enabled copyright → office/, routing disabled → build/ fallback). Runner dédié ou fusion avec CDX-5-3. ~3 scénarios.
+| 🟡 À FAIRE
+|===
+
+== EPIC CDX-7 — Tests unitaires + intégration (P1-23)
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-7-0
+| **Cadrage EPIC** (gouvernance pure, cette session)
+| ✅ TERMINÉ (S-077)
+
+| CDX-7-1
+| **`FontStyleDetectorTest` + `TypographicAnalyzerTest`** — tests unitaires isolés sur `FontStyleDetector` (enum + detection) et analyse typographique extraite de `ExtractBookStructureTask`. ~8 unit tests.
+| 🟡 À FAIRE
+
+| CDX-7-2
+| **`ConvertToMarkdownTaskTest` chaîné** — test sur sortie réelle de `ExtractBookStructureTask` (AsciiDoc canonique) au lieu de fragments simples. Vérifie la chaîne extraction→conversion. ~5 unit tests.
+| 🟡 À FAIRE
+
+| CDX-7-3
+| **`SemanticChunkerTest` (extrait de `ChunkDocumentTask`)** — tests sur `buildChunks`/`buildSectionPath`/`extractFirstTwoSentences` isolés. Unification potentielle avec `CodexPipelineTask.chunkMd` (constat #7). ~7 unit tests.
+| 🟡 À FAIRE
+
+| CDX-7-4
+| **`CodexPipelineIntegrationTest`** — test d'intégration E2E sur PDF canonique de `office/books-collection/`. `@Tag("integration")` + `assumeTrue(pdfFile.exists())`. Pipeline complet : extract → markdown → chunk → assertions. ~3 tests integration.
+| 🟡 À FAIRE
+|===
+
+== Ordre d'exécution (baby-step)
+
+. *CDX-7-1* (tests `FontStyleDetector`/`TypographicAnalyzer`) — foundation, pas de nouveau code, couverture.
+. *CDX-3-1* (domaine `codex.ontology` + `OntologyDeriver`) — nouveau domaine pur, unit-testable.
+. *CDX-4-1* (domaine `codex.enrichment` + `JsonLddEnricher`) — nouveau domaine pur, dépend de `DocumentChunk` existant.
+. *CDX-5-1* (domaine `codex.licence` + `PdfLicenseDetector` + `LicenseRouter`) — nouveau domaine pur.
+. *CDX-3-2* / *CDX-4-2* / *CDX-5-2* — tâches Gradle (functional tests).
+. *CDX-4-3* — câblage canal Graphify (modifie `CodexCompositeContextTask`).
+. *CDX-6-1* / *CDX-6-2* — routing licence DSL.
+. *CDX-7-2* / *CDX-7-3* / *CDX-7-4* — tests chaînés + intégration E2E.
+. *CDX-3-3* / *CDX-4-4* / *CDX-5-3* / *CDX-6-3* — Cucumber BDD (dernier, validation comportement).
+
+== Prochaine session — 078
+
+Démarrer *CDX-7-1* (tests `FontStyleDetector`/`TypographicAnalyzer`) —
+foundation sans nouveau code, couverture des composants existants. Baby-step
+TDD strict : RED (tests manquants) → GREEN (tests passent sur code existant)
+→ REFACTOR (extraire `TypographicAnalyzer` si besoin).
+
+[cols="2,5"]
+|===
+| Domaine cible | `codex.typography` (extraction de `ExtractBookStructureTask`)
+| Fichiers | `FontStyleDetectorTest.kt` (nouveau) + `TypographicAnalyzerTest.kt` (nouveau)
+| Tests | ~8 unit (RED → GREEN → REFACTOR)
+| Gate | Aucune — code existant, pas de bump BOM
+|===

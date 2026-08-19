@@ -1273,3 +1273,69 @@ Gouvernance MEMPHIS (4) : INDEX, SESSIONS_HISTORY, BACKLOG, libs.versions.toml
 - AGENTS.adoc racine ligne 480 : mention "CDX-15 TDD rétroactif suspendu" à corriger prochaine sync racine
 
 *Prochaine session* : 077 — Bump consommateur codex vers BOM 0.0.23 + démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS + sync AGENTS racine
+
+'''
+== Session 077 — Cadrage 5 EPICs P1 Corpus Enrichment + BOM bump 0.0.23 + sync AGENTS racine
+
+*Date* : 2026-08-19
+*Type* : governance
+*Modèle* : glm-5.2:cloud (via opencode)
+*Score* : ✅ TERMINÉ
+
+*Objectif* :
+. Actions reportées S-076 : bump BOM 0.0.22→0.0.23 + sync AGENTS.adoc racine CDX-15 CADUQUE.
+. Cadrer les 5 EPICs P1 « Enrichissement Croisé du Corpus » (CDX-3 à CDX-7).
+. Méthode baby-step DDD/TDD/BDD (pattern S-057/S-063 — gouvernance pure, zéro code).
+
+*Livrables* :
+
+*A. Actions reportées S-076* :
+- Bump BOM 0.0.22 → 0.0.23 dans `codex-plugin/build.gradle.kts:30`. Build + tests verts.
+- Sync AGENTS.adoc racine ligne 480 : "CDX-15 ✅ CADUQUE (jamais cadré, résidu résolu S-076)".
+- Entrée Brooklyn désynchronisée (s'arrêtait S-072) alignée sur état réel (S-073→S-076).
+
+*B. Cadrage 5 EPICs P1* (gouvernance pure, zéro code) :
+- Document `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` créé (racine codex-gradle).
+- 12 constats audités, 13 décisions architecturales.
+- CDX-3 `deriveOntology` (P1-19) — domaine `codex.ontology` 12e. 3 US 🟡.
+- CDX-4 `enrichJsonLdd` (P1-20) — domaine `codex.enrichment` 13e. 4 US 🟡.
+- CDX-5 `exportKnowledgeBase` routing (P1-21) — domaine `codex.licence` 14e. 3 US 🟡.
+- CDX-6 OSS/CSS routing (P1-22) — DSL `licenceRouting`. 3 US 🟡.
+- CDX-7 tests (P1-23) — FontStyleDetector/TypographicAnalyzer/SemanticChunker/E2E PDF. 4 US 🟡.
+- PLAN_GLOBAL.adoc 5 EPICs P1 ✅ Cadrés S-077.
+- BACKLOG.adoc 5 EPICs P1 ajoutés avec US détaillées.
+
+*C. Constats clés (audit code)* :
+- `ImportBookSqlTask` génère DDL/INSERT structurel, pas ontologique.
+- `DocumentChunk.entities` est un placeholder vide (jamais peuplé).
+- `CodexCompositeContextTask` alloue 20% Graphify mais `graphifySection = ""`.
+- `LicenseZoneDetector` détecte par chemin projet, pas par contenu PDF.
+- `CodexPipelineTask.chunkMd` duplique `ChunkDocumentTask.buildChunks` (pas DRY).
+- Aucun test d'intégration sur PDF canonique de `office/books-collection/`.
+- graphify-gradle publie `graph.json` mais codex ne le consomme pas.
+
+*D. Décisions architecturales* :
+- 3 nouveaux domaines : `codex.ontology` 12e, `codex.enrichment` 13e, `codex.licence` 14e.
+- `deriveOntology`/`JsonLddEnricher` = objects purs (testables sans I/O).
+- `GraphifyFileResolver` lit `graph.json` — pas de dépendance compile graphify.
+- `PdfLicenseDetector` additive — `LicenseZoneDetector` existant inchangé.
+- Backward compat total. Zéro bump BOM. English only.
+- Ordre d'exécution : CDX-7-1 (tests foundation) → domaines purs → tâches → câblage → Cucumber.
+
+*Vérifications* :
+- `../gradlew build -x test` BUILD SUCCESSFUL (BOM 0.0.23).
+- `../gradlew test` 211 tests, 0 failures, 0 errors (baseline préservée).
+- Zéro secret, zéro code de production modifié (gouvernance pure).
+
+*Fichiers modifiés* :
+- `codex-plugin/build.gradle.kts` — BOM 0.0.22 → 0.0.23 (ligne 30).
+- `AGENTS.adoc` (racine) — ligne 480 CDX-15 CADUQUE + entrée Brooklyn alignée S-073→S-076.
+- `PLAN_GLOBAL.adoc` (racine) — 5 EPICs P1 ✅ Cadrés S-077.
+- `BACKLOG.adoc` — 5 EPICs P1 ajoutés (CDX-3/4/5/6/7) avec US détaillées.
+- `codex-plugin/PROMPT_REPRISE.adoc` — mis à jour pour session 078.
+- `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (créé) — doc cadrage.
+- `.agents/INDEX.adoc` — session 077 + roadmap 5 EPICs P1.
+- `.agents/sessions/077-p1-corpus-enrichment-cadrage.adoc` (créé) — rapport.
+
+*Prochaine session* : 078 — Démarrer CDX-7-1 (tests FontStyleDetector/TypographicAnalyzer).
+Baby-step TDD strict. Domaine cible `codex.typography`. ~8 unit tests.
