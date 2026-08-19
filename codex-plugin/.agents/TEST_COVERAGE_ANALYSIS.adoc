@@ -1,6 +1,27 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-08-19
-:session: 083
+:date: 2026-08-20
+:session: 084
+
+== Session 084 — CDX-3-2 tâche deriveOntology (+4 functional, 337/337 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/kotlin/codex/tasks/DeriveOntologyTaskTest.kt` | 4 functional | ✅ PASS (tâche registered transform group, writes mapping from SQL DDL, uses LDD title for context name, empty SQL → empty mapping)
+|===
+
+*Nouveau testé* :
+- `DeriveOntologyTask` — thin wrapper Gradle autour de `OntologyDeriver`
+  (objet pur créé S-079). 4 functional tests ProjectBuilder + SQL DDL
+  synthétique + assertions JSON (parse `OntologyMapping.serializer()`).
+- Sérialisation rétroactive `@Serializable` sur `OntologyMapping` + 3
+  sous-types — exercée par `parseMapping()` dans les 4 tests (lecture
+  JSON → data class roundtrip).
+
+*Couverture* : la logique métier (`OntologyDeriver.derive`) est couverte
+par les 13 unit tests `OntologyDeriverTest` (S-079). La tâche Gradle
+ajoute la couverture functional du wiring (IO contract, ProjectBuilder,
+plugin registration, output file écriture).
 
 == Session 083 — CDX-5-3 Cucumber BDD licence routing (+6 cucumber dédiés, 333/333 PASS)
 

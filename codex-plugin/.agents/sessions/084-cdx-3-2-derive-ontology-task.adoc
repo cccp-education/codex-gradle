@@ -1,0 +1,130 @@
+= Session 084 — CDX-3-2 tâche deriveOntology + wiring CodexPlugin
+:session: 084
+:date: 2026-08-20
+:epic: CDX-3 (deriveOntology P1-19)
+:us: CDX-3-2
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Exposer le domaine `codex.ontology` (créé S-079) via une tâche Gradle
+`deriveOntology` (groupe `transform`) + wiring `CodexPlugin`. Le domaine
+pur `OntologyDeriver.derive(lddNodes, sqlScript)` calcule la
+cartographie ontologique (bounded contexts, aggregates, value objects)
+à partir du SQL LMD généré par `ImportBookSqlTask` et des LDD nodes
+produits par `AsciiDocToJsonLddTask`. La tâche écrit le résultat
+`OntologyMapping` en JSON.
+
+== Méthode
+
+Baby-step TDD strict (RED → GREEN → REFACTOR), niveau functional
+(ProjectBuilder + SQL DDL synthétique).
+
+. RED : 1 fichier test créé (`DeriveOntologyTaskTest.kt`, 4 functional).
+  Référence la tâche inexistante `DeriveOntologyTask` +
+  `OntologyMapping.serializer()` (annotation `@Serializable` absente).
+  `compileTestKotlin` FAILED — `Unresolved reference 'DeriveOntologyTask'`.
+
+. GREEN : 2 fichiers prod créés.
+  - `DeriveOntologyTask.kt` (68 lignes) — `@DisableCachingByDefault`,
+    3 properties (`sqlFile`, `jsonFile` `@InputFile`, `outputFile`
+    `@OutputFile`). `@TaskAction derive()` : lit SQL + LDD JSON,
+    appelle `OntologyDeriver.derive(lddNodes, sqlScript)`, écrit
+    `OntologyMapping` JSON via kotlinx.serialization.
+  - `OntologyMapping.kt` annoté `@Serializable` sur les 4 data classes
+    (`OntologyMapping`, `BoundedContext`, `Aggregate`, `ValueObject`) +
+    `import kotlinx.serialization.Serializable`. Modification additive
+    (sérialisation rétroactive — backward compat total, les data classes
+    restent inchangées).
+  - `CodexPlugin.kt` wiring : `import DeriveOntologyTask` + tâche
+    `deriveOntology` groupe `transform`, `outputFile` default
+    `build/codex/ontology-mapping.json`. Compteur KDoc 11 → 12 tâches.
+
+. REFACTOR : `check` BUILD SUCCESSFUL in 1m 3s. 337 tests 0 FAIL
+  (baseline 333 → +4 : 4 functional `DeriveOntologyTaskTest`). Kover VERT,
+  validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
+  backward compat total.
+
+== Décisions architecturales
+
+. *Sérialisation rétroactive* : `OntologyMapping` + 3 sous-types
+  annotés `@Serializable` pour permettre l'écriture JSON par la tâche.
+  Modification additive — les data classes existantes restent
+  structurellement inchangées (pas de nouveau champ, pas de nouveau
+  constructeur). Le plugin kotlin-serialization est déjà appliqué
+  (build.gradle.kts `kotlin-serialization` alias).
+
+. *IO contract* : `sqlFile` (`@InputFile` PathSensitivity.RELATIVE) +
+  `jsonFile` (`@InputFile` PathSensitivity.RELATIVE) + `outputFile`
+  (`@OutputFile`). Mirror pattern `ImportBookSqlTask` (jsonFile→sqlFile)
+  et `AsciiDocToJsonLddTask` (adocFile→jsonFile). Default output
+  `build/codex/ontology-mapping.json` (convention `build/codex/`).
+
+. *Groupe `transform`* : aligné sur la taxonomie EPIC K (4 verbes
+  GENERER/COLLECTER/TRANSFORMER/DÉPLOYER). `deriveOntology` est un
+  transform (SQL LMD → ontology mapping), pas un collect (pas
+  d'acquisition de document source).
+
+. *Pas de nouvelle dépendance* : kotlinx.serialization déjà présent
+  (catalogue `kotlinx-serialization-json`). `OntologyDeriver` objet pur
+  existant — la tâche est un thin wrapper Gradle autour du domaine.
+
+== Fichiers modifiés
+
+[cols="2,1,3"]
+|===
+| Fichier | Type | Rôle
+
+| `src/main/kotlin/codex/tasks/DeriveOntologyTask.kt`
+| Créé (68 lignes)
+| Tâche Gradle thin wrapper — lit SQL + LDD, appelle `OntologyDeriver`,
+  écrit `OntologyMapping` JSON.
+
+| `src/main/kotlin/codex/ontology/OntologyMapping.kt`
+| Modifié (+5 annotations `@Serializable` + 1 import)
+| Sérialisation rétroactive des 4 data classes.
+
+| `src/main/kotlin/codex/CodexPlugin.kt`
+| Modifié (+1 import + +1 enregistrement tâche + KDoc 11→12)
+| Wiring `deriveOntology` groupe `transform`, output default.
+
+| `src/test/kotlin/codex/tasks/DeriveOntologyTaskTest.kt`
+| Créé (143 lignes, 4 functional)
+| RED → GREEN — ProjectBuilder + SQL DDL synthétique + assertions JSON.
+|===
+
+== Résultats
+
+. 337 tests 0 FAIL (baseline 333 → +4 functional).
+. `check` BUILD SUCCESSFUL — Kover VERT, validatePlugins VERT.
+. Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+. EPIC CDX-3 progression : 2/3 US (CDX-3-0 ✅ S-077, CDX-3-1 ✅ S-079,
+  CDX-3-2 ✅ S-084, CDX-3-3 🟡 À FAIRE Cucumber).
+
+== Prochaine session — 085
+
+*Mission principale* : *CDX-3-3* Cucumber BDD
+`codex_derive_ontology.feature` 3 scénarios `@ontology` (clôture EPIC
+CDX-3). Baby-step BDD strict (RED → GREEN → REFACTOR). Pure BDD —
+zéro production modifié. Runner dédié pattern S-082
+(`CodexOntologyCucumberRunner`) + `OntologySteps` + tâche Gradle
+`cucumberTestOntology`.
+
+*Alternatives* :
+. *CDX-4-2* (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re tâche
+  Gradle enrichment (domaine `codex.enrichment` créé S-080).
+. *CDX-4-3* (câblage canal Graphify dans `CodexCompositeContextTask`
+  `graphifySection` peuplé ~3 unit).
+. *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
+
+*Enchaînement* (ordre d'exécution du cadrage S-077) :
+. Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅).
+. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-5-3 ✅ (S-083) →
+  CDX-3-2 ✅ (S-084) → CDX-4-2 (~5 functional) → câblage (CDX-4-3)
+  → DSL (CDX-6-1/2).
+. Cucumber BDD : CDX-3-3 (clôture CDX-3) → CDX-4-4 → CDX-6-3.
+
+*Actions reportées* :
+. Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
+  débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).

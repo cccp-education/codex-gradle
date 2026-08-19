@@ -314,3 +314,35 @@
 * EPIC CDX-5 2/4 US (CDX-5-0 ✅, CDX-5-1 ✅, CDX-5-2/3 🟡 À FAIRE).
 * Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 tous ✅).
 * Baby-step TDD strict RED → GREEN → REFACTOR.
+
+=== CDX-3-2 — Tâche deriveOntology + wiring CodexPlugin (session 084, 2026-08-20)
+
+*EPIC* : CDX-3 (deriveOntology P1-19)
+*US* : CDX-3-2
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+* `DeriveOntologyTask.kt` (nouveau, 68 lignes) — thin wrapper Gradle
+  autour de `OntologyDeriver` (objet pur S-079). `@DisableCachingByDefault`,
+  3 properties : `sqlFile` + `jsonFile` (`@InputFile` PathSensitivity.RELATIVE)
+  + `outputFile` (`@OutputFile`). `@TaskAction derive()` : lit SQL LMD +
+  LDD JSON, appelle `OntologyDeriver.derive(lddNodes, sqlScript)`, écrit
+  `OntologyMapping` JSON via kotlinx.serialization.
+* `OntologyMapping.kt` (modifié) — sérialisation rétroactive : `OntologyMapping`
+  + 3 sous-types (`BoundedContext`, `Aggregate`, `ValueObject`) annotés
+  `@Serializable` + `import kotlinx.serialization.Serializable`. Modification
+  additive (pas de nouveau champ, backward compat total).
+* `CodexPlugin.kt` (modifié) — wiring : `import DeriveOntologyTask` + tâche
+  `deriveOntology` groupe `transform`, `outputFile` default
+  `build/codex/ontology-mapping.json`. Compteur KDoc 11 → 12 tâches.
+* `DeriveOntologyTaskTest.kt` (nouveau, 143 lignes, 4 functional) —
+  ProjectBuilder + SQL DDL synthétique + assertions JSON (tâche registered
+  transform group, writes mapping from SQL DDL, uses LDD title for context
+  name, empty SQL → empty mapping).
+* Tests : 333 → 337 (+4 functional, 0 FAIL). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+  (`OntologyDeriver`/`ImportBookSqlTask`/`AsciiDocToJsonLddTask` inchangés).
+* 2 fichiers prod créés + 1 fichier prod modifié + 1 fichier test créé.
+* EPIC CDX-3 progression 2/3 US (CDX-3-0 ✅ S-077, CDX-3-1 ✅ S-079,
+  CDX-3-2 ✅ S-084, CDX-3-3 🟡 À FAIRE Cucumber).
+* Baby-step TDD strict RED → GREEN → REFACTOR.

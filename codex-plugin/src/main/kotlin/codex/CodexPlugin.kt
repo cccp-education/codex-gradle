@@ -9,6 +9,7 @@ import codex.tasks.CodexRetrieveTask
 import codex.tasks.CollectOcrTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.DeployKnowledgeBaseRoutedTask
+import codex.tasks.DeriveOntologyTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
@@ -20,7 +21,7 @@ import org.gradle.api.Project
 /**
  * Gradle plugin for unstructured document acquisition and transformation.
  *
- * Registers 11 tasks organized into 3 unified taxonomy groups:
+ * Registers 12 tasks organized into 3 unified taxonomy groups:
  *
  * **COLLECT group**:
  * - `collectText` — raw text extraction from PDF
@@ -39,6 +40,7 @@ import org.gradle.api.Project
  * - `transformToMarkdown` — AsciiDoc → Markdown
  * - `transformChunk` — semantic section chunking
  * - `transformCorpusToPdf` — composite pipeline auto-detecting PDF/EPUB
+ * - `deriveOntology` — SQL LMD → ontology mapping (bounded contexts, aggregates, value objects)
  *
  * **DEPLOY group**:
  * - `deployKnowledgeBase` — multi-format export (JSON-L, Markdown, AsciiDoc)
@@ -212,6 +214,15 @@ class CodexPlugin : Plugin<Project> {
             it.language.convention(extension.ocrLanguage)
             // US-CDX-13-3 : outputDir primary output (one .adoc file per page, N2↔N2 bridge)
             it.outputDir.convention(project.layout.buildDirectory.dir("codex/ocr-pages"))
+        }
+
+        project.tasks.register(
+            "deriveOntology",
+            DeriveOntologyTask::class.java
+        ) {
+            it.group = "transform"
+            it.description = "SQL LMD + LDD → ontology mapping JSON (bounded contexts, aggregates, value objects) — computed from DDL"
+            it.outputFile.set(project.layout.buildDirectory.file("codex/ontology-mapping.json"))
         }
     }
 }

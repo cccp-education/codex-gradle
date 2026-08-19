@@ -1,5 +1,7 @@
 package codex.ontology
 
+import kotlinx.serialization.Serializable
+
 /**
  * Immutable result of the ontological derivation from SQL LMD.
  *
@@ -13,6 +15,7 @@ package codex.ontology
  * @property valueObjects tables without outgoing FK (no REFERENCES in their
  *           CREATE TABLE body).
  */
+@Serializable
 data class OntologyMapping(
     val boundedContexts: List<BoundedContext>,
     val aggregates: List<Aggregate>,
@@ -27,6 +30,7 @@ data class OntologyMapping(
  *           deterministic fallback.
  * @property tables tables belonging to this bounded context.
  */
+@Serializable
 data class BoundedContext(
     val name: String,
     val tables: List<String>
@@ -41,6 +45,7 @@ data class BoundedContext(
  * @property dependentTables tables whose FK targets the root with the
  *           `ON DELETE CASCADE` clause.
  */
+@Serializable
 data class Aggregate(
     val rootTable: String,
     val dependentTables: List<String>
@@ -53,6 +58,7 @@ data class Aggregate(
  * @property table the table name.
  * @property columns column names declared in the CREATE TABLE body.
  */
+@Serializable
 data class ValueObject(
     val table: String,
     val columns: List<String>
