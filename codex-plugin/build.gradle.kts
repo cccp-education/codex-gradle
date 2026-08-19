@@ -170,3 +170,28 @@ val cucumberTestLicence by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── CDX-3-3 — Dedicated Cucumber runner for ontology derivation (pattern S-082) ─
+// Scoped to CodexOntologyCucumberRunner so only codex_derive_ontology.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestOntology by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_derive_ontology.feature Cucumber suite (CDX-3-3 ontology derivation)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexOntologyCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_derive_ontology.feature")
+    systemProperty("cucumber.filter.tags", "@ontology and @derivation and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}

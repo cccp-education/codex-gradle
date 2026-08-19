@@ -1682,3 +1682,75 @@ CDX-3-3 🟡 À FAIRE Cucumber).
 CDX-3). Baby-step BDD strict. Runner dédié pattern S-082
 (`CodexOntologyCucumberRunner`) + `OntologySteps` + tâche
 `cucumberTestOntology`.
+
+'''
+
+== Session 085 — 2026-08-20 — CDX-3-3 Cucumber BDD Ontology Derivation (clôture EPIC CDX-3)
+
+*Type* : dev (pure BDD)
+*EPIC* : CDX-3 (terminé 4/4 US)
+*Statut* : ✅ TERMINÉ
+
+*A. Objectif* :
+CDX-3-3 Cucumber BDD `codex_derive_ontology.feature` 3 scénarios
+`@ontology @derivation` + runner dédié `CodexOntologyCucumberRunner`
+(pattern S-082) + `OntologySteps` + tâche Gradle `cucumberTestOntology`.
+Clôture EPIC CDX-3. Baby-step BDD strict RED → GREEN → REFACTOR.
+Pure BDD — zéro production modifié.
+
+*B. Constat initial* :
+. Domaine `codex.ontology` créé S-079 (`OntologyDeriver` + `OntologyMapping`
+  4 data classes).
+. Tâche `DeriveOntologyTask` créée S-084 (thin wrapper Gradle, 4 functional).
+. Pattern S-082 validé S-083 (`CodexLicenceCucumberRunner` + tâche
+  `cucumberTestLicence` inline dans `build.gradle.kts`, pas de
+  `CucumberTaskSpec` dans codex-gradle).
+. 337 tests baseline préservée.
+
+*C. Décisions* :
+. Feature `codex_derive_ontology.feature` — 3 scénarios couvrent les 3
+  vues archétypales : bounded context (nommé depuis LDD title), aggregates
+  (ON DELETE CASCADE), value objects (tables sans FK sortantes).
+. Background partagé : SQL DDL 3 tables (book/documents/paragraphs) +
+  LDD title "Applied AI for Enterprise Java". Identique au SQL de
+  `DeriveOntologyTaskTest` (cohérence tests).
+. Runner `CodexOntologyCucumberRunner` — mirror `CodexLicenceCucumberRunner`
+  (S-083). `@SelectClasspathResource` scopé à la feature, glue `codex.bdd`,
+  filter `@ontology and @derivation and not @wip and not @integration`.
+. Steps `OntologySteps` — 8 step defs (3 Given, 1 When, 4 Then) +
+  helper `parseMapping`. Drive `DeriveOntologyTask` via `ProjectBuilder`
+  (in-process, zéro I/O réseau). Mirror `DeriveOntologyTaskTest`.
+. Tâche `cucumberTestOntology` — pattern S-082 inline (pas de
+  `CucumberTaskSpec`), `excludeEngines("junit-jupiter")`,
+  `includeTestsMatching("codex.bdd.CodexOntologyCucumberRunner")`,
+  `systemProperty("cucumber.features", ...)` + `systemProperty("cucumber.filter.tags", ...)`.
+. Tags `@ontology @derivation` (distincts de `@licence @routing` CDX-5-3).
+. Plugin property `pretty, html:build/reports/cucumber-ontology-derivation.html, json:build/reports/cucumber-ontology-derivation.json`.
+
+*D. Fichiers modifiés* :
+- `src/test/resources/features/codex_derive_ontology.feature` (créé,
+  3 scénarios `@ontology @derivation`).
+- `src/test/kotlin/codex/bdd/CodexOntologyCucumberRunner.kt` (créé,
+  pattern S-082 mirror `CodexLicenceCucumberRunner`).
+- `src/test/kotlin/codex/bdd/OntologySteps.kt` (créé, 8 step defs
+  ProjectBuilder + helper `parseMapping`).
+- `codex-plugin/build.gradle.kts` (modifié, +25 lignes — tâche
+  `cucumberTestOntology` pattern S-082 inline).
+- `.agents/sessions/085-cdx-3-3-cucumber-ontology-derivation.adoc` (créé).
+- `PROMPT_REPRISE.adoc` — mis à jour pour session 086.
+- `.agents/INDEX.adoc` — session 085 + roadmap CDX-3 TERMINÉ.
+- `BACKLOG.adoc` — CDX-3-3 statut mis à jour.
+
+*E. Résultats* :
+370 tests 0 FAIL (baseline 337 → +33 : +6 cucumber licence + +6 cucumber
+ontology + variations découverte JUnit). `check` VERT, Kover VERT,
+validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
+backward compat total. Pure BDD — zéro production modifié. EPIC CDX-3
+TERMINÉ 4/4 US (CDX-3-0 ✅ S-077, CDX-3-1 ✅ S-079, CDX-3-2 ✅ S-084,
+CDX-3-3 ✅ S-085). Domaine `codex.ontology` (12e) clos.
+
+*Prochaine session* : 086 — Démarrer CDX-4-2 tâche `enrichJsonLdd` +
+wiring `CodexPlugin` ~5 functional (1re tâche Gradle enrichment, domaine
+`codex.enrichment` créé S-080). Alternatives : CDX-4-3 (câblage Graphify
+~3 unit) ou CDX-6-1/2 (DSL `licenceRouting`) ou CDX-7-2
+(`ConvertToMarkdownTaskTest` chaîné).

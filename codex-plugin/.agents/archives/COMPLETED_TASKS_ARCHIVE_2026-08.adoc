@@ -1,5 +1,40 @@
 = COMPLETED_TASKS_ARCHIVE — Août 2026 — codex-gradle
 
+== Session 085 (2026-08-20) — CDX-3-3 Cucumber BDD ontology derivation + clôture EPIC CDX-3
+
+=== US CDX-3-3 — Cucumber BDD codex_derive_ontology.feature + runner dédié (TERMINÉ)
+
+* *Valeur* : Clôture EPIC CDX-3 (4/4 US). Validation BDD end-to-end des
+  3 vues archétypales de l'ontologie dérivée (bounded contexts, aggregates,
+  value objects) via `DeriveOntologyTask` + `ProjectBuilder`.
+* *Implémentation* :
+  - `codex_derive_ontology.feature` (nouveau) — 3 scénarios
+    `@ontology @derivation` (bounded context nommé depuis LDD title,
+    aggregates depuis ON DELETE CASCADE, value objects = tables sans FK
+    sortantes). Background partagé SQL DDL + LDD title.
+  - `CodexOntologyCucumberRunner.kt` (nouveau) — pattern S-082
+    (`@Suite` + `@SelectClasspathResource` + glue `codex.bdd` + filter
+    `@ontology and @derivation`). Mirror `CodexLicenceCucumberRunner` (S-083).
+  - `OntologySteps.kt` (nouveau) — 8 step defs (3 Given, 1 When, 4 Then)
+    + helper `parseMapping`. Drive `DeriveOntologyTask` via `ProjectBuilder`
+    (in-process, zéro I/O réseau). SQL DDL synthétique identique à
+    `DeriveOntologyTaskTest` (3 tables book/documents/paragraphs, 2 CASCADE FK).
+  - `build.gradle.kts` (modifié) — tâche `cucumberTestOntology` (pattern
+    S-082 inline, +25 lignes). `excludeEngines("junit-jupiter")`,
+    `includeTestsMatching("codex.bdd.CodexOntologyCucumberRunner")`,
+    `systemProperty("cucumber.features", ...)` + `systemProperty("cucumber.filter.tags", ...)`.
+* *Tests* : 337 → 370 (+6 cucumber licence + +6 cucumber ontology + variations
+  découverte JUnit, 0 FAIL). `check` VERT, Kover VERT, validatePlugins VERT.
+* *Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
+* *Pure BDD* — zéro production modifié.
+* *3 fichiers test créés + 1 fichier build modifié.*
+* *EPIC CDX-3 TERMINÉ 4/4 US* (CDX-3-0 ✅ S-077, CDX-3-1 ✅ S-079,
+  CDX-3-2 ✅ S-084, CDX-3-3 ✅ S-085). Domaine `codex.ontology` (12e) clos.
+* *Baby-step BDD strict RED (6 PendingException) → GREEN (3/3 PASSED) →
+  REFACTOR (`check` VERT).*
+
+'''
+
 == Session 083 (2026-08-19) — CDX-5-3 Cucumber BDD licence routing + clôture EPIC CDX-5
 
 === US CDX-5-3 — Cucumber BDD codex_export_routed.feature + runner dédié (TERMINÉ)

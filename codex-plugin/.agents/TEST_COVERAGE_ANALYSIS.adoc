@@ -1,6 +1,31 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-20
-:session: 084
+:session: 085
+
+== Session 085 — CDX-3-3 Cucumber BDD Ontology Derivation (+6 cucumber dédiés, 370/370 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/bdd/OntologySteps.kt` (via `CodexOntologyCucumberRunner`) | 3 scénarios `@ontology @derivation` | ✅ PASS (bounded context nommé depuis LDD title, aggregates depuis ON DELETE CASCADE, value objects = tables sans FK sortantes)
+|===
+
+*Nouveau runner Cucumber dédié* : `CodexOntologyCucumberRunner` (pattern S-082 —
+`@Suite` + `@SelectClasspathResource` + glue `codex.bdd` + filter `@ontology and @derivation`).
+Tâche Gradle `cucumberTestOntology` (pattern S-082 inline, `excludeEngines("junit-jupiter")`,
+`includeTestsMatching("codex.bdd.CodexOntologyCucumberRunner")`).
+
+*Pure BDD* : zéro production modifié. `OntologySteps` (8 step defs) drive
+`DeriveOntologyTask` via `ProjectBuilder` (in-process, zéro I/O réseau).
+SQL DDL synthétique identique à `DeriveOntologyTaskTest` (3 tables book/documents/paragraphs,
+2 CASCADE FK, 1 self-ref).
+
+*Non-régression* : 337 unit/functional préservés (baseline S-084),
+6 cucumber licence préservés (S-083), +6 cucumber ontology (S-085).
+370 tests 0 FAIL. `check` VERT, Kover VERT, validatePlugins VERT.
+
+'''
 
 == Session 084 — CDX-3-2 tâche deriveOntology (+4 functional, 337/337 PASS)
 

@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 085
-:session: 085
+= PROMPT_REPRISE — Codex — Session 086
+:session: 086
 :date: 2026-08-20
 :status: PRET
 :max-lines: 45
@@ -8,68 +8,43 @@
 
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
-../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 337/337 PASS (baseline préservée S-084)
-../gradlew cucumberTestLicence  # 3/3 scénarios CDX-5-3 PASSED
+./gradlew build -x test   # compile OK, validatePlugins OK
+./gradlew test             # 337/337 PASS (baseline préservée S-084)
+./gradlew cucumberTestOntology  # 3/3 scénarios CDX-3-3 PASSED
 ```
 
-== Session 084 terminée — CDX-3-2 tâche deriveOntology + wiring
+== Session 085 terminée — CDX-3-3 Cucumber BDD Ontology Derivation
 
-. *CDX-3-2 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
-  EPIC CDX-3 progression 2/3 US (reste CDX-3-3 Cucumber).
-. *`DeriveOntologyTask`* (68 lignes, thin wrapper Gradle) — lit `sqlFile`
-  (SQL LMD de `collectBookSql`) + `jsonFile` (LDD nodes de
-  `transformToJsonLdd`), appelle `OntologyDeriver.derive(lddNodes,
-  sqlScript)`, écrit `OntologyMapping` JSON via kotlinx.serialization.
-  `@DisableCachingByDefault`, 3 properties (`@InputFile` × 2 +
-  `@OutputFile`).
-. *Sérialisation rétroactive* — `OntologyMapping` + 3 sous-types
-  (`BoundedContext`, `Aggregate`, `ValueObject`) annotés `@Serializable`.
-  Modification additive (backward compat total, pas de nouveau champ).
-. *Wiring `CodexPlugin`* — tâche `deriveOntology` groupe `transform`,
-  `outputFile` default `build/codex/ontology-mapping.json`. Compteur KDoc
-  11 → 12 tâches.
-. *4 functional tests* (`DeriveOntologyTaskTest`) — ProjectBuilder +
-  SQL DDL synthétique + assertions JSON (tâche registered transform
-  group, writes mapping from SQL DDL, uses LDD title for context name,
-  empty SQL → empty mapping).
-. *337 tests 0 FAIL* (baseline 333 → +4). `check` VERT, Kover VERT,
-  validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
-  backward compat total.
+. *CDX-3-3 TERMINÉ* — Cucumber BDD `codex_derive_ontology.feature` 3
+  scénarios `@ontology @derivation` + runner dédié
+  `CodexOntologyCucumberRunner` (pattern S-082) + `OntologySteps`
+  (8 step defs ProjectBuilder) + tâche Gradle `cucumberTestOntology`
+  dédiée. Baby-step BDD strict RED → GREEN → REFACTOR. Pure BDD —
+  zéro production modifié. EPIC CDX-3 TERMINÉ 4/4 US.
+. *370 tests 0 FAIL* (337 baseline + 6 cucumber licence + 6 cucumber
+  ontology). `check` VERT, Kover VERT, validatePlugins VERT. Zéro
+  bump BOM, zéro secret, zéro régression, backward compat total.
 
-== Prochaine session — 085
+== Prochaine session — 086
 
-*Mission principale* : *CDX-3-3* Cucumber BDD
-`codex_derive_ontology.feature` 3 scénarios `@ontology` (clôture EPIC
-CDX-3). Baby-step BDD strict (RED → GREEN → REFACTOR). Pure BDD —
-zéro production modifié. Runner dédié pattern S-082
-(`CodexOntologyCucumberRunner`) + `OntologySteps` + tâche Gradle
-`cucumberTestOntology`.
-
-. Baby-step BDD strict : RED (3 `UndefinedStepException`) → GREEN
-  (3/3 scénarios PASSED) → REFACTOR (`check` VERT).
-. Runner dédié `CodexOntologyCucumberRunner` (pattern S-082 —
-  `@Suite` + `@SelectClasspathResource` + glue `codex.bdd` + filter
-  `@ontology`).
-. `OntologySteps` — step defs réutilisant `OntologyDeriver` +
-  ProjectBuilder (mirror `DeriveOntologyTaskTest`).
-. Tâche Gradle `cucumberTestOntology` dédiée (pattern S-082 —
-  excludeEngines junit-jupiter, filter runnerClass, override
-  `cucumber.features` via systemProperty).
+*Mission principale* : *CDX-4-2* tâche `enrichJsonLdd` + wiring
+`CodexPlugin` ~5 functional. 1re tâche Gradle enrichment (domaine
+`codex.enrichment` créé S-080). Baby-step TDD strict RED → GREEN →
+REFACTOR. Tâche `enrichJsonLdd` (groupe transform) consomme LDD JSON +
+RAG chunks + Graphify `graph.json` → `EnrichedLddNode` JSON via
+`JsonLddEnricher`. Wiring `CodexPlugin` (compteur KDoc 12 → 13).
 
 *Alternatives* :
-. *CDX-4-2* (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re tâche
-  Gradle enrichment (domaine `codex.enrichment` créé S-080).
-. *CDX-4-3* (câblage canal Graphify dans `CodexCompositeContextTask`
+. *CDX-4-3* (câblage Graphify dans `CodexCompositeContextTask`
   `graphifySection` peuplé ~3 unit).
 . *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
+. *CDX-7-2* (`ConvertToMarkdownTaskTest` chaîné ~5 unit).
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
 . Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅).
-. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-5-3 ✅ (S-083) →
-  CDX-3-2 ✅ (S-084) → CDX-4-2 (~5 functional) → câblage (CDX-4-3)
-  → DSL (CDX-6-1/2).
-. Cucumber BDD : CDX-3-3 (clôture CDX-3) → CDX-4-4 → CDX-6-3.
+. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-3-2 ✅ (S-084) →
+  CDX-4-2 (~5 functional) → câblage (CDX-4-3) → DSL (CDX-6-1/2).
+. Cucumber BDD : CDX-3-3 ✅ (S-085) → CDX-4-4 → CDX-6-3.
 
 *Actions reportées* :
 . Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
@@ -77,8 +52,8 @@ zéro production modifié. Runner dédié pattern S-082
 
 == References
 
-- `.agents/sessions/084-cdx-3-2-derive-ontology-task.adoc`
+- `.agents/sessions/085-cdx-3-3-cucumber-ontology-derivation.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
-- `BACKLOG.adoc` § EPIC CDX-3/4/6/7 (US détaillées)
-- `build.gradle.kts:148` — tâche `cucumberTestLicence` (pattern S-082)
+- `BACKLOG.adoc` § EPIC CDX-4/6/7 (US détaillées)
+- `build.gradle.kts:175` — tâche `cucumberTestOntology` (pattern S-082)
 - Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

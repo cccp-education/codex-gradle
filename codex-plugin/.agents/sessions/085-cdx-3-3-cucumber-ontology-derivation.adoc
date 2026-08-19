@@ -1,0 +1,70 @@
+= Session 085 — CDX-3-3 Cucumber BDD Ontology Derivation (clôture EPIC CDX-3)
+:date: 2026-08-20
+:epic: CDX-3
+:status: ✅ TERMINÉ
+
+== Récit
+
+*CDX-3-3 TERMINÉ* — Cucumber BDD `codex_derive_ontology.feature` 3 scénarios
+`@ontology @derivation` + runner dédié `CodexOntologyCucumberRunner`
+(pattern S-082) + `OntologySteps` (8 step defs ProjectBuilder) + tâche
+Gradle `cucumberTestOntology` dédiée. Baby-step BDD strict
+RED → GREEN → REFACTOR. Pure BDD — zéro production modifié.
+
+== Détail technique
+
+. *Feature* `codex_derive_ontology.feature` — 3 scénarios `@ontology @derivation` :
+  - Bounded context nommé depuis le LDD title (1 ctx "Applied AI for Enterprise Java" contient book/documents/paragraphs)
+  - Aggregates depuis ON DELETE CASCADE (root=book→dependent=documents, root=documents→dependent=paragraphs)
+  - Value objects = tables sans FK sortantes (book avec colonnes id/title/created_at)
+
+. *Runner* `CodexOntologyCucumberRunner` — `@Suite` + `@IncludeEngines("cucumber")` +
+  `@SelectClasspathResource("features/codex_derive_ontology.feature")` + glue `codex.bdd` +
+  filter `@ontology and @derivation and not @wip and not @integration`.
+  Mirror `CodexLicenceCucumberRunner` (S-083).
+
+. *Steps* `OntologySteps` — 8 step defs (3 Given, 1 When, 4 Then) + helper `parseMapping`.
+  SQL DDL synthétique identique à `DeriveOntologyTaskTest` (3 tables book/documents/paragraphs,
+  2 CASCADE FK, 1 self-ref). Drive `DeriveOntologyTask` via `ProjectBuilder` (in-process, zéro I/O réseau).
+  Background partagé : SQL DDL + LDD title "Applied AI for Enterprise Java".
+
+. *Tâche Gradle* `cucumberTestOntology` (pattern S-082 inline, pas de CucumberTaskSpec) :
+  `excludeEngines("junit-jupiter")`, `includeTestsMatching("codex.bdd.CodexOntologyCucumberRunner")`,
+  `systemProperty("cucumber.features", "src/test/resources/features/codex_derive_ontology.feature")`,
+  `systemProperty("cucumber.filter.tags", "@ontology and @derivation and not @wip and not @integration")`,
+  `shouldRunAfter(test)`, `outputs.upToDateWhen { false }`.
+
+== Baby-step BDD strict
+
+. *RED* — `OntologySteps` stub avec `PendingException` : 6 tests failed (3 scénarios × 2 découvertes).
+. *GREEN* — `OntologySteps` implémenté (8 step defs ProjectBuilder + assertions) : 3/3 scénarios PASSED.
+. *REFACTOR* — `check` VERT 370 tests 0 FAIL (baseline 337 → +33 : +6 cucumber licence + +6 cucumber ontology + variations découverte).
+
+== Métriques
+
+. *Tests* : 370 tests 0 FAIL (337 baseline + 6 cucumberTestLicence + 6 cucumberTestOntology + variations découverte JUnit).
+. *Fichiers* : 3 créés (1 feature + 1 runner + 1 steps) + 1 modifié (build.gradle.kts +25 lignes).
+. *BOM* : zéro bump (0.0.23 inchangée).
+. *Secrets* : zéro.
+. *Régression* : zéro (baseline préservée).
+. *Production modifié* : zéro (pure BDD).
+
+== EPIC CDX-3 — TERMINÉ 4/4 US
+
+. CDX-3-0 cadrage ✅ (S-077)
+. CDX-3-1 domaine `codex.ontology` + `OntologyDeriver` + 13 unit ✅ (S-079)
+. CDX-3-2 tâche `deriveOntology` + wiring + 4 functional ✅ (S-084)
+. CDX-3-3 Cucumber BDD + runner dédié ✅ (S-085)
+
+Domaine `codex.ontology` (12e) clos.
+
+== Prochaine session — 086
+
+*Priorité* : CDX-4-2 (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re tâche Gradle enrichment (domaine `codex.enrichment` créé S-080). Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅), phase tâches Gradle en cours (CDX-5-2 ✅, CDX-3-2 ✅, reste CDX-4-2).
+
+*Alternatives* :
+. CDX-4-3 (câblage Graphify dans `CodexCompositeContextTask` ~3 unit).
+. CDX-6-1/2 (DSL `licenceRouting` + `CodexPipelineTask` routing).
+. CDX-7-2 (`ConvertToMarkdownTaskTest` chaîné ~5 unit).
+
+*Actions reportées* : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS (gate CDX-RC-04).

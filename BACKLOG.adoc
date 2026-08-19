@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 084 — CDX-3-2 tâche `deriveOntology` + wiring `CodexPlugin` + sérialisation rétroactive `OntologyMapping` @Serializable, 4 functional, EPIC CDX-3 progression 2/3 US, 337 tests 0 FAIL)_
+_Dernière mise à jour : 2026-08-20 (session 085 — CDX-3-3 Cucumber BDD `codex_derive_ontology.feature` 3 scénarios `@ontology @derivation` + runner dédié `CodexOntologyCucumberRunner` + `OntologySteps` + tâche `cucumberTestOntology`, EPIC CDX-3 TERMINÉ 4/4 US, 370 tests 0 FAIL, pure BDD zéro prod modifié)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -222,7 +222,7 @@ prochaine synchronisation gouvernance racine — supprimer la mention
 ("CDX-15 ✅ CADUQUE (jamais cadré, résidu résolu S-076)").
 
 '''
-== 🟡 EPIC CDX-3 — `deriveOntology` (P1-19) — Cadrage S-077
+== ✅ EPIC CDX-3 — `deriveOntology` (P1-19) — Cadrage S-077 — TERMINÉ S-085
 
 _Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-19.
 _Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-3.
@@ -248,7 +248,7 @@ objects *calculés* (pas devinés). 3 requêtes archétypales SQL.
 
 | CDX-3-3
 | Cucumber BDD `codex_derive_ontology.feature` 3 scénarios `@ontology`. ~3 scénarios.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-085)
 |===
 
 '''
