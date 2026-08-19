@@ -182,3 +182,40 @@
 * 2 fichiers prod créés + 2 fichiers test créés (zéro fichier existant modifié).
 * EPIC CDX-4 1/4 US (CDX-4-0 ✅, CDX-4-1 ✅, CDX-4-2/3/4 🟡 À FAIRE).
 * Baby-step TDD strict RED → GREEN → REFACTOR.
+
+=== Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter (2026-08-19)
+
+*EPIC* : CDX-5 (exportKnowledgeBase routing licence P1-21)
+*US* : CDX-5-1 — Domaine `codex.licence` (14e) + `PdfLicenseDetector` +
+`LicenseRouter`
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*Livrables* :
+* Domaine `codex.licence` (14e domaine codex) créé — 2 fichiers prod purs
+  (~110 lignes) + 2 fichiers test (16 unit).
+* `PdfLicenseDetector.kt` (object pur) — `detect(text: String):
+  LicenseZone` (5 patterns OSS regex case-insensitive `apache license
+  2.0`/`apache-2.0`/`creative commons`/`cc-by`/`cc0` + 3 patterns CSS
+  `©`/`copyright`/`all rights reserved` + precedence OSS > CSS > UNKNOWN
+  + blank → UNKNOWN) + `detect(pdfFile: File): LicenseZone` (lit PDF via
+  `Loader.loadPDF` + `PDFTextStripper`, délègue à `detect(text)`, dégradé
+  silencieux UNKNOWN sur erreur). Additif à `LicenseZoneDetector`
+  path-based (content d'abord, path en fallback).
+* `LicenseRouter.kt` (object pur) — `route(zone, baseDir): File` :
+  OSS→`baseDir/OSS/`, CSS/UNKNOWN→`baseDir/office/` (closed by default
+  precaution). Ne crée PAS de dirs (calcul pur).
+* `PdfLicenseDetectorTest.kt` (nouveau, 12 unit) — apache 2.0 full
+  phrase, SPDX apache-2.0, creative commons, CC-BY, CC0, © sign,
+  copyright word, all rights reserved, no mention UNKNOWN, blank UNKNOWN,
+  apache precedence over copyright, case-insensitive.
+* `LicenseRouterTest.kt` (nouveau, 4 unit) — OSS→OSS/, CSS→office/,
+  UNKNOWN→office/ precaution, no dir creation.
+* Tests : 284 → 300 (+16 unit, 0 FAIL). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+  (`LicenseZoneDetector`/`CodexPlugin`/`CodexPipelineTask`/
+  `CodexExtension` inchangés).
+* 2 fichiers prod créés + 2 fichiers test créés (zéro fichier existant modifié).
+* EPIC CDX-5 2/4 US (CDX-5-0 ✅, CDX-5-1 ✅, CDX-5-2/3 🟡 À FAIRE).
+* Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 tous ✅).
+* Baby-step TDD strict RED → GREEN → REFACTOR.

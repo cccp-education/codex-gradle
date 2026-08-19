@@ -3,6 +3,44 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-5 (exportKnowledgeBase routing licence P1-21)
+*US* : CDX-5-1
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*Objectif* :
+- Démarrer CDX-5-1 : domaine `codex.licence` (14e) + `PdfLicenseDetector`
+  object pur (scanne contenu PDF pour détecter la licence) +
+  `LicenseRouter` object pur (route vers `OSS/` ou `office/` selon zone).
+- 3e domaine pur du P1 « Enrichissement Croisé du Corpus ».
+
+*Livrables* :
+- `src/main/kotlin/codex/licence/PdfLicenseDetector.kt` — object pur.
+  `detect(text: String): LicenseZone` (5 patterns OSS regex case-insensitive
+  + 3 patterns CSS + precedence OSS > CSS > UNKNOWN + blank → UNKNOWN) +
+  `detect(pdfFile: File): LicenseZone` (lit PDF via `Loader.loadPDF` +
+  `PDFTextStripper`, délègue à `detect(text)`, dégradé silencieux UNKNOWN
+  sur erreur). Additif à `LicenseZoneDetector` path-based.
+- `src/main/kotlin/codex/licence/LicenseRouter.kt` — object pur
+  `route(zone, baseDir): File` (OSS→`OSS/`, CSS/UNKNOWN→`office/` closed
+  by default, ne crée pas de dirs).
+- 16 unit tests (12 `PdfLicenseDetectorTest` + 4 `LicenseRouterTest`).
+
+*Vérifications* :
+- `../gradlew test --tests "codex.licence.*"` → 16/16 PASSED.
+- `../gradlew test` → 300 tests 0 FAIL (baseline 284 → +16).
+- `../gradlew check` → BUILD SUCCESSFUL, Kover VERT, validatePlugins VERT.
+- Zéro secret, zéro bump BOM, zéro régression, backward compat total.
+
+*Prochaine session* : 082 — CDX-5-2 (tâche `deployKnowledgeBaseRouted` +
+wiring `CodexPlugin` ~4 functional). Domaines purs P1 TERMINÉS
+(CDX-3-1/4-1/5-1 ✅).
+
+'''
 == Session 080 — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher + GraphifyFileResolver
 
 *Date* : 2026-08-19

@@ -1,6 +1,17 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-19
-:session: 080
+:session: 081
+
+== Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter (+16 unit, 300/300 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/licence/PdfLicenseDetectorTest.kt` | 12 JUnit5 | ✅ PASS (object pur — apache 2.0 full, SPDX apache-2.0, creative commons, CC-BY, CC0, © sign, copyright word, all rights reserved, no mention UNKNOWN, blank UNKNOWN, apache precedence over copyright, case-insensitive)
+| `test/codex/licence/LicenseRouterTest.kt` | 4 JUnit5 | ✅ PASS (object pur — OSS→OSS/, CSS→office/, UNKNOWN→office/ precaution, no dir creation)
+|===
+
+*Baseline* : 284 tests (S-080) → *300 tests* (S-081), +16 unit, 0 FAIL.
 
 == Session 080 — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher + GraphifyFileResolver (+16 unit, 284/284 PASS)
 

@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 080 — CDX-4-1 domaine `codex.enrichment` + `JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver` adapter TERMINÉ, +16 unit)_
+_Dernière mise à jour : 2026-08-19 (session 081 — CDX-5-1 domaine `codex.licence` (14e) + `PdfLicenseDetector` object pur + `LicenseRouter` object pur TERMINÉ, +16 unit)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -304,7 +304,7 @@ JSON-L / Markdown / AsciiDoc vers `office/` ou `OSS/` selon licence.
 
 | CDX-5-1
 | Domaine `codex.licence` + `PdfLicenseDetector` (scanne PDF contenu) + `LicenseRouter`. `LicenseZoneDetector` existant inchangé. ~10 unit.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-081)
 
 | CDX-5-2
 | Tâche `deployKnowledgeBaseRouted` (groupe deploy). `ExportKnowledgeBaseTask` existant inchangé. ~4 functional.

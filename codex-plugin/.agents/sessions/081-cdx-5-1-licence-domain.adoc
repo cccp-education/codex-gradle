@@ -1,0 +1,147 @@
+= Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter
+:session: 081
+:date: 2026-08-19
+:epic: CDX-5 (exportKnowledgeBase routing licence P1-21)
+:us: CDX-5-1
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Démarrer *CDX-5-1* — 3e domaine pur du P1 « Enrichissement Croisé du
+Corpus » : domaine `codex.licence` (14e domaine codex) +
+`PdfLicenseDetector` object pur (scanne contenu PDF pour détecter la
+licence) + `LicenseRouter` object pur (route vers `OSS/` ou `office/`
+selon la zone détectée).
+
+== Méthode
+
+Baby-step TDD strict (RED → GREEN → REFACTOR), niveau unit uniquement
+(domaine pur, pas de tâche Gradle, pas de Cucumber — US-2/3 suivantes).
+
+. RED : 2 fichiers test créés (16 unit) référençant types inexistants
+  (`PdfLicenseDetector`, `LicenseRouter`) → compilation échoue
+  (`Unresolved reference` × 14 sites).
+. GREEN : 2 fichiers prod créés (2 objects purs) → 16/16 tests PASSED.
+  Correction API PDFBox : `Loader.loadPDF` (pattern codebase) au lieu de
+  `PDDocument.load` (déprécié).
+. REFACTOR : code déjà propre (object pur, pas d'effet de bord,
+  precedence rules documentées). Aucune itération nécessaire.
+
+== Livrables
+
+=== Code production (2 fichiers, ~110 lignes)
+
+. `src/main/kotlin/codex/licence/PdfLicenseDetector.kt` — object pur.
+  * `detect(text: String): LicenseZone` — analyse pure testable.
+    - 5 patterns OSS (regex case-insensitive) :
+      `apache license 2.0`, `apache-2.0`, `creative commons`,
+      `cc-by`, `cc0`.
+    - 3 patterns CSS : `©`, `copyright`, `all rights reserved`.
+    - Precedence : OSS > CSS > UNKNOWN (premier match gagne).
+    - Blank → UNKNOWN.
+  * `detect(pdfFile: File): LicenseZone` — lit PDF via
+    `Loader.loadPDF` + `PDFTextStripper`, délègue à `detect(text)`.
+    Dégradé silencieux : fichier manquant/invalide/pas de texte →
+    `UNKNOWN` (caller fallback `LicenseZoneDetector` par chemin).
+  * Additif à `LicenseZoneDetector` existant (détection par chemin
+    `foundry/public/` vs `foundry/private/`) — `PdfLicenseDetector`
+    est *content-based*, `LicenseZoneDetector` est *path-based*.
+    Complémentaires : content d'abord, path en fallback.
+
+. `src/main/kotlin/codex/licence/LicenseRouter.kt` — object pur.
+  * `route(zone: LicenseZone, baseDir: File): File` :
+    - OSS → `baseDir/OSS/`
+    - CSS → `baseDir/office/`
+    - UNKNOWN → `baseDir/office/` (closed by default — precaution)
+  * Ne crée PAS de répertoires (calcul pur, caller responsable).
+
+=== Tests (2 fichiers, 16 unit)
+
+. `src/test/kotlin/codex/licence/PdfLicenseDetectorTest.kt` — 12 unit.
+  * Apache License 2.0 (full phrase) → OSS
+  * SPDX `Apache-2.0` → OSS
+  * Creative Commons (full phrase) → OSS
+  * `CC-BY` → OSS
+  * `CC0` → OSS
+  * `©` → CSS
+  * `Copyright` (word) → CSS
+  * `All rights reserved` (phrase) → CSS
+  * No license mention → UNKNOWN
+  * Blank text → UNKNOWN
+  * Apache precedence when both Apache + Copyright present → OSS
+  * Case-insensitive detection → OSS
+
+. `src/test/kotlin/codex/licence/LicenseRouterTest.kt` — 4 unit.
+  * OSS → `OSS/`
+  * CSS → `office/`
+  * UNKNOWN → `office/` (precaution)
+  * Route does not create directories on disk
+
+== Vérifications
+
+. `../gradlew test --tests "codex.licence.*"` → 16/16 PASSED.
+. `../gradlew test` → 300 tests 0 FAIL (baseline 284 → +16).
+. `../gradlew check` → BUILD SUCCESSFUL, Kover VERT, validatePlugins VERT.
+. `grep -rIE "TOKEN|SECRET|PASSWORD|API_KEY|gho_|ghp_" src/main/kotlin/codex/licence/ src/test/kotlin/codex/licence/` → zéro match.
+. `git status` → 4 fichiers créés (2 prod + 2 test), aucun fichier existant modifié.
+
+== Non-régression
+
+. `LicenseZoneDetector.kt` existant inchangé (détection par chemin).
+. `CodexPlugin.kt` wiring existant inchangé (`LicenseZoneDetector.detect`).
+. `CodexPipelineTask.kt` wiring existant inchangé.
+. `CodexExtension.kt` (`zone: Property<LicenseZone>`) inchangé.
+. Backward compat total : nouveau domaine purement additif, zéro impact
+  sur le pipeline documentaire existant.
+. Zéro bump BOM (aucune dépendance nouvelle, PDFBox déjà utilisé par
+  `ExtractTextTask`/`ExtractBookStructureTask`/`CodexPipelineTask`).
+
+== Décisions architecturales
+
+. *Domaine 14e* : `codex.licence` (après `codex.ontology` 12e S-079,
+  `codex.enrichment` 13e S-080).
+. *Pattern object pur* : `PdfLicenseDetector` et `LicenseRouter` sont
+  des `object` Kotlin singletons sans état, déterministes, side-effect
+  free (sauf I/O fichier dans `detect(File)`).
+. *Precedence OSS > CSS* : quand un document mentionne à la fois
+  "Copyright" (CSS) et "Apache License 2.0" (OSS), l'OSS gagne. Rationale
+  : beaucoup de livres OSS contiennent un © d'auteur + une licence
+  Apache. La licence prime sur le copyright pour le routing.
+. *UNKNOWN = closed by default* : `LicenseRouter` route UNKNOWN vers
+  `office/` (CSS), pas vers `OSS/`. Rationale : en cas de doute, on ne
+  publie pas en OSS. Le caller doit explicitement confirmer via
+  `LicenseZoneDetector` (path-based) si le content-based est UNKNOWN.
+. *Additif, pas remplaçant* : `PdfLicenseDetector` ne remplace pas
+  `LicenseZoneDetector`. Le path-based reste le fallback quand le
+  content-based est UNKNOWN (PDF sans licence mentionnée, ou texte
+  non-extractable).
+. *API PDFBox* : `Loader.loadPDF(file)` (pattern codebase existant dans
+  `ExtractTextTask.kt:40`, `ExtractBookStructureTask.kt:80`,
+  `CodexPipelineTask.kt:102`) — pas `PDDocument.load` (déprécié).
+
+== Enchaînement (rappel cadrage S-077)
+
+. CDX-7-1 ✅ (S-078) → CDX-3-1 ✅ (S-079) → CDX-4-1 ✅ (S-080) →
+  CDX-5-1 ✅ (S-081) →
+. *Prochaines US domaine pur* : aucune (CDX-5-1 termine les domaines
+  purs P1 — CDX-3-1/4-1/5-1 tous TERMINÉS).
+. *Prochaines US tâches Gradle* : CDX-3-2 (deriveOntology) / CDX-4-2
+  (enrichJsonLdd) / CDX-5-2 (deployKnowledgeBaseRouted) — wiring
+  `CodexPlugin` + tâches Gradle, ~4-5 functional chacune.
+. *Câblage* : CDX-4-3 (GraphifySection dans CodexCompositeContextTask).
+. *DSL* : CDX-6-1/2 (licenceRouting DSL).
+. *Cucumber BDD* : CDX-3-3 / CDX-4-4 / CDX-5-3 / CDX-6-3.
+
+== Actions reportées
+
+. Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
+  débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).
+
+== References
+
+. `BACKLOG.adoc` § EPIC CDX-5 (US détaillées)
+. `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-5
+. `build.gradle.kts` — BOM 0.0.23 (inchangée)
+. Central : codex-plugin 0.0.4 (bundle `8556eea3`, inchangé)
+. Session précédente : `080-cdx-4-1-enrichment-domain.adoc`
