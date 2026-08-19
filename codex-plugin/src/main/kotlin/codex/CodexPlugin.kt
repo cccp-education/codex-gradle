@@ -181,6 +181,12 @@ class CodexPlugin : Plugin<Project> {
             it.description = "Semantic search via CodexVectorStore → composite-context.json (runner-compatible)"
             it.query.set(project.providers.gradleProperty("query").orElse("architecture du workspace"))
             it.topK.set(project.providers.gradleProperty("topK").orElse("10"))
+            // CDX-CR3-2 : wiring pg depuis l'extension (avant fix, hardcodé localhost:5432)
+            it.pgHost.convention(extension.pgvectorHost)
+            it.pgPort.convention(extension.pgvectorPort)
+            it.pgDatabase.convention(extension.pgvectorDatabase)
+            it.pgUser.convention(extension.pgvectorUser)
+            it.pgPassword.convention(extension.pgvectorPassword)
             it.outputFile.set(project.layout.buildDirectory.file("codex/composite-context.json"))
         }
 

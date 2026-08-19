@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 073
-:session: 073
-:date: 2026-07-04
+= PROMPT_REPRISE — Codex — Session 074
+:session: 074
+:date: 2026-08-19
 :status: PRET
 :max-lines: 40
 
@@ -9,39 +9,37 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 167/167 PASS (135 + 6 Llm + 6 OcrPipeline + 5 Http + 5 CollectOcr + 10 Cucumber)
+../gradlew test            # 204/204 PASS (167 baseline + 37 nouveaux)
 ```
 
-== Session 072 terminée — CDX-13 OCR Pipeline (DOC-11 alignement)
+== Session 073 terminée — EPIC CDX-CR3 + US-CDX-13-1/2
 
-LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback
-LLM→Tesseract) + HttpOllamaChatClient (port/adapter, java.net.http) +
-CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages). 167
-tests (+32 : 22 unit + 5 functional + 5 cucumber). Méthode baby-step
-TDD/BDD (Red→Green→Refactor). BUILD SUCCESSFUL, build -x test OK.
+3 bugs P0/P1 de CR-GLOBALE-003 fixés (CDX-CR3-1 SQL injection,
+CDX-CR3-2 hardcode localhost:5432, CDX-CR3-3 chunk_index dupliqués) +
+cache OCR par hash image (US-CDX-13-1, Loi Économie d'Encre) + tests
+intégration réelle Ollama (US-CDX-13-2, assumeTrue + OllamaProbe).
+204 tests, 0 failures. Baby-step TDD strict.
 
-Nouvelles classes domaine OCR : OllamaChatClient (port), HttpOllamaChatClient
-(adapter), LlmOcrEngine, OcrPipeline, CollectOcrTask. CodexExtension +4
-propriétés (ollamaHost, ollamaPort, ollamaModel, ocrLanguage). Defaults :
-localhost:11437, gpt-oss:120b-cloud, fr (plage rotation 11437-11465).
+Nouveaux domaines : `codex.store` (IngestStatements, IngestIndexing),
+`codex.ocr` (OcrResultCache, DiskCacheStorage, OllamaProbe).
 
-== Prochaine session — 073
+== Prochaine session — 074
 
-1. *Tests intégration réelle Ollama* : `assumeTrue(isOllamaReady(port))` sur
-   plage 11437-11465. Test d'intégration LlmOcrEngine avec vrai Ollama
-   (skip propre hors CI/local sans Ollama).
-2. *Persistance OcrResult par page* (cache disque, hash image) — Loi de
-   l'Économie d'Encre (Regle 5). Ne pas re-OCRoiser une image déjà traitée.
-3. *Vérifier propagation Central codex-plugin:0.0.2* (session 070) — toujours
-   en attente.
-4. *Alignement switcher EN* : corriger README.md (master EN) switcher 10 langues.
-5. CDX-13 exposition REST (runner-gradle N3) reste 🔴 SUSPENDU — viendra avec
-   DOC-11 bookPipeline côté document-gradle.
+1. *Vérifier propagation Central codex-plugin:0.0.2* — toujours en attente
+   depuis session 070. Vérifier sur central.sonatype.com.
+2. *PUB-2.2* : mise à jour commentaire relocation dans build.gradle.kts
+   (BACKLOG.adoc).
+3. *PUB-3.09* : publication codex-plugin 0.0.3 (si 0.0.2 propagé).
+4. *CDX-13-3 exposition REST* 🔴 SUSPENDU — viendra avec DOC-11 bookPipeline
+   côté document-gradle.
+5. *Alignement switcher EN* : corriger README.md (master EN) switcher 10 langues.
+6. *EPIC CDX-CR3 clos* — vérifier synchronisation BACKLOG.adoc (marqueurs
+   `🟡`/`⏳` → `✅ TERMINÉ (S-073)`).
 
 == References
 
-- `.agents/sessions/072-cdx13-ocr-pipeline.adoc`
-- `codex-plugin/src/main/kotlin/codex/ocr/` (9 fichiers : OcrEngine, OcrRequest,
-  OcrResult, OcrConfig, TesseractOcrEngine, LlmOcrEngine, OcrPipeline,
-  OllamaChatClient, HttpOllamaChatClient)
-- `codex-plugin/src/main/kotlin/codex/tasks/CollectOcrTask.kt`
+- `.agents/sessions/073-cdx-cr3-ocr-cache.adoc`
+- `codex-plugin/src/main/kotlin/codex/store/IngestStatements.kt`
+- `codex-plugin/src/main/kotlin/codex/store/IngestIndexing.kt`
+- `codex-plugin/src/main/kotlin/codex/ocr/OcrResultCache.kt`
+- `codex-plugin/src/main/kotlin/codex/ocr/OllamaProbe.kt`

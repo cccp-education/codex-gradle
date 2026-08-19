@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-07-04 (CDX-13 OCR Pipeline — LlmOcrEngine + OcrPipeline + collectOcr task, DOC-11 alignement)
-_Session terminee_ : 072 ✅ — CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages, consommable par document-gradle DOC-11). 167 tests (+32 : 22 unit + 5 functional + 5 cucumber). BUILD SUCCESSFUL, build -x test OK. Méthode baby-step TDD/BDD.
-_Session precedente_ : 071 ✅ — CNV-6 Migration : convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS, BUILD SUCCESS. CNV-6 terminé.
-_Session en cours_ : 073 — Vérifier propagation Central codex-plugin:0.0.2 + tests intégration réelle Ollama (assumeTrue) + persistance OcrResult (cache disque hash)
+_Derniere mise a jour_ : 2026-08-19 (EPIC CDX-CR3 TERMINÉ 3/3 US + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama)
+_Session terminee_ : 073 ✅ — EPIC CDX-CR3 (3 bugs P0/P1 CR-GLOBALE-003) + US-CDX-13-1 (cache OCR hash image, Loi Économie d'Encre) + US-CDX-13-2 (tests intégration réelle Ollama, OllamaProbe + assumeTrue). 204 tests (+37), 0 failures. Baby-step TDD strict. Domaines enrichis : `codex.store` (IngestStatements, IngestIndexing), `codex.ocr` (OcrResultCache, DiskCacheStorage, OllamaProbe). `check` VERT, zéro régression, zéro secret, zéro bump BOM.
+_Session precedente_ : 072 ✅ — CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages, consommable par document-gradle DOC-11). 167 tests (+32 : 22 unit + 5 functional + 5 cucumber). BUILD SUCCESSFUL, build -x test OK. Méthode baby-step TDD/BDD.
+_Session en cours_ : 074 — Vérifier propagation Central codex-plugin:0.0.2 + PUB-2.2 commentaire relocation + alignement switcher EN README
 
 '''
 == REGLES ABSOLUES (resume)
@@ -62,6 +62,7 @@ _Session en cours_ : 073 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | 068 | 2026-06-24 | doc+i18n | README multilingues — 20 fichiers (10 langues × consumer + plugin), badges Maven Central/Plugin Portal/CI/License, switcher i18n, AR/UR RTL | ✅
 | **071** | **2026-07-03** | **dev** | **CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS** | **✅ TERMINE**
 | **072** | **2026-07-04** | **impl+test** | **CDX-13 OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr → AsciiDoc, DOC-11 alignement), 167 tests (+32), baby-step TDD/BDD** | **✅ TERMINE**
+| **073** | **2026-08-19** | **bugfix+impl+test** | **EPIC CDX-CR3 TERMINÉ 3/3 US (CDX-CR3-1 SQL injection, CDX-CR3-2 hardcode localhost:5432, CDX-CR3-3 chunk_index dupliqués) + US-CDX-13-1 cache OCR hash image (Loi Économie d'Encre) + US-CDX-13-2 tests intégration réelle Ollama (OllamaProbe + assumeTrue), 204 tests (+37), baby-step TDD strict, `check` VERT** | **✅ TERMINE**
 |===
 
 '''
@@ -91,6 +92,9 @@ _Session en cours_ : 073 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
 | EPIC OCR-2 | Tesseract fallback — OcrEngine + TesseractOcrEngine (boundary codex↔codebase) | ✅ TERMINE (session 067) | P1
 | EPIC OCR-3 | LLM OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback) + collectOcr task (DOC-11 alignement) | ✅ TERMINE (session 072) | P1
+| EPIC CDX-CR3 | Revue CR-GLOBALE-003 : SQL injection + hardcode localhost + chunk_index dupliqués | ✅ TERMÉ (session 073) | P0
+| US-CDX-13-1 | Persistance OcrResult par page (cache disque hash image) — Loi Économie d'Encre | ✅ TERMINE (session 073) | P1
+| US-CDX-13-2 | Tests intégration réelle Ollama (assumeTrue + OllamaProbe) | ✅ TERMINE (session 073) | P2
 | EPIC README-I18N | README multilingues (10 langues × consumer + plugin) | ✅ TERMINE (session 068) | P2
 |===
 

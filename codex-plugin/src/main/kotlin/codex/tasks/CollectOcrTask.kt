@@ -1,11 +1,13 @@
 package codex.tasks
 
+import codex.ocr.DiskCacheStorage
 import codex.ocr.HttpOllamaChatClient
 import codex.ocr.LlmOcrEngine
 import codex.ocr.OcrConfig
 import codex.ocr.OcrPipeline
 import codex.ocr.OcrRequest
 import codex.ocr.OcrResult
+import codex.ocr.OcrResultCache
 import codex.ocr.TesseractOcrEngine
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -20,6 +22,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
+import java.security.MessageDigest
 
 /**
  * Collects OCR results from a directory of page images.
@@ -72,6 +75,14 @@ abstract class CollectOcrTask : DefaultTask() {
     @get:Optional
     abstract val language: Property<String>
 
+    // US-CDX-13-1 : cache disque optionnel pour éviter de re-OCRoiser
+    // les images dont le hash n'a pas changé (Loi de l'Économie d'Encre).
+    // Si non configuré, aucun cache — comportement original préservé.
+    @get:InputDirectory
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val cacheDir: DirectoryProperty
+
     @TaskAction
     fun collectOcr() {
         val input = inputDir.asFile.get()
@@ -109,15 +120,34 @@ abstract class CollectOcrTask : DefaultTask() {
         sb.appendLine("= OCR Book")
         sb.appendLine()
 
+        // US-CDX-13-1 : cache OCR par hash d'image (économise les tokens LLM).
+        val cache = cacheDir.orNull?.let {
+            OcrResultCache(DiskCacheStorage(it.asFile))
+        }
+
         images.forEachIndexed { idx, imageFile ->
             val page = idx + 1
+            val pageId = imageFile.nameWithoutExtension
+            val imageHash = sha256(imageFile.readBytes())
             logger.lifecycle("[codex]           page $page/${images.size} — ${imageFile.name}")
-            val request = OcrRequest(
-                imageData = imageFile.readBytes(),
-                format = detectMime(imageFile),
-                language = lang
-            )
-            val result: OcrResult = pipeline.process(request)
+
+            // Cache hit → réutilisation sans appel LLM (Économie d'Encre)
+            val cached = cache?.lookup(pageId, imageHash)
+            val result: OcrResult = if (cached != null) {
+                logger.lifecycle("[codex]             ✓ cache hit (hash=$imageHash) — skip LLM")
+                cached
+            } else {
+                // Cache miss → appel pipeline LLM → Tesseract fallback
+                val request = OcrRequest(
+                    imageData = imageFile.readBytes(),
+                    format = detectMime(imageFile),
+                    language = lang
+                )
+                pipeline.process(request).also { fresh ->
+                    cache?.store(pageId, imageHash, fresh)
+                }
+            }
+
             sb.appendLine("== Page $page")
             sb.appendLine()
             sb.appendLine(result.structuredText.ifBlank { "[page vide ou OCR échec]" })
@@ -140,5 +170,10 @@ abstract class CollectOcrTask : DefaultTask() {
         "bmp" -> "image/bmp"
         "tif", "tiff" -> "image/tiff"
         else -> "image/png"
+    }
+
+    private fun sha256(bytes: ByteArray): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(bytes).joinToString("") { "%02x".format(it) }
     }
 }

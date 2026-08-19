@@ -1032,3 +1032,97 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - Port/Adapter : OllamaChatClient = port, HttpOllamaChatClient = adapter, LlmOcrEngine = domaine pur
 
 *Résultat* : ✅ EPIC OCR-3 TERMINÉ — CDX-13 pipeline OCR domaine livré, exposition N3 suspendue (DOC-11 bookPipeline)
+
+== Session 073 (2026-08-19) — EPIC CDX-CR3 + US-CDX-13-1/2
+
+*Type* : bugfix + impl + test
+*Statut* : ✅ TERMINE
+*Durée* : 1 session
+
+*Objectif* : Fixer les 3 bugs P0/P1 de la revue CR-GLOBALE-003 (EPIC CDX-CR3)
+puis enchaîner sur les US du PROMPT_REPRISE (cache OCR + tests intégration Ollama).
+
+=== EPIC CDX-CR3 — Revue CR-GLOBALE-003 (3/3 US TERMINÉ)
+
+*CDX-CR3-1 (🔴 P0) — SQL injection CodexIngestTask.kt:118* :
+- Constat : `UPDATE codex_chunks SET embedding = '[$vec]'::vector WHERE id = $chunkId`
+  interpolait $chunkId (Long) et $vec (String) directement dans le SQL
+- Fix : extraction templates SQL dans `IngestStatements` (objet pur, codex.store)
+  - insertDocument/insertChunk : paramètres positionnels $1,$2... (R2DBC bind)
+  - updateEmbedding : vecteur inliné littéral safe (ONNX nombres, pas entrée utilisateur)
+    + chunkId inliné (Long généré par RETURNING id, safe)
+  - R2DBC/pgvector ne supporte pas binding $1::vector dans contexte SET (limitation documentée)
+- Tests : IngestStatementsTest (10 unit)
+
+*CDX-CR3-2 (🔴 P0) — CodexCompositeContextTask hardcode localhost:5432* :
+- Constat : CodexCompositeContextTask.kt:39 instançait CodexVectorStore() sans args
+  → defaults localhost:5432. Task n'exposait aucune propriété pg.
+- Fix : 5 propriétés pgHost/pgPort/pgDatabase/pgUser/pgPassword (@Input) sur la task
+  + conventions backward compat (localhost:5432/codex/codex/codex)
+  + CodexVectorStore instancié avec valeurs de l'extension
+  + Plugin wiring depuis CodexExtension (convention)
+- Tests : CodexCompositeContextTaskTest (7 unit)
+
+*CDX-CR3-3 (🟠 P1) — chunk_index incorrect pour contenu dupliqué* :
+- Constat : CodexIngestTask.kt:110 utilisait chunks.indexOf(chunk) sur liste globale
+  → indexOf retourne première occurrence → chunks identiques reçoivent même index
+- Fix : compteur local par document (docChunks.withIndex()) au lieu de chunks.indexOf(chunk)
+  + extraction logique dans IngestIndexing (objet pur, codex.store)
+- Tests : ChunkIndexAssignmentTest (6 unit)
+
+=== US-CDX-13-1 — Persistance OcrResult par page (cache disque hash image)
+
+*Loi de l'Économie d'Encre* (Regle 5 AGENT.adoc) : ne pas re-OCRoiser une image
+dont le hash SHA-256 n'a pas changé.
+
+- OcrResultCache (codex.ocr) — objet pur, cache par hash SHA-256, délègue I/O au CacheStorage
+- DiskCacheStorage — implémentation disque (JSON <pageId>.ocr-cache.json)
+- CollectOcrTask — propriété cacheDir optionnelle, cache hit → skip LLM, miss → pipeline + store
+- Dégradé silencieux : erreur stockage → miss (pas de crash)
+- Tests : OcrResultCacheTest (13 unit)
+
+=== US-CDX-13-2 — Tests intégration réelle Ollama (assumeTrue)
+
+- OllamaProbe (codex.ocr) — sonde /api/tags, isReady/isModelAvailable/findReadyPort
+  Plage 11437-11465 (AGENTS.adoc). Ports 11434-11436 INTERDITS.
+- LlmOcrEngineIntegrationTest (@Tag("integration")) — 5 tests assumeTrue(ollamaReady())
+  Valide contrat HTTP réel LlmOcrEngine + HttpOllamaChatClient avec vrai Ollama
+- Résultat local : 5/5 PASSED (Ollama ready port 11437, gpt-oss:120b-cloud)
+
+=== Métriques
+
+- Tests : 167 → 204 (+37 : 27 unit + 5 integration + 5 autres)
+- Failures : 0
+- check : BUILD SUCCESSFUL (Kover VERT, validatePlugins VERT)
+- BOM : zéro bump
+- Secrets : zéro
+- Régression : zéro (CodexIngestRetrieveIT 4/4 PASS)
+
+=== Fichiers
+
+Production (7) :
+- codex/store/IngestStatements.kt
+- codex/store/IngestIndexing.kt
+- codex/ocr/OcrResultCache.kt
+- codex/ocr/DiskCacheStorage.kt
+- codex/ocr/OllamaProbe.kt
+
+Tests (6) :
+- codex/store/IngestStatementsTest.kt (10 unit)
+- codex/store/ChunkIndexAssignmentTest.kt (6 unit)
+- codex/tasks/CodexCompositeContextTaskTest.kt (7 unit)
+- codex/ocr/OcrResultCacheTest.kt (13 unit)
+- codex/ocr/LlmOcrEngineIntegrationTest.kt (5 integration)
+
+Modifiés (4) :
+- codex/CodexPlugin.kt — wiring pg generateCompositeContext (CDX-CR3-2)
+- codex/tasks/CodexIngestTask.kt — IngestStatements + index local (CDX-CR3-1/3)
+- codex/tasks/CodexCompositeContextTask.kt — propriétés pg + CodexVectorStore (CDX-CR3-2)
+- codex/tasks/CollectOcrTask.kt — cache OCR + sha256 (US-CDX-13-1)
+
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR), agile software craftsmanship
+- DDD : ubiquitous language (IngestStatements, IngestIndexing, OcrResultCache, OllamaProbe)
+- TDD : 1 test à la fois, objet pur extrait du task Gradle pour testabilité
+- Port/Adapter : CacheStorage = port, DiskCacheStorage = adapter, OcrResultCache = domaine pur
+
+*Résultat* : ✅ EPIC CDX-CR3 TERMINÉ 3/3 US + US-CDX-13-1/2 TERMINÉS

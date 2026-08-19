@@ -174,3 +174,27 @@ Aucun test OCR ajouté. Infrastructure build uniquement :
 - Diagnostic des 3 regressions
 - publishToMavenLocal (si autorise)
 - CDX-13 : Suspension REST maintenue
+
+== Session 073 — EPIC CDX-CR3 + US-CDX-13-1/2 (+37 tests, 204/204 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/codex/store/IngestStatementsTest.kt` | 10 JUnit5 | ✅ PASS (templates SQL paramétrés)
+| `test/codex/store/ChunkIndexAssignmentTest.kt` | 6 JUnit5 | ✅ PASS (index locaux par document)
+| `test/codex/tasks/CodexCompositeContextTaskTest.kt` | 7 JUnit5 | ✅ PASS (propriétés pg + defaults)
+| `test/codex/ocr/OcrResultCacheTest.kt` | 13 JUnit5 | ✅ PASS (cache hit/miss, hash, dégradé)
+| `test/codex/ocr/LlmOcrEngineIntegrationTest.kt` | 5 integration | ✅ PASS (vrai Ollama port 11437)
+|===
+
+*Nouveaux domaines testés* :
+- `codex.store` — IngestStatements (templates SQL), IngestIndexing (index locaux)
+- `codex.ocr` — OcrResultCache (cache hash), OllamaProbe (sonde disponibilité)
+
+*Tests d'intégration* : 5 tests @Tag("integration") avec assumeTrue(ollamaReady())
+— skip propre hors CI/local sans Ollama. En local (port 11437, gpt-oss:120b-cloud),
+5/5 PASSED avec vrai contrat HTTP.
+
+*Non-régression* : CodexIngestRetrieveIT 4/4 PASS (Testcontainers pgvector),
+Cucumber OCR pipeline 5/5 PASS, tous tests existants préservés.

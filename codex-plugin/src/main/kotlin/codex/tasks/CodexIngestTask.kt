@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codex.store.IngestStatements
 import dev.langchain4j.data.segment.TextSegment
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
@@ -82,11 +83,7 @@ abstract class CodexIngestTask : DefaultTask() {
     private suspend fun initSchema(factory: ConnectionFactory) {
         val conn = factory.create().awaitFirst()
         try {
-            listOf(
-                "CREATE EXTENSION IF NOT EXISTS vector",
-                "CREATE TABLE IF NOT EXISTS codex_documents (id BIGSERIAL PRIMARY KEY, source_document TEXT NOT NULL, chunk_count INTEGER NOT NULL, license TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW())",
-                "CREATE TABLE IF NOT EXISTS codex_chunks (id BIGSERIAL PRIMARY KEY, document_id BIGINT REFERENCES codex_documents(id) ON DELETE CASCADE, chunk_index INTEGER NOT NULL, chunk_text TEXT NOT NULL, section_path TEXT NOT NULL, heading_level INTEGER DEFAULT 0, embedding vector(384), created_at TIMESTAMPTZ DEFAULT NOW())"
-            ).forEach { conn.createStatement(it).execute().awaitFirst() }
+            IngestStatements.initSchema().forEach { conn.createStatement(it).execute().awaitFirst() }
         } finally { conn.close().awaitFirstOrNull() }
     }
 
@@ -97,28 +94,30 @@ abstract class CodexIngestTask : DefaultTask() {
 
         for ((source, docChunks) in groups) {
             val license = docChunks.first().license
-            val docId = conn.createStatement(
-                "INSERT INTO codex_documents (source_document, chunk_count, license) VALUES (${'$'}1, ${'$'}2, ${'$'}3) RETURNING id"
-            ).bind(0, source).bind(1, docChunks.size).bind(2, license)
+            val docId = conn.createStatement(IngestStatements.insertDocument())
+                .bind(0, source).bind(1, docChunks.size).bind(2, license)
                 .execute().awaitFirst().map { r, _ -> r.get("id", Long::class.java)!! }.awaitFirst()
 
             logger.lifecycle("[codex]   $source (${docChunks.size} chunks, batch=$effectiveBatchSize)")
 
             var stored = 0
-            for (batch in docChunks.chunked(effectiveBatchSize)) {
-                for ((i, chunk) in batch.withIndex()) {
-                    val idx = chunks.indexOf(chunk)
-                    val chunkId = conn.createStatement(
-                        "INSERT INTO codex_chunks (document_id, chunk_index, chunk_text, section_path, heading_level) VALUES (${'$'}1, ${'$'}2, ${'$'}3, ${'$'}4, ${'$'}5) RETURNING id"
-                    ).bind(0, docId).bind(1, idx).bind(2, chunk.content)
-                        .bind(3, chunk.sectionPath).bind(4, chunk.headingLevel)
-                        .execute().awaitFirst().map { r, _ -> r.get("id", Long::class.java)!! }.awaitFirst()
+            // CDX-CR3-3 : compteur local par document au lieu de chunks.indexOf(chunk)
+            // qui retourne la première occurrence pour les chunks dupliqués.
+            for ((localIndex, chunk) in docChunks.withIndex()) {
+                val chunkId = conn.createStatement(IngestStatements.insertChunk())
+                    .bind(0, docId).bind(1, localIndex).bind(2, chunk.content)
+                    .bind(3, chunk.sectionPath).bind(4, chunk.headingLevel)
+                    .execute().awaitFirst().map { r, _ -> r.get("id", Long::class.java)!! }.awaitFirst()
 
-                    val vec = computeEmbedding(chunk.content)
-                    conn.createStatement("UPDATE codex_chunks SET embedding = '[$vec]'::vector WHERE id = $chunkId")
-                        .execute().awaitFirst()
-                }
-                stored += batch.size
+                val vec = computeEmbedding(chunk.content)
+                // CDX-CR3-1 : le chunkId (Long généré par PostgreSQL via
+                // RETURNING id) et le vecteur (nombres ONNX) sont safe à
+                // inliner — aucune entrée utilisateur. R2DBC/pgvector ne
+                // supporte pas le binding paramétré du vecteur dans un
+                // contexte SET (limitation documentée dans IngestStatements).
+                conn.createStatement(IngestStatements.updateEmbedding(vec, chunkId))
+                    .execute().awaitFirst()
+                stored++
             }
             docCount++
             logger.lifecycle("[codex]   ✓ $stored embeddings")

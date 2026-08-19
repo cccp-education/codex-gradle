@@ -1,0 +1,48 @@
+= COMPLETED_TASKS_ARCHIVE — Août 2026 — codex-gradle
+
+== Session 073 (2026-08-19) — EPIC CDX-CR3 + US-CDX-13-1/2
+
+=== EPIC CDX-CR3 — Revue CR-GLOBALE-003 (3/3 US TERMINÉ)
+
+* CDX-CR3-1 (🔴 P0) — SQL injection CodexIngestTask.kt:118
+  - IngestStatements objet pur (codex.store), templates SQL paramétrés
+  - updateEmbedding : vecteur inliné safe (ONNX) + chunkId inliné (Long RETURNING id)
+  - R2DBC/pgvector limitation binding $1::vector contexte SET documentée
+  - 10 unit tests (IngestStatementsTest)
+
+* CDX-CR3-2 (🔴 P0) — CodexCompositeContextTask hardcode localhost:5432
+  - 5 propriétés pgHost/pgPort/pgDatabase/pgUser/pgPassword (@Input)
+  - Conventions backward compat (localhost:5432/codex/codex/codex)
+  - CodexVectorStore instancié avec valeurs extension
+  - Plugin wiring depuis CodexExtension
+  - 7 unit tests (CodexCompositeContextTaskTest)
+
+* CDX-CR3-3 (🟠 P1) — chunk_index incorrect pour contenu dupliqué
+  - Compteur local par document (docChunks.withIndex()) au lieu de chunks.indexOf(chunk)
+  - IngestIndexing objet pur (codex.store)
+  - 6 unit tests (ChunkIndexAssignmentTest)
+
+=== US-CDX-13-1 — Persistance OcrResult par page (cache disque hash image)
+
+* Loi de l'Économie d'Encre (Regle 5 AGENT.adoc)
+* OcrResultCache (codex.ocr) — objet pur, cache par hash SHA-256
+* DiskCacheStorage — implémentation disque (JSON)
+* CollectOcrTask — propriété cacheDir optionnelle, cache hit → skip LLM
+* Dégradé silencieux : erreur stockage → miss
+* 13 unit tests (OcrResultCacheTest)
+
+=== US-CDX-13-2 — Tests intégration réelle Ollama (assumeTrue)
+
+* OllamaProbe (codex.ocr) — sonde /api/tags, plage 11437-11465
+* LlmOcrEngineIntegrationTest — 5 tests @Tag("integration")
+* assumeTrue(ollamaReady()) pour skip propre hors CI/local
+* Résultat local : 5/5 PASSED (port 11437, gpt-oss:120b-cloud)
+
+=== Métriques
+
+- Tests : 167 → 204 (+37)
+- Failures : 0
+- check : BUILD SUCCESSFUL
+- BOM : zéro bump
+- Secrets : zéro
+- Régression : zéro
