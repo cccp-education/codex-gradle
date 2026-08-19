@@ -76,33 +76,29 @@ parcouru, pas `indexOf`.
    HTTP par document-gradle DOC-11 bookPipeline.
 . *Statut* : Suspendu — viendra avec DOC-11 bookPipeline côté document-gradle.
 
-=== PUB-3.09 — codex-plugin
+=== PUB-3.09 — codex-plugin ✅ TERMINÉ (S-074)
 **Priorite** : P0
 **Estimation** : 1 pt
 **Dependances** : PUB-0 et PUB-1 complets (DNS TXT + GPG)
 
-. `cd foundry/public/codex-gradle && ./gradlew publish closeAndRelease`
-. Artefact : `education.cccp:codex-plugin`
-. Verifier sur https://central.sonatype.com/artifact/education.cccp/codex-plugin
+. `cd foundry/public/codex-gradle/codex-plugin && ../gradlew publishAggregationToCentralPortal --no-daemon`
+. Artefact : `education.cccp:codex-plugin:0.0.3`
+. Bundle : `3b4d1915-bf5a-456b-8b6b-a34134ac408b` (AUTOMATIC, propagé Central)
+. Vérifié sur https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3
+. Contenu depuis 0.0.2 : S-072 OCR Pipeline (LlmOcrEngine + OcrPipeline + collectOcr) +
+  S-073 EPIC CDX-CR3 (3 bugs P0/P1) + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration.
+  204 tests, 0 failures.
 
-=== PUB-2.2 — Mise a jour commentaire relocation dans build.gradle.kts
+=== PUB-2.2 — Mise a jour commentaire relocation dans build.gradle.kts ✅ CADUQUE (S-074)
 **Priorite** : P1
 **Estimation** : 1 pt
 **Dependances** : Aucune
 
-Dans le `build.gradle.kts` de codex-plugin, remplacer le commentaire :
-
-```kotlin
-// RELOCATION : prepare la migration du groupId education.cccp →
-// <futur-domaine>. Activer avec -Prem relocationGroup="io.github.cccp-education"
-```
-
-Par :
-
-```kotlin
-// RELOCATION : garde comme echappatoire future.
-// Activable avec -Prem relocationGroup="<futur-namespace>"
-```
+*Statut* : CADUQUE — le bloc relocation (commentaire + DSL `findProperty("relocationGroup")`)
+a été supprimé lors de la migration CNV-6 (session 071) qui a remplacé le publishing
+manuel par les conventions plugins `education.cccp.build.publishing` v0.0.1. La US n'a
+plus de cible à modifier. Marquée CADUQUE plutôt que TERMINÉ pour refléter l'obsolescence
+de la spécification rather qu'une exécution.
 
 '''
 == EPIC PUB-5 — Verification
@@ -111,33 +107,4 @@ Par :
 
 | Artefact | URL |
 |---|---|
-| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin |
-
-'''
-== 🔴 EPIC CDX-CR3 — Revue CR-GLOBALE-003 : Création de Contenu Solide
-
-_Source_ : `GLOBAL_CODE_REVIEW.adoc` (workspace root) — session CR-GLOBALE-003 (2026-08-04).
-_Focus_ : codex alimente document DOC-11 (bookPipeline) ; les bugs critiques bloquent la chaîne amont.
-
-[cols="1,3,2", options="header"]
-|===
-| EPIC | Description | Priorité
-
-| CDX-CR3-1
-| **SQL injection `CodexIngestTask.kt:118`** — `$chunkId` interpolé directement dans le SQL
-(`UPDATE codex_chunks SET embedding = '[$vec]'::vector WHERE id = $chunkId`). Parameterizer comme
-les autres requêtes (`$1`, `$2`). _(Rappel de CR-GLOBALE-002, toujours non fixé.)_
-| 🔴 P0
-
-| CDX-CR3-2
-| **`CodexCompositeContextTask` hardcode `localhost:5432`** — `CodexCompositeContextTask.kt:39`
-instancie `CodexVectorStore()` sans pgHost/pgPort lus de l'extension `codex`. Inutilisable hors localhost.
-Ajouter les propriétés de tâche + wiring depuis l'extension.
-| 🔴 P0
-
-| CDX-CR3-3
-| **`chunk_index` incorrect pour contenu dupliqué** — `CodexIngestTask.kt:110` : `chunks.indexOf(chunk)`
-retourne la première occurrence → deux chunks identiques reçoivent le même index. Utiliser un compteur
-parcouru, pas `indexOf`.
-| 🟠 P1
-|===
+| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.3 publié S-074) |

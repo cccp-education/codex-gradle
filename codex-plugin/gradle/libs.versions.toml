@@ -1,6 +1,6 @@
 [versions]
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
-codex-plugin = "0.0.2"
+codex-plugin = "0.0.3"
 codebase = "0.0.2"
 koog = "1.0.0"
 

@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 074
-:session: 074
+= PROMPT_REPRISE — Codex — Session 075
+:session: 075
 :date: 2026-08-19
 :status: PRET
 :max-lines: 40
@@ -9,37 +9,37 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 204/204 PASS (167 baseline + 37 nouveaux)
+../gradlew test            # 204/204 PASS (baseline préservée S-073)
 ```
 
-== Session 073 terminée — EPIC CDX-CR3 + US-CDX-13-1/2
+== Session 074 terminée — PUB-3.09 Publication Maven Central 0.0.3
 
-3 bugs P0/P1 de CR-GLOBALE-003 fixés (CDX-CR3-1 SQL injection,
-CDX-CR3-2 hardcode localhost:5432, CDX-CR3-3 chunk_index dupliqués) +
-cache OCR par hash image (US-CDX-13-1, Loi Économie d'Encre) + tests
-intégration réelle Ollama (US-CDX-13-2, assumeTrue + OllamaProbe).
-204 tests, 0 failures. Baby-step TDD strict.
+`codex-plugin:0.0.3` publié sur Maven Central (bundle
+`3b4d1915-bf5a-456b-8b6b-a34134ac408b`, AUTOMATIC, propagé).
+Bump version catalogue 0.0.2→0.0.3. 6 points PROMPT_REPRISE résolus.
+PUB-2.2 marqué ✅ CADUQUE (bloc relocation supprimé en S-071 CNV-6).
+204 tests préservés, zéro code de production modifié, zéro bump BOM.
 
-Nouveaux domaines : `codex.store` (IngestStatements, IngestIndexing),
-`codex.ocr` (OcrResultCache, DiskCacheStorage, OllamaProbe).
+Contenu publié depuis 0.0.2 : S-072 OCR Pipeline (LlmOcrEngine +
+OcrPipeline + CollectOcrTask) + S-073 EPIC CDX-CR3 (3 bugs) +
+US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama.
 
-== Prochaine session — 074
+== Prochaine session — 075
 
-1. *Vérifier propagation Central codex-plugin:0.0.2* — toujours en attente
-   depuis session 070. Vérifier sur central.sonatype.com.
-2. *PUB-2.2* : mise à jour commentaire relocation dans build.gradle.kts
-   (BACKLOG.adoc).
-3. *PUB-3.09* : publication codex-plugin 0.0.3 (si 0.0.2 propagé).
-4. *CDX-13-3 exposition REST* 🔴 SUSPENDU — viendra avec DOC-11 bookPipeline
-   côté document-gradle.
-5. *Alignement switcher EN* : corriger README.md (master EN) switcher 10 langues.
-6. *EPIC CDX-CR3 clos* — vérifier synchronisation BACKLOG.adoc (marqueurs
-   `🟡`/`⏳` → `✅ TERMINÉ (S-073)`).
+1. *Borough DORMANT côté contenu* — tous EPICs P0/P1 terminés.
+   CDX-13-3 exposition REST 🔴 SUSPENDU (viendra avec DOC-11 bookPipeline
+   côté document-gradle).
+2. *Maven Central contrainte BOM* — workspace-bom 0.0.21 pointe encore
+   sur codex-plugin 0.0.2. Bump à prévoir dans MEMPHIS à la prochaine
+   publication BOM (pas urgent — codex n'est pas auto-consommateur).
+3. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
+   traiter les nouveaux bugs selon la même méthode baby-step TDD.
+4. *DOGFOODING* — quand DOC-11 bookPipeline sera prêt côté document-gradle,
+   câbler CDX-13-3 exposition REST (sortie de SUSPENDU).
 
 == References
 
-- `.agents/sessions/073-cdx-cr3-ocr-cache.adoc`
-- `codex-plugin/src/main/kotlin/codex/store/IngestStatements.kt`
-- `codex-plugin/src/main/kotlin/codex/store/IngestIndexing.kt`
-- `codex-plugin/src/main/kotlin/codex/ocr/OcrResultCache.kt`
-- `codex-plugin/src/main/kotlin/codex/ocr/OllamaProbe.kt`
+- `.agents/sessions/074-pub-0.0.3.adoc`
+- `gradle/libs.versions.toml:3` — version catalogue (codex-plugin = "0.0.3")
+- `settings.gradle.kts:21-27` — nmcpSettings centralPortal
+- Maven Central : https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3

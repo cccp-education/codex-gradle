@@ -46,3 +46,34 @@
 - BOM : zéro bump
 - Secrets : zéro
 - Régression : zéro
+
+== Session 074 (2026-08-19) — PUB-3.09 Publication Maven Central 0.0.3
+
+=== PUB-3.09 — codex-plugin:0.0.3 sur Maven Central
+
+* Bundle `3b4d1915-bf5a-456b-8b6b-a34134ac408b` (AUTOMATIC, propagé ~60s)
+* Bump version catalogue `codex-plugin = "0.0.2"` → `"0.0.3"`
+* Commande : `./gradlew publishAggregationToCentralPortal --no-daemon`
+* Vérifié : https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3
+* Contenu depuis 0.0.2 : S-072 OCR Pipeline + S-073 EPIC CDX-CR3 + cache OCR +
+  tests intégration Ollama
+
+=== PUB-2.2 — ✅ CADUQUE
+
+* Bloc relocation (commentaire + DSL `findProperty("relocationGroup")`)
+  supprimé en S-071 (CNV-6 migration conventions plugins). Plus de cible.
+* Marqué CADUQUE plutôt que TERMINÉ (obsolescence de spécification).
+
+=== Backlog cleanup
+
+* Section EPIC CDX-CR3 dupliquée en fin de BACKLOG supprimée
+  (la section d'en-tête est la source de vérité unique)
+
+=== Métriques
+
+- Tests : 204 (baseline préservée S-073)
+- Failures : 0
+- Code production modifié : zéro (session gouvernance + publication)
+- BOM : zéro bump (workspace-bom 0.0.21 inchangé)
+- Secrets : zéro
+- Régression : zéro

@@ -1126,3 +1126,47 @@ Modifiés (4) :
 - Port/Adapter : CacheStorage = port, DiskCacheStorage = adapter, OcrResultCache = domaine pur
 
 *Résultat* : ✅ EPIC CDX-CR3 TERMINÉ 3/3 US + US-CDX-13-1/2 TERMINÉS
+
+'''
+== Session 074 (2026-08-19) — PUB-3.09 Publication Maven Central 0.0.3
+
+*Date* : 2026-08-19
+*Type* : publish + governance
+*Score* : 9/10
+
+*Objectif* :
+- Vérifier propagation Central codex-plugin:0.0.2
+- PUB-2.2 : mise à jour commentaire relocation dans build.gradle.kts
+- PUB-3.09 : publication codex-plugin 0.0.3 (si 0.0.2 propagé)
+- Alignement switcher EN README.md
+- Vérification sync BACKLOG CDX-CR3
+
+*Livrables* :
+- `codex-plugin:0.0.3` publié Maven Central (bundle `3b4d1915-bf5a-456b-8b6b-a34134ac408b`,
+  AUTOMATIC, propagé en ~60s). Vérifié sur central.sonatype.com.
+- Bump version catalogue `codex-plugin = "0.0.2"` → `"0.0.3"` (libs.versions.toml:3)
+- PUB-2.2 marqué ✅ CADUQUE (S-074) — bloc relocation supprimé en S-071 CNV-6
+- BACKLOG cleanup : suppression section EPIC CDX-CR3 dupliquée en fin de fichier
+  (doublon de la section d'en-tête déjà marquée TERMINÉ)
+- 6 points PROMPT_REPRISE résolus (1 propagation confirmée, 2 PUB-2.2 caduque,
+  3 PUB-3.09 publié, 4 CDX-13-3 suspendu inchangé, 5 README déjà aligné,
+  6 backlog sync)
+
+*Contenu publié depuis 0.0.2* :
+- S-072 CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision) + OcrPipeline
+  (fallback LLM→Tesseract) + HttpOllamaChatClient + CollectOcrTask
+- S-073 EPIC CDX-CR3 (3 bugs P0/P1) : SQL injection, hardcode localhost, chunk_index
+- S-073 US-CDX-13-1 cache OCR hash image (Loi Économie d'Encre)
+- S-073 US-CDX-13-2 tests intégration réelle Ollama (assumeTrue + OllamaProbe)
+
+*Fichiers modifiés* :
+- codex-plugin/gradle/libs.versions.toml — bump codex-plugin 0.0.2 → 0.0.3
+- BACKLOG.adoc — PUB-3.09 ✅ TERMINÉ + PUB-2.2 ✅ CADUQUE + suppression doublon CDX-CR3
+
+*Méthode* : gouvernance pure + publication (pas de baby-step TDD — aucun code
+de production modifié). Pré-requis nmcp vérifiés : version hardcodée, settings
+nmcp 1.5.0, POM complet via convention publishing, dépendances releases,
+build compile, tests verts.
+
+*Résultat* : ✅ codex-plugin:0.0.3 sur Maven Central. 204 tests préservés
+(0 failures). Zéro secret, zéro régression, zéro bump BOM.

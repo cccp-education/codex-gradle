@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-08-19 (EPIC CDX-CR3 TERMINÉ 3/3 US + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama)
-_Session terminee_ : 073 ✅ — EPIC CDX-CR3 (3 bugs P0/P1 CR-GLOBALE-003) + US-CDX-13-1 (cache OCR hash image, Loi Économie d'Encre) + US-CDX-13-2 (tests intégration réelle Ollama, OllamaProbe + assumeTrue). 204 tests (+37), 0 failures. Baby-step TDD strict. Domaines enrichis : `codex.store` (IngestStatements, IngestIndexing), `codex.ocr` (OcrResultCache, DiskCacheStorage, OllamaProbe). `check` VERT, zéro régression, zéro secret, zéro bump BOM.
-_Session precedente_ : 072 ✅ — CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision, gpt-oss:120b-cloud) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr, dossier images → AsciiDoc multi-pages, consommable par document-gradle DOC-11). 167 tests (+32 : 22 unit + 5 functional + 5 cucumber). BUILD SUCCESSFUL, build -x test OK. Méthode baby-step TDD/BDD.
-_Session en cours_ : 074 — Vérifier propagation Central codex-plugin:0.0.2 + PUB-2.2 commentaire relocation + alignement switcher EN README
+_Derniere mise a jour_ : 2026-08-19 (PUB-3.09 publication Maven Central codex-plugin:0.0.3 + PUB-2.2 caduque)
+_Session terminee_ : 074 ✅ — Publication `codex-plugin:0.0.3` sur Maven Central via nmcp (bundle `3b4d1915-bf5a-456b-8b6b-a34134ac408b`, AUTOMATIC, propagé). Bump version catalogue 0.0.2→0.0.3. 6 points PROMPT_REPRISE résolus : propagation 0.0.2 confirmée, PUB-2.2 ✅ CADUQUE (bloc relocation supprimé S-071 CNV-6), PUB-3.09 ✅ TERMINÉ, CDX-13-3 SUSPENDU inchangé, README switcher EN déjà aligné, BACKLOG CDX-CR3 sync (zéro marqueur périmé, doublon section supprimé). 204 tests préservés, 0 failures. `build -x test` VERT, `test` VERT. Zéro code de production modifié, zéro secret, zéro bump BOM. Contenu publié depuis 0.0.2 : S-072 OCR Pipeline + S-073 EPIC CDX-CR3 + cache OCR + tests intégration Ollama.
+_Session precedente_ : 073 ✅ — EPIC CDX-CR3 (3 bugs P0/P1 CR-GLOBALE-003) + US-CDX-13-1 (cache OCR hash image, Loi Économie d'Encre) + US-CDX-13-2 (tests intégration réelle Ollama, OllamaProbe + assumeTrue). 204 tests (+37), 0 failures. Baby-step TDD strict. Domaines enrichis : `codex.store` (IngestStatements, IngestIndexing), `codex.ocr` (OcrResultCache, DiskCacheStorage, OllamaProbe). `check` VERT, zéro régression, zéro secret, zéro bump BOM.
+_Session en cours_ : 075 — Maintenance/DOGFOOD (CDX-13-3 suspendu avec DOC-11). Borough DORMANT côté contenu.
 
 '''
 == REGLES ABSOLUES (resume)
@@ -63,6 +63,7 @@ _Session en cours_ : 074 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | **071** | **2026-07-03** | **dev** | **CNV-6 Migration — convention plugins education.cccp.build.* v0.0.1 appliquées (pattern bakery gradle-plugin + publishing), build.gradle.kts 200→139 lignes (-61), variantes gardées (buildscript annotations force, freeCompilerArgs -Xjsr305=strict, kover, kotlin.serialization), compileKotlin SUCCESS** | **✅ TERMINE**
 | **072** | **2026-07-04** | **impl+test** | **CDX-13 OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback LLM→Tesseract) + HttpOllamaChatClient (port/adapter) + CollectOcrTask (collectOcr → AsciiDoc, DOC-11 alignement), 167 tests (+32), baby-step TDD/BDD** | **✅ TERMINE**
 | **073** | **2026-08-19** | **bugfix+impl+test** | **EPIC CDX-CR3 TERMINÉ 3/3 US (CDX-CR3-1 SQL injection, CDX-CR3-2 hardcode localhost:5432, CDX-CR3-3 chunk_index dupliqués) + US-CDX-13-1 cache OCR hash image (Loi Économie d'Encre) + US-CDX-13-2 tests intégration réelle Ollama (OllamaProbe + assumeTrue), 204 tests (+37), baby-step TDD strict, `check` VERT** | **✅ TERMINE**
+| **074** | **2026-08-19** | **publish+governance** | **PUB-3.09 Publication Maven Central codex-plugin:0.0.3 (bundle `3b4d1915`, AUTOMATIC, propagé) + PUB-2.2 ✅ CADUQUE (bloc relocation supprimé S-071 CNV-6) + 6 points PROMPT_REPRISE résolus, 204 tests préservés, zéro code prod modifié** | **✅ TERMINE**
 |===
 
 '''
@@ -89,7 +90,7 @@ _Session en cours_ : 074 — Vérifier propagation Central codex-plugin:0.0.2 + 
 | CDX-13 | Exposition REST via runner-gradle N3 | 🔴 SUSPENDU (pipeline OCR domaine livré session 072, exposition N3 avec DOC-11 bookPipeline) | P1
 | CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
 | EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
-| EPIC PUB | Publication Maven Central codex-plugin:0.0.1 (nmcp) | ✅ TERMINE (session 029) | P0
+| EPIC PUB | Publication Maven Central codex-plugin (0.0.1 S-029, 0.0.2 S-070, 0.0.3 S-074) | ✅ TERMINE (S-074) | P0
 | EPIC OCR-2 | Tesseract fallback — OcrEngine + TesseractOcrEngine (boundary codex↔codebase) | ✅ TERMINE (session 067) | P1
 | EPIC OCR-3 | LLM OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback) + collectOcr task (DOC-11 alignement) | ✅ TERMINE (session 072) | P1
 | EPIC CDX-CR3 | Revue CR-GLOBALE-003 : SQL injection + hardcode localhost + chunk_index dupliqués | ✅ TERMÉ (session 073) | P0

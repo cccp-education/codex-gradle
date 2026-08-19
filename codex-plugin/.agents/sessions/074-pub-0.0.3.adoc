@@ -1,0 +1,133 @@
+= Session 074 — codex-gradle — PUB-3.09 Publication Maven Central 0.0.3
+:date: 2026-08-19
+:session: 074
+:status: TERMINE
+
+== Résumé
+
+Session 074 — Publication Maven Central `codex-plugin:0.0.3` via nmcp (bundle
+`3b4d1915-bf5a-456b-8b6b-a34134ac408b`, AUTOMATIC, propagé). 6 points du
+PROMPT_REPRISE résolus : (1) propagation 0.0.2 confirmée, (2) PUB-2.2 caduque
+— bloc relocation supprimé en S-071 CNV-6, (3) PUB-3.09 publié 0.0.3, (4)
+CDX-13-3 inchangé SUSPENDU, (5) README switcher EN déjà aligné, (6) BACKLOG
+CDX-CR3 synchronisé (zéro marqueur périmé).
+
+Build VERT (204 tests, 0 failures, 0 skipped). Zéro régression, zéro secret,
+zéro bump BOM. Session de gouvernance + publication (pas de baby-step TDD —
+aucun code de production modifié, seulement un bump de version catalogue).
+
+== Point 1 — Propagation Central 0.0.2 ✅
+
+Vérifié sur https://central.sonatype.com/artifact/education.cccp/codex-plugin/versions —
+`0.0.2` publiée et disponible. Confirme que le blocage rapporté en session 070
+est levé. Le POM 0.0.2 contient licence Apache-2.0, developer cccp-education,
+SCM github.com/cccp-education/codex (injectés par la convention
+`education.cccp.build.publishing` v0.0.2).
+
+== Point 2 — PUB-2.2 CADUQUE ✅
+
+*Constat* : Le BACKLOG demandait de remplacer un commentaire `RELOCATION` dans
+`build.gradle.kts`. Audit git : le bloc relocation (commentaire + DSL
+`findProperty("relocationGroup")` + injection XML `<distributionManagement>`)
+existait en `69067a4` (renommage doc-pipeline → codex-plugin) mais a été
+**supprimé** en `d26ff3a` (session 071 — migration CNV-6 vers les conventions
+plugins `education.cccp.build.publishing` v0.0.1, -61 lignes). La publishing
+est désormais gérée par la convention, plus de relocation manuelle.
+
+*Décision* : marquer PUB-2.2 `✅ CADUQUE (S-074)` plutôt que TERMINÉ pour
+ refléter l'obsolescence de la spécification (plus de cible à modifier)
+ plutôt qu'une exécution. Backlog mis à jour en conséquence.
+
+== Point 3 — PUB-3.09 Publication 0.0.3 ✅ TERMINÉ
+
+*Justification du bump* : contenu publié depuis 0.0.2 —
+. S-072 CDX-13 OCR Pipeline : LlmOcrEngine (Ollama vision) + OcrPipeline
+  (fallback LLM→Tesseract) + HttpOllamaChatClient + CollectOcrTask
+. S-073 EPIC CDX-CR3 (3 bugs P0/P1) : SQL injection paramétrée, hardcode
+  localhost:5432 wire'd depuis l'extension, chunk_index par compteur
+. S-073 US-CDX-13-1 cache OCR hash image (Loi Économie d'Encre)
+. S-073 US-CDX-13-2 tests intégration réelle Ollama (assumeTrue + OllamaProbe)
+
+*Pré-requis vérifiés* :
+. `codex-plugin` version hardcodée `0.0.3` dans `gradle/libs.versions.toml`
+. `settings.gradle.kts` : `com.gradleup.nmcp.settings` 1.5.0 + centralPortal
+  (username/password depuis `~/.gradle/gradle.properties`, AUTOMATIC)
+. `build.gradle.kts` : POM via `withType<MavenPublication>` (convention
+  publishing), `repositories { mavenCentral() }`, `signing { useGpgCmd() }`
+. Toutes les dépendances `education.cccp:*` sont des releases :
+  - `workspace-bom:0.0.21` ✅ sur Central (23h)
+  - `codebase-contracts:0.0.2` ✅ sur Central
+  - conventions `education.cccp.build.*:0.0.2` ✅ sur Central
+. Build compile (`./gradlew build -x test`)
+. Tests verts (`./gradlew test` → 204/204 PASS, 0 failures, 0 skipped)
+
+*Commande exécutée* :
+----
+cd foundry/public/codex-gradle/codex-plugin
+../gradlew publishAggregationToCentralPortal --no-daemon
+----
+
+*Résultat* : bundle `3b4d1915-bf5a-456b-8b6b-a34134ac408b` uploadé,
+publishingType=AUTOMATIC, validation 5s, publishing confirmed. Vérifié sur
+https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3
+(page résolue ~60s après upload).
+
+*Note* : pas de bump de la contrainte BOM `codex-plugin` (gérée dans
+workspace-bom, qui pointe encore sur 0.0.2 — sera mis à jour à la prochaine
+publication BOM si nécessaire ; codex n'est pas un consommateur direct de
+soi-même).
+
+== Point 4 — CDX-13-3 Exposition REST 🔴 SUSPENDU
+
+Inchangé — viendra avec DOC-11 bookPipeline côté document-gradle. Aucune
+action cette session.
+
+== Point 5 — Alignement switcher EN README ✅
+
+Vérifié : `README.md` (master EN) ligne 15 contient le switcher 10 langues
+correct avec `**EN**` en gras (langue courante) + liens vers
+`README.plugin/README.{zh,hi,es,fr,ar,bn,pt,ru,ur}.md`. AR/UR RTL. Déjà aligné
+depuis session 068 (README multilingues). Aucune modification nécessaire.
+
+== Point 6 — Synchronisation BACKLOG CDX-CR3 ✅
+
+Vérification post-sync :
+----
+grep -n "🟡\|⏳\|À FAIRE\|À PLANIFIER\|EN PAUSE\|à planifier\|à faire" BACKLOG.adoc
+----
+Retour : aucun match pour les EPICs terminés. Seul `🔴 SUSPENDU` subsiste
+pour CDX-13-3 (légitime — réellement suspendu, pas un marqueur périmé).
+
+*Cleanup supplémentaire* : section EPIC CDX-CR3 dupliquée en fin de BACKLOG
+(lignes 113-139 version pré-édit) supprimée — la section d'en-tête
+(lignes 25-51) marquée `✅ TERMINÉ (S-073)` est la source de vérité unique.
+Élimine l'ambiguïté entre deux tables de statut divergentes.
+
+== Modifications fichiers
+
+. `codex-plugin/gradle/libs.versions.toml` — bump `codex-plugin = "0.0.2"` → `"0.0.3"`
+. `BACKLOG.adoc` — PUB-3.09 ✅ TERMINÉ (S-074) + PUB-2.2 ✅ CADUQUE (S-074) +
+  suppression section CDX-CR3 dupliquée + URL PUB-5.1 mise à jour avec 0.0.3
+
+== Non-modifications
+
+. Aucun code de production modifié (session de gouvernance + publication)
+. Aucun test modifié (baseline 204 préservée)
+. Aucun bump BOM (workspace-bom 0.0.21 inchangé — codex n'est pas
+  auto-consommateur)
+
+== Vérifications clôture
+
+. `grep TOKEN\|SECRET\|PASSWORD\|API_KEY\|gho_\|ghp_` → zéro secret
+. `git status` → 2 fichiers modifiés (BACKLOG.adoc, libs.versions.toml)
+. `./gradlew test` → 204/204 PASS, 0 failures
+. `./gradlew build -x test` → BUILD SUCCESSFUL
+. `./gradlew publishAggregationToCentralPortal` → bundle uploadé + propagé
+
+== Références
+
+. `codex-plugin/gradle/libs.versions.toml:3` — version catalogue
+. `codex-plugin/settings.gradle.kts:21-27` — nmcpSettings centralPortal
+. `codex-plugin/build.gradle.kts:107-123` — publishing + mavenCentral()
+. Maven Central : https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3
+. Bundle : `3b4d1915-bf5a-456b-8b6b-a34134ac408b`
