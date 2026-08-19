@@ -1170,3 +1170,13 @@ build compile, tests verts.
 
 *Résultat* : ✅ codex-plugin:0.0.3 sur Maven Central. 204 tests préservés
 (0 failures). Zéro secret, zéro régression, zéro bump BOM.
+
+*Post-publication* : synchronisation amont cross-borough (correction d'un
+oubli méthode initiale) —
+- MEMPHIS workspace-bom 0.0.22 publiée (bundle `f913774d`, contrainte codex
+  0.0.3). Commit `78c34e4`.
+- Queens codebase-gradle sync catalogue (codex 0.0.3 + BOM 0.0.4→0.0.22
+  catch-up massif). compileKotlin VERT. Commit `633ac5a`.
+- 3 repos poussés sur `main` (codex 7bc7a29, BOM 78c34e4, codebase 633ac5a).
+- Pas de republication codebase-plugin (borough DORMANT — bump de contrainte
+  sans changement de code ne justifie pas une publication).

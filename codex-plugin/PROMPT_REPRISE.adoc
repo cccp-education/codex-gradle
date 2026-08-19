@@ -24,18 +24,22 @@ Contenu publié depuis 0.0.2 : S-072 OCR Pipeline (LlmOcrEngine +
 OcrPipeline + CollectOcrTask) + S-073 EPIC CDX-CR3 (3 bugs) +
 US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama.
 
+Synchronisation amont cross-borough effectuée :
+- MEMPHIS workspace-bom 0.0.22 publiée (bundle `f913774d`, contrainte codex 0.0.3)
+- Queens codebase-gradle sync (codex 0.0.3 + BOM 0.0.22 catch-up)
+- Commits poussés sur les 3 repos (codex 7bc7a29, BOM 78c34e4, codebase 633ac5a)
+
 == Prochaine session — 075
 
 1. *Borough DORMANT côté contenu* — tous EPICs P0/P1 terminés.
    CDX-13-3 exposition REST 🔴 SUSPENDU (viendra avec DOC-11 bookPipeline
    côté document-gradle).
-2. *Maven Central contrainte BOM* — workspace-bom 0.0.21 pointe encore
-   sur codex-plugin 0.0.2. Bump à prévoir dans MEMPHIS à la prochaine
-   publication BOM (pas urgent — codex n'est pas auto-consommateur).
-3. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
+2. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
    traiter les nouveaux bugs selon la même méthode baby-step TDD.
-4. *DOGFOODING* — quand DOC-11 bookPipeline sera prêt côté document-gradle,
+3. *DOGFOODING* — quand DOC-11 bookPipeline sera prêt côté document-gradle,
    câbler CDX-13-3 exposition REST (sortie de SUSPENDU).
+4. *Vérifier MEMPHIS INDEX* — borough en retard de gouvernance (PROMPT_REPRISE
+   MEMPHIS parle encore de 0.0.9 alors que BOM à 0.0.22).
 
 == References
 

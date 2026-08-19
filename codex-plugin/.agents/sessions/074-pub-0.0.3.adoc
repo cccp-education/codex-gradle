@@ -77,6 +77,35 @@ workspace-bom, qui pointe encore sur 0.0.2 — sera mis à jour à la prochaine
 publication BOM si nécessaire ; codex n'est pas un consommateur direct de
 soi-même).
 
+== Synchronisation amont cross-borough (post-publication)
+
+*Constat* : la publication 0.0.3 sans synchroniser la BOM et les boroughs
+consommateurs laissait le pipeline dans un état incohérent — Central avait
+0.0.3 mais la BOM 0.0.21 pointait sur 0.0.2, et codebase-gradle référençait
+explicitement 0.0.2. Correction :
+
+=== MEMPHIS — workspace-bom 0.0.22
+
+. Bump contrainte `codex-plugin = "0.0.2"` → `"0.0.3"` dans `gradle/libs.versions.toml:51`
+. Bump version BOM `0.0.21` → `"0.0.22"` dans `build.gradle.kts:10`
+. `publishToMavenLocal` VERT (POM vérifié : `<version>0.0.3</version>` pour codex-plugin)
+. `publishAggregationToCentralPortal` VERT — bundle `f913774d-1a20-4a1f-b34a-66796d452aa6`,
+  AUTOMATIC, propagé en ~75s sur https://central.sonatype.com/artifact/education.cccp/workspace-bom/0.0.22
+. Commit `78c34e4` poussé sur `main`
+
+=== Queens — codebase-gradle
+
+. Bump `codex-plugin = "0.0.2"` → `"0.0.3"` dans `codebase-plugin/gradle/libs.versions.toml:43`
+  (version explicite — le BOM en `implementation(platform())` ne propage pas
+  ses contraintes aux consommateurs transitifs, d'où le doublon catalogue)
+. Catch-up BOM `0.0.4` → `"0.0.22"` dans `codebase-plugin/gradle/libs.versions.toml:9`
+  (borough en retard massif — dernière sync BOM en 0.0.4)
+. `compileKotlin` VERT — zéro breaking change (S-072/S-073 additifs : nouveau
+  domaine `codex.ocr` + bugfixes internes, aucune API publique modifiée)
+. Pas de republication codebase-plugin (borough DORMANT — bump de contrainte
+  sans changement de code ne justifie pas une publication)
+. Commit `633ac5a` poussé sur `main`
+
 == Point 4 — CDX-13-3 Exposition REST 🔴 SUSPENDU
 
 Inchangé — viendra avec DOC-11 bookPipeline côté document-gradle. Aucune
@@ -109,7 +138,11 @@ pour CDX-13-3 (légitime — réellement suspendu, pas un marqueur périmé).
 . `BACKLOG.adoc` — PUB-3.09 ✅ TERMINÉ (S-074) + PUB-2.2 ✅ CADUQUE (S-074) +
   suppression section CDX-CR3 dupliquée + URL PUB-5.1 mise à jour avec 0.0.3
 
-== Non-modifications
+== Modifications cross-borough (synchronisation amont)
+
+. `workspace-bom/build.gradle.kts` — bump version `0.0.21` → `"0.0.22"` (MEMPHIS)
+. `workspace-bom/gradle/libs.versions.toml` — bump contrainte `codex-plugin` `"0.0.2"` → `"0.0.3"` (MEMPHIS)
+. `codebase-plugin/gradle/libs.versions.toml` — bump `codex-plugin` `"0.0.2"` → `"0.0.3"` + BOM `"0.0.4"` → `"0.0.22"` (Queens)
 
 . Aucun code de production modifié (session de gouvernance + publication)
 . Aucun test modifié (baseline 204 préservée)
