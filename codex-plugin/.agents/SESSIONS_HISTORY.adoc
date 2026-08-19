@@ -859,7 +859,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 *Date* : 2026-06-17
 *Type* : chore+infra
 *Modèle* : deepseek-v4-flash:free (via opencode)
-*Score* : 🟡 PARTIEL (build codex OK, koog 1.0.0 non migré)
+*Score* : ✅ CADUQUE (S-076 — koog supprimé, migration forwardTo sans objet)
 
 *Objectif* :
 - Nettoyer buildSrc de codex-gradle (inliner la convention plugin)
@@ -878,7 +878,7 @@ Chaîne CDX-1a ✅ | CDX-1b ✅ | CDX-1c ✅ | CDX-2 ✅ | CDX-3 ✅ | CDX-4 ✅
 - koog version passée `0.8.0` → `1.0.0` dans workspace-bom, codex, codebase
 - `koog-agents` exclude retiré de codex (redondant avec force())
 
-*Prochaine session* : 033 — Migration koog 1.0.0 (forwardTo → replacement API)
+*Prochaine session* : 033 — Migration koog 1.0.0 (forwardTo → replacement API) — ✅ CADUQUE S-076 (koog supprimé, zéro usage codex, dépendance morte)
 
 '''
 == Session 032 — Fix Gradle 9 build (standalone sub-build + codebase 0.0.2)
@@ -1240,3 +1240,36 @@ Production (2) : `CollectOcrTask.kt` (outputDir + outputFile optionnel),
 Tests (2 créés, 2 modifiés) : `CollectOcrPagesContractTest.kt` (4 unit),
 `OcrPipelineSteps.kt` (+9 step defs), `ocr-pipeline.feature` (+3 scénarios)
 Gouvernance MEMPHIS (4) : INDEX, SESSIONS_HISTORY, BACKLOG, libs.versions.toml
+
+'''
+== Session 076 — Cadrage CDX-RC-04 + koog cleanup + BOM bump + clôtures + Publication 0.0.4
+
+*Date* : 2026-08-19
+*Type* : governance+cleanup+publish
+*Modèle* : glm-5.2:cloud (via opencode)
+*Score* : ✅ TERMINÉ
+
+*Objectif* :
+- Traiter 6 éléments actionnables non listés dans le backlog codex (ordre 6,1,2,3,5,4)
+- Méthode baby-step DDD/TDD/BDD + agile software craftsmanship
+- Permission commit/push en fin de session
+
+*Livrables* :
+- #6 Cadrage gouvernance US CDX-RC-04 (pont RAG SessionMemoryContract) dans BACKLOG — gouvernance pure S-057/S-063, zéro code. Table dédiée `codex_learner_profiles`, domaine `codex.profile` 12e, gate MEMPHIS runtime-contracts:0.0.1.
+- #1 koog cleanup — `koog-agents:1.0.0` supprimée (zéro usage src). build.gradle.kts + libs.versions.toml nettoyés.
+- #2 BOM bump 0.0.21→0.0.22 dans build.gradle.kts.
+- #3 Session 031 🟡 PARTIEL ✅ CADUQUE (koog supprimé, migration forwardTo sans objet). INDEX + SESSIONS_HISTORY mis à jour.
+- #5 CDX-15 EPIC fantôme ✅ CADUQUE (jamais cadré, résidu AGENTS racine ligne 480). BACKLOG mis à jour.
+- #4 Publication codex-plugin 0.0.4 sur Central (bundle `8556eea3`) + BOM 0.0.23 sur Central (bundle `8dc8e513`, constraint codex 0.0.4). Bump consommateur codex vers BOM 0.0.23 reporté (propagation en cours).
+
+*Vérifications* :
+- `../gradlew compileKotlin compileTestKotlin` BUILD SUCCESSFUL (warnings préexistants)
+- `../gradlew test` BUILD SUCCESSFUL — 211 tests, 0 failures, 0 errors (baseline préservée)
+- `grep -rn "TOKEN\|SECRET\|PASSWORD\|API_KEY\|gho_\|ghp_"` → zéro secret
+- Vérification post-sync backlog : seuls marqueurs légitimes subsistent
+
+*Cross-borough* :
+- MEMPHIS : BOM 0.0.23 publiée (constraint codex 0.0.4)
+- AGENTS.adoc racine ligne 480 : mention "CDX-15 TDD rétroactif suspendu" à corriger prochaine sync racine
+
+*Prochaine session* : 077 — Bump consommateur codex vers BOM 0.0.23 + démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS + sync AGENTS racine

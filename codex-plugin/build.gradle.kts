@@ -10,7 +10,7 @@ plugins {
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
 // Gradle 9.x pinne org.jetbrains:annotations:{strictly 13.0} via son Kotlin embed.
 // codebase-plugin ne contraint plus annotations depuis la republo 0.0.2 locale,
-// mais Gradle impose toujours 13.0 → les transitives (koog 26.0.2-1, flexmark 24.0.1)
+// mais Gradle impose toujours 13.0 → les transitives (flexmark 24.0.1)
 // sont bloquées. force() est la seule parade.
 buildscript {
     configurations.all {
@@ -27,7 +27,7 @@ version = libs.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.21"))
+    implementation(platform("education.cccp:workspace-bom:0.0.22"))
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -44,8 +44,8 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
     implementation(libs.jackson.dataformat.yaml)
 
-    // koog Agentic Orchestrator
-    implementation(libs.koog.agents)
+    // koog Agentic Orchestrator — supprimé S-076 (dépendance morte : zéro usage dans src)
+    // implementation(libs.koog.agents)
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
     implementation("education.cccp:codebase-contracts:0.0.2")

@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
 _Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-08-19 (CDX-13-3 réactivé — contrat N2↔N2 pages individuelles + MEMPHIS rattrapage)
-_Session terminee_ : 075 ✅ — Deux livrables : (1) MEMPHIS rattrapage gouvernance (4 versions BOM 0.0.19→0.0.22 rattrapées, bug désynchronisation catalogue `libs.versions.toml` corrigé `0.0.20`→`0.0.22`, INDEX/SESSIONS_HISTORY/BACKLOG MEMPHIS synchronisés, zéro code prod). (2) CDX-13-3 réactivé (baby-step TDD/BDD) — split-brain contrat N2↔N2 résolu : `CollectOcrTask` produit désormais des pages individuelles `NNN-<pageId>.adoc` dans `outputDir` (sortie primaire, alignée sur `PageOrder.fromFileName` document-gradle), `outputFile` legacy optionnel backward compat. 4 unit `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`. 211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT. Zéro régression, zéro secret, zéro bump BOM.
-_Session precedente_ : 074 ✅ — Publication `codex-plugin:0.0.3` sur Maven Central via nmcp (bundle `3b4d1915`, AUTOMATIC) + synchronisation amont cross-borough (MEMPHIS BOM 0.0.22 + Queens codebase sync). 204 tests préservés, 0 failures. Zéro code prod modifié.
-_Prochaine session_ : 076 — Borough DORMANT côté contenu (tous EPICs P0/P1 terminés). DOGFOODING E2E collectOcr→bookPipeline cross-borough à valider. Publication 0.0.4 (breaking change outputDir) à valider.
+_Derniere mise a jour_ : 2026-08-19 (session 076 — cadrage CDX-RC-04 + koog cleanup + BOM bump + clôtures session 031/CDX-15 + publication 0.0.4)
+_Session terminee_ : 076 ✅ — 6 éléments actionnables traités (ordre 6,1,2,3,5,4) : (1) Cadrage gouvernance US CDX-RC-04 pont RAG `SessionMemoryContract` dans BACKLOG (table dédiée `codex_learner_profiles`, domaine `codex.profile` 12e, gate MEMPHIS runtime-contracts:0.0.1). (2) koog cleanup — dépendance morte `koog-agents:1.0.0` supprimée (zéro usage src), build.gradle.kts + libs.versions.toml nettoyés. (3) BOM bump 0.0.21→0.0.22. (4) Session 031 🟡 clôturée ✅ CADUQUE (koog supprimé, migration sans objet). (5) CDX-15 EPIC fantôme ✅ CADUQUE (jamais cadré, résidu AGENTS racine). (6) Publication codex-plugin 0.0.4 sur Central (bundle `8556eea3`) + BOM 0.0.23 sur Central (bundle `8dc8e513`, constraint codex 0.0.4). 211 tests 0 FAIL, `check` VERT, zéro régression, zéro secret. Bump consommateur codex vers BOM 0.0.23 reporté (propagation Central en cours).
+_Session precedente_ : 075 ✅ — Deux livrables : (1) MEMPHIS rattrapage gouvernance (4 versions BOM 0.0.19→0.0.22 rattrapées, bug désynchronisation catalogue `libs.versions.toml` corrigé `0.0.20`→`0.0.22`, INDEX/SESSIONS_HISTORY/BACKLOG MEMPHIS synchronisés, zéro code prod). (2) CDX-13-3 réactivé (baby-step TDD/BDD) — split-brain contrat N2↔N2 résolu : `CollectOcrTask` produit désormais des pages individuelles `NNN-<pageId>.adoc` dans `outputDir` (sortie primaire, alignée sur `PageOrder.fromFileName` document-gradle), `outputFile` legacy optionnel backward compat. 4 unit `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`. 211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT. Zéro régression, zéro secret, zéro bump BOM.
+_Prochaine session_ : 077 — Bump consommateur codex vers BOM 0.0.23 (propagation Central effective). Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour débloquer US CDX-RC-04. Sync AGENTS.adoc racine ligne 480 (CDX-15 ✅ CADUQUE). DOGFOODING E2E collectOcr→bookPipeline à valider.
 _Session en cours_ : —
 
 '''
@@ -57,7 +57,7 @@ _Session en cours_ : —
 | 026 | 2026-05-22 | investigate | Kover offline instrumentation — limitation documentee (Kover 0.9.1) | ✅
 | — | 2026-06-08 | review | Architecture boundary review Codex↔Document — boundary READ+RAG vs WRITE+PUBLISH | ✅
 | 030 | 2026-06-17 | bugfix+build | Fix plugin ID + buildscript Gradle 9.x — 135/135 PASS | ✅
-| 031 | 2026-06-17 | chore+infra | Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé) | 🟡
+| 031 | 2026-06-17 | chore+infra | Infra cleanup (buildSrc supprimé, eachDependency retiré, koog 1.0.0 entamé) | ✅ CADUQUE (S-076 — koog supprimé, migration sans objet)
 | 032 | 2026-06-17 | bugfix+build | Fix Gradle 9 build — standalone sub-build + codebase 0.0.2 | ✅
 | 067 | 2026-06-23 | impl+boundary | EPIC OCR-2 Tesseract fallback — OcrEngine + TesseractOcrEngine, boundary codex↔codebase harmonisé, 5 tests JUnit5, publishToMavenLocal 0.0.1 | ✅
 | 068 | 2026-06-24 | doc+i18n | README multilingues — 20 fichiers (10 langues × consumer + plugin), badges Maven Central/Plugin Portal/CI/License, switcher i18n, AR/UR RTL | ✅
@@ -66,6 +66,7 @@ _Session en cours_ : —
 | **073** | **2026-08-19** | **bugfix+impl+test** | **EPIC CDX-CR3 TERMINÉ 3/3 US (CDX-CR3-1 SQL injection, CDX-CR3-2 hardcode localhost:5432, CDX-CR3-3 chunk_index dupliqués) + US-CDX-13-1 cache OCR hash image (Loi Économie d'Encre) + US-CDX-13-2 tests intégration réelle Ollama (OllamaProbe + assumeTrue), 204 tests (+37), baby-step TDD strict, `check` VERT** | **✅ TERMINE**
 | **074** | **2026-08-19** | **publish+governance** | **PUB-3.09 Publication Maven Central codex-plugin:0.0.3 (bundle `3b4d1915`, AUTOMATIC, propagé) + synchronisation amont cross-borough (MEMPHIS BOM 0.0.22 bundle `f913774d` + Queens codebase-gradle sync codex 0.0.3 + BOM 0.0.22 catch-up) + PUB-2.2 ✅ CADUQUE + 6 points PROMPT_REPRISE résolus, 204 tests préservés, zéro code prod modifié** | **✅ TERMINE**
 | **075** | **2026-08-19** | **governance+impl+test** | **(1) MEMPHIS rattrapage 0.0.19→0.0.22 (4 versions hors-session, bug catalogue `libs.versions.toml` 0.0.20→0.0.22 corrigé, INDEX/SESSIONS_HISTORY/BACKLOG sync). (2) CDX-13-3 réactivé — split-brain N2↔N2 résolu : `CollectOcrTask` produit pages individuelles `NNN-<pageId>.adoc` dans `outputDir` (sortie primaire, alignée `PageOrder.fromFileName`), `outputFile` legacy backward compat. Baby-step TDD/BDD RED→GREEN→REFACTOR. 4 unit + 3 scénarios Cucumber `@n2-bridge`. 211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT. Zéro régression, zéro secret, zéro bump BOM.** | **✅ TERMINE**
+| **076** | **2026-08-19** | **governance+cleanup+publish** | **6 éléments actionnables (ordre 6,1,2,3,5,4) : (1) Cadrage US CDX-RC-04 pont RAG `SessionMemoryContract` dans BACKLOG (gouvernance pure, table `codex_learner_profiles`, domaine `codex.profile` 12e, gate MEMPHIS runtime-contracts:0.0.1). (2) koog cleanup — `koog-agents:1.0.0` supprimée (zéro usage src). (3) BOM bump 0.0.21→0.0.22. (4) Session 031 🟡 ✅ CADUQUE. (5) CDX-15 EPIC fantôme ✅ CADUQUE. (6) Publication codex-plugin 0.0.4 Central (bundle `8556eea3`) + BOM 0.0.23 Central (bundle `8dc8e513`, constraint codex 0.0.4). 211 tests 0 FAIL, `check` VERT, zéro régression, zéro secret.** | **✅ TERMINE**
 |===
 
 '''
@@ -92,13 +93,15 @@ _Session en cours_ : —
 | CDX-13 | Exposition N2↔N2 : collectOcr produit pages individuelles pour document-gradle DOC-11 bookPipeline | ✅ TERMINÉ (session 075 — outputDir + NNN-<pageId>.adoc, contrat PageOrder.fromFileName aligné) | P1
 | CDX-14 | Couverture tests (A JUnit5 + B Cucumber + C Kover metrics) | ✅ TERMINE (A+B, C analyse Kover: ProjectBuilder non instrumentable) | P0
 | EPIC K | Renommage taxonomie + Metadata.kt + documentation | ✅ TERMINE | P0
-| EPIC PUB | Publication Maven Central codex-plugin (0.0.1 S-029, 0.0.2 S-070, 0.0.3 S-074) | ✅ TERMINE (S-074) | P0
+| EPIC PUB | Publication Maven Central codex-plugin (0.0.1 S-029, 0.0.2 S-070, 0.0.3 S-074, 0.0.4 S-076) | ✅ TERMINE (S-076) | P0
 | EPIC OCR-2 | Tesseract fallback — OcrEngine + TesseractOcrEngine (boundary codex↔codebase) | ✅ TERMINE (session 067) | P1
 | EPIC OCR-3 | LLM OCR Pipeline — LlmOcrEngine (Ollama vision) + OcrPipeline (fallback) + collectOcr task (DOC-11 alignement) | ✅ TERMINE (session 072) | P1
 | EPIC CDX-CR3 | Revue CR-GLOBALE-003 : SQL injection + hardcode localhost + chunk_index dupliqués | ✅ TERMÉ (session 073) | P0
 | US-CDX-13-1 | Persistance OcrResult par page (cache disque hash image) — Loi Économie d'Encre | ✅ TERMINE (session 073) | P1
 | US-CDX-13-2 | Tests intégration réelle Ollama (assumeTrue + OllamaProbe) | ✅ TERMINE (session 073) | P2
 | EPIC README-I18N | README multilingues (10 langues × consumer + plugin) | ✅ TERMINE (session 068) | P2
+| EPIC CDX-RC-04 | Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — cadrage S-076 | 🟡 Cadré (gated par MEMPHIS runtime-contracts:0.0.1) | P1
+| EPIC CDX-15 | TDD rétroactif (EPIC fantôme mentionné AGENTS racine) | ✅ CADUQUE (S-076 — jamais cadré) | P3
 |===
 
 '''

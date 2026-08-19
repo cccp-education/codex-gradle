@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 076
-:session: 076
+= PROMPT_REPRISE — Codex — Session 077
+:session: 077
 :date: 2026-08-19
 :status: PRET
 :max-lines: 40
@@ -9,47 +9,44 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 397/397 PASS (baseline préservée S-075)
+../gradlew test            # 211/211 PASS (baseline préservée S-076)
 ```
 
-== Session 075 terminée — MEMPHIS rattrapage + CDX-13-3 N2↔N2 bridge
+== Session 076 terminée — Cadrage CDX-RC-04 + koog cleanup + publication 0.0.4
 
-Deux livrables :
+Six éléments actionnables traités (ordre 6,1,2,3,5,4) :
 
-1. **MEMPHIS rattrapage** (gouvernance pure) — INDEX workspace-bom rattrapé
-   (4 versions 0.0.19→0.0.22 publiées hors-session). Bug désynchronisation
-   catalogue `libs.versions.toml` corrigé (`workspace-bom = "0.0.20"` → `"0.0.22"`).
-   INDEX/SESSIONS_HISTORY/BACKLOG synchronisés. Zéro code prod.
+1. **Cadrage CDX-RC-04** (gouvernance pure) — US `CDX-RC-04` cadrée dans
+   BACKLOG.adoc documentant le rôle de codex comme implémenteur privé du
+   contrat `SessionMemoryContract` (mémoire incrémentale RAG) de l'EPIC
+   RUNTIME-CONTRACTS-3 MEMPHIS. Table dédiée `codex_learner_profiles`,
+   domaine `codex.profile` (12e), gate publication MEMPHIS
+   `runtime-contracts:0.0.1`.
+2. **koog cleanup** — dépendance morte `koog-agents:1.0.0` supprimée
+   (zéro usage dans src). build.gradle.kts + libs.versions.toml nettoyés.
+3. **BOM bump** — workspace-bom 0.0.21 → 0.0.22 dans build.gradle.kts.
+4. **Session 031 🟡** clôturée ✅ CADUQUE (koog supprimé, migration sans objet).
+5. **CDX-15** (EPIC fantôme) ✅ CADUQUE — jamais cadré, résidu AGENTS racine.
+6. **Publication 0.0.4** — codex-plugin 0.0.4 sur Central (bundle
+   `8556eea3`) + BOM 0.0.23 sur Central (bundle `8dc8e513`, constraint
+   codex 0.0.4). 211 tests 0 FAIL, `check` VERT, zéro régression, zéro secret.
 
-2. **CDX-13-3 réactivé** (baby-step TDD/BDD) — split-brain de contrat N2↔N2
-   résolu. `CollectOcrTask` produit désormais des pages individuelles
-   `NNN-<pageId>.adoc` dans `outputDir` (sortie primaire), alignées sur le
-   contrat `PageOrder.fromFileName` de document-gradle `BookAssembler`.
-   `outputFile` (legacy concaténé) préservé optionnel backward compat.
-   4 unit `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`.
-   211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT.
+== Prochaine session — 077
 
-Bug split-brain découvert : codex produisait un seul fichier concaténé,
-document attendait un répertoire de pages ordonnées. Pont N2↔N2 filesystem
-spécifié (KDoc `BookPage`) mais non respecté → désormais aligné.
-
-== Prochaine session — 076
-
-1. *Borough DORMANT côté contenu* — CDX-13-3 est désormais ✅ TERMINÉ.
-   Tous les EPICs P0/P1 codex sont terminés.
-2. *DOGFOODING E2E* — possibilité de tester le pipeline complet
-   `collectOcr → bookPipeline` cross-borough (codex→document) sur un vrai
-   livre de `office/books-collection/`. À valider avec l'utilisateur.
-3. *Publication 0.0.4* — le contrat `outputDir` est un breaking change
-   mineur (nouvelle sortie primaire). Bump 0.0.3→0.0.4 + publication Maven
-   Central + sync BOM MEMPHIS. À valider avec l'utilisateur.
-4. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
-   traiter les nouveaux bugs selon baby-step TDD.
+1. *Bump consommateur codex vers BOM 0.0.23* — propagation Central 0.0.23
+   effective, changer `build.gradle.kts` ligne 30 `0.0.22` → `0.0.23`.
+2. *Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS* (US RC-1..7) pour débloquer
+   l'US CDX-RC-04 côté codex (gate publication `runtime-contracts:0.0.1`).
+3. *Sync AGENTS.adoc racine* — corriger mention "CDX-15 TDD rétroactif
+   suspendu" ligne 480 (remplacer par "CDX-15 ✅ CADUQUE").
+4. *DOGFOODING E2E* collectOcr→bookPipeline cross-borough (codex→document)
+   sur un vrai livre de `office/books-collection/`. À valider.
 
 == References
 
-- `.agents/sessions/075-memphis-rattrapage-cdx-13-3-n2-bridge.adoc`
-- `src/main/kotlin/codex/tasks/CollectOcrTask.kt:27-60` — outputDir + outputFile
-- `src/test/kotlin/codex/tasks/CollectOcrPagesContractTest.kt` — contrat N2↔N2
-- `src/test/resources/features/ocr-pipeline.feature` — 3 scénarios @n2-bridge
-- workspace-bom : INDEX rattrapé 0.0.19→0.0.22, catalogue corrigé
+- `.agents/sessions/076-cdx-rc04-koog-cleanup-pub-0.0.4.adoc`
+- `BACKLOG.adoc` § EPIC CDX-RC-04 (cadrage pont RAG SessionMemoryContract)
+- `BACKLOG.adoc` § EPIC CDX-15 (✅ CADUQUE)
+- `build.gradle.kts:30` — BOM 0.0.22 (bump 0.0.23 reporté propagation)
+- `gradle/libs.versions.toml` — koog supprimé, codex-plugin 0.0.4
+- Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

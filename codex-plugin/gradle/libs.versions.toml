@@ -1,8 +1,7 @@
 [versions]
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
-codex-plugin = "0.0.3"
+codex-plugin = "0.0.4"
 codebase = "0.0.2"
-koog = "1.0.0"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
 kotlin = "2.4.10"
@@ -59,10 +58,10 @@ r2dbc-spi = { module = "io.r2dbc:r2dbc-spi", version = "1.0.0.RELEASE" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
 
-# ── koog Agentic Orchestrator ──────────────────────────────────────────────────
-koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
-
 # ── Tests ─────────────────────────────────────────────────────────────────────
+# koog Agentic Orchestrator — supprimé S-076 (dépendance morte : zéro usage dans src)
+# koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }

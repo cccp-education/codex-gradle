@@ -1,0 +1,117 @@
+= Session 076 — Cadrage CDX-RC-04 + koog cleanup + BOM bump + clôtures + Publication 0.0.4
+:session: 076
+:date: 2026-08-19
+:type: governance+cleanup+publish
+:modele: glm-5.2:cloud (via opencode)
+:score: ✅ TERMINÉ
+
+== Objectif
+
+Traiter 6 éléments actionnables non listés dans le backlog codex, dans l'ordre
+suivant : #6 (EPIC-RC-04), #1 (koog cleanup), #2 (BOM bump), #3 (session 031 🟡),
+#5 (CDX-15), #4 (publication 0.0.4). Méthode baby-step DDD/TDD/BDD + agile
+software craftsmanship. Permission explicite commit/push en fin de session.
+
+== Livrables
+
+=== #6 — Cadrage gouvernance EPIC CDX-RC-04 (pont RAG SessionMemoryContract)
+
+Gouvernance pure S-057/S-063 — zéro code modifié. Cadrage dans BACKLOG.adoc
+d'une US `CDX-RC-04` documentant le rôle de codex comme implémenteur privé
+du contrat `SessionMemoryContract` (mémoire incrémentale RAG) défini dans
+l'EPIC RUNTIME-CONTRACTS-3 (MEMPHIS N0).
+
+Constat clé : le contrat N0 n'existe pas encore — `runtime-contracts` n'est
+même pas créé comme module MEMPHIS. L'US codex est donc *gated* par la
+publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
+
+Décisions architecturales documentées :
+. Boundary : codex = implémenteur privé OSS (Apache 2.0). Le contrat est OSS
+  MEMPHIS, l'implémentation du pont RAG est OSS codex. Pas de propriétaire ici.
+. Table dédiée `codex_learner_profiles` — séparée de `codex_documents`/
+  `codex_chunks`. Le profil n'est PAS un document du corpus, c'est de la
+  mémoire de session. Mélanger casserait la recherche sémantique.
+. Embedding profil : concaténation `weakPoints` + `annotations.values`.
+  Pas d'embedding sur `completedModules` (IDs), ni `progressionPct`/
+  `comprehensionScore` (numériques, filtrage SQL).
+. Domaine : `codex.profile` (12e domaine codex). Mirror pattern `codex.ocr`.
+. Non-regression : nouvelle table, nouveau domaine, nouvelle tâche. Backward
+  compat total.
+. Gate MEMPHIS : ne pas démarrer avant publication `runtime-contracts:0.0.1`.
+
+Prochaine action côté MEMPHIS : démarrer EPIC RUNTIME-CONTRACTS (US RC-1..7)
+dans une session MEMPHIS dédiée.
+
+=== #1 — koog cleanup (suppression dépendance morte)
+
+`koog-agents:1.0.0` était en `implementation` dans `build.gradle.kts` mais
+**zéro usage** dans `src/`. Supprimé :
+. `build.gradle.kts` : `implementation(libs.koog.agents)` → commenté
+. `gradle/libs.versions.toml` : version `koog = "1.0.0"` + library
+  `koog-agents` supprimés
+. Commentaire buildscript ajusté (koog 26.0.2-1 retiré de la liste transitives)
+
+Compile OK, 211 unit tests 0 FAIL, 0 errors. Non-régression confirmée.
+
+=== #2 — BOM bump (workspace-bom 0.0.21 → 0.0.22)
+
+`build.gradle.kts` ligne 30 : `implementation(platform("...:workspace-bom:0.0.21"))`
+→ `0.0.22`. Alignement sur dernière BOM publiée (rattrapage S-075 MEMPHIS).
+
+=== #3 — Clôture session 031 🟡 PARTIEL
+
+Le marqueur 🟡 de session 031 concernait "koog 1.0.0 bumpé jamais migré"
+(forwardTo → replacement API). Avec #1, koog est supprimé (zéro usage codex) —
+la migration n'a plus de sens. Clôturé en ✅ CADUQUE dans INDEX.adoc (ligne
+table sessions) + SESSIONS_HISTORY.adoc (score + prochaine session).
+
+=== #5 — CDX-15 (EPIC fantôme) ✅ CADUQUE
+
+"CDX-15 TDD rétroactif suspendu" mentionné uniquement dans AGENTS.adoc racine
+(ligne 480), jamais cadré dans backlog/INDEX codex. Déclaré CADUQUE dans
+BACKLOG.adoc avec rationale : EPIC fantôme, jamais spécifié, jamais découpé en
+US. Résidu de session 072 (OCR pipeline). Action : corriger la mention
+AGENTS.adoc racine lors de la prochaine sync gouvernance racine.
+
+=== #4 — Publication codex-plugin 0.0.4 + BOM 0.0.23 sur Maven Central
+
+. Bump version `codex-plugin` 0.0.3 → 0.0.4 dans `gradle/libs.versions.toml`.
+. `./gradlew build -x test` BUILD SUCCESSFUL (validatePlugins OK).
+. `./gradlew publishAggregationToCentralPortal --no-daemon` BUILD SUCCESSFUL —
+  bundle `8556eea3-3cfe-4c13-ad51-cdf224089a88` (AUTOMATIC, propagation Central).
+. Contenu depuis 0.0.3 : S-075 CDX-13-3 (contrat N2↔N2 pages individuelles) +
+  S-076 koog cleanup + BOM bump 0.0.22.
+. Sync BOM MEMPHIS : bump `workspace-bom` 0.0.22 → 0.0.23 + constraint
+  `codex-plugin` 0.0.3 → 0.0.4 dans `gradle/libs.versions.toml` +
+  `build.gradle.kts` version. Publication `./gradlew
+  publishAggregationToCentralPortal` BUILD SUCCESSFUL — bundle
+  `8dc8e513-5b25-483b-8621-c6b86c0939a7` (AUTOMATIC).
+. Bump consommateur codex vers BOM 0.0.23 tenté mais propagation Central non
+  encore effective — conservé sur BOM 0.0.22 pour compilation locale. Bump
+  reporté prochaine session (propagation en cours).
+
+== Vérifications
+
+. `../gradlew compileKotlin compileTestKotlin` BUILD SUCCESSFUL (warnings
+  préexistants uniquement).
+. `../gradlew test` BUILD SUCCESSFUL — 211 tests, 0 failures, 0 errors
+  (baseline S-075 préservée).
+. `grep -rn "TOKEN\|SECRET\|PASSWORD\|API_KEY\|gho_\|ghp_"` → zéro secret.
+. Vérification post-sync backlog : `grep -n "🟡\|⏳\|À FAIRE\|À PLANIFIER\|EN PAUSE\|à planifier\|à faire" BACKLOG.adoc` → seuls marqueurs légitimes subsistent (EPICs réellement en cours/cadrés/caduqués).
+
+== Cross-borough
+
+. MEMPHIS (workspace-bom) : BOM 0.0.23 publiée (constraint codex 0.0.4).
+. Codex 0.0.4 publié sur Central. Consommateur codex restera sur BOM 0.0.22
+  jusqu'à propagation Central 0.0.23 (prochaine session).
+. AGENTS.adoc racine (ligne 480) : mention "CDX-15 TDD rétroactif suspendu" à
+  corriger lors de la prochaine sync gouvernance racine.
+
+== Prochaine session — 077
+
+. Bump consommateur codex vers BOM 0.0.23 (propagation Central effective).
+. Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour débloquer
+  l'US CDX-RC-04 côté codex (gate publication runtime-contracts:0.0.1).
+. Sync AGENTS.adoc racine : corriger mention CDX-15 ligne 480.
+. DOGFOODING E2E collectOcr→bookPipeline cross-borough (codex→document) sur
+  un vrai livre de `office/books-collection/` — à valider.

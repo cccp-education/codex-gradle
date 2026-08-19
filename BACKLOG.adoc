@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 075 — CDX-13-3 réactivé : contrat N2↔N2 pages individuelles + MEMPHIS rattrapage gouvernance)_
+_Dernière mise à jour : 2026-08-19 (session 076 — cadrage CDX-RC-04 pont RAG SessionMemoryContract + cleanup koog + BOM bump + clôtures session 031/CDX-15)_
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
@@ -117,3 +117,101 @@ de la spécification rather qu'une exécution.
 | Artefact | URL |
 |---|---|
 | codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.3 publié S-074) |
+
+'''
+== 🟡 EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076
+
+_Source_ : `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc` (jardin secret) — EPIC RUNTIME-CONTRACTS-3
+`SessionMemoryContract` + `LearnerProfile` (US EPIC-RC-04, ⏳ À FAIRE côté MEMPHIS).
+_Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié, cadrage uniquement.
+
+=== Contexte cross-borough
+
+L'EPIC RUNTIME-CONTRACTS (MEMPHIS) crée le 8e artefact N0 `runtime-contracts`
+avec 8 US (RC-0 cadrage ✅, RC-1..7 ⏳ À FAIRE). Codex est identifié dans le
+cadrage (ligne 281 du `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc`) comme
+*l'implémenteur privé du pont RAG* pour la US RC-3 `SessionMemoryContract` :
+
+  > Profil stagiaire (compréhension, points faibles, progression). Pont
+  > vers codex RAG (ingère le profil dans pgvector). À NE PAS confondre
+  > avec le RAG corpus (codex ingère du contenu, pas du profil).
+
+Le contrat N0 (`SessionMemoryContract` interface + `LearnerProfile` data class)
+vit dans MEMPHIS `runtime-contracts`. L'implémentation du pont RAG
+(persistance pgvector + embedding du profil) vit côté codex N2.
+
+=== État bloqué
+
+Le contrat N0 n'existe pas encore — `runtime-contracts` n'est même pas créé
+comme module MEMPHIS. L'US codex CDX-RC-04 est donc *gated* par la
+publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-RC-04
+| **Implémentation privée du pont RAG `SessionMemoryContract`** —
+  consomme `contracts.runtime.SessionMemoryContract` + `LearnerProfile`
+  (MEMPHIS `runtime-contracts:0.0.1`). Persistence pgvector séparée du
+  corpus documentaire (nouvelle table `codex_learner_profiles`, même
+  base `codex`, embedding AllMiniLmL6V2 384 dim). Domaine `codex.profile`
+  (nouveau). Adapter `PgVectorSessionMemory` implémente
+  `SessionMemoryContract.save(profile)` / `load(learnerId, formationId)`.
+  Embedding du profil = concaténation des `weakPoints` + `annotations`
+  values (sémantique "points faibles + notes pédagogiques" requêtable).
+  Tâche Gradle `persistLearnerProfile` (groupe `codex-memory`). Baby-step
+  TDD strict : unit (port + adapter fake) → functional (R2DBC in-memory)
+  → Cucumber `codex_session_memory.feature` @session-memory.
+  ~4 unit + ~3 functional + ~3 scénarios.
+| ⏳ À FAIRE (gated par MEMPHIS runtime-contracts:0.0.1)
+|===
+
+=== Décisions architecturales (cadrage S-076)
+
+. *Boundary* : codex = implémenteur privé du contrat MEMPHIS. Le contrat
+  est OSS (Apache 2.0), l'implémentation du pont RAG est OSS (codex Apache 2.0).
+  Pas de code propriétaire ici — la frontière licence 3 étages place
+  l'orchestration agentique privée dans workspace-gradle, pas dans codex.
+. *Table dédiée* `codex_learner_profiles` — séparée de `codex_documents`/
+  `codex_chunks`. Rationale : le profil n'est PAS un document du corpus,
+  c'est de la mémoire de session. Mélanger les deux casserait la recherche
+  sémantique (un Retrieve sur un module pédagogique retournerait le profil
+  du stagiaire — bruit). Clé composite `(learner_id, formation_id)`.
+. *Embedding profil* : concaténation `weakPoints.joinToString` +
+  `annotations.values.joinToString`. Pas d'embedding sur `completedModules`
+  (liste de IDs, pas sémantique). Pas d'embedding sur `progressionPct`/
+  `comprehensionScore` (numériques, filtrage SQL direct).
+. *Domaine* : `codex.profile` (12e domaine codex — voir codebase.agents
+  ontologique). Mirror pattern `codex.ocr` (port + adapter + config).
+. *Non-regression* : zéro impact sur le pipeline documentaire existant.
+  Nouvelle table, nouveau domaine, nouvelle tâche. Backward compat total.
+. *Gate MEMPHIS* : ne pas démarrer l'implémentation tant que
+  `runtime-contracts:0.0.1` n'est pas publié sur Maven Central
+  (EPIC-RC-07). Pour progresser : ouvrir une session MEMPHIS dédiée à
+  RUNTIME-CONTRACTS-1..7 (publication préalable).
+
+=== Prochaine action
+
+*Côté MEMPHIS* : démarrer EPIC RUNTIME-CONTRACTS (US RC-1..7) dans une
+session MEMPHIS dédiée. Publier `runtime-contracts:0.0.1`.
+*Côté codex* : dès publication MEMPHIS, bump codex build.gradle.kts
+`implementation("education.cccp:runtime-contracts:0.0.1")` et démarrer
+l'US CDX-RC-04 en baby-step TDD/BDD.
+
+'''
+== 🟡 EPIC CDX-15 — TDD rétroactif — ✅ CADUQUE (S-076)
+
+_Source_ : mention unique dans AGENTS.adoc racine (ligne 480) :
+« CDX-15 TDD rétroactif suspendu ». Aucun cadrage dans backlog/INDEX codex.
+
+*Statut* : ✅ CADUQUE — EPIC fantôme. Jamais cadré, jamais spécifié, jamais
+découpé en US. La mention "suspendu" dans AGENTS.adoc racine est un
+résidu de session 072 (OCR pipeline) où une intention de TDD rétroactif
+sur le code legacy a été évoquée mais jamais formalisée. Aucune
+spécification, aucun contrat, aucune dépendance amont. Marqué CADUQUE
+plutôt que TERMINÉ pour refléter l'absence de spécification exécutée.
+
+*Action* : corriger la mention AGENTS.adoc racine (ligne 480) lors de la
+prochaine synchronisation gouvernance racine — supprimer la mention
+"CDX-15 TDD rétroactif suspendu" ou la remplacer par "CDX-15 ✅ CADUQUE".
