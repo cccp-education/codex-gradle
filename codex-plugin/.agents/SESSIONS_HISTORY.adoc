@@ -1180,3 +1180,63 @@ oubli méthode initiale) —
 - 3 repos poussés sur `main` (codex 7bc7a29, BOM 78c34e4, codebase 633ac5a).
 - Pas de republication codebase-plugin (borough DORMANT — bump de contrainte
   sans changement de code ne justifie pas une publication).
+
+'''
+== Session 075 (2026-08-19) — MEMPHIS rattrapage + CDX-13-3 N2↔N2 bridge
+
+*Date* : 2026-08-19
+*Type* : governance + impl + test
+*Score* : 9/10
+
+Deux livrables distincts :
+
+=== A. MEMPHIS rattrapage gouvernance (workspace-bom)
+
+INDEX MEMPHIS s'arrêtait à S-020 / BOM 0.0.18. 4 versions publiées
+hors-session rattrapées : 0.0.19 (slider 0.0.16→0.0.18 + codebase 0.0.5→0.0.8
++ bakery 0.0.3→0.0.6 + plantuml 0.0.3→0.0.4, bundle `2160075f`), 0.0.20
+(bakery 0.0.6→0.0.8), 0.0.21 (bakery 0.0.8→0.0.9), 0.0.22 (codex 0.0.2→0.0.3,
+bundle `f913774d`).
+
+Bug désynchronisation catalogue `gradle/libs.versions.toml` découvert et
+corrigé : `workspace-bom = "0.0.20"` alors que `build.gradle.kts` version =
+`"0.0.22"`. 4 bumps manqués (catalogue n'avait pas suivi depuis BOM 0.0.19).
+
+INDEX.adoc + SESSIONS_HISTORY.adoc + BACKLOG.adoc MEMPHIS synchronisés.
+Zéro code de production modifié (catalogue = metadata, pas logique).
+
+=== B. CDX-13-3 réactivé — Contrat N2↔N2 pages individuelles
+
+CDX-13-3 "exposition REST" était SUSPENDU en attendant DOC-11 bookPipeline
+côté document-gradle. Audit révèle :
+- DOC-11 ✅ TERMINÉ côté document-gradle (session 012) — `bookPipeline` existe
+- Design boundary (AGENT.adoc Regle 4bis) est **parallèle N2, pas empilé** —
+  pas de dépendance directe, le pont N2↔N2 est le filesystem
+- **Split-brain de contrat découvert** : `CollectOcrTask` produisait un seul
+  fichier concaténé, mais `BookAssembler` (document-gradle) attend un
+  répertoire de fichiers `NNN-<pageId>.adoc` (contrat `PageOrder.fromFileName`)
+
+US-CDX-13-3 refondue : aligner le contrat de sortie `collectOcr`.
+
+Baby-step TDD strict :
+- **RED** : 4 tests unit `CollectOcrPagesContractTest` créés —
+  `Unresolved reference 'outputDir'`
+- **GREEN** : implémentation `outputDir` (DirectoryProperty, sortie primaire)
+  + `outputFile` (legacy optionnel, concaténé backward compat). Chaque page
+  dans `NNN-<pageId>.adoc` (zero-padded 3-digit prefix). 4/4 PASS
+- **REFACTOR** : plugin wiring default `outputDir = build/codex/ocr-pages`,
+  KDoc mis à jour
+- **BDD** : 3 scénarios Cucumber `@n2-bridge` ajoutés dans `ocr-pipeline.feature`
+  + 9 step defs dans `OcrPipelineSteps`
+
+Résultats : 211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT.
+Zéro régression (legacy `outputFile` backward compat préservée).
+Zéro secret, zéro bump BOM, zéro appel réseau.
+
+=== Fichiers modifiés
+
+Production (2) : `CollectOcrTask.kt` (outputDir + outputFile optionnel),
+`CodexPlugin.kt` (wiring default outputDir)
+Tests (2 créés, 2 modifiés) : `CollectOcrPagesContractTest.kt` (4 unit),
+`OcrPipelineSteps.kt` (+9 step defs), `ocr-pipeline.feature` (+3 scénarios)
+Gouvernance MEMPHIS (4) : INDEX, SESSIONS_HISTORY, BACKLOG, libs.versions.toml

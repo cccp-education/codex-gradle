@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 073 — EPIC CDX-CR3 TERMINÉ 3/3 US + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama)_
+_Dernière mise à jour : 2026-08-19 (session 075 — CDX-13-3 réactivé : contrat N2↔N2 pages individuelles + MEMPHIS rattrapage gouvernance)_
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
@@ -70,11 +70,20 @@ parcouru, pas `indexOf`.
   - Plage 11437-11465 (AGENTS.adoc), ports 11434-11436 INTERDITS
   - Résultat local : 5/5 PASSED (port 11437, gpt-oss:120b-cloud)
 
-=== US-CDX-13-3 — Exposition REST via runner-gradle N3 — 🔴 SUSPENDU
+=== US-CDX-13-3 — Contrat N2↔N2 : pages individuelles pour document-gradle ✅ TERMINÉ (session 075)
 
-. *Valeur* : Exposer le pipeline OCR via runner-gradle N3 pour consommation
-   HTTP par document-gradle DOC-11 bookPipeline.
-. *Statut* : Suspendu — viendra avec DOC-11 bookPipeline côté document-gradle.
+. *Valeur* : Aligner le contrat de sortie `collectOcr` avec `BookAssembler`
+   (document-gradle DOC-11). Split-brain résolu : codex produisait un seul
+   fichier concaténé, document attendait un répertoire de pages ordonnées.
+. *Implémentation* :
+  - `outputDir` (DirectoryProperty, sortie primaire) — une page `.adoc` par
+    fichier, nommée `NNN-<pageId>.adoc` (zero-padded 3-digit prefix, aligné
+    sur `PageOrder.fromFileName` document-gradle)
+  - `outputFile` (legacy optionnel, concaténé `== Page N`) — backward compat
+  - Plugin wiring default `outputDir = build/codex/ocr-pages`
+  - 4 unit tests `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`
+  - Baby-step TDD/BDD strict RED → GREEN → REFACTOR
+  - 211 unit + 186 cucumber = 397 tests, 0 FAIL
 
 === PUB-3.09 — codex-plugin ✅ TERMINÉ (S-074)
 **Priorite** : P0

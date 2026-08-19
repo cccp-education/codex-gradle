@@ -1,0 +1,77 @@
+= Session 075 — Codex — MEMPHIS rattrapage + CDX-13-3 réactivation
+:session: 075
+:date: 2026-08-19
+:borough: Brooklyn (codex-gradle)
+:status: ✅ TERMINÉ
+:method: Gouvernance pure + baby-step TDD/BDD (RED → GREEN → REFACTOR)
+
+== Mission
+
+1. **A. Maintenance MEMPHIS** — rattraper l'INDEX workspace-bom (gouvernance pure, point 4 PROMPT_REPRISE S-074)
+2. **B. Réactiver CDX-13-3** — exposition REST suspendue, à réactiver en baby-step DDD/TDD/BDD
+
+== A. Rattrapage gouvernance MEMPHIS (workspace-bom)
+
+*Constat* : INDEX MEMPHIS s'arrêtait à S-020 / BOM 0.0.18. Le git log montre 4 versions publiées hors-session non rattrapées : 0.0.19 (commit `ce80bf0`, bundle `2160075f`), 0.0.20 (commit `04729ed`), 0.0.21 (commit `4b94171`), 0.0.22 (commit `78c34e4`, bundle `f913774d`). PROMPT_REPRISE codex S-074 signalait "MEMPHIS INDEX en retard (parle encore de 0.0.9 alors que BOM à 0.0.22)".
+
+*Bug découverte* : désynchronisation catalogue `gradle/libs.versions.toml` — `workspace-bom = "0.0.20"` alors que `build.gradle.kts` version = `"0.0.22"`. 4 bumps manqués (catalogue n'avait pas suivi depuis BOM 0.0.19).
+
+*Actions* :
+. INDEX.adoc — session 021 ajoutée, 4 entrées rattrapage table Sessions, 4 entrées table Publications Maven Central, roadmap PUB mis à jour (BOM 0.0.22, slider 0.0.18, codebase 0.0.8, codex 0.0.3, bakery 0.0.9, plantuml 0.0.4)
+. SESSIONS_HISTORY.adoc — 4 entrées rattrapage + entrée session 021
+. BACKLOG.adoc — PUB-3.01 mis à jour (dernière version 0.0.22)
+. `gradle/libs.versions.toml` — `workspace-bom = "0.0.20"` → `"0.0.22"` (fix désynchronisation catalogue)
+. `./gradlew help` VERT (sanity check)
+. Zéro code de production modifié (catalogue = metadata, pas logique)
+. Zéro secret, zéro bump BOM
+
+== B. Réactivation CDX-13-3 — Contrat N2↔N2 : pages individuelles
+
+*Cadrage refonte* : CDX-13-3 "exposition REST" était SUSPENDU en attendant DOC-11 bookPipeline côté document-gradle. Audit révèle :
+. DOC-11 ✅ TERMINÉ côté document-gradle (session 012) — `bookPipeline` task composite existe et fonctionne
+. Le design boundary (AGENT.adoc Regle 4bis) est **parallèle N2, pas empilé** — pas de dépendance directe document→codex, le pont N2↔N2 est le filesystem
+. **Split-brain de contrat découvert** : `CollectOcrTask` produisait un seul fichier concaténé (`outputFile`), mais `BookAssembler` (document-gradle) attend un répertoire de fichiers `NNN-<pageId>.adoc` (contrat `PageOrder.fromFileName` — leading digits déterminent l'ordre). Le pont filesystem était spécifié (KDoc `BookPage`) mais non respecté par codex
+
+*US-CDX-13-3 refondue* : aligner le contrat de sortie `collectOcr` pour produire des pages individuelles consommables par `BookAssembler`.
+
+*Baby-step TDD strict* :
+. **RED** : 4 tests unit `CollectOcrPagesContractTest` créés — `Unresolved reference 'outputDir'` (la propriété n'existait pas)
+. **GREEN** : implémentation `outputDir` (DirectoryProperty, sortie primaire) + `outputFile` (legacy optionnel, concaténé backward compat). Chaque page écrite dans `NNN-<pageId>.adoc` (zero-padded 3-digit prefix, pattern PageOrder). 4/4 PASS
+. **REFACTOR** : plugin wiring default `outputDir = build/codex/ocr-pages`, KDoc mis à jour, description task alignée
+. **BDD** : 3 scénarios Cucumber `@n2-bridge` ajoutés dans `ocr-pipeline.feature` (pages individuelles, nommage PageOrder-compatible, 0 pages si aucune image) + 9 step defs dans `OcrPipelineSteps`
+
+*Résultats* :
+. 211 unit + 186 cucumber = 397 tests, 0 failures, 0 errors (baseline 204 unit → +7 unit, +18 total)
+. `./gradlew check` BUILD SUCCESSFUL — Kover VERT, validatePlugins VERT
+. Zéro régression (legacy `outputFile` backward compat préservée — 5 tests `CollectOcrTaskTest` PASS)
+. Zéro secret, zéro bump BOM, zéro appel réseau (port 1 = connection refused immédiat)
+. Bug split-brain N2↔N2 résolu — `collectOcr` produit désormais le contrat attendu par `BookAssembler`
+
+== Fichiers modifiés
+
+*Code production* (1 fichier) :
+. `src/main/kotlin/codex/tasks/CollectOcrTask.kt` — refactor `outputDir` + `outputFile` optionnel
+. `src/main/kotlin/codex/CodexPlugin.kt` — wiring default `outputDir`
+
+*Tests* (2 fichiers créés, 2 modifiés) :
+. `src/test/kotlin/codex/tasks/CollectOcrPagesContractTest.kt` — 4 unit tests (NOUVEAU)
+. `src/test/kotlin/codex/bdd/OcrPipelineSteps.kt` — 9 step defs `@n2-bridge` (modifié)
+. `src/test/resources/features/ocr-pipeline.feature` — 3 scénarios `@n2-bridge` (modifié)
+
+*Gouvernance MEMPHIS* (4 fichiers) :
+. `workspace-bom/.agents/INDEX.adoc` — rattrapage 0.0.19→0.0.22
+. `workspace-bom/.agents/SESSIONS_HISTORY.adoc` — 4 entrées rattrapage
+. `workspace-bom/BACKLOG.adoc` — PUB-3.01 mis à jour
+. `workspace-bom/gradle/libs.versions.toml` — fix catalogue 0.0.20→0.0.22
+
+== Vérifications
+
+. `./gradlew compileKotlin` — UP-TO-DATE
+. `./gradlew test` — 397 tests, 0 FAIL
+. `./gradlew check` — BUILD SUCCESSFUL (Kover + validatePlugins VERT)
+. `grep TOKEN|SECRET|PASSWORD|API_KEY` — zéro match
+. `git status` — propre avant clôture
+
+== Score session
+
+9/10 — Deux livrables distincts (gouvernance MEMPHIS + bug fix split-brain N2↔N2), méthode baby-step TDD/BDD respectée, non-régression stricte. Un point de moins car l'US CDX-13-3 a été refondue (exposition REST → contrat filesystem) — le cadrage original SUSPENDU était caduc, l'implémentation a dû s'adapter au design boundary réel.

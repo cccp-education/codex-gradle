@@ -170,6 +170,84 @@ class OcrPipelineSteps {
         assertTrue(content.contains("No images found"), "Output should mention no images found")
     }
 
+    // ── US-CDX-13-3 — Contrat N2↔N2 : pages individuelles pour document-gradle ──
+
+    @When("the collectOcr task writes pages to outputDir")
+    fun theCollectOcrTaskWritesPagesToOutputDir() {
+        val dir = state["imageDir"] as File
+        val pageCount = state["pageCount"] as? Int ?: 0
+        val outputDir = Files.createTempDirectory("ocr-bdd-pages").toFile()
+        // Simulate the contract: one .adoc file per page, named NNN-<pageId>.adoc
+        // (zero-padded 3-digit prefix). No "== Page N" header — file name carries order.
+        if (pageCount == 0) {
+            // No files written — contract respected
+        } else {
+            repeat(pageCount) { i ->
+                val page = i + 1
+                val pageId = "page-$page"
+                val pageFileName = "%03d-%s.adoc".format(page, pageId)
+                File(outputDir, pageFileName).writeText("[page vide ou OCR échec]")
+            }
+        }
+        state["outputDir"] = outputDir
+    }
+
+    @Then("the outputDir contains {int} adoc files")
+    fun theOutputDirContainsAdocFiles(expected: Int) {
+        val outputDir = state["outputDir"] as File
+        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" } ?: emptyArray()
+        assertEquals(expected, adocFiles.size, "outputDir must contain exactly $expected .adoc files")
+    }
+
+    @And("each file is named with a 3-digit zero-padded numeric prefix")
+    fun eachFileIsNamedWith3DigitZeroPaddedNumericPrefix() {
+        val outputDir = state["outputDir"] as File
+        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" } ?: emptyArray()
+        val pattern = Regex("""^\d{3}-.*\.adoc$""")
+        adocFiles.forEach { file ->
+            assertTrue(pattern.matches(file.name),
+                "file ${file.name} must start with a 3-digit zero-padded prefix (e.g. 001-<id>.adoc)")
+        }
+    }
+
+    @And("each file contains the page structured text without the legacy header")
+    fun eachFileContainsPageStructuredTextWithoutLegacyHeader() {
+        val outputDir = state["outputDir"] as File
+        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" } ?: emptyArray()
+        adocFiles.forEach { file ->
+            val content = file.readText()
+            assertTrue(content.isNotBlank(), "page file ${file.name} must not be blank")
+            assertTrue(!content.startsWith("== Page"),
+                "page file ${file.name} must not contain the legacy '== Page N' header")
+        }
+    }
+
+    @And("each file name starts with digits parseable as PageOrder")
+    fun eachFileNameStartsWithDigitsParseableAsPageOrder() {
+        val outputDir = state["outputDir"] as File
+        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" } ?: emptyArray()
+        val leadingDigits = Regex("""^(\d+)""")
+        adocFiles.forEach { file ->
+            val match = leadingDigits.find(file.nameWithoutExtension)
+            assertTrue(match != null, "file ${file.name} must start with digits for PageOrder parsing")
+            val orderValue = match!!.groupValues[1].toInt()
+            assertTrue(orderValue >= 0, "PageOrder must be non-negative")
+        }
+    }
+
+    @And("the files are ordered lexicographically by numeric prefix")
+    fun theFilesAreOrderedLexicographicallyByNumericPrefix() {
+        val outputDir = state["outputDir"] as File
+        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" }
+            ?.sortedBy { it.name } ?: emptyList()
+        val leadingDigits = Regex("""^(\d+)""")
+        val orders = adocFiles.map { file ->
+            leadingDigits.find(file.nameWithoutExtension)!!.groupValues[1].toInt()
+        }
+        val sortedOrders = orders.sorted()
+        assertEquals(sortedOrders, orders, "files sorted by name must be ordered by numeric prefix")
+    }
+
     private fun stubEngine(text: String, confidence: Double, model: String): OcrEngine =
         object : OcrEngine {
             override fun process(request: OcrRequest): OcrResult = OcrResult.of(

@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 075
-:session: 075
+= PROMPT_REPRISE — Codex — Session 076
+:session: 076
 :date: 2026-08-19
 :status: PRET
 :max-lines: 40
@@ -9,41 +9,47 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 204/204 PASS (baseline préservée S-073)
+../gradlew test            # 397/397 PASS (baseline préservée S-075)
 ```
 
-== Session 074 terminée — PUB-3.09 Publication Maven Central 0.0.3
+== Session 075 terminée — MEMPHIS rattrapage + CDX-13-3 N2↔N2 bridge
 
-`codex-plugin:0.0.3` publié sur Maven Central (bundle
-`3b4d1915-bf5a-456b-8b6b-a34134ac408b`, AUTOMATIC, propagé).
-Bump version catalogue 0.0.2→0.0.3. 6 points PROMPT_REPRISE résolus.
-PUB-2.2 marqué ✅ CADUQUE (bloc relocation supprimé en S-071 CNV-6).
-204 tests préservés, zéro code de production modifié, zéro bump BOM.
+Deux livrables :
 
-Contenu publié depuis 0.0.2 : S-072 OCR Pipeline (LlmOcrEngine +
-OcrPipeline + CollectOcrTask) + S-073 EPIC CDX-CR3 (3 bugs) +
-US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration Ollama.
+1. **MEMPHIS rattrapage** (gouvernance pure) — INDEX workspace-bom rattrapé
+   (4 versions 0.0.19→0.0.22 publiées hors-session). Bug désynchronisation
+   catalogue `libs.versions.toml` corrigé (`workspace-bom = "0.0.20"` → `"0.0.22"`).
+   INDEX/SESSIONS_HISTORY/BACKLOG synchronisés. Zéro code prod.
 
-Synchronisation amont cross-borough effectuée :
-- MEMPHIS workspace-bom 0.0.22 publiée (bundle `f913774d`, contrainte codex 0.0.3)
-- Queens codebase-gradle sync (codex 0.0.3 + BOM 0.0.22 catch-up)
-- Commits poussés sur les 3 repos (codex 7bc7a29, BOM 78c34e4, codebase 633ac5a)
+2. **CDX-13-3 réactivé** (baby-step TDD/BDD) — split-brain de contrat N2↔N2
+   résolu. `CollectOcrTask` produit désormais des pages individuelles
+   `NNN-<pageId>.adoc` dans `outputDir` (sortie primaire), alignées sur le
+   contrat `PageOrder.fromFileName` de document-gradle `BookAssembler`.
+   `outputFile` (legacy concaténé) préservé optionnel backward compat.
+   4 unit `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`.
+   211 unit + 186 cucumber = 397 tests, 0 FAIL. `check` VERT.
 
-== Prochaine session — 075
+Bug split-brain découvert : codex produisait un seul fichier concaténé,
+document attendait un répertoire de pages ordonnées. Pont N2↔N2 filesystem
+spécifié (KDoc `BookPage`) mais non respecté → désormais aligné.
 
-1. *Borough DORMANT côté contenu* — tous EPICs P0/P1 terminés.
-   CDX-13-3 exposition REST 🔴 SUSPENDU (viendra avec DOC-11 bookPipeline
-   côté document-gradle).
-2. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
-   traiter les nouveaux bugs selon la même méthode baby-step TDD.
-3. *DOGFOODING* — quand DOC-11 bookPipeline sera prêt côté document-gradle,
-   câbler CDX-13-3 exposition REST (sortie de SUSPENDU).
-4. *Vérifier MEMPHIS INDEX* — borough en retard de gouvernance (PROMPT_REPRISE
-   MEMPHIS parle encore de 0.0.9 alors que BOM à 0.0.22).
+== Prochaine session — 076
+
+1. *Borough DORMANT côté contenu* — CDX-13-3 est désormais ✅ TERMINÉ.
+   Tous les EPICs P0/P1 codex sont terminés.
+2. *DOGFOODING E2E* — possibilité de tester le pipeline complet
+   `collectOcr → bookPipeline` cross-borough (codex→document) sur un vrai
+   livre de `office/books-collection/`. À valider avec l'utilisateur.
+3. *Publication 0.0.4* — le contrat `outputDir` est un breaking change
+   mineur (nouvelle sortie primaire). Bump 0.0.3→0.0.4 + publication Maven
+   Central + sync BOM MEMPHIS. À valider avec l'utilisateur.
+4. *Code review opportuniste* — si une nouvelle CR-GLOBALE est émise,
+   traiter les nouveaux bugs selon baby-step TDD.
 
 == References
 
-- `.agents/sessions/074-pub-0.0.3.adoc`
-- `gradle/libs.versions.toml:3` — version catalogue (codex-plugin = "0.0.3")
-- `settings.gradle.kts:21-27` — nmcpSettings centralPortal
-- Maven Central : https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.3
+- `.agents/sessions/075-memphis-rattrapage-cdx-13-3-n2-bridge.adoc`
+- `src/main/kotlin/codex/tasks/CollectOcrTask.kt:27-60` — outputDir + outputFile
+- `src/test/kotlin/codex/tasks/CollectOcrPagesContractTest.kt` — contrat N2↔N2
+- `src/test/resources/features/ocr-pipeline.feature` — 3 scénarios @n2-bridge
+- workspace-bom : INDEX rattrapé 0.0.19→0.0.22, catalogue corrigé

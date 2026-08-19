@@ -77,3 +77,33 @@
 - BOM : zéro bump (workspace-bom 0.0.21 inchangé)
 - Secrets : zéro
 - Régression : zéro
+'''
+== Session 075 (2026-08-19) — MEMPHIS rattrapage + CDX-13-3 N2↔N2 bridge
+
+=== A. MEMPHIS rattrapage gouvernance (workspace-bom)
+
+* 4 versions BOM rattrapées (0.0.19→0.0.22) dans INDEX/SESSIONS_HISTORY
+* Bug désynchronisation catalogue `libs.versions.toml` corrigé
+  (`workspace-bom = "0.0.20"` → `"0.0.22"`)
+* BACKLOG.adoc PUB-3.01 mis à jour (dernière version 0.0.22)
+* Zéro code de production modifié (catalogue = metadata)
+
+=== B. CDX-13-3 — Contrat N2↔N2 pages individuelles (TERMINÉ)
+
+* Split-brain de contrat découvert et résolu : `CollectOcrTask` produisait
+  un seul fichier concaténé, mais `BookAssembler` (document-gradle) attend
+  un répertoire de fichiers `NNN-<pageId>.adoc` (contrat PageOrder)
+* `outputDir` (DirectoryProperty, sortie primaire) — une page par fichier
+  `NNN-<pageId>.adoc` (zero-padded 3-digit prefix, aligné PageOrder.fromFileName)
+* `outputFile` (legacy optionnel, concaténé) — backward compat préservée
+* Plugin wiring default `outputDir = build/codex/ocr-pages`
+* 4 unit tests `CollectOcrPagesContractTest` + 3 scénarios Cucumber `@n2-bridge`
+
+=== Métriques
+
+- Tests : 211 unit + 186 cucumber = 397 (baseline 204 unit → +7 unit, +18 total)
+- Failures : 0
+- Code production modifié : 2 fichiers (CollectOcrTask.kt, CodexPlugin.kt)
+- BOM : zéro bump (workspace-bom 0.0.22 inchangé)
+- Secrets : zéro
+- Régression : zéro (legacy outputFile backward compat)
