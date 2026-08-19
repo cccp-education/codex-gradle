@@ -381,3 +381,44 @@
 * EPIC CDX-3 progression 2/3 US (CDX-3-0 ✅ S-077, CDX-3-1 ✅ S-079,
   CDX-3-2 ✅ S-084, CDX-3-3 🟡 À FAIRE Cucumber).
 * Baby-step TDD strict RED → GREEN → REFACTOR.
+
+== Session 086 — CDX-4-2 tâche enrichJsonLdd + wiring CodexPlugin
+
+*Date* : 2026-08-20
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-4 (enrichJsonLdd P1-20)
+*US* : CDX-4-2
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+* `EnrichJsonLddTask.kt` (nouveau, 80 lignes) — thin wrapper Gradle
+  autour de `JsonLddEnricher` (objet pur S-080). `@DisableCachingByDefault`,
+  4 properties : `jsonFile` + `chunksFile` + `graphifyFile` (`@InputFile`
+  PathSensitivity.RELATIVE) + `outputFile` (`@OutputFile`). `@TaskAction
+  enrich()` : lit LDD JSON (`ListSerializer(LddNode.serializer())`) +
+  chunks JSON (`ListSerializer(DocumentChunk.serializer())`), instancie
+  `GraphifyFileResolver(graphInput)`, appelle
+  `JsonLddEnricher.enrich(lddNodes, ragChunks, resolver)`, écrit
+  `List<EnrichedLddNode>` JSON via kotlinx.serialization.
+* `JsonLddEnricher.kt` (modifié) — sérialisation rétroactive :
+  `EnrichedLddNode` annoté `@Serializable` (+1 import). Modification
+  additive (pas de nouveau champ, backward compat total).
+* `CodexPlugin.kt` (modifié) — wiring : `import EnrichJsonLddTask` + tâche
+  `enrichJsonLdd` groupe `transform`, `outputFile` default
+  `build/codex/enriched-ldd.json`. Compteur KDoc 12 → 13 tâches.
+* `EnrichJsonLddTaskTest.kt` (nouveau, 6 functional) — ProjectBuilder +
+  JSON LDD synthétique (2 sections) + chunks RAG synthétiques (2 chunks)
+  + `graph.json` synthétique (2 nodes). Tests : registered transform
+  group, writes enriched JSON, rag chunks attached by section title,
+  graphify nodes resolved, degraded silent missing graph, density 0.5.
+* `CodexPluginTest.kt` (modifié) — +1 test wiring (enrichJsonLdd task
+  type + group + description).
+* Tests : 370 → 377 (+7 : 6 functional + 1 wiring, 0 FAIL). `check` VERT,
+  Kover VERT, validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+  (`JsonLddEnricher`/`GraphifyFileResolver` inchangés).
+* 1 fichier prod créé + 1 fichier prod modifié (2 lignes) + 1 fichier
+  test créé + 1 fichier test modifié.
+* EPIC CDX-4 progression 2/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
+  CDX-4-2 ✅ S-086, CDX-4-3/4 🟡 À FAIRE).
+* Baby-step TDD strict RED → GREEN → REFACTOR.

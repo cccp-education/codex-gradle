@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 086
-:session: 086
+= PROMPT_REPRISE — Codex — Session 087
+:session: 087
 :date: 2026-08-20
 :status: PRET
 :max-lines: 45
@@ -9,42 +9,44 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 337/337 PASS (baseline préservée S-084)
+./gradlew test             # 365/365 PASS (baseline préservée S-086)
 ./gradlew cucumberTestOntology  # 3/3 scénarios CDX-3-3 PASSED
 ```
 
-== Session 085 terminée — CDX-3-3 Cucumber BDD Ontology Derivation
+== Session 086 terminée — CDX-4-2 Tâche enrichJsonLdd + wiring
 
-. *CDX-3-3 TERMINÉ* — Cucumber BDD `codex_derive_ontology.feature` 3
-  scénarios `@ontology @derivation` + runner dédié
-  `CodexOntologyCucumberRunner` (pattern S-082) + `OntologySteps`
-  (8 step defs ProjectBuilder) + tâche Gradle `cucumberTestOntology`
-  dédiée. Baby-step BDD strict RED → GREEN → REFACTOR. Pure BDD —
-  zéro production modifié. EPIC CDX-3 TERMINÉ 4/4 US.
-. *370 tests 0 FAIL* (337 baseline + 6 cucumber licence + 6 cucumber
+. *CDX-4-2 TERMINÉ* — `EnrichJsonLddTask` (80 lignes, thin wrapper
+  Gradle pattern `DeriveOntologyTask`) consomme `jsonFile` (LDD) +
+  `chunksFile` (chunks) + `graphifyFile` (graph.json) → appelle
+  `JsonLddEnricher.enrich` → écrit `EnrichedLddNode` JSON.
+  `@DisableCachingByDefault`, 4 properties (3 `@InputFile` + 1
+  `@OutputFile`). `EnrichedLddNode` annoté `@Serializable` (additif,
+  backward compat). Wiring `CodexPlugin` : tâche `enrichJsonLdd` groupe
+  `transform`, `outputFile` default `build/codex/enriched-ldd.json`.
+  KDoc 12 → 13 tâches. Baby-step TDD strict RED → GREEN → REFACTOR.
+. *377 tests 0 FAIL* (365 unit + 6 cucumber licence + 6 cucumber
   ontology). `check` VERT, Kover VERT, validatePlugins VERT. Zéro
   bump BOM, zéro secret, zéro régression, backward compat total.
 
-== Prochaine session — 086
+== Prochaine session — 087
 
-*Mission principale* : *CDX-4-2* tâche `enrichJsonLdd` + wiring
-`CodexPlugin` ~5 functional. 1re tâche Gradle enrichment (domaine
-`codex.enrichment` créé S-080). Baby-step TDD strict RED → GREEN →
-REFACTOR. Tâche `enrichJsonLdd` (groupe transform) consomme LDD JSON +
-RAG chunks + Graphify `graph.json` → `EnrichedLddNode` JSON via
-`JsonLddEnricher`. Wiring `CodexPlugin` (compteur KDoc 12 → 13).
+*Mission principale* : *CDX-4-3* câblage canal Graphify dans
+`CodexCompositeContextTask` (`graphifySection` peuplé depuis
+`enrichedJsonFile` au lieu de `""`). ~3 unit. Non-regression : fallback
+`""` si enrichissement absent. Domaine `codex.enrichment` consommé par
+le composite context.
 
 *Alternatives* :
-. *CDX-4-3* (câblage Graphify dans `CodexCompositeContextTask`
-  `graphifySection` peuplé ~3 unit).
+. *CDX-4-4* (Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios
+  `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner`).
 . *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
 . *CDX-7-2* (`ConvertToMarkdownTaskTest` chaîné ~5 unit).
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
 . Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅).
-. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-3-2 ✅ (S-084) →
-  CDX-4-2 (~5 functional) → câblage (CDX-4-3) → DSL (CDX-6-1/2).
-. Cucumber BDD : CDX-3-3 ✅ (S-085) → CDX-4-4 → CDX-6-3.
+. Phase tâches Gradle : CDX-5-2 ✅ → CDX-3-2 ✅ → CDX-4-2 ✅ → câblage
+  (CDX-4-3) → DSL (CDX-6-1/2).
+. Cucumber BDD : CDX-3-3 ✅ → CDX-5-3 ✅ → CDX-4-4 → CDX-6-3.
 
 *Actions reportées* :
 . Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
@@ -52,7 +54,7 @@ RAG chunks + Graphify `graph.json` → `EnrichedLddNode` JSON via
 
 == References
 
-- `.agents/sessions/085-cdx-3-3-cucumber-ontology-derivation.adoc`
+- `.agents/sessions/086-cdx-4-2-enrich-json-ldd-task.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
 - `BACKLOG.adoc` § EPIC CDX-4/6/7 (US détaillées)
 - `build.gradle.kts:175` — tâche `cucumberTestOntology` (pattern S-082)

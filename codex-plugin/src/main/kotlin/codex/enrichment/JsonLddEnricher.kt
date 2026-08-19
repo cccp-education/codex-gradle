@@ -2,6 +2,7 @@ package codex.enrichment
 
 import codex.tasks.DocumentChunk
 import codex.tasks.LddNode
+import kotlinx.serialization.Serializable
 
 /**
  * Port for resolving Graphify nodes by section title.
@@ -32,6 +33,7 @@ fun interface GraphifyResolver {
  * @property semanticDensity ratio `ragChunks.size / totalRagChunks`.
  * @property entities capitalized words extracted from title and text.
  */
+@Serializable
 data class EnrichedLddNode(
     val ldd: LddNode,
     val ragChunks: List<DocumentChunk>,

@@ -10,6 +10,7 @@ import codex.tasks.CollectOcrTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.DeployKnowledgeBaseRoutedTask
 import codex.tasks.DeriveOntologyTask
+import codex.tasks.EnrichJsonLddTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
@@ -21,7 +22,7 @@ import org.gradle.api.Project
 /**
  * Gradle plugin for unstructured document acquisition and transformation.
  *
- * Registers 12 tasks organized into 3 unified taxonomy groups:
+ * Registers 13 tasks organized into 3 unified taxonomy groups:
  *
  * **COLLECT group**:
  * - `collectText` — raw text extraction from PDF
@@ -41,6 +42,7 @@ import org.gradle.api.Project
  * - `transformChunk` — semantic section chunking
  * - `transformCorpusToPdf` — composite pipeline auto-detecting PDF/EPUB
  * - `deriveOntology` — SQL LMD → ontology mapping (bounded contexts, aggregates, value objects)
+ * - `enrichJsonLdd` — JSON LDD + RAG chunks + Graphify → enriched LDD nodes
  *
  * **DEPLOY group**:
  * - `deployKnowledgeBase` — multi-format export (JSON-L, Markdown, AsciiDoc)
@@ -223,6 +225,15 @@ class CodexPlugin : Plugin<Project> {
             it.group = "transform"
             it.description = "SQL LMD + LDD → ontology mapping JSON (bounded contexts, aggregates, value objects) — computed from DDL"
             it.outputFile.set(project.layout.buildDirectory.file("codex/ontology-mapping.json"))
+        }
+
+        project.tasks.register(
+            "enrichJsonLdd",
+            EnrichJsonLddTask::class.java
+        ) {
+            it.group = "transform"
+            it.description = "JSON LDD + RAG chunks + Graphify graph.json → enriched LDD nodes JSON (cross-source annotation)"
+            it.outputFile.set(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
         }
     }
 }

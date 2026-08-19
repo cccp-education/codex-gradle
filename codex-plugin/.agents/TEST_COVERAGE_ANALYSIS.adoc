@@ -1,6 +1,38 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-20
-:session: 085
+:session: 086
+
+== Session 086 — CDX-4-2 tâche enrichJsonLdd (+7 tests, 377/377 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/tasks/EnrichJsonLddTaskTest.kt` | 6 functional | ✅ PASS (registered transform group, writes enriched JSON from LDD+chunks+graph, rag chunks attached by section title, graphify nodes resolved, degraded silent missing graph, semantic density 0.5)
+| `test/kotlin/codex/CodexPluginTest.kt` | +1 wiring | ✅ PASS (enrichJsonLdd task type EnrichJsonLddTask, group transform, description "enriched")
+|===
+
+*Nouveau testé* :
+- `EnrichJsonLddTask` — thin wrapper Gradle autour de `JsonLddEnricher`
+  (objet pur créé S-080). 6 functional tests ProjectBuilder + JSON LDD
+  synthétique (2 sections Architecture/Testing) + chunks RAG synthétiques
+  (2 chunks) + `graph.json` synthétique (2 nodes).
+- Sérialisation `@Serializable` sur `EnrichedLddNode` — exercée par
+  `parseEnriched()` dans les 6 tests (lecture JSON → data class roundtrip,
+  `EnrichedLddNode.serializer()`).
+- Dégradé silencieux : `graph.json` manquant → `graphifyNodes` vide, pas
+  de crash (contrat `GraphifyFileResolver` S-080).
+
+*Couverture* : la logique métier (`JsonLddEnricher.enrich`) est couverte
+par les 10 unit tests `JsonLddEnricherTest` + 6 `GraphifyFileResolverTest`
+(S-080). La tâche Gradle ajoute la couverture functional du wiring (IO
+contract, ProjectBuilder, plugin registration, output file écriture).
+
+*Non-régression* : 365 unit/functional préservés (baseline S-085),
+6 cucumber licence préservés (S-083), 6 cucumber ontology préservés (S-085).
+377 tests 0 FAIL. `check` VERT, Kover VERT, validatePlugins VERT.
+
+'''
 
 == Session 085 — CDX-3-3 Cucumber BDD Ontology Derivation (+6 cucumber dédiés, 370/370 PASS)
 

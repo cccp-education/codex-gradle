@@ -7,6 +7,7 @@ import codex.tasks.CodexPipelineTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.DeployKnowledgeBaseRoutedTask
+import codex.tasks.EnrichJsonLddTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
@@ -93,6 +94,18 @@ class CodexPluginTest {
         assertTrue(task is DeployKnowledgeBaseRoutedTask)
         assertEquals("deploy", task!!.group)
         assertTrue(task.description!!.contains("licence"))
+    }
+
+    @Test
+    fun `plugin registers enrichJsonLdd task`() {
+        val project = ProjectBuilder.builder().build()
+        project.plugins.apply("education.cccp.codex")
+
+        val task = project.tasks.findByName("enrichJsonLdd")
+        assertNotNull(task, "enrichJsonLdd should be registered")
+        assertTrue(task is EnrichJsonLddTask)
+        assertEquals("transform", task!!.group)
+        assertTrue(task.description!!.contains("enriched"))
     }
 
     @Test

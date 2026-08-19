@@ -3,6 +3,75 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 086 — CDX-4-2 Tâche enrichJsonLdd + wiring CodexPlugin
+
+*Date* : 2026-08-20
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-4 (enrichJsonLdd P1-20)
+*US* : CDX-4-2
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*A. Objectif* :
+Démarrer *CDX-4-2* — 1re tâche Gradle du domaine `codex.enrichment`
+(créé S-080). `EnrichJsonLddTask` consomme le JSON LDD produit par
+`transformToJsonLdd`, les chunks RAG produits par `transformChunk`, et
+le `graph.json` produit par graphify-gradle (N0) → appelle
+`JsonLddEnricher.enrich(lddNodes, ragChunks, graphifyResolver)` → écrit
+la liste des `EnrichedLddNode` en JSON. Wiring `CodexPlugin` (compteur
+KDoc 12 → 13 tâches).
+
+*B. Réalisation* :
+- RED : 1 fichier test créé (6 functional) référençant
+  `EnrichJsonLddTask` inexistante → compile fail
+  (`Unresolved reference 'EnrichJsonLddTask'` + `'enrich'`).
+- GREEN : `EnrichedLddNode` annoté `@Serializable` (2 lignes additif) +
+  `EnrichJsonLddTask.kt` créé (80 lignes, pattern `DeriveOntologyTask`,
+  3 `@InputFile` + 1 `@OutputFile`, `@DisableCachingByDefault`) + wiring
+  `CodexPlugin` (tâche `enrichJsonLdd` groupe `transform`, default
+  `build/codex/enriched-ldd.json`) + 1 test wiring `CodexPluginTest`.
+  6/6 functional + 1/1 wiring PASSED.
+- REFACTOR : `check` BUILD SUCCESSFUL in 1m 5s, Kover VERT,
+  validatePlugins VERT. 377 tests 0 FAIL (baseline 370 → +7). Zéro
+  régression, zéro secret, zéro bump BOM, backward compat total.
+
+*C. Constats clés* :
+- `EnrichedLddNode` était une `data class` pure (S-080) — l'ajout
+  d'`@Serializable` est additif (pas de reconstruction, pas de bump
+  BOM). `LddNode` et `DocumentChunk` sont déjà `@Serializable`.
+- `GraphifyFileResolver` (S-080) dégrade silencieusement si le fichier
+  `graph.json` est manquant ou invalide → la tâche n'a pas de guard
+  supplémentaire, le dégradé est garanti par l'adapter.
+- La tâche ne peuple *pas* `DocumentChunk.entities` directement — le
+  `JsonLddEnricher` extrait les entités depuis le `LddNode` (titre +
+  texte) et les place sur l'`EnrichedLddNode`. Le placeholder
+  `DocumentChunk.entities` reste `emptyList()` — c'est l'`EnrichedLddNode`
+  qui porte les entités calculées (cohérent design S-080).
+
+*D. Vérifications* :
+- `../gradlew compileTestKotlin` RED (Unresolved reference).
+- `../gradlew test --tests "codex.tasks.EnrichJsonLddTaskTest"` 6/6 PASSED.
+- `../gradlew test --tests "codex.CodexPluginTest"` 9/9 PASSED.
+- `../gradlew check` BUILD SUCCESSFUL, Kover VERT, validatePlugins VERT.
+- 377 tests 0 FAIL (baseline 370 → +7).
+
+*E. Fichiers modifiés* :
+- `src/main/kotlin/codex/enrichment/JsonLddEnricher.kt` — +1 import
+  `kotlinx.serialization.Serializable` + `@Serializable` (2 lignes).
+- `src/main/kotlin/codex/tasks/EnrichJsonLddTask.kt` (créé, 80 lignes).
+- `src/main/kotlin/codex/CodexPlugin.kt` — import + tâche `enrichJsonLdd`
+  + KDoc 12 → 13.
+- `src/test/kotlin/codex/tasks/EnrichJsonLddTaskTest.kt` (créé, 6 functional).
+- `src/test/kotlin/codex/CodexPluginTest.kt` — import + 1 test wiring.
+
+*F. État EPIC* : CDX-4 2/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
+CDX-4-2 ✅ S-086, CDX-4-3/4 🟡 À FAIRE).
+
+*Prochaine session* : 087 — CDX-4-3 câblage canal Graphify dans
+`CodexCompositeContextTask` (`graphifySection` peuplé depuis
+`enrichedJsonFile`) ~3 unit. Baby-step TDD strict.
+
+'''
 == Session 083 — CDX-5-3 Cucumber BDD licence routing + clôture EPIC CDX-5
 
 *Date* : 2026-08-19
