@@ -38,7 +38,7 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
     abstract val outputDir: DirectoryProperty
 
     @TaskAction
-    fun export() {
+    open fun export() {
         val input = chunksFile.asFile.get()
         val output = outputDir.asFile.get()
 

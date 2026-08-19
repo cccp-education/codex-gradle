@@ -1,5 +1,66 @@
 = COMPLETED_TASKS_ARCHIVE — Août 2026 — codex-gradle
 
+== Session 082 (2026-08-19) — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring
+
+=== US CDX-5-2 — DeployKnowledgeBaseRoutedTask + wiring CodexPlugin (TERMINÉ)
+
+* `DeployKnowledgeBaseRoutedTask` (nouveau, 69 lignes, codex.tasks) étend
+  `ExportKnowledgeBaseTask` : détecte licence PDF via `PdfLicenseDetector`
+  → route via `LicenseRouter` → rebind `outputDir` → délègue à
+  `super.export()` (multi-format JSON-LD/Markdown/AsciiDoc inchangé).
+  3 props Gradle : `pdfFile` (`@InputFile`), `baseDir`
+  (`@OutputDirectory`), `fallbackZone` (`@Input @Optional`).
+  `@DisableCachingByDefault` (validatePlugins).
+* `ExportKnowledgeBaseTask.export()` rendu `open` (1 mot-clé) —
+  backward compat total (comportement inchangé pour consommateurs).
+* Wiring `CodexPlugin` : task `deployKnowledgeBaseRouted` groupe
+  `deploy`, `fallbackZone.convention(zone)` (apply-time, cohérent avec
+  `extension.zone.convention`).
+* `DeployKnowledgeBaseRoutedTaskTest.kt` (nouveau, 5 functional) —
+  Apache→OSS, Copyright→office, Unknown+OSS fallback, Unknown+CSS
+  fallback, CC-BY→OSS (PDFs synthétiques PDFBox, ProjectBuilder).
+* `CodexPluginTest.kt` (extension, +1 wiring) — task registered, type,
+  group, description contains "licence".
+* Tests : 300 → 306 (+5 functional + 1 wiring, 0 FAIL). `check` VERT,
+  Kover VERT, validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+  (`ExportKnowledgeBaseTask`/`LicenseZoneDetector`/`CodexExtension`
+  inchangés sauf 1 mot-clé `open`).
+* 1 fichier prod créé + 1 fichier prod modifié (1 mot-clé) + 1 wiring
+  plugin + 1 fichier test créé + 1 test étendu.
+* EPIC CDX-5 3/4 US (CDX-5-0 ✅, CDX-5-1 ✅, CDX-5-2 ✅, CDX-5-3 🟡 À FAIRE).
+* Baby-step TDD strict RED → GREEN → REFACTOR.
+
+'''
+== Session 081 (2026-08-19) — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter
+
+=== US CDX-5-1 — Domaine codex.licence (14e) + PdfLicenseDetector + LicenseRouter (TERMINÉ)
+
+* `PdfLicenseDetector` (object pur, codex.licence) — scanne contenu PDF :
+  5 patterns OSS (`apache license 2.0`/`apache-2.0`/`creative commons`/
+  `cc-by`/`cc0`) + 3 patterns CSS (`©`/`copyright`/`all rights reserved`),
+  precedence OSS > CSS > UNKNOWN, case-insensitive. `detect(text)` pure +
+  `detect(pdfFile)` via `Loader.loadPDF` + `PDFTextStripper`. Dégradé
+  silencieux UNKNOWN sur erreur. Additif à `LicenseZoneDetector` path-based.
+* `LicenseRouter` (object pur, codex.licence) — `route(zone, baseDir): File`
+  (OSS→`OSS/`, CSS/UNKNOWN→`office/` closed by default, ne crée pas de dirs).
+* `PdfLicenseDetectorTest.kt` (nouveau, 12 unit) — apache 2.0 full
+  phrase, SPDX apache-2.0, creative commons, CC-BY, CC0, © sign,
+  copyright word, all rights reserved, no mention UNKNOWN, blank UNKNOWN,
+  apache precedence over copyright, case-insensitive.
+* `LicenseRouterTest.kt` (nouveau, 4 unit) — OSS→OSS/, CSS→office/,
+  UNKNOWN→office/ precaution, no dir creation.
+* Tests : 284 → 300 (+16 unit, 0 FAIL). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+  (`LicenseZoneDetector`/`CodexPlugin`/`CodexPipelineTask`/
+  `CodexExtension` inchangés).
+* 2 fichiers prod créés + 2 fichiers test créés (zéro fichier existant modifié).
+* EPIC CDX-5 2/4 US (CDX-5-0 ✅, CDX-5-1 ✅, CDX-5-2/3 🟡 À FAIRE).
+* Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 tous ✅).
+* Baby-step TDD strict RED → GREEN → REFACTOR.
+
+'''
 == Session 073 (2026-08-19) — EPIC CDX-CR3 + US-CDX-13-1/2
 
 === EPIC CDX-CR3 — Revue CR-GLOBALE-003 (3/3 US TERMINÉ)

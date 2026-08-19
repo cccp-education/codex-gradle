@@ -8,6 +8,7 @@ import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.CollectOcrTask
 import codex.tasks.ConvertToMarkdownTask
+import codex.tasks.DeployKnowledgeBaseRoutedTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
@@ -128,6 +129,15 @@ class CodexPlugin : Plugin<Project> {
         ) {
             it.group = "deploy"
             it.description = "Agrege les chunks en base de connaissance multi-format (JSON-L, Markdown, AsciiDoc)"
+        }
+
+        project.tasks.register(
+            "deployKnowledgeBaseRouted",
+            DeployKnowledgeBaseRoutedTask::class.java
+        ) {
+            it.group = "deploy"
+            it.description = "Route la base de connaissance vers OSS/ ou office/ selon la licence detectee dans le PDF source"
+            it.fallbackZone.convention(zone)
         }
 
         project.tasks.register(

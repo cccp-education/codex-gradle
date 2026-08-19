@@ -3,6 +3,83 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 082 — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring CodexPlugin
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-5 (exportKnowledgeBase routing licence P1-21)
+*US* : CDX-5-2
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*A. Objectif* :
+Démarrer *CDX-5-2* — 1re tâche Gradle du P1 exposant le domaine
+`codex.licence` (créé S-081). `DeployKnowledgeBaseRoutedTask` étend
+`ExportKnowledgeBaseTask` : détecte licence PDF via `PdfLicenseDetector`,
+route sortie vers `OSS/` ou `office/` via `LicenseRouter`, délègue à
+`super.export()` (multi-format inchangé).
+
+*B. Réalisation* :
+- RED : 1 fichier test créé (5 functional) référençant
+  `DeployKnowledgeBaseRoutedTask` inexistant → compile fail
+  (`Unresolved reference 'fallbackZone'`).
+- GREEN : 2 fichiers prod créés (1 nouvelle tâche 69 lignes + 1
+  modification additive `ExportKnowledgeBaseTask.export()` → `open`)
+  + wiring `CodexPlugin` (task `deployKnowledgeBaseRouted`, groupe
+  `deploy`, `fallbackZone.convention(zone)`) + 1 test wiring
+  `CodexPluginTest` → 5/5 functional + 1/1 wiring PASSED.
+- REFACTOR : bug `validatePlugins` (`@DisableCachingByDefault`
+  manquante sur la sous-classe) → corrigée. `check` VERT, Kover VERT.
+
+*C. Constats clés* :
+- `ExportKnowledgeBaseTask.export()` était `fun` (final par défaut en
+  Kotlin) → rendu `open` pour permettre l'override. Backward compat
+  total (comportement inchangé pour consommateurs existants).
+- Héritage + override + rebind `outputDir` est idiomatique Gradle pour
+  les tâches "wrap" (pas de duplication de la logique d'export).
+- `validatePlugins` exige `@DisableCachingByDefault` ou `@CacheableTask`
+  sur toute tâche — sous-classes incluses.
+- `fallbackZone.convention(zone)` : la zone détectée par
+  `LicenseZoneDetector` au apply-time devient le fallback quand le PDF
+  content yield `UNKNOWN` (cohérent avec `extension.zone.convention`).
+
+*D. Décisions architecturales* :
+- Héritage而非 composition : `DeployKnowledgeBaseRoutedTask` étend
+  `ExportKnowledgeBaseTask` (minimal, 1 mot-clé `open`).
+- `outputDir` rebind : pas de redéfinition, `outputDir.set(routed)`
+  avant `super.export()`. Pas de duplication.
+- `baseDir` est `@OutputDirectory` (Gradle le crée). `routed.mkdirs()`
+  redondant mais explicite.
+- `@DisableCachingByDefault` requise par `validatePlugins`.
+
+*Vérifications* :
+- `../gradlew compileTestKotlin` RED.
+- `../gradlew test --tests "codex.tasks.DeployKnowledgeBaseRoutedTaskTest"` 5/5 PASSED.
+- `../gradlew test --tests "codex.CodexPluginTest"` 7/7 PASSED (incl. +1 wiring).
+- `../gradlew check` BUILD SUCCESSFUL in 44s (Kover VERT, validatePlugins VERT).
+- `../gradlew test` 306 tests 0 FAIL (baseline 300 → +6).
+- Zéro secret, zéro bump BOM, zéro régression, backward compat total.
+
+*Fichiers modifiés* :
+- `codex-plugin/src/main/kotlin/codex/tasks/ExportKnowledgeBaseTask.kt` — `export()` → `open`.
+- `codex-plugin/src/main/kotlin/codex/tasks/DeployKnowledgeBaseRoutedTask.kt` (créé, 69 lignes).
+- `codex-plugin/src/main/kotlin/codex/CodexPlugin.kt` — import + enregistrement `deployKnowledgeBaseRouted`.
+- `codex-plugin/src/test/kotlin/codex/tasks/DeployKnowledgeBaseRoutedTaskTest.kt` (créé, 5 functional).
+- `codex-plugin/src/test/kotlin/codex/CodexPluginTest.kt` — import + test wiring.
+- `codex-plugin/PROMPT_REPRISE.adoc` — mis à jour pour session 083.
+- `.agents/INDEX.adoc` — session 082 + roadmap CDX-5-2 ✅.
+- `.agents/sessions/082-cdx-5-2-deploy-routed.adoc` (créé) — rapport.
+- `BACKLOG.adoc` — CDX-5-2 ✅ TERMINÉ (S-082).
+
+*Statut EPIC CDX-5* : CDX-5-0 ✅, CDX-5-1 ✅ S-081, CDX-5-2 ✅ S-082,
+CDX-5-3 🟡 À FAIRE (Cucumber BDD).
+
+*Prochaine session* : 083 — Démarrer CDX-5-3 (Cucumber BDD
+`codex_export_routed.feature` 3 scénarios + runner dédié
+`CodexLicenceCucumberRunner`) — clôture EPIC CDX-5. Baby-step BDD
+strict. Pure BDD zéro production modifié.
+
+'''
 == Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter
 
 *Date* : 2026-08-19

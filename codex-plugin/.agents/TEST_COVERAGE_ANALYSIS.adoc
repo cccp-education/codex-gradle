@@ -1,7 +1,37 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-19
-:session: 081
+:session: 082
 
+== Session 082 — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring CodexPlugin (+6 tests, 306/306 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/tasks/DeployKnowledgeBaseRoutedTaskTest.kt` | 5 functional | ✅ PASS (Apache→OSS, Copyright→office, Unknown+OSS fallback, Unknown+CSS fallback, CC-BY→OSS — PDFs synthétiques PDFBox, ProjectBuilder, délégation `super.export()`)
+| `test/codex/CodexPluginTest.kt` (extension) | +1 wiring | ✅ PASS (task `deployKnowledgeBaseRouted` registered, type `DeployKnowledgeBaseRoutedTask`, group `deploy`, description contains "licence")
+|===
+
+*Nouveau testé* :
+- `DeployKnowledgeBaseRoutedTask` — tâche Gradle additive (étend `ExportKnowledgeBaseTask`) :
+  detection `PdfLicenseDetector` → routing `LicenseRouter` → rebind `outputDir` →
+  delegation `super.export()`. 3 props Gradle (`pdfFile`, `baseDir`, `fallbackZone`).
+  `@DisableCachingByDefault` (validatePlugins).
+- Backward compat : `ExportKnowledgeBaseTask.export()` rendu `open` — 8 tests existants préservés.
+
+*Niveaux de tests baby-step TDD* :
+- RED : 1 fichier test créé (5 functional) → compile fail (`Unresolved reference 'fallbackZone'`).
+- GREEN : 2 fichiers prod créés (1 nouvelle tâche + 1 modification `open`) → 5/5 functional + 1/1 wiring PASSED.
+- REFACTOR : bug `validatePlugins` (`@DisableCachingByDefault` manquante) → corrigée. `check` VERT.
+
+*Non-régression* :
+- `ExportKnowledgeBaseTaskTest` 8/8 PASS (backward compat `open`).
+- `CodexPluginTest` 7/7 PASS (incl. +1 wiring, 6 existants préservés).
+- `check` BUILD SUCCESSFUL in 44s (Kover VERT, validatePlugins VERT).
+- 306 tests 0 FAIL (baseline 300 → +6 : 5 functional + 1 wiring).
+
+*Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
+
+'''
 == Session 081 — CDX-5-1 Domaine codex.licence + PdfLicenseDetector + LicenseRouter (+16 unit, 300/300 PASS)
 
 [cols="2,3,2"]

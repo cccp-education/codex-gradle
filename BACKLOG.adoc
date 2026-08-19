@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 081 — CDX-5-1 domaine `codex.licence` (14e) + `PdfLicenseDetector` object pur + `LicenseRouter` object pur TERMINÉ, +16 unit)_
+_Dernière mise à jour : 2026-08-19 (session 082 — CDX-5-2 tâche `deployKnowledgeBaseRouted` + wiring `CodexPlugin` TERMINÉ, +6 tests : 5 functional + 1 wiring)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -307,8 +307,8 @@ JSON-L / Markdown / AsciiDoc vers `office/` ou `OSS/` selon licence.
 | ✅ TERMINÉ (S-081)
 
 | CDX-5-2
-| Tâche `deployKnowledgeBaseRouted` (groupe deploy). `ExportKnowledgeBaseTask` existant inchangé. ~4 functional.
-| 🟡 À FAIRE
+| Tâche `deployKnowledgeBaseRouted` (groupe deploy). `DeployKnowledgeBaseRoutedTask` étend `ExportKnowledgeBaseTask` : détecte licence PDF → route output vers `OSS/` ou `office/`. Wiring `CodexPlugin`. `ExportKnowledgeBaseTask` existant inchangé (backward compat, `export()` rendu `open`). ~4 functional + 1 wiring.
+| ✅ TERMINÉ (S-082)
 
 | CDX-5-3
 | Cucumber BDD `codex_export_routed.feature` 3 scénarios `@licence @routing`. ~3 scénarios.

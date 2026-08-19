@@ -6,6 +6,7 @@ import codex.tasks.CodexIngestTask
 import codex.tasks.CodexPipelineTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.ConvertToMarkdownTask
+import codex.tasks.DeployKnowledgeBaseRoutedTask
 import codex.tasks.ExportKnowledgeBaseTask
 import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
@@ -80,6 +81,18 @@ class CodexPluginTest {
         val deployKnowledgeBase = project.tasks.findByName("deployKnowledgeBase")
         assertNotNull(deployKnowledgeBase, "deployKnowledgeBase should be registered")
         assertTrue(deployKnowledgeBase is ExportKnowledgeBaseTask)
+    }
+
+    @Test
+    fun `plugin registers deployKnowledgeBaseRouted task`() {
+        val project = ProjectBuilder.builder().build()
+        project.plugins.apply("education.cccp.codex")
+
+        val task = project.tasks.findByName("deployKnowledgeBaseRouted")
+        assertNotNull(task, "deployKnowledgeBaseRouted should be registered")
+        assertTrue(task is DeployKnowledgeBaseRoutedTask)
+        assertEquals("deploy", task!!.group)
+        assertTrue(task.description!!.contains("licence"))
     }
 
     @Test

@@ -1,0 +1,144 @@
+= Session 082 — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring CodexPlugin
+:session: 082
+:date: 2026-08-19
+:epic: CDX-5 (exportKnowledgeBase routing licence P1-21)
+:us: CDX-5-2
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Démarrer *CDX-5-2* — 1re tâche Gradle du P1 exposant le domaine
+`codex.licence` (créé S-081). `DeployKnowledgeBaseRoutedTask` étend
+`ExportKnowledgeBaseTask` : détecte la licence du PDF source via
+`PdfLicenseDetector`, route la sortie vers `OSS/` ou `office/` via
+`LicenseRouter`, puis délègue à `super.export()` (multi-format inchangé).
+
+== Méthode
+
+Baby-step TDD strict (RED → GREEN → REFACTOR), niveau functional
+(tâche Gradle ProjectBuilder + PDFs synthétiques PDFBox).
+
+. RED : 1 fichier test créé (5 functional) référençant
+  `DeployKnowledgeBaseRoutedTask` inexistant → compilation échoue
+  (`Unresolved reference 'fallbackZone'` × 1 site).
+. GREEN : 2 fichiers prod créés (1 nouvelle tâche + 1 modification
+  additive `ExportKnowledgeBaseTask.export()` → `open`) → 5/5
+  functional PASSED + 1 wiring test PASSED (`CodexPluginTest`).
+  Bug `validatePlugins` : `@DisableCachingByDefault` manquante sur la
+  sous-classe → corrigée (1 itération REFACTOR).
+. REFACTOR : `validatePlugins` VERT, Kover VERT, `check` BUILD
+  SUCCESSFUL. Code propre (délégation + rebind `outputDir`, pas de
+  duplication de la logique d'export).
+
+== Implémentation
+
+. *`ExportKnowledgeBaseTask.kt`* — `export()` rendu `open` (1 mot-clé)
+  pour permettre l'override dans la sous-classe. Backward compat total :
+  comportement inchangé pour les consommateurs existants.
+. *`DeployKnowledgeBaseRoutedTask.kt`* (nouveau, 69 lignes) — étend
+  `ExportKnowledgeBaseTask`. 3 propriétés Gradle :
+  ** `pdfFile: RegularFileProperty` (`@InputFile`) — PDF source scanné
+     par `PdfLicenseDetector` (content-based).
+  ** `baseDir: DirectoryProperty` (`@OutputDirectory`) — répertoire
+     racine sous lequel `LicenseRouter` résout `OSS/` ou `office/`.
+  ** `fallbackZone: Property<LicenseZone>` (`@Input @Optional`) — zone
+     de fallback quand le PDF content yield `UNKNOWN` (default
+     `LicenseZone.UNKNOWN` → routes to `office/`).
+  Flow `export()` :
+  1. `PdfLicenseDetector.detect(pdf)` → `detected`.
+  2. Si `detected == UNKNOWN` → `effective = fallbackZone`, sinon
+     `effective = detected`.
+  3. `LicenseRouter.route(effective, base)` → `routed`.
+  4. `routed.mkdirs()` + `outputDir.set(routed)`.
+  5. `super.export()` — délègue à `ExportKnowledgeBaseTask` qui écrit
+     les 3 fichiers (JSON-LD, Markdown, AsciiDoc) dans `routed`.
+  Annotation `@DisableCachingByDefault` requise par `validatePlugins`.
+. *`CodexPlugin.kt`* — enregistrement `deployKnowledgeBaseRouted`
+  (groupe `deploy`, `fallbackZone` convention = `zone` détectée par
+  `LicenseZoneDetector` au apply-time). `ExportKnowledgeBaseTask`
+  existant inchangé (backward compat).
+. *`CodexPluginTest.kt`* — +1 test wiring `deployKnowledgeBaseRouted`
+  (type + group + description contains "licence").
+
+== Tests
+
+. *5 functional* (`DeployKnowledgeBaseRoutedTaskTest`) :
+  ** Apache License 2.0 PDF → `OSS/<source>/` (3 formats).
+  ** Copyright PDF → `office/<source>/`.
+  ** Unknown PDF + fallbackZone=OSS → `OSS/<source>/`.
+  ** Unknown PDF + fallbackZone=CSS → `office/<source>/`.
+  ** Creative Commons CC-BY PDF → `OSS/<source>/`.
+. *1 wiring* (`CodexPluginTest.deployKnowledgeBaseRouted`) — task
+  registered, type `DeployKnowledgeBaseRoutedTask`, group `deploy`,
+  description contains "licence".
+. *Non-régression* : 8 tests `ExportKnowledgeBaseTaskTest` préservés
+  (backward compat `open` export()).
+
+*Total* : 306 tests 0 FAIL (baseline 300 → +6 : 5 functional + 1
+wiring). `check` BUILD SUCCESSFUL in 44s. Kover VERT.
+validatePlugins VERT. Zéro régression, zéro secret, zéro bump BOM.
+
+== Décisions architecturales
+
+. *`ExportKnowledgeBaseTask.export()` rendu `open`* — minimal,
+  backward compat. L'alternative (composition plutôt qu'héritage)
+  aurait nécessité un refactor plus large. L'héritage + override est
+  idiomatique Gradle pour les tâches "wrap".
+. *`outputDir` rebind* — `DeployKnowledgeBaseRoutedTask` ne redéfinit
+  pas `outputDir` (hérité). Il le *rebind* via `outputDir.set(routed)`
+  avant de déléguer. Pas de duplication de la logique d'export.
+. *`fallbackZone` convention* — `CodexPlugin` câble
+  `fallbackZone.convention(zone)` où `zone` est la zone détectée par
+  `LicenseZoneDetector.detect(projectDir)` au apply-time. Cohérent
+  avec le pattern existant (`extension.zone.convention(zone)`).
+. *`baseDir` est `@OutputDirectory`* — Gradle le crée automatiquement.
+  `routed.mkdirs()` est redondant mais explicite (documentation).
+. *`@DisableCachingByDefault`* — requis par `validatePlugins` pour
+  toute tâche non-`@CacheableTask`. Raison documentée : "license
+  detection + multi-format write".
+
+== Fichiers modifiés
+
+. `codex-plugin/src/main/kotlin/codex/tasks/ExportKnowledgeBaseTask.kt`
+   — `export()` → `open fun export()` (1 mot-clé).
+. `codex-plugin/src/main/kotlin/codex/tasks/DeployKnowledgeBaseRoutedTask.kt`
+   (créé, 69 lignes).
+. `codex-plugin/src/main/kotlin/codex/CodexPlugin.kt` — import +
+   enregistrement `deployKnowledgeBaseRouted`.
+. `codex-plugin/src/test/kotlin/codex/tasks/DeployKnowledgeBaseRoutedTaskTest.kt`
+   (créé, 5 functional).
+. `codex-plugin/src/test/kotlin/codex/CodexPluginTest.kt` — import +
+   test wiring.
+
+== Statut EPIC
+
+EPIC CDX-5 (P1) — `exportKnowledgeBase` routing licence :
+ * CDX-5-0 ✅ TERMINÉ (S-077 cadrage)
+ * CDX-5-1 ✅ TERMINÉ (S-081 domaine `codex.licence`)
+ * CDX-5-2 ✅ TERMINÉ (S-082 tâche `deployKnowledgeBaseRouted`)
+ * CDX-5-3 🟡 À FAIRE (Cucumber BDD `codex_export_routed.feature`)
+
+== Prochaine session — 083
+
+Démarrer *CDX-5-3* (Cucumber BDD `codex_export_routed.feature` 3
+scénarios `@licence @routing`) — clôture EPIC CDX-5. Runner dédié
+`CodexLicenceCucumberRunner` (pattern S-082).
+
+Alternatives :
+ * CDX-3-2 (tâche `deriveOntology` + wiring ~4 functional) — 1re
+   tâche Gradle du P1 ontology.
+ * CDX-4-2 (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re
+   tâche Gradle du P1 enrichment.
+ * CDX-6-1/2 (DSL `licenceRouting` + `CodexPipelineTask` routing).
+
+Baby-step BDD strict (RED → GREEN → REFACTOR).
+
+== Vérifications
+
+- `../gradlew compileTestKotlin` RED (Unresolved reference 'fallbackZone').
+- `../gradlew test --tests "codex.tasks.DeployKnowledgeBaseRoutedTaskTest"` 5/5 PASSED.
+- `../gradlew test --tests "codex.CodexPluginTest"` 7/7 PASSED (incl. +1 wiring).
+- `../gradlew check` BUILD SUCCESSFUL in 44s (Kover VERT, validatePlugins VERT).
+- `../gradlew test` 306 tests 0 FAIL (baseline 300 → +6).
+- Zéro secret, zéro bump BOM, zéro régression, backward compat total.
