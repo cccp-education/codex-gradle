@@ -62,19 +62,9 @@ abstract class ExtractBookStructureTask : DefaultTask() {
         return buildAsciiDocFromGroups(groups, headerThresholds)
     }
 
-    private data class HeaderThresholds(
-        val h1: Double, val h2: Double, val h3: Double, val h4: Double
-    )
-
     private fun computeHeaderThresholds(
         avg: Double, max: Double, min: Double, range: Double
-    ): HeaderThresholds {
-        val dynamicH1 = if (range > 1.0) max - range * 0.05 else max * 0.95
-        val dynamicH2 = if (range > 2.0) max - range * 0.25 else max * 0.75
-        val dynamicH3 = if (range > 3.0) max - range * 0.50 else max * 0.50
-        val dynamicH4 = if (range > 4.0) max - range * 0.70 else max * 0.35
-        return HeaderThresholds(dynamicH1, dynamicH2, dynamicH3, dynamicH4)
-    }
+    ): HeaderThresholds = TypographicAnalyzer.computeThresholds(avg, max, min, range)
 
     data class PositionedLine(
         val text: String,

@@ -1,0 +1,109 @@
+= Session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer (baby-step TDD)
+:session: 078
+:date: 2026-08-19
+:epic: CDX-7 (Tests unitaires + intégration P1-23)
+:us: CDX-7-1
+:status: TERMINÉ
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+
+== Mission
+
+Démarrer *CDX-7-1* — tests `FontStyleDetector`/`TypographicAnalyzer`,
+foundation sans nouveau code métier, couverture des composants existants
+extraits de `ExtractBookStructureTask`. Cadrage S-077 prévoyait ~8 unit tests.
+
+== Constats (audit code)
+
+. `FontStyleDetector` (object pur `codex.tasks`) classifie les fontes PDF en
+  5 styles via heuristiques nom — 12 mots-clés monospace, 5 bold, 5 italic.
+  Aucun test unitaire isolé dédié — couverture uniquement via
+  `ExtractBookStructureTaskTest` (6 assertions `assertTrue` noires).
+. `ExtractBookStructureTask.computeHeaderThresholds` (lignes 65-77) est un
+  calcul pur de thresholds dynamiques h1/h2/h3/h4 à partir de stats font-size
+  (avg/max/min/range). Logique typographique pure, candidat extraction.
+. `HeaderThresholds` private data class — non testable isolément.
+
+== Décisions
+
+. *FontStyleDetectorTest.kt* — characterization tests de l'objet existant.
+  GREEN direct (code existe). 32 unit couvrant : 12 mots-clés monospace ×
+  cas nominaux, priorité monospace > bold, 5 variantes bold, 5 variantes
+  italic, combinaison BOLD_ITALIC, fallback NORMAL, case-insensitive,
+  helpers enum `isMonospace`/`isBold`/`isItalic` pour les 5 valeurs.
+. *TypographicAnalyzer* extrait de `ExtractBookStructureTask` — nouvel
+  objet pur `codex.tasks.TypographicAnalyzer` + data class publique
+  `HeaderThresholds` (sortie du private). `ExtractBookStructureTask.computeHeaderThresholds`
+  délègue désormais (`= TypographicAnalyzer.computeThresholds(...)`). -11 lignes.
+. *TypographicAnalyzerTest.kt* — 12 unit couvrant : 4 thresholds dynamiques
+  (large range), 4 fallbacks (range < 1.0/2.0/3.0/4.0 + zero range), ordre
+  h1>h2>h3>h4, plafond max, range négative défensive.
+. *Domaine* : `codex.tasks` (inchangé — extraction interne, pas nouveau
+  domaine DDD. Le cadrage mentionnait `codex.typography` mais l'extraction
+  est restée dans `codex.tasks` car `TypographicAnalyzer` est un collaborateur
+  privé de `ExtractBookStructureTask`, pas un agrégat métier. Pas de bump
+  BOM, pas de nouveau package.
+. *Bug test corrigé* : `"DIN-Regular"` ne matche pas `bd ` (avec espace final).
+  Test corrigé pour documenter le comportement réel (`"DIN bd Regular"` → BOLD,
+  `"DIN-bd-Regular"` → NORMAL). C'est un bug dans mon assertion, pas dans le code.
+
+== Implémentation
+
+. `src/main/kotlin/codex/tasks/TypographicAnalyzer.kt` (nouveau, 32 lignes) —
+  objet pur `computeThresholds(avg, max, min, range): HeaderThresholds` +
+  data class publique `HeaderThresholds(h1, h2, h3, h4)`.
+. `src/main/kotlin/codex/tasks/ExtractBookStructureTask.kt` (modifié) —
+  suppression `HeaderThresholds` private + `computeHeaderThresholds` body
+  (12 lignes) → delegation 1 ligne `= TypographicAnalyzer.computeThresholds(...)`.
+. `src/test/kotlin/codex/tasks/FontStyleDetectorTest.kt` (nouveau, 174 lignes) —
+  32 unit characterization tests.
+. `src/test/kotlin/codex/tasks/TypographicAnalyzerTest.kt` (nouveau, 113 lignes) —
+  12 unit tests extraction.
+
+== Vérification
+
+----
+cd codex-plugin
+../gradlew check      # BUILD SUCCESSFUL 59s
+# 255 tests 0 FAIL 0 errors (baseline 211 → +44 : 32 FontStyle + 12 Typographic)
+# Kover VERT, validatePlugins VERT
+grep -rE "TOKEN|SECRET|PASSWORD|API_KEY|gho_|ghp_" src/main src/test  # 0 match
+----
+
+*Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
+*`ExtractBookStructureTask` comportement identique* — delegation pure.
+
+== Prochaine session — 079
+
+*CDX-3-1* (domaine `codex.ontology` + `OntologyDeriver` object pur ~12 unit)
+selon ordre d'exécution du cadrage S-077. Nouveau domaine DDD, unit-testable,
+dépend de `LddNode` existant.
+
+Alternativement *CDX-7-2* (tests chaînés `ConvertToMarkdownTask`) si on
+privilégie la couverture avant les nouveaux domaines.
+
+== État EPICs
+
+[cols="2,2,3"]
+|===
+| EPIC | Statut | Détail
+
+| CDX-7-1
+| ✅ TERMINÉ (S-078)
+| 44 unit +1 prod extraction (TypographicAnalyzer)
+
+| CDX-7-2
+| 🟡 À FAIRE
+| ConvertToMarkdownTask chaîné ~5 unit
+
+| CDX-7-3
+| 🟡 À FAIRE
+| SemanticChunker extrait ~7 unit
+
+| CDX-7-4
+| 🟡 À FAIRE
+| CodexPipelineIntegrationTest E2E PDF ~3 integration
+
+| CDX-3/4/5/6
+| 🟡 À FAIRE
+| Cadrés S-077, non démarrés
+|===

@@ -1,7 +1,46 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-07-04
-:session: 072
+:date: 2026-08-19
+:session: 078
 
+== Session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer (+44 unit, 255/255 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/tasks/FontStyleDetectorTest.kt` | 32 JUnit5 | ✅ PASS (characterization exhaustive objet existant)
+| `test/codex/tasks/TypographicAnalyzerTest.kt` | 12 JUnit5 | ✅ PASS (objet extrait de ExtractBookStructureTask)
+|===
+
+*Baseline* : 211 tests (S-077) → *255 tests* (S-078), +44 unit, 0 FAIL.
+
+*FontStyleDetectorTest* (32) — characterization de l'objet existant `FontStyleDetector` :
+. 12 mots-clés monospace (courier, mono, consolas, typewriter, menlo, monaco,
+  source code, fira code, jetbrains, droid sans mono, dejavu sans mono, liberation mono)
+. Priorité monospace > bold (CourierNew-Bold → MONOSPACE)
+. 5 variantes bold (bold, heavy, black, "bd " avec espace, BoldMT regex)
+. 5 variantes italic (italic, oblique, slanted, "it " avec espace, ItalicMT regex)
+. Combinaison BOLD_ITALIC (BoldItalic, Bold Italic, BoldOblique)
+. Fallback NORMAL (Helvetica, Arial, Times-Roman, empty string)
+. Case-insensitive (HELVETICA-BOLD, helvetica-italic, COURIER)
+. Helpers enum `isMonospace`/`isBold`/`isItalic` pour les 5 valeurs
+
+*TypographicAnalyzerTest* (12) — objet extrait de `ExtractBookStructureTask` :
+. 4 thresholds dynamiques (large range > 4.0) : h1 = max - range×0.05, etc.
+. 4 fallbacks (range < 1.0 → max×0.95, < 2.0 → max×0.75, < 3.0 → max×0.50, < 4.0 → max×0.35)
+. Zero range → tous fallbacks
+. Ordre h1 > h2 > h3 > h4 pour large range
+. Plafond max (thresholds ≤ max)
+. Range négative défensive → tous fallbacks
+
+*Gate Kover* : VERT (préservé S-077). Kover 0.9.8 ne supporte pas offline
+instrumentation — couverture plugin tests non comptée (limitation connue).
+
+*Prochaines US de test (CDX-7)* :
+. CDX-7-2 `ConvertToMarkdownTask` chaîné ~5 unit
+. CDX-7-3 `SemanticChunker` extrait ~7 unit
+. CDX-7-4 `CodexPipelineIntegrationTest` E2E PDF ~3 integration
+
+'''
 == Session 072 — CDX-13 OCR Pipeline (+32 tests, 167/167 PASS)
 
 [cols="2,3,2"]

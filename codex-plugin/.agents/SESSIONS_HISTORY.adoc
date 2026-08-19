@@ -3,6 +3,39 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-7 (Tests unitaires + intégration P1-23)
+*US* : CDX-7-1
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*Objectif* :
+- Démarrer CDX-7-1 : tests `FontStyleDetector`/`TypographicAnalyzer`,
+  foundation sans nouveau code métier, couverture des composants existants
+  extraits de `ExtractBookStructureTask`. Cadrage S-077 prévoyait ~8 unit.
+
+*Livrables* :
+- `FontStyleDetectorTest.kt` (nouveau, 32 unit) — characterization exhaustive
+  de l'objet existant : 12 mots-clés monospace, priorité mono>bold, 5 bold,
+  5 italic, combinaison BOLD_ITALIC, fallback NORMAL, case-insensitive,
+  helpers enum `isMonospace`/`isBold`/`isItalic` pour les 5 valeurs.
+- `TypographicAnalyzer.kt` (nouveau, 32 lignes) — objet pur extrait de
+  `ExtractBookStructureTask` + `HeaderThresholds` data class publique.
+  `ExtractBookStructureTask.computeHeaderThresholds` délègue (-11 lignes).
+- `TypographicAnalyzerTest.kt` (nouveau, 12 unit) — 4 thresholds dynamiques
+  (large range), 4 fallbacks (range < 1/2/3/4 + zero), ordre h1>h2>h3>h4,
+  plafond max, range négative défensive.
+- 255 tests 0 FAIL (baseline 211 → +44). Kover VERT, validatePlugins VERT.
+- Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+- EPIC CDX-7 1/4 US (CDX-7-1 ✅, CDX-7-2/3/4 🟡 À FAIRE).
+
+*Prochaine session* : CDX-3-1 (domaine `codex.ontology` + `OntologyDeriver`
+~12 unit) selon ordre d'exécution du cadrage S-077.
+
+'''
 == Session 071 — CNV-6 Migration
 
 *Date* : 2026-07-03

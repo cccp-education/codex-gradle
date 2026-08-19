@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 077 — cadrage 5 EPICs P1 CDX-3/4/5/6/7 + bump BOM 0.0.23 + sync AGENTS racine)_
+_Dernière mise à jour : 2026-08-19 (session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer TERMINÉ, +44 unit)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -363,7 +363,7 @@ ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
 
 | CDX-7-1
 | `FontStyleDetectorTest` + `TypographicAnalyzerTest` (extraction de `ExtractBookStructureTask`). ~8 unit.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-078)
 
 | CDX-7-2
 | `ConvertToMarkdownTaskTest` chaîné (sortie réelle `ExtractBookStructureTask`). ~5 unit.
