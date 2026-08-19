@@ -1,0 +1,178 @@
+= Session 080 — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher + GraphifyFileResolver
+:session: 080
+:date: 2026-08-19
+:epic: CDX-4 (enrichJsonLdd P1-20)
+:us: CDX-4-1
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Démarrer *CDX-4-1* — 2e domaine pur du P1 « Enrichissement Croisé du
+Corpus » : domaine `codex.enrichment` (13e domaine codex) +
+`JsonLddEnricher` object pur + `GraphifyResolver` port +
+`GraphifyFileResolver` adapter (lit `graph.json` N0 produit par
+graphify-gradle, zéro dépendance compile).
+
+== Méthode
+
+Baby-step TDD strict (RED → GREEN → REFACTOR), 3 niveaux de tests
+(unit → functional → cucumber). Cette session : niveau unit uniquement
+(domaine pur, pas de tâche Gradle, pas de Cucumber).
+
+. RED : 2 fichiers test créés (16 unit) référençant types inexistants
+  (`JsonLddEnricher`, `EnrichedLddNode`, `GraphifyResolver`,
+  `GraphifyFileResolver`) → compilation échoue (`Unresolved reference`).
+. GREEN : 2 fichiers prod créés (3 types publics + adapters privés) →
+  16/16 tests PASSED.
+. REFACTOR : code déjà propre (object pur, ports/adapter, data classes
+  immutables). Aucune itération nécessaire.
+
+== Livrables
+
+=== Production (2 fichiers, domaine `codex.enrichment` 13e)
+
+* `codex/enrichment/JsonLddEnricher.kt` (nouveau, 90 lignes) :
+  ** `GraphifyResolver` — `fun interface` (port) `resolve(sectionTitle):
+     List<String>`. Aucune dépendance compile graphify — contrat N0 par
+     fichier `graph.json`.
+  ** `EnrichedLddNode` — data class immutable. *Composition* (pas
+     héritage — `LddNode` n'est pas `open`, contrat stable non modifié) :
+     `ldd: LddNode` + `ragChunks: List<DocumentChunk>` +
+     `graphifyNodes: List<String>` + `semanticDensity: Double` +
+     `entities: List<String>`.
+  ** `JsonLddEnricher` — object pur déterministe `enrich(lddNodes,
+     ragChunks, graphifyResolver): List<EnrichedLddNode>`. Jointure par
+     titre de section (dernier segment de `sectionPath` après `>`),
+     case-insensitive. Densité = `joined.size / total`. Entités extraites
+     par regex `\b[A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+)*\b` sur
+     title + text. Short-circuit si `title.isBlank()` (paragraphes).
+
+* `codex/enrichment/GraphifyFileResolver.kt` (nouveau, 70 lignes) :
+  ** Adapter qui lit `graph.json` via kotlinx.serialization (déjà dispo
+     en classpath, zéro bump BOM).
+  ** Modèle sérialisation privé mirror `GraphModel` graphify :
+     `GraphFileModel`/`GraphFileNode`/`GraphFileEdge`/`GraphFileCommunity`
+     (`@Serializable`, `ignoreUnknownKeys = true`, `isLenient = true`).
+  ** `resolve(sectionTitle)` filter case-insensitive sur `label`,
+     retourne les `id`. Dégradé silencieux : fichier manquant → empty,
+     JSON invalide → empty, `nodes` absent → empty.
+
+=== Tests (2 fichiers, 16 unit)
+
+* `codex/enrichment/JsonLddEnricherTest.kt` (nouveau, 10 unit) :
+  ** empty lddNodes → empty result.
+  ** chunk matching section title (dernier segment sectionPath) attached.
+  ** chunk from other section not attached.
+  ** graphify nodes resolved via resolver (fake object).
+  ** semantic density = 1/2 = 0.5 (1 matching out of 2 total).
+  ** zero density when no rag chunks.
+  ** entities extracted from title + text (capitalized words).
+  ** ldd title/level preserved in EnrichedLddNode.
+  ** pure — same input yields same output (deterministic).
+  ** paragraph nodes (title blank, type "paragraph") handled sans crash.
+
+* `codex/enrichment/GraphifyFileResolverTest.kt` (nouveau, 6 unit,
+  `@TempDir`) :
+  ** empty graph json → empty resolve.
+  ** exact label match → node id returned.
+  ** case-insensitive label match.
+  ** no label match → empty.
+  ** missing `nodes` field tolerated (degraded → empty).
+  ** multiple labels match → multiple ids returned (order preserved).
+
+=== Métriques
+
+* Tests : 268 → 284 (+16, soit 10 + 6).
+* Failures : 0.
+* `check` : BUILD SUCCESSFUL (34s).
+* Kover : VERT. validatePlugins : VERT.
+* BOM : zéro bump (0.0.23 inchangé).
+* Secrets : zéro (`grep -r "TOKEN\|SECRET\|PASSWORD\|API_KEY\|gho_\|ghp_"`
+  clean).
+* Régression : zéro (211 unit + 186 cucumber baseline préservée).
+* Backward compat : total (nouveaux fichiers uniquement, zéro fichier
+  existant modifié).
+
+== Décisions architecturales
+
+. *Composition sur héritage* — `EnrichedLddNode` compose `LddNode` au
+  lieu d'en hériter. `LddNode` est `data class` (non `open`), contrat
+  stable consommé par `AsciiDocToJsonLddTask`/`ImportBookSqlTask`. Modifier
+  ce contrat casserait la backward compat. La composition préserve le
+  contrat et expose les enrichments comme champs supplémentaires.
+
+. *Port `fun interface`* — `GraphifyResolver` est une SAM interface
+  (`resolve(sectionTitle): List<String>`). Permet aux tests d'instancier
+  avec des `object : GraphifyResolver { override fun resolve(...) = ... }`
+  anonymes, et à l'adapter `GraphifyFileResolver` d'implémenter
+  naturellement. Pattern mirror `OcrEngine`/`OcrPipeline` (codex.ocr).
+
+. *Zéro dépendance compile graphify* — `GraphifyFileResolver` lit
+  `graph.json` via kotlinx.serialization avec son propre modèle privé
+  (`GraphFileModel`). Aucun `implementation("...:graphify-gradle:...")`
+  dans `build.gradle.kts`. Le contrat N0 est le fichier JSON, pas le
+  code. Pattern constat #12 du cadrage S-077 (graphify publie `graph.json`
+  mais codex ne le consomme pas — désormais consommé).
+
+. *Dégradé silencieux* — `GraphifyFileResolver` tolère fichier
+  manquant/JSON invalide/champ `nodes` absent → retourne empty au lieu
+  de crasher. Pattern `OcrResultCache` (économie d'encre : le pipeline
+  enrichi fonctionne sans graphify si le fichier n'existe pas).
+
+. *Jointure par dernier segment de sectionPath* — un chunk
+  `sectionPath = "Chapter 1 > Architecture"` est joint à la section
+  LDD `title = "Architecture"` (dernier segment après `>`). Case-
+  insensitive. Rationale : `sectionPath` est hiérarchique, le dernier
+  segment est le titre de la section courante — l'ancêtre est du contexte
+  (pas le titre direct).
+
+. *Entités par regex capitalized words* — extraction `\b[A-Z][A-Za-z0-9]+
+  (?:\s+[A-Z][A-Za-z0-9]+)*\b` sur title + text. Peuple le placeholder
+  `DocumentChunk.entities` (constat #3 du cadrage S-077). Simple,
+  déterministe, pas d'appel NLP externe. Suffisant pour MVP0 (les entités
+  sont des indices, pas une extraction NER complète).
+
+. *Zéro bump BOM* — `kotlinx.serialization.json` déjà en classpath
+  (build.gradle.kts:32 `implementation(libs.kotlinx.serialization.json)`).
+  `DocumentChunk` et `LddNode` existants consommés (pas modifiés). Pas
+  de nouvelle dépendance. Gate MEMPHIS (CDX-RC-04) non touchée.
+
+== État EPIC
+
+* EPIC CDX-4 1/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080, CDX-4-2/3/4 🟡 À FAIRE).
+* Enchaînement (cadrage S-077) :
+  ** CDX-7-1 ✅ (S-078), CDX-3-1 ✅ (S-079), CDX-4-1 ✅ (S-080) — domaines purs.
+  ** Prochain : CDX-5-1 (domaine `codex.licence` + `PdfLicenseDetector` +
+     `LicenseRouter` ~10 unit) — 3e domaine pur.
+  ** Puis : tâches Gradle (CDX-3-2/4-2/5-2) → câblage (CDX-4-3) → DSL
+     (CDX-6-1/2) → tests chaînés (CDX-7-2/3/4) → Cucumber BDD
+     (CDX-3-3/4-4/5-3/6-3).
+
+== Prochaine session — 081
+
+*Mission principale* : *CDX-5-1* (domaine `codex.licence` 14e +
+`PdfLicenseDetector` scanne contenu PDF + `LicenseRouter` route vers
+`OSS/` ou `office/`, ~10 unit) — 3e domaine pur du P1.
+
+. Baby-step TDD strict : RED (`PdfLicenseDetector` inexistant) → GREEN
+  (objet pur créé) → REFACTOR.
+. `LicenseZoneDetector` existant inchangé (détection par chemin projet).
+  `PdfLicenseDetector` est *additive* (détection par contenu PDF).
+. Pattern : `PdfLicenseDetector.detect(pdfFile): LicenseZone` +
+  `LicenseRouter.route(zone, baseDir): File`.
+. Domaine cible : `codex.licence` (14e domaine codex).
+. Gate : aucune — nouveau domaine pur, pas de bump BOM.
+
+*Alternatives* :
+. *CDX-3-2* (tâche `deriveOntology` + wiring `CodexPlugin` ~4 functional)
+  — si priorité exposition Gradle ontology.
+. *CDX-4-2* (tâche `enrichJsonLdd` + wiring `CodexPlugin` ~5 functional)
+  — si priorité exposition Gradle enrichment.
+
+== Références
+
+* `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-4 (décisions #4, #5, #9).
+* `BACKLOG.adoc` § EPIC CDX-4 (US détaillées).
+* `build.gradle.kts:30` — BOM 0.0.23.
+* Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`).

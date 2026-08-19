@@ -3,7 +3,52 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
-== Session 079 — CDX-3-1 Domaine codex.ontology + OntologyDeriver
+== Session 080 — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher + GraphifyFileResolver
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-4 (enrichJsonLdd P1-20)
+*US* : CDX-4-1
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*Objectif* :
+- Démarrer CDX-4-1 : domaine `codex.enrichment` (13e) + `JsonLddEnricher`
+  object pur + `GraphifyResolver` port + `GraphifyFileResolver` adapter
+  (lit `graph.json` N0 produit par graphify-gradle, zéro dépendance
+  compile). Croisement JSON LDD + RAG pgvector + Knowledge Graph Graphify.
+
+*Livrables* :
+- `JsonLddEnricher.kt` (nouveau, 90 lignes) — `GraphifyResolver` `fun
+  interface` port + `EnrichedLddNode` data class composition de `LddNode`
+  (ldd + ragChunks + graphifyNodes + semanticDensity + entities) +
+  `JsonLddEnricher` object pur déterministe `enrich(lddNodes, ragChunks,
+  graphifyResolver): List<EnrichedLddNode>`. Jointure par dernier segment
+  `sectionPath` (case-insensitive). Densité = joined/total. Entités regex
+  capitalized words (peuple `DocumentChunk.entities` placeholder constat #3).
+- `GraphifyFileResolver.kt` (nouveau, 70 lignes) — adapter lit `graph.json`
+  via kotlinx.serialization (zéro dépendance compile graphify, contrat N0
+  par fichier). Modèle privé mirror `GraphModel` (`GraphFileModel`/
+  `GraphFileNode`/`GraphFileEdge`/`GraphFileCommunity`). Dégradé silencieux
+  (fichier manquant/JSON invalide/champ `nodes` absent → empty).
+- `JsonLddEnricherTest.kt` (nouveau, 10 unit) — empty, chunk matching,
+  other section excluded, graphify resolved, density 0.5, zero density,
+  entities extracted, ldd preserved, pure/deterministic, paragraph handled.
+- `GraphifyFileResolverTest.kt` (nouveau, 6 unit `@TempDir`) — empty,
+  exact match, case-insensitive, no match, missing nodes field, multiple
+  matches.
+- 284 tests 0 FAIL (baseline 268 → +16). `check` VERT, Kover VERT,
+  validatePlugins VERT.
+- Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+- 2 fichiers prod créés + 2 fichiers test créés (zéro fichier existant modifié).
+- EPIC CDX-4 1/4 US (CDX-4-0 ✅, CDX-4-1 ✅, CDX-4-2/3/4 🟡 À FAIRE).
+
+*Prochaine session* : CDX-5-1 (domaine `codex.licence` 14e +
+`PdfLicenseDetector` + `LicenseRouter` ~10 unit) selon ordre d'exécution
+du cadrage S-077. Alternatives : CDX-3-2 ou CDX-4-2 (tâches Gradle
+functional).
+
+'''
 
 *Date* : 2026-08-19
 *Type* : dev

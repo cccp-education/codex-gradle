@@ -1,8 +1,19 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-19
-:session: 078
+:session: 080
 
-== Session 078 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer (+44 unit, 255/255 PASS)
+== Session 080 — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher + GraphifyFileResolver (+16 unit, 284/284 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/codex/enrichment/JsonLddEnricherTest.kt` | 10 JUnit5 | ✅ PASS (object pur — empty, chunk matching, other section excluded, graphify resolved, density 0.5, zero density, entities extracted, ldd preserved, pure/deterministic, paragraph handled)
+| `test/codex/enrichment/GraphifyFileResolverTest.kt` | 6 JUnit5 | ✅ PASS (adapter — empty, exact match, case-insensitive, no match, missing nodes field, multiple matches, `@TempDir`)
+|===
+
+*Baseline* : 268 tests (S-079) → *284 tests* (S-080), +16 unit, 0 FAIL.
+
+== Session 079 — CDX-7-1 tests FontStyleDetector + TypographicAnalyzer (+44 unit, 255/255 PASS)
 
 [cols="2,3,2"]
 |===

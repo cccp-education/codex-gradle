@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-19 (session 079 — CDX-3-1 domaine `codex.ontology` + `OntologyDeriver` object pur TERMINÉ, +13 unit)_
+_Dernière mise à jour : 2026-08-19 (session 080 — CDX-4-1 domaine `codex.enrichment` + `JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver` adapter TERMINÉ, +16 unit)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -271,7 +271,7 @@ sémantique. Peuple `DocumentChunk.entities` placeholder.
 
 | CDX-4-1
 | Domaine `codex.enrichment` + `JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver` adapter (lit `graph.json`, pas de dépendance compile graphify). ~15 unit.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-080)
 
 | CDX-4-2
 | Tâche `enrichJsonLdd` (groupe transform) + wiring `CodexPlugin`. ~5 functional.

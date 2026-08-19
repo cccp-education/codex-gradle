@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 080
-:session: 080
+= PROMPT_REPRISE — Codex — Session 081
+:session: 081
 :date: 2026-08-19
 :status: PRET
 :max-lines: 45
@@ -9,48 +9,59 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 268/268 PASS (baseline préservée S-079)
+../gradlew test            # 284/284 PASS (baseline préservée S-080)
 ```
 
-== Session 079 terminée — CDX-3-1 Domaine codex.ontology + OntologyDeriver
+== Session 080 terminée — CDX-4-1 Domaine codex.enrichment + JsonLddEnricher
 
-. *CDX-3-1 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
-. *Domaine `codex.ontology`* (12e) — 2 fichiers prod purs :
-  `OntologyMapping.kt` (4 data classes immutables) +
-  `OntologyDeriver.kt` (object pur 169 lignes, parsing SQL DDL par regex).
-. *3 requêtes archétypales* : bounded contexts (BFS connectivité FK),
-  aggregates (CASCADE edges par racine, self-ref exclue), value objects
-  (tables sans FK sortantes). LDD title nomme le bounded context.
-. *13 unit tests* (OntologyDeriverTest) — empty, extraction, FK-connected,
-  disconnected, CASCADE roots, dependents, no-CASCADE exclusion, VO
-  sans FK, VO exclut FK, columns, 3 vues, pure/déterministe, LDD naming.
-. *268 tests* 0 FAIL (baseline 255 → +13). Kover VERT, validatePlugins VERT.
+. *CDX-4-1 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
+. *Domaine `codex.enrichment`* (13e) — 2 fichiers prod purs :
+  `JsonLddEnricher.kt` (90 lignes, `GraphifyResolver` `fun interface` port +
+  `EnrichedLddNode` data class composition de `LddNode` + `JsonLddEnricher`
+  object pur) + `GraphifyFileResolver.kt` (70 lignes, adapter lit
+  `graph.json` via kotlinx.serialization, zéro dépendance compile graphify).
+. *Jointure par dernier segment* `sectionPath` (case-insensitive) — chunk
+  `sectionPath = "Chapter 1 > Architecture"` joint à section LDD
+  `title = "Architecture"`. Densité = joined/total. Entités regex
+  capitalized words (peuple `DocumentChunk.entities` placeholder).
+. *Dégradé silencieux* — fichier manquant/JSON invalide/champ `nodes` absent
+  → empty (économie d'encre, pipeline enrichi fonctionne sans graphify).
+. *16 unit tests* (10 `JsonLddEnricherTest` + 6 `GraphifyFileResolverTest`).
+. *284 tests* 0 FAIL (baseline 268 → +16). Kover VERT, validatePlugins VERT.
 . *Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
 
-== Prochaine session — 080
+== Prochaine session — 081
 
-*Mission principale* : *CDX-4-1* (domaine `codex.enrichment` +
-`JsonLddEnricher` + `GraphifyResolver` port + `GraphifyFileResolver`
-adapter lit `graph.json`, ~15 unit) — 2e domaine pur du P1.
+*Mission principale* : *CDX-5-1* (domaine `codex.licence` 14e +
+`PdfLicenseDetector` scanne contenu PDF + `LicenseRouter` route vers
+`OSS/` ou `office/`, ~10 unit) — 3e domaine pur du P1.
 
-. Baby-step TDD strict : RED (`JsonLddEnricher` inexistant) → GREEN
+. Baby-step TDD strict : RED (`PdfLicenseDetector` inexistant) → GREEN
   (objet pur créé) → REFACTOR.
-. Types : `EnrichedLddNode` étend `LddNode` avec `ragChunks`/
-  `graphifyNodes`/`semanticDensity`/`entities`. `GraphifyFileResolver`
-  lit `graph.json` (pas de dépendance compile graphify).
-. Domaine cible : `codex.enrichment` (13e domaine codex, voir cadrage S-077).
+. `LicenseZoneDetector` existant inchangé (détection par chemin projet,
+  `foundry/public/` vs `foundry/private/`). `PdfLicenseDetector` est
+  *additive* (détection par contenu PDF) :
+  ** Mention "Apache License 2.0" / "Apache-2.0" → OSS.
+  ** Mention "Creative Commons" / "CC-BY" / "CC0" → OSS.
+  ** Mention "©" / "Copyright" / "All rights reserved" → CSS (office/).
+  ** Aucune mention → fallback `LicenseZoneDetector.detect(projectDir)`.
+. Types : `LicenseZone` enum (OSS/CSS/UNKNOWN, existant si déjà présent),
+  `PdfLicenseDetector` object pur `detect(pdfFile): LicenseZone`,
+  `LicenseRouter` object pur `route(zone, baseDir): File`.
+. Domaine cible : `codex.licence` (14e domaine codex).
 . Gate : aucune — nouveau domaine pur, pas de bump BOM.
 
 *Alternatives* :
-. *CDX-5-1* (`codex.licence` + `PdfLicenseDetector` + `LicenseRouter`
-  ~10 unit) — si priorité routing licence.
 . *CDX-3-2* (tâche `deriveOntology` + wiring `CodexPlugin` ~4 functional)
-  — si priorité exposition Gradle.
+  — si priorité exposition Gradle ontology.
+. *CDX-4-2* (tâche `enrichJsonLdd` + wiring `CodexPlugin` ~5 functional)
+  — si priorité exposition Gradle enrichment.
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
-. CDX-7-1 ✅ (S-078) → CDX-3-1 ✅ (S-079) → CDX-4-1/5-1 (domaines purs) →
-. tâches Gradle (CDX-3-2/4-2/5-2) → câblage (CDX-4-3) → DSL (CDX-6-1/2) →
-. tests chaînés (CDX-7-2/3/4) → Cucumber BDD (CDX-3-3/4-4/5-3/6-3).
+. CDX-7-1 ✅ (S-078) → CDX-3-1 ✅ (S-079) → CDX-4-1 ✅ (S-080) →
+. CDX-5-1 (domaine pur) → tâches Gradle (CDX-3-2/4-2/5-2) →
+. câblage (CDX-4-3) → DSL (CDX-6-1/2) → tests chaînés (CDX-7-2/3/4) →
+. Cucumber BDD (CDX-3-3/4-4/5-3/6-3).
 
 *Actions reportées* :
 . Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour débloquer
@@ -58,7 +69,7 @@ adapter lit `graph.json`, ~15 unit) — 2e domaine pur du P1.
 
 == References
 
-- `.agents/sessions/079-cdx-3-1-ontology-deriver.adoc`
+- `.agents/sessions/080-cdx-4-1-enrichment-domain.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
 - `BACKLOG.adoc` § EPIC CDX-3/4/5/6/7 (US détaillées)
 - `build.gradle.kts:30` — BOM 0.0.23
