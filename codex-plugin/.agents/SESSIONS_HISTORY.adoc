@@ -3,6 +3,50 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 083 — CDX-5-3 Cucumber BDD licence routing + clôture EPIC CDX-5
+
+*Date* : 2026-08-19
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-5 (exportKnowledgeBase routing licence P1-21)
+*US* : CDX-5-3
+*Méthode* : baby-step BDD strict (RED → GREEN → REFACTOR)
+
+*A. Objectif* :
+Clôture de *l'EPIC CDX-5* par la US CDX-5-3 : Cucumber BDD
+`codex_export_routed.feature` 3 scénarios `@licence @routing` + runner
+dédié `CodexLicenceCucumberRunner` (pattern S-082). Le domaine
+`codex.licence` créé S-081, tâche câblée S-082 — pure BDD, zéro
+production modifié.
+
+*B. Réalisation* :
+- RED : 4 fichiers créés (1 feature + 1 runner + 1 steps + 1 wiring
+  build.gradle.kts) + 1 entrée catalogue `junit-platform-suite`.
+  Découverte : `cucumber.features` du `junit-platform.properties`
+  global override les `@SelectClasspathResource` → tâche Gradle doit
+  override via `systemProperty`. Steps `{string}` du `When` ne
+  matchaient pas `UNKNOWN`/`OSS` sans guillemets → feature corrigée.
+- GREEN : 3/3 scénarios PASSED en 9s (Apache→OSS, Copyright→office,
+  Unknown→OSS fallback).
+- REFACTOR : `check` BUILD SUCCESSFUL, Kover VERT, validatePlugins
+  VERT. 333 tests 0 failures (baseline 306 → +27). Zéro régression,
+  zéro secret, zéro bump BOM, backward compat total.
+
+*C. Artefacts* :
+- `src/test/resources/features/codex_export_routed.feature` (3 scénarios)
+- `src/test/kotlin/codex/bdd/CodexLicenceCucumberRunner.kt` (runner S-082)
+- `src/test/kotlin/codex/bdd/LicenceRoutingSteps.kt` (6 step defs)
+- `gradle/libs.versions.toml` (+1 version +1 library)
+- `build.gradle.kts` (+1 dependency +1 tâche `cucumberTestLicence`)
+
+*D. Évolution tests* : 306 → 333 (+27 : 6 cucumber dédiés × 2
+découvertes). 0 failures, 15 skipped (@integration préservés).
+
+*E. État EPIC* : CDX-5 TERMINÉ 4/4 US (CDX-5-0 ✅ S-077, CDX-5-1 ✅
+S-081, CDX-5-2 ✅ S-082, CDX-5-3 ✅ S-083). Domaine `codex.licence`
+(14e) clos.
+
+'''
 == Session 082 — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring CodexPlugin
 
 *Date* : 2026-08-19

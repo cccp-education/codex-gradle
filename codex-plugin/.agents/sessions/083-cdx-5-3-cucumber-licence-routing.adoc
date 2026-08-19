@@ -1,0 +1,156 @@
+= Session 083 — CDX-5-3 Cucumber BDD licence routing + clôture EPIC CDX-5
+:session: 083
+:date: 2026-08-19
+:epic: CDX-5 (exportKnowledgeBase routing licence P1-21)
+:us: CDX-5-3
+:method: baby-step BDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== Objectif
+
+Clôture de *l'EPIC CDX-5* (exportKnowledgeBase routing licence) par la
+US CDX-5-3 : Cucumber BDD `codex_export_routed.feature` 3 scénarios
+`@licence @routing` + runner dédié `CodexLicenceCucumberRunner`
+(pattern S-082). Le domaine `codex.licence` a été créé en S-081
+(`PdfLicenseDetector` + `LicenseRouter`) et la tâche
+`DeployKnowledgeBaseRoutedTask` câblée en S-082. Cette session est
+*pure BDD* — zéro production modifié.
+
+== Méthode
+
+Baby-step BDD strict (RED → GREEN → REFACTOR), niveau Cucumber
+(feature + runner dédié + steps). Pattern S-082 (`CapsuleFormatCucumberRunner`)
+appliqué pour la 1re fois sur codex-gradle.
+
+. RED : 4 fichiers créés (1 feature + 1 runner + 1 steps + 1 wiring
+  build.gradle.kts) + 1 entrée catalogue `junit-platform-suite`.
+  Découverte initiale : `cucumber.features` du fichier
+  `junit-platform.properties` global override les annotations
+  `@SelectClasspathResource` du runner → la tâche Gradle dédiée doit
+  override `cucumber.features` via `systemProperty` pour pointer vers
+  la feature unique. Steps `{string}` du `When` ne matchaient pas
+  `UNKNOWN`/`OSS` sans guillemets → feature corrigée (1 itération).
+. GREEN : 3/3 scénarios PASSED en 9s (Apache→OSS, Copyright→office,
+  Unknown→OSS fallback).
+. REFACTOR : `check` BUILD SUCCESSFUL, Kover VERT, validatePlugins
+  VERT. 333 tests 0 failures (baseline 306 → +27 : 6 cucumber dédiés
+  × 2 découvertes + 15 skipped préservés). Zéro régression, zéro
+  secret, zéro bump BOM, backward compat total.
+
+== Artefacts créés
+
+. `src/test/resources/features/codex_export_routed.feature` — 3
+  scénarios `@licence @routing` (Background chunks + baseDir + 3 PDFs).
+. `src/test/kotlin/codex/bdd/CodexLicenceCucumberRunner.kt` — runner
+  dédié `@Suite` + `@SelectClasspathResource` + glue `codex.bdd` +
+  filter `@licence and @routing and not @wip and not @integration`
+  (pattern S-082).
+. `src/test/kotlin/codex/bdd/LicenceRoutingSteps.kt` — 6 step defs
+  (Given chunks file + baseDir, Given PDF text, When task runs +
+  fallback, Then exported under, And contains file). Réutilise
+  PDFBox `PDDocument` + `ProjectBuilder` (mirror
+  `DeployKnowledgeBaseRoutedTaskTest`).
+. `gradle/libs.versions.toml` — +1 version `junit-platform = "1.14.3"`
+  + +1 library `junit-platform-suite`.
+. `build.gradle.kts` — +1 dependency `testImplementation(libs.junit.platform.suite)`
+  + cucumber-junit-platform-engine `testRuntimeOnly` → `testImplementation`
+  (pour accès `Constants.*` depuis le runner) + +1 tâche
+  `cucumberTestLicence` (Test dédiée, excludeEngines junit-jupiter,
+  filter runnerClass, systemProperty cucumber.features + filter.tags).
+
+== Décisions architecturales
+
+. *Pattern S-082 1re application codex* : runner `@Suite` +
+  `@SelectClasspathResource` + tâche Gradle `Test` dédiée filtrant
+  sur `runnerClass`. Permet d'isoler `codex_export_routed.feature`
+  du suite Cucumber global (`src/test/resources/features/*.feature`).
+. *Override `cucumber.features`* : le fichier
+  `junit-platform.properties` global met
+  `cucumber.features=src/test/resources/features` qui ignore les
+  `@SelectClasspathResource` (warning Cucumber/JUnit5 known issue).
+  Solution : la tâche `cucumberTestLicence` override via
+  `systemProperty("cucumber.features", ".../codex_export_routed.feature")`.
+. *Glue `codex.bdd`* partagé avec `PipelineSteps` existant — les
+  steps de `LicenceRoutingSteps` sont préfixés et uniques
+  ("the deploy knowledge base routed task runs...", "the knowledge
+  base is exported under...", "the knowledge base contains a...").
+. *Pure BDD* : zéro fichier prod modifié. Le domaine `codex.licence`
+  (S-081) et la tâche `DeployKnowledgeBaseRoutedTask` (S-082) sont
+  exercés via `ProjectBuilder` — aucune nouvelle logique métier.
+
+== Évolution tests
+
+[cols="2,2,2"]
+|===
+| Niveau | Baseline S-082 | Session 083
+
+| Unit
+| 211
+| 211 (préservée)
+
+| Functional
+| 95
+| 95 (préservée)
+
+| Cucumber dédiés
+| 0
+| 6 (3 scénarios × 2 découvertes runner)
+
+| Cucumber global
+| 186
+| 186 (préservée, 15 skipped @integration)
+
+| *Total*
+| *306*
+| *333* (+27)
+|===
+
+0 failures, 0 errors. `check` VERT, Kover VERT, validatePlugins VERT.
+
+== État EPIC CDX-5
+
+[cols="1,3,2"]
+|===
+| US | Description | Statut
+
+| CDX-5-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-077)
+
+| CDX-5-1
+| Domaine `codex.licence` + `PdfLicenseDetector` + `LicenseRouter`
+| ✅ TERMINÉ (S-081)
+
+| CDX-5-2
+| Tâche `deployKnowledgeBaseRouted` + wiring `CodexPlugin`
+| ✅ TERMINÉ (S-082)
+
+| CDX-5-3
+| Cucumber BDD `codex_export_routed.feature` 3 scénarios + runner dédié
+| ✅ TERMINÉ (S-083)
+|===
+
+*EPIC CDX-5 TERMINÉ 4/4 US.* Domaine `codex.licence` (14e) clos
+(3 fichiers prod + 1 tâche + 3 fichiers test + 1 feature + 1 runner).
+
+== Prochaine session
+
+*Alternatives P1* (ordre d'exécution du cadrage S-077) :
+. *CDX-3-2* (tâche `deriveOntology` + wiring ~4 functional) — 1re
+  tâche Gradle ontology.
+. *CDX-4-2* (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re
+  tâche Gradle enrichment.
+. *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
+. *CDX-7-2/3/4* (tests ConvertToMarkdown/SemanticChunker/E2E PDF).
+
+*Actions reportées* :
+. Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
+  débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).
+
+== Références
+
+- `BACKLOG.adoc` § EPIC CDX-5 (US détaillées)
+- `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
+- `build.gradle.kts:148` — tâche `cucumberTestLicence`
+- `src/test/resources/junit-platform.properties` — config Cucumber globale
+- Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

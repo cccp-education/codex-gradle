@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 083
-:session: 083
+= PROMPT_REPRISE — Codex — Session 084
+:session: 084
 :date: 2026-08-19
 :status: PRET
 :max-lines: 45
@@ -9,56 +9,56 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ../gradlew build -x test   # compile OK, validatePlugins OK
-../gradlew test            # 306/306 PASS (baseline préservée S-082)
+../gradlew test            # 333/333 PASS (baseline préservée S-083)
+../gradlew cucumberTestLicence  # 3/3 scénarios CDX-5-3 PASSED
 ```
 
-== Session 082 terminée — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring
+== Session 083 terminée — CDX-5-3 Cucumber BDD + clôture EPIC CDX-5
 
-. *CDX-5-2 TERMINÉ* — baby-step TDD strict RED → GREEN → REFACTOR.
-. *`DeployKnowledgeBaseRoutedTask`* (nouveau, 69 lignes) étend
-  `ExportKnowledgeBaseTask` : détecte licence PDF via
-  `PdfLicenseDetector` → route via `LicenseRouter` → rebind
-  `outputDir` → délègue à `super.export()` (multi-format inchangé).
-  3 props Gradle : `pdfFile` (`@InputFile`), `baseDir`
-  (`@OutputDirectory`), `fallbackZone` (`@Input @Optional`).
-  `@DisableCachingByDefault` (validatePlugins).
-. *`ExportKnowledgeBaseTask.export()` rendu `open`* — backward
-  compat total, 1 mot-clé.
-. *Wiring `CodexPlugin`* — task `deployKnowledgeBaseRouted` groupe
-  `deploy`, `fallbackZone.convention(zone)` (apply-time).
-. *6 tests* (5 functional + 1 wiring) — Apache→OSS, Copyright→office,
-  Unknown+OSS fallback, Unknown+CSS fallback, CC-BY→OSS, plugin
-  registers task. 306 tests 0 FAIL (baseline 300 → +6). `check` VERT,
-  Kover VERT, validatePlugins VERT.
-. *Zéro bump BOM, zéro secret, zéro régression, backward compat total.*
+. *CDX-5-3 TERMINÉ* — baby-step BDD strict RED → GREEN → REFACTOR.
+  EPIC CDX-5 TERMINÉ 4/4 US.
+. *Runner dédié `CodexLicenceCucumberRunner`* (pattern S-082, 1re
+  application codex) — `@Suite` + `@SelectClasspathResource` +
+  glue `codex.bdd` + filter `@licence and @routing`.
+. *Feature `codex_export_routed.feature`* — 3 scénarios
+  (Apache→OSS, Copyright→office, Unknown→OSS fallback).
+. *`LicenceRoutingSteps`* — 6 step defs réutilisant PDFBox +
+  ProjectBuilder (mirror `DeployKnowledgeBaseRoutedTaskTest`).
+. *Tâche Gradle `cucumberTestLicence`* — Test dédiée, excludeEngines
+  junit-jupiter, filter runnerClass, override `cucumber.features`
+  via systemProperty (contourne le `junit-platform.properties` global).
+. *Catalogue* — +1 version `junit-platform = "1.14.3"` + +1 library
+  `junit-platform-suite`. Build : cucumber-junit-platform-engine
+  `testRuntimeOnly` → `testImplementation` (accès `Constants.*`).
+. *333 tests 0 FAIL* (baseline 306 → +27). `check` VERT, Kover VERT,
+  validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
+  backward compat total. Pure BDD — zéro production modifié.
 
-== Prochaine session — 083
+== Prochaine session — 084
 
-*Mission principale* : *CDX-5-3* (Cucumber BDD `codex_export_routed.feature`
-3 scénarios `@licence @routing` + runner dédié `CodexLicenceCucumberRunner`
-pattern S-082) — clôture EPIC CDX-5.
+*Mission principale* : *CDX-3-2* (tâche `deriveOntology` + wiring
+`CodexPlugin` ~4 functional) — 1re tâche Gradle ontology. Le domaine
+`codex.ontology` + `OntologyDeriver` object pur ont été créés en
+S-079. CDX-3-2 expose ce domaine via une tâche Gradle `transform`
+(lire SQL DDL → `OntologyMapping` → écrire JSON).
 
-. Baby-step BDD strict : RED (3 `UndefinedStepException`) → GREEN
-  (3/3 scénarios PASSED) → REFACTOR.
-. Scénarios : PDF Apache → OSS/, PDF copyright → office/, PDF unknown
-  → fallback zone projet.
-. Runner dédié `CodexLicenceCucumberRunner` + `CucumberTaskSpec`
-  (pattern S-082 capsule/slider).
-. Domaine `codex.licence` déjà créé (S-081), tâche déjà câblée (S-082)
-  — pure BDD, zéro production modifié.
+. Baby-step TDD strict : RED (4 functional référençant la tâche
+  inexistante) → GREEN (tâche + wiring) → REFACTOR.
+. Wiring `CodexPlugin` : task `deriveOntology` groupe `transform`.
+. ~4 functional tests (ProjectBuilder + SQL DDL synthétique).
 
 *Alternatives* :
-. *CDX-3-2* (tâche `deriveOntology` + wiring ~4 functional) — 1re
-  tâche Gradle ontology.
 . *CDX-4-2* (tâche `enrichJsonLdd` + wiring ~5 functional) — 1re
-  tâche Gradle enrichment.
+  tâche Gradle enrichment (domaine `codex.enrichment` créé S-080).
 . *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
+. *CDX-7-2* (tests ConvertToMarkdown chaîné ~5 unit).
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
 . Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅).
-. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-3-2 / CDX-4-2 (~4-5
-  functional chacune) → câblage (CDX-4-3) → DSL (CDX-6-1/2) →
-. Cucumber BDD (CDX-3-3/4-4/5-3/6-3).
+. Phase tâches Gradle : CDX-5-2 ✅ (S-082) → CDX-5-3 ✅ (S-083) →
+  CDX-3-2 / CDX-4-2 (~4-5 functional chacune) → câblage (CDX-4-3)
+  → DSL (CDX-6-1/2).
+. Cucumber BDD (CDX-3-3/4-4/6-3).
 
 *Actions reportées* :
 . Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
@@ -66,8 +66,8 @@ pattern S-082) — clôture EPIC CDX-5.
 
 == References
 
-- `.agents/sessions/082-cdx-5-2-deploy-routed.adoc`
+- `.agents/sessions/083-cdx-5-3-cucumber-licence-routing.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
-- `BACKLOG.adoc` § EPIC CDX-3/4/5/6/7 (US détaillées)
-- `build.gradle.kts:30` — BOM 0.0.23
+- `BACKLOG.adoc` § EPIC CDX-3/4/6/7 (US détaillées)
+- `build.gradle.kts:148` — tâche `cucumberTestLicence` (pattern S-082)
 - Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

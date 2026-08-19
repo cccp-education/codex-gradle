@@ -1,6 +1,36 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-19
-:session: 082
+:session: 083
+
+== Session 083 — CDX-5-3 Cucumber BDD licence routing (+6 cucumber dédiés, 333/333 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/kotlin/codex/bdd/LicenceRoutingSteps.kt` | 6 step defs (3 scénarios × 2 découvertes) | ✅ PASS (Apache→OSS, Copyright→office, Unknown→OSS fallback — PDFs synthétiques PDFBox, ProjectBuilder, délégation `super.export()`)
+| `test/resources/features/codex_export_routed.feature` | 3 scénarios `@licence @routing` | ✅ PASS (Background chunks + baseDir, 3 PDFs routing end-to-end)
+| `test/kotlin/codex/bdd/CodexLicenceCucumberRunner.kt` | runner dédié | ✅ PASS (pattern S-082, `@Suite` + `@SelectClasspathResource`, glue `codex.bdd`)
+|===
+
+*Nouveau testé* :
+- `CodexLicenceCucumberRunner` — runner Cucumber dédié (pattern S-082,
+  1re application codex). Isole `codex_export_routed.feature` du suite
+  global via `@SelectClasspathResource` + filter tags.
+- `LicenceRoutingSteps` — 6 step defs BDD (Given chunks file + baseDir,
+  Given PDF text, When task runs + fallback, Then exported under, And
+  contains file). Réutilise PDFBox + ProjectBuilder (mirror
+  `DeployKnowledgeBaseRoutedTaskTest`).
+- Tâche Gradle `cucumberTestLicence` — Test dédiée (excludeEngines
+  junit-jupiter, filter runnerClass, override `cucumber.features`).
+
+*Couverture* : pure BDD — zéro production modifié. Le domaine
+`codex.licence` (S-081) et la tâche `DeployKnowledgeBaseRoutedTask`
+(S-082) sont exercés via `ProjectBuilder`. Aucune nouvelle logique
+métier.
+
+*Non-régression* : 306 → 333 tests (+27 : 6 cucumber dédiés × 2
+découvertes runner). 0 failures, 15 skipped (@integration préservés).
+`check` VERT, Kover VERT, validatePlugins VERT.
 
 == Session 082 — CDX-5-2 Tâche deployKnowledgeBaseRouted + wiring CodexPlugin (+6 tests, 306/306 PASS)
 

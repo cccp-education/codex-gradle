@@ -72,7 +72,9 @@ dependencies {
     // Cucumber BDD
     testImplementation(libs.cucumber.java)
     testImplementation(libs.cucumber.java8)
-    testRuntimeOnly(libs.cucumber.junit.platform.engine)
+    testImplementation(libs.cucumber.junit.platform.engine)
+    // Dedicated Cucumber runners (pattern S-082 — @Suite + @SelectClasspathResource)
+    testImplementation(libs.junit.platform.suite)
 
     testRuntimeOnly(libs.junit.platform.launcher)
 }
@@ -143,3 +145,28 @@ kover {
 // This means tests for CodexPlugin, CodexExtension etc. pass but
 // their coverage is not counted by Kover.
 // Upgrade to Kover 1.x+ for offline instrumentation support (when released).
+
+// ── CDX-5-3 — Dedicated Cucumber runner for licence routing (pattern S-082) ─────
+// Scoped to CodexLicenceCucumberRunner so only codex_export_routed.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestLicence by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_export_routed.feature Cucumber suite (CDX-5-3 licence routing)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexLicenceCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_export_routed.feature")
+    systemProperty("cucumber.filter.tags", "@licence and @routing and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}
