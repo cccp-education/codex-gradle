@@ -16,6 +16,8 @@ buildscript {
     configurations.all {
         resolutionStrategy {
             force("org.jetbrains:annotations:26.0.2-1")
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21")
         }
     }
 }
@@ -27,7 +29,6 @@ dependencies {
     // Import BOM
     implementation(platform("education.cccp:workspace-bom:0.0.21"))
 
-    implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.serialization.json)
 
     // PDF extraction
