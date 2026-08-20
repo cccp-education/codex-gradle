@@ -1,6 +1,42 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-08-20
-:session: 091
+:date: 2026-08-22
+:session: 093
+
+== Session 093 — CDX-UNIFY unification constat #7 (+50 tests, 535/535 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/tasks/CodexPipelineChunkingTest.kt` | 4 characterization | ✅ PASS (output AsciiDoc non-blank, output contient texte extrait, PDF vide → fallback AsciiDoc, déterminisme cross-runs)
+| `test/kotlin/codex/bdd/UnifiedPipelineChunkingSteps.kt` | 3 scénarios BDD | ✅ PASS (routing disabled → outputFile + AsciiDoc, routing enabled Apache → OSS/ + AsciiDoc, déterminisme cross-runs)
+| `test/resources/features/codex_pipeline_unified_chunking.feature` | 3 scénarios `@pipeline @unify` | ✅ 3/3 PASSED via `CodexPipelineUnifyCucumberRunner` (pattern S-082, 5e runner codex)
+| `main/kotlin/codex/tasks/CodexPipelineTask.kt` | refactor -37 lignes | ✅ `chunkMd` supprimé (33 lignes), délègue à `SemanticChunker.chunk()`, import `MessageDigest` supprimé. Non-régression : `CodexPipelineRoutingTest` 7/7, `CodexPipelineIntegrationTest` 3/3, `SemanticChunkerTest` 7/7, `ChunkDocumentTaskTest` 11/11.
+|===
+
+*Refactor CDX-UNIFY-1* : `CodexPipelineTask.chunkMd` (constat #7) unifié
+avec `SemanticChunker.chunk()`. L'audit infirme l'hypothèse de risque
+S-091 ("pgvector orphelins") : `chunkMd` était éphémère (log-only), hors
+circuit pgvector. Le chemin pgvector passe par `ChunkDocumentTask` →
+`SemanticChunker.chunk()` (depuis S-091). Refactor sécuritaire.
+
+*Characterization tests* (pattern CDX-7-1) : 4 tests verrouillent le
+contrat de sortie de `pipeline()` AVANT le refactor (GREEN pré-refactor)
+→ REFACTOR (délégation `SemanticChunker.chunk()`) → GREEN post-refactor
+(tests inchangés, behaviour output identique).
+
+*Cucumber BDD CDX-UNIFY-2* : 3 scénarios `@pipeline @unify` via runner
+dédié `CodexPipelineUnifyCucumberRunner` (pattern S-082, 5e runner
+dédié codex). Step defs préfixés "unified" (bug S-088 — évite
+DuplicateStepDefinition avec `LicencePipelineRoutingSteps` CDX-6-3).
+
+*Coverage impact* : baseline 485 (S-092) → 535 tests (+50 dont +4
+characterization +46 variations découverte cucumber par le `test` task
+qui scanne `src/test/resources/features/`). `check` VERT 2m11s, Kover
+VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
+backward compat total.
+
+'''
 
 == Session 091 — CDX-7-3 SemanticChunker extraction (+7 tests, 508/508 PASS)
 

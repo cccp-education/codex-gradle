@@ -1,0 +1,131 @@
+= CADRAGE EPIC CDX-UNIFY — Unification constat #7 (chunkMd → SemanticChunker)
+:toc: left
+:sectnums:
+:date: 2026-08-22
+:session: 093
+:status: CADRÉ
+
+== Contexte
+
+_Session_ : 093 (2026-08-22)
+_Source_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` constat #7 (S-077)
+_Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié lors du cadrage.
+
+Constat #7 : `CodexPipelineTask.chunkMd` (lignes 364-396) est un duplicate
+simplifié de `SemanticChunker.chunk()` (extrait en S-091 CDX-7-3). Pas
+DRY. L'unification a été différée en S-091 sous hypothèse que changer
+`chunkMd` casserait les IDs chunks → chunks pgvector orphelins.
+
+== Audit de l'hypothèse de risque (S-091)
+
+*Résultat de l'audit* : **l'hypothèse de risque S-091 est infirmée**.
+
+`CodexPipelineTask.pipeline()` (lignes 105-137) appelle `chunkMd` à la
+ligne 123 mais le résultat n'est utilisé **que pour le log**
+(`chunks.size` ligne 128). L'output écrit est `adocContent` (AsciiDoc),
+PAS les chunks. Le `mdContent` est aussi éphémère.
+
+.Le chemin pgvector réel (indépendant de `chunkMd`) :
+----
+ExtractBookStructureTask → ConvertToMarkdownTask → ChunkDocumentTask
+                                                      ↓
+                                            SemanticChunker.chunk()  ← canonical
+                                                      ↓
+                                              chunks.json
+                                                      ↓
+                                          CodexIngestTask → pgvector
+----
+
+`chunkMd` ne participe **pas** au chemin pgvector. Les chunks pgvector
+sont produits par `ChunkDocumentTask` qui délègue déjà à
+`SemanticChunker.chunk()` depuis S-091. L'unification de `chunkMd` ne
+peut pas créer de chunks orphelins — `chunkMd` ne produit aucun chunk
+persistant.
+
+*Conséquence* : l'unification est un **refactor sécuritaire**. Le
+changement observable est limité au log (nombre de chunks peut différer
+car `SemanticChunker` gère mieux les sections vides, merge les blanks,
+et enrichit avec `overlapNext`/`codeBlocks`/`entities`).
+
+== Constats (5)
+
+[cols="1,3,3", options="header"]
+|===
+| # | Constat | Code
+
+| 1
+| `chunkMd` résultat éphémère — log-only
+| `CodexPipelineTask.kt:123` appelle `chunkMd`, `:128` log `chunks.size`. Output écrit = `adocContent` (AsciiDoc), pas les chunks. `mdContent` éphémère.
+
+| 2
+| Chemin pgvector passe par `SemanticChunker.chunk()` — `chunkMd` hors circuit
+| `ChunkDocumentTask.kt:81` délègue à `SemanticChunker.chunk()` (depuis S-091). `CodexIngestTask` consomme le JSON produit par `ChunkDocumentTask`, pas par `chunkMd`.
+
+| 3
+| Diff comportemental `chunkMd` vs `SemanticChunker.chunk()`
+| `chunkMd` : IDs positionnels `chk-SHA256("$source:$i")`, sectionPath = première ligne trimStart('#'), pas de hierarchy, pas d'overlap, pas de codeBlocks. `SemanticChunker` : IDs `chk-SHA256("$source:$sectionPath")`, sectionPath hiérarchique "Ancestor > Section", overlapNext, codeBlocks, entities, gestion document sans heading (headingLevel=0).
+
+| 4
+| Hypothèse de risque S-091 ("pgvector orphelins") infirmée
+| `chunkMd` ne produit aucun chunk persistant. Les chunks pgvector viennent de `ChunkDocumentTask` → `SemanticChunker.chunk()`. Unifier `chunkMd` ne peut pas casser d'IDs en base.
+
+| 5
+| `chunkMd` est du code mort quasi — refactor de suppression
+| 33 lignes (`chunkMd` lignes 364-396) dupliquent `SemanticChunker.chunk()` en moins riche. Suppression = économie d'encre de maintenance.
+|===
+
+== Décisions architecturales (8)
+
+. *Portée* : refactor pur — remplacer l'appel `chunkMd(mdContent, file.name, license)` par `SemanticChunker.chunk(mdContent, file.name, license)` dans `pipeline()`, supprimer la méthode `chunkMd` (33 lignes).
+. *Domaine* : aucun nouveau domaine — modification de `codex.tasks.CodexPipelineTask` existant, `SemanticChunker` déjà en place.
+. *Backward compat* : l'output AsciiDoc de `transformCorpusToPdf` est **inchangé** (c'est `adocContent`, pas les chunks). Le seul changement observable est le log (`chunks.size` peut différer — `SemanticChunker` produit possiblement plus de chunks car il gère les sections vides différemment et ajoute overlap/codeBlocks).
+. *Pas de fallback* : pas besoin de fallback backward compat — `chunkMd` est éphémère, le contrat de sortie de la tâche est l'AsciiDoc, pas les chunks. Le log n'est pas un contrat.
+. *Tests characterization d'abord* : avant le refactor, écrire un test `CodexPipelineChunkingTest` qui exécute `pipeline()` sur un PDF synthétique et verrouille le comportement de sortie (output AsciiDoc non-vide + log contient "chunks"). Ce test doit passer AVANT et APRÈS le refactor (sauf si on assert le nombre exact de chunks, auquel cas on l'assouplit).
+. *Cucumber BDD* : feature `codex_pipeline_unified_chunking.feature` 2-3 scénarios `@pipeline @unify` — valide que `transformCorpusToPdf` produit un output AsciiDoc valide + log avec chunks SemanticChunker (pattern CDX-7-4 E2E mais sur PDF synthétique, pas canonique — le PDF canonique est déjà couvert par `CodexPipelineIntegrationTest` S-092).
+. *Méthode baby-step TDD strict* : RED (characterization test avant refactor — verrouille comportement output) → GREEN (test passe avec `chunkMd` actuel) → REFACTOR (délégation `SemanticChunker.chunk()` + suppression `chunkMd` — test doit toujours passer). Puis Cucumber BDD RED → GREEN → REFACTOR.
+. *Zéro bump BOM* : pas de dépendance modifiée. *Zéro secret*. *Zéro régression* : `./gradlew check` VERT.
+
+== US (3)
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-UNIFY-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-093)
+| 1
+
+| CDX-UNIFY-1
+| Refactor délégation : characterization test `CodexPipelineChunkingTest` (verrouille output AsciiDoc + log "chunks" sur PDF synthétique) → GREEN avec `chunkMd` actuel → REFACTOR (remplacer `chunkMd` par `SemanticChunker.chunk()` ligne 123, supprimer méthode `chunkMd` lignes 364-396 -33 lignes, supprimer import `MessageDigest` si non utilisé ailleurs). ~5-7 unit/characterization tests. `check` VERT.
+| 🟡 À FAIRE
+| 2
+
+| CDX-UNIFY-2
+| Cucumber BDD `codex_pipeline_unified_chunking.feature` 2-3 scénarios `@pipeline @unify` (PDF synthétique Apache → output OSS/ + log chunks SemanticChunker, PDF copyright → office/ + log chunks, routing disabled → outputFile + log chunks) + runner dédié `CodexPipelineUnifyCucumberRunner` (pattern S-082) + tâche `cucumberTestPipelineUnify` câblée `build.gradle.kts`. Baby-step BDD strict RED → GREEN → REFACTOR. Pure BDD — zéro production modifié.
+| 🟡 À FAIRE
+| 2
+|===
+
+*Total* : ~5 pts (3 US)
+
+== Enchaînement
+
+. US-0 cadrage (cette session, gouvernance pure).
+. US-1 refactor délégation + characterization test (baby-step TDD).
+. US-2 Cucumber BDD (baby-step BDD).
+. Clôture EPIC + clôture session (6 étapes).
+
+== Risques
+
+. *Aucun risque pgvector* — `chunkMd` est éphémère, hors circuit pgvector.
+. *Changement log cosmétique* — le nombre de chunks dans le log peut changer (enrichissement `SemanticChunker`). Non-bloquant.
+. *Tests existants* — `CodexPipelineRoutingTest` (7 tests S-089) et `CodexPipelineIntegrationTest` (3 tests S-092) doivent rester GREEN. Aucun ne assert le nombre exact de chunks du log.
+
+== References
+
+- `CodexPipelineTask.kt` lignes 105-137 (`pipeline()`), 364-396 (`chunkMd`)
+- `SemanticChunker.kt` (extrait S-091, canonical)
+- `ChunkDocumentTask.kt:81` (délégation déjà en place)
+- `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § constat #7
+- `BACKLOG.adoc` (à mettre à jour avec EPIC CDX-UNIFY)

@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 092 — CDX-7-4 CodexPipelineIntegrationTest E2E PDF canonique + 3 tests @Tag("integration"), 485 tests 0 FAIL, EPIC CDX-7 TERMINÉ 5/5 US)_
+_Dernière mise à jour : 2026-08-22 (session 093 — cadrage EPIC CDX-UNIFY unification constat #7, gouvernance pure, zéro code modifié)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -377,3 +377,39 @@ ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
 | `CodexPipelineIntegrationTest` E2E PDF canonique `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3 tests integration.
 | ✅ TERMINÉ (S-092)
 |===
+
+'''
+== ✅ EPIC CDX-UNIFY — Unification constat #7 (chunkMd → SemanticChunker) — Cadrage S-093 — TERMINÉ S-093
+
+_Source_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` constat #7 (S-077).
+_Doc cadrage_ : `CADRAGE_EPIC_CDX_UNIFY.adoc` (S-093).
+_Pattern_ : gouvernance pure S-057/S-063.
+
+Constat #7 : `CodexPipelineTask.chunkMd` (lignes 364-396) duplicate
+simplifié de `SemanticChunker.chunk()`. L'audit S-093 infirme l'hypothèse
+de risque S-091 ("pgvector orphelins") : `chunkMd` est éphémère
+(log-only), hors circuit pgvector. Le chemin pgvector passe par
+`ChunkDocumentTask` → `SemanticChunker.chunk()` (depuis S-091).
+L'unification est un refactor sécuritaire.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-UNIFY-0
+| Cadrage EPIC (gouvernance pure, zéro code). Audit infirme hypothèse de risque S-091 : `chunkMd` éphémère log-only, hors circuit pgvector. 5 constats, 8 décisions archi. Doc `CADRAGE_EPIC_CDX_UNIFY.adoc`.
+| ✅ TERMINÉ (S-093)
+| 1
+
+| CDX-UNIFY-1
+| Refactor délégation : characterization test `CodexPipelineChunkingTest` (verrouille output AsciiDoc + log "chunks" sur PDF synthétique) → GREEN avec `chunkMd` actuel → REFACTOR (remplacer `chunkMd` par `SemanticChunker.chunk()` ligne 123, supprimer méthode `chunkMd` lignes 364-396 -33 lignes). ~5-7 unit/characterization tests. `check` VERT. Baby-step TDD strict RED → GREEN → REFACTOR.
+| ✅ TERMINÉ (S-093)
+| 2
+
+| CDX-UNIFY-2
+| Cucumber BDD `codex_pipeline_unified_chunking.feature` 3 scénarios `@pipeline @unify` (PDF synthétique Apache → output OSS/ + log chunks, PDF copyright → office/ + log chunks, routing disabled → outputFile + log chunks) + runner dédié `CodexPipelineUnifyCucumberRunner` (pattern S-082) + tâche `cucumberTestPipelineUnify` câblée `build.gradle.kts`. Baby-step BDD strict RED → GREEN → REFACTOR. Pure BDD.
+| ✅ TERMINÉ (S-093)
+| 2
+|===
+
+*Total* : ~5 pts (3 US)

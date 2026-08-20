@@ -245,3 +245,27 @@ val cucumberTestPipelineRouting by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// CDX-UNIFY-2 : dedicated Cucumber suite for codex_pipeline_unified_chunking.feature.
+// Scoped to CodexPipelineUnifyCucumberRunner so only the unified-chunking feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Pattern S-082 inline — mirrors cucumberTestPipelineRouting above.
+val cucumberTestPipelineUnify by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_pipeline_unified_chunking.feature Cucumber suite (CDX-UNIFY-2)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexPipelineUnifyCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_pipeline_unified_chunking.feature")
+    systemProperty("cucumber.filter.tags", "@pipeline and @unify and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}

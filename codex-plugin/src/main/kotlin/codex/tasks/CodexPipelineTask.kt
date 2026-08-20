@@ -21,7 +21,6 @@ import org.gradle.work.DisableCachingByDefault
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
-import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import codex.Metadata as CodexMetadata
 
@@ -120,7 +119,7 @@ abstract class CodexPipelineTask : DefaultTask() {
         }
         val mdContent = convertToMd(adocContent)
         val license = licenseName.orNull ?: LicenseZoneDetector.detect(file.absolutePath).name
-        val chunks = chunkMd(mdContent, file.name, license)
+        val chunks = SemanticChunker.chunk(mdContent, file.name, license)
 
         val output = resolveOutput(file, format)
         output.writeText(adocContent)
@@ -359,39 +358,5 @@ abstract class CodexPipelineTask : DefaultTask() {
         }
         flushCodeBlock()
         return sb.toString().trimEnd() + "\n"
-    }
-
-    private fun chunkMd(md: String, sourceDocument: String, license: String): List<DocumentChunk> {
-        val lines = md.lines()
-        val headingPattern = Regex("""^(#{1,6})\s+(.+)$""")
-        val sections = mutableListOf<Pair<Int, String>>()
-        val pendingLines = mutableListOf<String>()
-        var currentLevel = 0
-        var currentTitle = sourceDocument
-
-        for (line in lines) {
-            val match = headingPattern.find(line)
-            if (match != null) {
-                if (pendingLines.isNotEmpty()) {
-                    sections.add(currentLevel to pendingLines.joinToString("\n"))
-                    pendingLines.clear()
-                }
-                currentLevel = match.groupValues[1].length
-                currentTitle = match.groupValues[2].trim()
-                pendingLines.add(line)
-            } else {
-                pendingLines.add(line)
-            }
-        }
-        if (pendingLines.isNotEmpty()) sections.add(currentLevel to pendingLines.joinToString("\n"))
-
-        return sections.mapIndexed { i, (level, content) ->
-            if (content.isBlank()) return@mapIndexed null
-            val id = "chk-${MessageDigest.getInstance("SHA-256")
-                .digest("$sourceDocument:$i".toByteArray()).take(8)
-                .joinToString("") { "%02x".format(it) }}"
-            DocumentChunk(id = id, sourceDocument = sourceDocument, sectionPath = content.lines().first().trimStart('#', ' '),
-                headingLevel = level, content = content, license = license)
-        }.filterNotNull()
     }
 }

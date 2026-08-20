@@ -601,3 +601,48 @@ BOM, zéro secret, zéro régression, backward compat total.
 *Fichiers* — 1 test créé (CodexPipelineIntegrationTest.kt, 136 lignes).
 Zéro production modifié (pure test, pattern characterization CDX-7-2
 S-090 étendu avec chunking step).
+
+== Session 093 — 2026-08-22 — EPIC CDX-UNIFY (unification constat #7)
+
+*EPIC* : CDX-UNIFY — Unification `CodexPipelineTask.chunkMd` →
+`SemanticChunker.chunk()` (constat #7 du cadrage P1 S-077).
+*Statut* : ✅ TERMINÉ 3/3 US.
+
+*US-0 Cadrage* (gouvernance pure, zéro code) : doc
+`CADRAGE_EPIC_CDX_UNIFY.adoc`. 5 constats, 8 décisions. Audit infirme
+hypothèse de risque S-091 ("pgvector orphelins") : `chunkMd` éphémère
+log-only, hors circuit pgvector.
+
+*US-1 Refactor délégation* (baby-step TDD strict RED → GREEN →
+REFACTOR) : characterization test `CodexPipelineChunkingTest` (4 tests
+verrouillent contrat sortie). Refactor : `chunkMd` (33 lignes) supprimé,
+appel remplacé par `SemanticChunker.chunk()`, import `MessageDigest`
+supprimé. -37 lignes net sur `CodexPipelineTask.kt`.
+
+*US-2 Cucumber BDD* : `codex_pipeline_unified_chunking.feature` 3
+scénarios `@pipeline @unify` + runner dédié `CodexPipelineUnifyCucumberRunner`
+(pattern S-082, 5e runner codex) + `UnifiedPipelineChunkingSteps` 10
+step defs préfixés "unified" + tâche `cucumberTestPipelineUnify`. 3/3
+PASSED.
+
+*Résumé* : Constat #7 RÉSOLU — `CodexPipelineTask` ne duplique plus la
+logique de chunking. `SemanticChunker.chunk()` est l'unique implémentation
+canonique.
+
+*Métriques* : 535 tests 0 FAIL (baseline 485 → +50 dont +4
+characterization +46 variations découverte cucumber). `check` VERT
+2m11s, Kover VERT, validatePlugins VERT. 16 cucumber dédiés GREEN
+(3 pipeline unify + 3 pipeline routing + 3 licence + 3 ontology + 4
+enrichment). Zéro bump BOM, zéro secret, zéro régression, backward
+compat total.
+
+*Fichiers* :
+- 1 prod modifié (`CodexPipelineTask.kt` -37 lignes).
+- 1 build modifié (`build.gradle.kts` +24 lignes — tâche
+  `cucumberTestPipelineUnify`).
+- 1 backlog modifié (`BACKLOG.adoc`).
+- 1 cadrage créé (`CADRAGE_EPIC_CDX_UNIFY.adoc`).
+- 1 test characterization créé (`CodexPipelineChunkingTest.kt`).
+- 1 runner cucumber créé (`CodexPipelineUnifyCucumberRunner.kt`).
+- 1 steps cucumber créé (`UnifiedPipelineChunkingSteps.kt`).
+- 1 feature créée (`codex_pipeline_unified_chunking.feature`).

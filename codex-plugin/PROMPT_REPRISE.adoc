@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 093
-:session: 093
+= PROMPT_REPRISE — Codex — Session 094
+:session: 094
 :date: 2026-08-22
 :status: PRET
 :max-lines: 45
@@ -9,51 +9,50 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 485/485 PASS (baseline préservée S-092)
-./gradlew cucumberTestEnrichment  # 8/8 scénarios CDX-4-4 PASSED
+./gradlew test             # 535/535 PASS (baseline préservée S-093)
+./gradlew cucumberTestPipelineUnify  # 3/3 scénarios CDX-UNIFY-2 PASSED
 ```
 
-== Session 092 terminée — CDX-7-4 E2E PDF canonique + clôture EPIC CDX-7
+== Session 093 terminée — EPIC CDX-UNIFY TERMINÉ 3/3 US
 
-. *CDX-7-4 TERMINÉ* — `CodexPipelineIntegrationTest` (3 tests
-  `@Tag("integration")`) chaîne les 3 tâches du pipeline sur PDF
-  canonique réel `office/books-collection/litterature/Manifeste des 60.pdf`
-  (65 KB). Extract → Markdown → Chunk JSON. Skip propre via
-  `assumeTrue(pdfFile.exists())` (walk-up résolution + system property
-  fallback). 87 chunks produits sur livre réel.
-. *EPIC CDX-7 TERMINÉ 5/5 US* — CDX-7-0 cadrage S-077, CDX-7-1
-  FontStyleDetector + TypographicAnalyzer S-078, CDX-7-2 ConvertToMarkdown
-  chaîné S-090, CDX-7-3 SemanticChunker extraction S-091, CDX-7-4 E2E
-  PDF canonique S-092.
-. *485 tests 0 FAIL* (baseline 482 → +3 : 485 test + 26 cucumber dédiés).
-  `check` VERT 1m26s, Kover VERT, validatePlugins VERT. Zéro bump BOM,
-  zéro secret, zéro régression, backward compat total. Pure test —
-  zéro production modifié.
+. *CDX-UNIFY-0* — Cadrage EPIC (gouvernance pure). Audit infirme
+  l'hypothèse de risque S-091 ("pgvector orphelins") : `chunkMd` est
+  éphémère (log-only), hors circuit pgvector. Le chemin pgvector
+  passe par `ChunkDocumentTask` → `SemanticChunker.chunk()` (depuis
+  S-091). 5 constats, 8 décisions. Doc `CADRAGE_EPIC_CDX_UNIFY.adoc`.
+. *CDX-UNIFY-1* — Refactor délégation (baby-step TDD strict RED →
+  GREEN → REFACTOR). Characterization test `CodexPipelineChunkingTest`
+  (4 tests verrouillent le contrat de sortie). Refactor : `chunkMd`
+  (33 lignes) supprimé, appel ligne 123 remplacé par
+  `SemanticChunker.chunk()`, import `MessageDigest` supprimé. -37
+  lignes net sur `CodexPipelineTask.kt`.
+. *CDX-UNIFY-2* — Cucumber BDD `codex_pipeline_unified_chunking.feature`
+  3 scénarios `@pipeline @unify` + runner dédié
+  `CodexPipelineUnifyCucumberRunner` (pattern S-082, 5e runner codex) +
+  `UnifiedPipelineChunkingSteps` 10 step defs préfixés "unified" +
+  tâche `cucumberTestPipelineUnify` câblée. 3/3 PASSED.
+. *Constat #7 RÉSOLU* — `CodexPipelineTask` ne duplique plus la
+  logique de chunking. `SemanticChunker.chunk()` est l'unique
+  implémentation canonique.
+. *535 tests 0 FAIL* (baseline S-092 485 → +50). `check` VERT 2m11s,
+  Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro
+  régression, backward compat total.
 
-== Prochaine session — 093
-
-*Mission principale* : *Unification constat #7* — `CodexPipelineTask.chunkMd`
-(lignes 364-396) duplicate simplifié de `SemanticChunker` (pas de
-hiérarchie/overlap/code blocks, IDs positionnels vs SHA-256 path).
-Faire déléguer `chunkMd` à `SemanticChunker.chunk()`. *Risque* :
-casserait IDs chunks → chunks pgvector orphelins. Approche : fallback
-backward compat ou migration contrôlée. ~3-5 US à cadrer.
+== Prochaine session — 094
 
 *Alternatives* :
 . *Démarrer EPIC RUNTIME-CONTRACTS* côté MEMPHIS (US RC-1..7) pour
   débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).
 . *EPICs P2* non cadrés (futur).
-
-*Enchaînement* (ordre d'exécution du cadrage S-077) :
-. Domaines purs P1 TERMINÉS (CDX-3/4/5 ✅).
-. Phase tâches Gradle TERMINÉE (CDX-3-2/4-2/5-2/6-1/2 ✅).
-. Cucumber BDD TERMINÉ (CDX-3-3/4-4/5-3/6-3 ✅).
-. Tests chaînés TERMINÉ (CDX-7-1/2/3/4 ✅ — EPIC CDX-7 CLOS).
+. *Publication codex-plugin 0.0.5* — refactor CDX-UNIFY = changement
+  mineur (suppression code mort), publication possible mais non
+  urgente.
+. *Cleanup KDoc* `SemanticChunker.kt` — retirer la mention
+  "unification différée" (constat #7 résolu S-093).
 
 == References
 
-- `.agents/sessions/092-cdx-7-4-pipeline-integration-test.adoc`
-- `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
-- `BACKLOG.adoc` § EPIC CDX-7 (US détaillées)
-- `CodexPipelineTask.kt` lignes 364-396 — `chunkMd` (constat #7)
+- `.agents/sessions/093-cdx-unify-chunkmd-delegation.adoc`
+- `CADRAGE_EPIC_CDX_UNIFY.adoc` — doc cadrage EPIC
+- `BACKLOG.adoc` § EPIC CDX-UNIFY (TERMINÉ)
 - Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)
