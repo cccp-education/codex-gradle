@@ -2159,3 +2159,27 @@ E2E PDF canonique `office/books-collection/`. `@Tag("integration")` +
 si terminé. Actions reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS
 (gate CDX-RC-04). Unification constat #7 (US future) : `CodexPipelineTask.chunkMd`
 → délègue à `SemanticChunker`.
+
+== Session 092 (2026-08-20) — CDX-7-4 E2E PDF canonique + clôture EPIC CDX-7 ✅
+
+*CDX-7-4 TERMINÉ* — `CodexPipelineIntegrationTest` (3 tests
+`@Tag("integration")`) chaîne les 3 tâches du pipeline sur PDF canonique
+réel `office/books-collection/litterature/Manifeste des 60.pdf` (65 KB) :
+ExtractBookStructureTask (PDF→AsciiDoc) → ConvertToMarkdownTask
+(AsciiDoc→Markdown) → ChunkDocumentTask (Markdown→chunks JSON). Skip propre
+via `assumeTrue(pdfFile.exists())` + walk-up résolution depuis working dir
+jusqu'au workspace root + system property `codex.canonical.pdf` fallback.
+87 chunks produits sur livre réel (126 total lines, 303 lignes Markdown,
+21072 bytes). Baby-step TDD strict RED (chemin relatif non résolu → tests
+SKIPPED) → GREEN (walk-up résolution + 3/3 PASSED) → REFACTOR (KDoc class
+header + system property fallback). 3 tests : non-empty chunks,
+deterministic SHA-256 ids `chk-[0-9a-f]{16}` + sourceDocument match,
+heading content preserved (sectionPath non null + headingLevel 1..6 +
+content non-blank). EPIC CDX-7 TERMINÉ 5/5 US (CDX-7-0 cadrage S-077,
+CDX-7-1 FontStyleDetector+TypographicAnalyzer S-078, CDX-7-2
+ConvertToMarkdown chaîné S-090, CDX-7-3 SemanticChunker extraction S-091,
+CDX-7-4 E2E PDF canonique S-092). 485 tests 0 FAIL (baseline 482 → +3 :
+485 test + 26 cucumber dédiés). `check` VERT 1m26s, Kover VERT,
+validatePlugins VERT. Cucumber dédiés GREEN (8 enrichment + 3 ontology +
+3 licence + 3 pipeline routing). Zéro bump BOM, zéro secret, zéro
+régression, backward compat total. Pure test — zéro production modifié.

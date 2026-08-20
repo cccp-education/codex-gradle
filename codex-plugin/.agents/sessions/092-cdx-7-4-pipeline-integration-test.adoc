@@ -1,0 +1,126 @@
+= Session 092 — CDX-7-4 CodexPipelineIntegrationTest E2E PDF canonique
+:session: 092
+:date: 2026-08-20
+:status: TERMINE
+:epic: CDX-7
+:us: CDX-7-4
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+
+== Mission
+
+*CDX-7-4* `CodexPipelineIntegrationTest` E2E PDF canonique
+`office/books-collection/`. Clôture EPIC CDX-7 (5/5 US).
+
+== Constat de départ
+
+EPIC CDX-7 4/5 US (CDX-7-0 ✅, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090,
+CDX-7-3 ✅ S-091, CDX-7-4 🟡 À FAIRE). Les 4 premières US ont extrait et
+testé les briques unitaires (FontStyleDetector, TypographicAnalyzer,
+SemanticChunker, ConvertToMarkdown chaîné). Restait le test E2E sur
+PDF canonique réel.
+
+== Réalisation
+
+*CDX-7-4 TERMINÉ* — `CodexPipelineIntegrationTest` (3 tests
+`@Tag("integration")`) chaîne les 3 tâches du pipeline sur un PDF
+canonique réel (`office/books-collection/litterature/Manifeste des 60.pdf`,
+65 KB — le plus petit livre réel du corpus) :
+
+. `ExtractBookStructureTask` — PDF → AsciiDoc (détection typographique)
+. `ConvertToMarkdownTask` — AsciiDoc → Markdown
+. `ChunkDocumentTask` — Markdown → chunks JSON sémantiques
+
+*Skip propre* via `assumeTrue(pdfFile.exists())` quand le corpus est
+absent (CI sans books, fresh clone). Résolution du PDF canonique
+robuste : walk-up depuis le working dir jusqu'au workspace root,
+fallback system property `codex.canonical.pdf`.
+
+*3 tests* :
+. `full pipeline on canonical PDF produces non-empty chunks` —
+  validate que le pipeline complet produit un fichier chunks JSON
+  non vide.
+. `full pipeline chunks have deterministic SHA-256 ids` — chaque
+  chunk id matche `chk-[0-9a-f]{16}`, sourceDocument = stem du PDF.
+. `full pipeline chunks preserve extracted heading content` —
+  sectionPath non null, headingLevel 1..6, content non-blank.
+
+*Résultat local* : 87 chunks produits (126 total lines), 303 lignes
+Markdown, 21072 bytes. Pipeline complet vert sur livre réel.
+
+*Baby-step TDD strict* : RED (tests skippés car PDF non résolu —
+chemin relatif) → GREEN (walk-up résolution + 3/3 PASSED) → REFACTOR
+(doc KDoc + system property fallback).
+
+== Métriques
+
+|===
+| Métrique | Avant | Après
+| Tests total | 482 | 485 (+3)
+| Tests failed | 0 | 0
+| Tests skipped | 90 | 93 (+3 integration skippés en CI)
+| `check` | VERT | VERT (1m26s)
+| Kover | VERT | VERT
+| validatePlugins | VERT | VERT
+| Cucumber dédiés | 26 | 26 (non-régression confirmée)
+| Code prod modifié | 0 | 0 (pure test)
+| Bump BOM | 0 | 0
+| Secret | 0 | 0
+|===
+
+Zéro régression, backward compat total. EPIC CDX-7 TERMINÉ 5/5 US.
+
+== Fichiers
+
+*Créés* :
+. `codex-plugin/src/test/kotlin/codex/tasks/CodexPipelineIntegrationTest.kt`
+   (136 lignes, 3 tests `@Tag("integration")`)
+
+*Modifiés* : aucun fichier de production.
+
+== Non-régression
+
+* `:check` VERT (1m26s)
+* `cucumberTestEnrichment` VERT (8/8 scénarios)
+* `cucumberTestOntology` VERT (3/3 scénarios)
+* `cucumberTestLicence` VERT (3/3 scénarios)
+* `cucumberTestPipelineRouting` VERT (3/3 scénarios)
+* 485 tests 0 FAIL (baseline 482 → +3)
+
+== Décisions architecturales
+
+. *PDF canonique* : `Manifeste des 60.pdf` (65 KB, litterature/) —
+  le plus petit livre réel de books-collection. Évite les
+  `__courses__/` (PDFs d'assets matplotlib, pas du contenu éditorial).
+. *Skip pattern* : `assumeTrue(pdfFile.exists())` + walk-up résolution.
+  Le corpus `office/` n'est jamais commité — les tests E2E se skip
+  proprement hors workspace local.
+. *Pure test* : aucune modification production. Le pipeline existant
+  (ExtractBookStructureTask → ConvertToMarkdownTask → ChunkDocumentTask)
+  est caractérisé, pas étendu.
+
+== Clôture EPIC CDX-7
+
+EPIC CDX-7 « Tests unitaires + intégration » TERMINÉ 5/5 US :
+. CDX-7-0 ✅ Cadrage (S-077)
+. CDX-7-1 ✅ FontStyleDetector + TypographicAnalyzer extraction (S-078)
+. CDX-7-2 ✅ ConvertToMarkdownTaskTest chaîné (S-090)
+. CDX-7-3 ✅ SemanticChunker extraction (S-091)
+. CDX-7-4 ✅ CodexPipelineIntegrationTest E2E PDF canonique (S-092)
+
+== Prochaine session — 093
+
+*Alternatives* :
+. *Unification constat #7* (US future) : `CodexPipelineTask.chunkMd`
+  → délègue à `SemanticChunker`. Casserait IDs chunks → nécessite
+  migration pgvector ou fallback backward compat.
+. *Démarrer EPIC RUNTIME-CONTRACTS* côté MEMPHIS (US RC-1..7) pour
+  débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).
+. *EPICs P2* non cadrés (futur).
+
+== Références
+
+. `PROMPT_REPRISE.adoc` — mission session 092
+. `BACKLOG.adoc` § EPIC CDX-7 (US détaillées)
+. `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
+. Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23
+  (bundle `8dc8e513`)

@@ -482,3 +482,25 @@ Aucun test OCR ajouté. Infrastructure build uniquement :
 
 *Non-régression* : CodexIngestRetrieveIT 4/4 PASS (Testcontainers pgvector),
 Cucumber OCR pipeline 5/5 PASS, tous tests existants préservés.
+
+== Session 092 — CDX-7-4 CodexPipelineIntegrationTest E2E
+
+*Ajout* : `CodexPipelineIntegrationTest` (3 tests `@Tag("integration")`)
+dans `codex/tasks/`. Chaîne les 3 tâches (ExtractBookStructureTask →
+ConvertToMarkdownTask → ChunkDocumentTask) sur PDF canonique réel
+`office/books-collection/litterature/Manifeste des 60.pdf` (65 KB).
+
+*Métriques* :
+- Tests total : 482 → 485 (+3)
+- Tests failed : 0
+- Tests skipped : 90 → 93 (+3 integration skippés en CI sans corpus)
+- `check` VERT 1m26s, Kover VERT, validatePlugins VERT
+
+*Pattern* : `assumeTrue(pdfFile.exists())` + walk-up résolution. Le
+corpus `office/` n'est jamais commité — les tests E2E se skippent
+proprement hors workspace local (CI, fresh clone). System property
+`codex.canonical.pdf` permet de pointer un PDF alternatif.
+
+*Non-régression* : 485 tests 0 FAIL, 26 cucumber dédiés GREEN (8
+enrichment + 3 ontology + 3 licence + 3 pipeline routing), zéro
+production modifié.

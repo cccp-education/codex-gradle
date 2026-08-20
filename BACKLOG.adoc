@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 091 — CDX-7-3 SemanticChunker object pur extrait de ChunkDocumentTask + 7 unit + delegation refactor -153 lignes, 508 tests 0 FAIL, EPIC CDX-7 4/5 US)_
+_Dernière mise à jour : 2026-08-20 (session 092 — CDX-7-4 CodexPipelineIntegrationTest E2E PDF canonique + 3 tests @Tag("integration"), 485 tests 0 FAIL, EPIC CDX-7 TERMINÉ 5/5 US)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -345,7 +345,7 @@ PDF Apache/Creative Commons → `OSS/`, PDF copyright → `office/`.
 |===
 
 '''
-== 🟡 EPIC CDX-7 — Tests unitaires + intégration (P1-23) — Cadrage S-077
+== ✅ EPIC CDX-7 — Tests unitaires + intégration (P1-23) — Cadrage S-077 — TERMINÉ S-092
 
 _Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-23.
 _Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-7.
@@ -375,5 +375,5 @@ ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
 
 | CDX-7-4
 | `CodexPipelineIntegrationTest` E2E PDF canonique `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3 tests integration.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-092)
 |===

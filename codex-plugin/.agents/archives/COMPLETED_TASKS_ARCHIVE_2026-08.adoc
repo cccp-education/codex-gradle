@@ -580,3 +580,24 @@ backward compat total.
 
 *Fichiers* — 1 prod créé (SemanticChunker.kt) + 1 test créé
 (SemanticChunkerTest.kt) + 1 prod refactoré (ChunkDocumentTask.kt -153 lignes).
+
+== S-092 (2026-08-20) — CDX-7-4 CodexPipelineIntegrationTest E2E PDF canonique ✅
+
+*EPIC* : CDX-7 (TERMINÉ 5/5 US).
+*US* : CDX-7-4 — `CodexPipelineIntegrationTest` E2E PDF canonique
+`office/books-collection/`.
+
+*Résumé* : 3 tests `@Tag("integration")` chaînent les 3 tâches du
+pipeline (ExtractBookStructureTask → ConvertToMarkdownTask →
+ChunkDocumentTask) sur PDF canonique réel `Manifeste des 60.pdf` (65 KB).
+Skip propre `assumeTrue(pdfFile.exists())` + walk-up résolution + system
+property `codex.canonical.pdf` fallback. 87 chunks produits sur livre
+réel.
+
+*Métriques* : 485 tests 0 FAIL (baseline 482 → +3). `check` VERT 1m26s,
+Kover VERT, validatePlugins VERT. 26 cucumber dédiés GREEN. Zéro bump
+BOM, zéro secret, zéro régression, backward compat total.
+
+*Fichiers* — 1 test créé (CodexPipelineIntegrationTest.kt, 136 lignes).
+Zéro production modifié (pure test, pattern characterization CDX-7-2
+S-090 étendu avec chunking step).
