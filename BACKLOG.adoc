@@ -121,10 +121,10 @@ de la spécification rather qu'une exécution.
 | codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.3 publié S-074) |
 
 '''
-== 🟡 EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076
+== 🟡 EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, DÉBLOQUÉ S-022
 
 _Source_ : `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc` (jardin secret) — EPIC RUNTIME-CONTRACTS-3
-`SessionMemoryContract` + `LearnerProfile` (US EPIC-RC-04, ⏳ À FAIRE côté MEMPHIS).
+`SessionMemoryContract` + `LearnerProfile` (US EPIC-RC-04, ✅ TERMINÉ côté MEMPHIS S-022).
 _Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié, cadrage uniquement.
 
 === Contexte cross-borough
@@ -148,6 +148,11 @@ Le contrat N0 n'existe pas encore — `runtime-contracts` n'est même pas créé
 comme module MEMPHIS. L'US codex CDX-RC-04 est donc *gated* par la
 publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
 
+*MAJ 2026-08-21* : **GATE LEVÉE**. EPIC RUNTIME-CONTRACTS TERMINÉ côté MEMPHIS
+(S-022). `runtime-contracts:0.0.1` publié Maven Central (bundle `04af4f31`)
++ BOM 0.0.24 (bundle `d3b82434`). Les contrats `SessionMemoryContract` +
+`LearnerProfile` sont disponibles. L'US CDX-RC-04 est **débloquée**.
+
 [cols="1,3,2", options="header"]
 |===
 | US | Description | Statut
@@ -155,9 +160,9 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
 | CDX-RC-04
 | **Implémentation privée du pont RAG `SessionMemoryContract`** —
   consomme `contracts.runtime.SessionMemoryContract` + `LearnerProfile`
-  (MEMPHIS `runtime-contracts:0.0.1`). Persistence pgvector séparée du
-  corpus documentaire (nouvelle table `codex_learner_profiles`, même
-  base `codex`, embedding AllMiniLmL6V2 384 dim). Domaine `codex.profile`
+  (MEMPHIS `runtime-contracts:0.0.1` publié S-022). Persistence pgvector
+  séparée du corpus documentaire (nouvelle table `codex_learner_profiles`,
+  même base `codex`, embedding AllMiniLmL6V2 384 dim). Domaine `codex.profile`
   (nouveau). Adapter `PgVectorSessionMemory` implémente
   `SessionMemoryContract.save(profile)` / `load(learnerId, formationId)`.
   Embedding du profil = concaténation des `weakPoints` + `annotations`
@@ -166,7 +171,7 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
   TDD strict : unit (port + adapter fake) → functional (R2DBC in-memory)
   → Cucumber `codex_session_memory.feature` @session-memory.
   ~4 unit + ~3 functional + ~3 scénarios.
-| ⏳ À FAIRE (gated par MEMPHIS runtime-contracts:0.0.1)
+| 🟡 DÉBLOQUÉ (gate MEMPHIS levée S-022 — runtime-contracts:0.0.1 publié Central)
 |===
 
 === Décisions architecturales (cadrage S-076)
@@ -188,16 +193,16 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
   ontologique). Mirror pattern `codex.ocr` (port + adapter + config).
 . *Non-regression* : zéro impact sur le pipeline documentaire existant.
   Nouvelle table, nouveau domaine, nouvelle tâche. Backward compat total.
-. *Gate MEMPHIS* : ne pas démarrer l'implémentation tant que
+. *Gate MEMPHIS* : ~~ne pas démarrer l'implémentation tant que
   `runtime-contracts:0.0.1` n'est pas publié sur Maven Central
-  (EPIC-RC-07). Pour progresser : ouvrir une session MEMPHIS dédiée à
-  RUNTIME-CONTRACTS-1..7 (publication préalable).
+  (EPIC-RC-07).~~ *GATE LEVÉE 2026-08-21* — `runtime-contracts:0.0.1`
+  publié Maven Central (bundle `04af4f31`), BOM 0.0.24 (bundle `d3b82434`).
 
 === Prochaine action
 
-*Côté MEMPHIS* : démarrer EPIC RUNTIME-CONTRACTS (US RC-1..7) dans une
-session MEMPHIS dédiée. Publier `runtime-contracts:0.0.1`.
-*Côté codex* : dès publication MEMPHIS, bump codex build.gradle.kts
+*FAIT côté MEMPHIS* : EPIC RUNTIME-CONTRACTS TERMINÉ S-022 (2026-08-21).
+`runtime-contracts:0.0.1` publié Maven Central.
+*Côté codex* : bump codex `build.gradle.kts`
 `implementation("education.cccp:runtime-contracts:0.0.1")` et démarrer
 l'US CDX-RC-04 en baby-step TDD/BDD.
 
