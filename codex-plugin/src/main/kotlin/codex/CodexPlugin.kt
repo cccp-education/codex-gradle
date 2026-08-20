@@ -69,6 +69,7 @@ class CodexPlugin : Plugin<Project> {
         extension.ollamaPort.convention("11437")
         extension.ollamaModel.convention("gpt-oss:120b-cloud")
         extension.ocrLanguage.convention("fr")
+        extension.licenceRouting.convention(false)
 
         project.tasks.register(
             "collectText",
@@ -185,6 +186,9 @@ class CodexPlugin : Plugin<Project> {
             it.pgUser.convention(extension.pgvectorUser)
             it.pgPassword.convention(extension.pgvectorPassword)
             it.batchSize.convention("32")
+            // CDX-6-2 : wiring licenceRouting from extension (default false, backward compat).
+            it.licenceRouting.convention(extension.licenceRouting)
+            it.fallbackZone.convention(extension.zone)
         }
 
         project.tasks.register(

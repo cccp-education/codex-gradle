@@ -35,4 +35,12 @@ abstract class CodexExtension {
     abstract val ollamaPort: Property<String>
     abstract val ollamaModel: Property<String>
     abstract val ocrLanguage: Property<String>
+
+    /**
+     * When `true`, `transformCorpusToPdf` routes its output to `OSS/` or
+     * `office/` based on the license detected in the source PDF. When
+     * `false` (default), the output goes to the configured `outputFile`
+     * (backward compat).
+     */
+    abstract val licenceRouting: Property<Boolean>
 }

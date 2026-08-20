@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 088 — CDX-4-4 Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner` (pattern S-082, 3e runner dédié codex) + `EnrichmentSteps` 13 step defs, 437 tests 0 FAIL, EPIC CDX-4 TERMINÉ 4/4 US)_
+_Dernière mise à jour : 2026-08-20 (session 089 — CDX-6 EPIC TERMINÉ 4/4 US : CDX-6-1 routing physique CodexPipelineTask +3 props + resolveOutput, CDX-6-2 DSL extension licenceRouting + wiring plugin, CDX-6-3 Cucumber BDD codex_licence_routing.feature 3 scénarios + 4e runner dédié CodexLicencePipelineCucumberRunner, 495 tests 0 FAIL, domaine codex.licence clos)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -316,7 +316,7 @@ JSON-L / Markdown / AsciiDoc vers `office/` ou `OSS/` selon licence.
 |===
 
 '''
-== 🟡 EPIC CDX-6 — Intégration OSS/CSS + routing licence (P1-22) — Cadrage S-077
+== ✅ EPIC CDX-6 — Intégration OSS/CSS + routing licence (P1-22) — Cadrage S-077 — TERMINÉ S-089
 
 _Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-22.
 _Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-6.
@@ -333,15 +333,15 @@ PDF Apache/Creative Commons → `OSS/`, PDF copyright → `office/`.
 
 | CDX-6-1
 | `LicenseRouter` (CDX-5-1) implémente routing physique. Intégration `CodexPipelineTask` : `outputDir` selon `PdfLicenseDetector`. ~5 unit.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-089)
 
 | CDX-6-2
 | DSL `codex { licenceRouting = true }` + `CodexExtension` +1 property (default false). ~3 unit + ~3 functional.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-089)
 
 | CDX-6-3
 | Cucumber BDD `codex_licence_routing.feature` 3 scénarios `@licence @routing`. ~3 scénarios.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-089)
 |===
 
 '''

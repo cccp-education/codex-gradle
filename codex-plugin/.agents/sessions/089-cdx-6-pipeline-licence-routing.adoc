@@ -1,0 +1,130 @@
+= Rapport Session 089 — CDX-6 EPIC TERMINÉ : Pipeline licence routing (CDX-6-1/2/3)
+:session: 089
+:date: 2026-08-20
+:epic: CDX-6
+:status: TERMINÉ
+:tests: 495 (0 FAIL)
+:method: baby-step TDD/BDD strict
+
+== Mission
+
+Clôturer l'EPIC CDX-6 « Intégration OSS/CSS + routing licence » en 3 US
+(CDX-6-1 routing physique, CDX-6-2 DSL extension, CDX-6-3 Cucumber BDD).
+
+== CDX-6-1 — LicenseRouter routing physique + CodexPipelineTask (~7 unit) ✅
+
+`CodexPipelineTask` étendu avec 3 propriétés :
+* `licenceRouting: Property<Boolean>` (default false, backward compat via
+  `init { licenceRouting.convention(false) }`)
+* `baseDir: DirectoryProperty` (@Optional, @InputDirectory, @PathSensitive RELATIVE)
+* `fallbackZone: Property<LicenseZone>` (@Optional, @Input)
+
+Méthode `resolveOutput(source, format)` :
+* Routing disabled → `outputFile.asFile.get()` (backward compat)
+* Routing enabled → `PdfLicenseDetector.detect(source)` → si UNKNOWN,
+  `fallbackZone.getOrElse(UNKNOWN)` → `LicenseRouter.route(effective, base)`
+  → `routed.mkdirs()` → `File(routed, "$stem.adoc")`
+
+Refactor `pipeline()` : extraction `resolveOutput()` (séparation des concerns),
+log clarifié (source name + format + output path).
+
+7 unit tests `CodexPipelineRoutingTest` :
+* `licenceRouting` defaults to false
+* `baseDir` optional (no default)
+* `fallbackZone` optional (no default)
+* Routing enabled + Apache PDF → OSS/
+* Routing enabled + copyright PDF → office/
+* Routing disabled → configured outputFile
+* Routing enabled + unknown PDF → fallback zone
+
+Bug `validatePlugins` : `baseDir` annoté `@Input` au lieu de `@InputDirectory`
++ `@PathSensitive` → corrigé.
+
+Baby-step TDD strict RED (6 `Unresolved reference`) → GREEN (7/7 PASSED)
+→ REFACTOR (`check` VERT).
+
+== CDX-6-2 — DSL `codex { licenceRouting = true }` + wiring (~5 unit) ✅
+
+`CodexExtension` +1 property `licenceRouting: Property<Boolean>` (abstract,
+convention false posée par `CodexPlugin.apply()`).
+
+`CodexPlugin` wiring `transformCorpusToPdf` :
+* `it.licenceRouting.convention(extension.licenceRouting)`
+* `it.fallbackZone.convention(extension.zone)`
+
+5 unit tests `CodexExtensionRoutingTest` :
+* Extension expose `licenceRouting` property
+* `licenceRouting` writable/readable
+* Plugin convention false on extension
+* Plugin wires extension `licenceRouting` → task
+* Plugin wires extension `zone` → task `fallbackZone`
+
+Baby-step TDD strict RED (5 `Unresolved reference`) → GREEN (5/5 PASSED)
+→ REFACTOR (`check` VERT).
+
+== CDX-6-3 — Cucumber BDD `codex_licence_routing.feature` (3 scénarios) ✅
+
+Feature `codex_licence_routing.feature` 3 scénarios `@licence @routing` :
+* Routing enabled + Apache PDF → zone OSS
+* Routing enabled + copyright PDF → zone office
+* Routing disabled → configured outputFile
+
+Runner dédié `CodexLicencePipelineCucumberRunner` (pattern S-082, 4e runner
+dédié codex) + `LicencePipelineRoutingSteps` (12 step defs, préfixés
+"pipeline" pour éviter `DuplicateStepDefinitionException` avec
+`LicenceRoutingSteps` CDX-5-3).
+
+Tâche `cucumberTestPipelineRouting` câblée `build.gradle.kts` (pattern S-082
+inline, `excludeEngines("junit-jupiter")` + `includeTestsMatching` +
+`systemProperty("cucumber.features", ...)` + `systemProperty("cucumber.filter.tags",
+"@licence and @routing and not @wip and not @integration")`).
+
+Bug path assertion : `relativePath` = "routed/OSS" mais `baseDir` déjà "routed/"
+→ double nesting. Corrigé : feature utilise "zone {string}" (just "OSS"/"office"),
+step `thePipelineOutputIsWrittenUnderZone` fait `File(root, zoneName)`.
+
+Baby-step BDD strict RED (DuplicateStepDefinition + path assertion fail)
+→ GREEN (3/3 scénarios PASSED) → REFACTOR (`check` VERT).
+
+== Résultats
+
+* **495 tests 0 FAIL** (baseline S-088 437 → +58 : +7 routing unit + +5 extension
+  + +6 cucumber dédiés + +40 variations découverte par le `test` task qui scanne
+  `src/test/resources/features/` via `junit-platform.properties`)
+* `check` VERT, Kover VERT, validatePlugins VERT
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+* EPIC CDX-6 TERMINÉ 4/4 US (CDX-6-0 ✅ S-077, CDX-6-1 ✅ S-089, CDX-6-2 ✅ S-089,
+  CDX-6-3 ✅ S-089)
+* Domaine `codex.licence` (14e) clos
+
+== Fichiers modifiés/créés
+
+* `src/main/kotlin/codex/tasks/CodexPipelineTask.kt` — modifié (+3 props, +resolveOutput, refactor pipeline())
+* `src/main/kotlin/codex/CodexExtension.kt` — modifié (+1 property licenceRouting)
+* `src/main/kotlin/codex/CodexPlugin.kt` — modifié (+2 wirings licenceRouting + fallbackZone)
+* `src/test/kotlin/codex/tasks/CodexPipelineRoutingTest.kt` — créé (7 unit)
+* `src/test/kotlin/codex/CodexExtensionRoutingTest.kt` — créé (5 unit)
+* `src/test/kotlin/codex/bdd/LicencePipelineRoutingSteps.kt` — créé (12 step defs)
+* `src/test/kotlin/codex/bdd/CodexLicencePipelineCucumberRunner.kt` — créé (4e runner dédié)
+* `src/test/resources/features/codex_licence_routing.feature` — créé (3 scénarios)
+* `build.gradle.kts` — modifié (+cucumberTestPipelineRouting task)
+
+== Prochaine session — 090
+
+*Mission principale* : *CDX-7-2* `ConvertToMarkdownTaskTest` chaîné (sortie réelle
+`ExtractBookStructureTask`). ~5 unit. EPIC CDX-7 2/5 US (CDX-7-0 ✅, CDX-7-1 ✅,
+CDX-7-2/3/4 🟡 À FAIRE).
+
+*Alternatives* :
+. *CDX-7-3* (`SemanticChunkerTest` extraction de `ChunkDocumentTask` ~7 unit).
+. *CDX-7-4* (`CodexPipelineIntegrationTest` E2E PDF canonique
+  `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3 tests).
+. *Actions reportées* : Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7)
+  pour débloquer US CDX-RC-04 (gate publication `runtime-contracts:0.0.1`).
+
+== Références
+
+* `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-6
+* `BACKLOG.adoc` § EPIC CDX-6/7 (US détaillées)
+* `build.gradle.kts:223` — tâche `cucumberTestPipelineRouting` (pattern S-082)
+* Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

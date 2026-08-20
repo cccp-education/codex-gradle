@@ -1,6 +1,9 @@
 package codex.tasks
 
+import codex.LicenseZone
 import codex.LicenseZoneDetector
+import codex.licence.LicenseRouter
+import codex.licence.PdfLicenseDetector
 import kotlinx.serialization.Serializable
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
@@ -10,12 +13,14 @@ import org.apache.tika.parser.AutoDetectParser
 import org.apache.tika.parser.ParseContext
 import org.apache.tika.sax.ToXMLContentHandler
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.io.File
 import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import codex.Metadata as CodexMetadata
@@ -63,18 +68,50 @@ abstract class CodexPipelineTask : DefaultTask() {
     @get:Input
     abstract val batchSize: Property<String>
 
+    /**
+     * When `true`, the pipeline routes its output to `baseDir/OSS/` or
+     * `baseDir/office/` based on the license detected in the PDF source
+     * via [PdfLicenseDetector] + [LicenseRouter]. When `false` (default),
+     * the output is written to [outputFile] (backward compat).
+     */
+    @get:Input
+    abstract val licenceRouting: Property<Boolean>
+
+    /**
+     * Base directory under which zone subdirectories (`OSS/`, `office/`)
+     * are resolved when [licenceRouting] is enabled.
+     */
+    @get:Optional
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val baseDir: DirectoryProperty
+
+    /**
+     * Fallback license zone used when the PDF content yields
+     * [LicenseZone.UNKNOWN]. Defaults to [LicenseZone.UNKNOWN]
+     * (which routes to `office/` per [LicenseRouter]).
+     */
+    @get:Optional
+    @get:Input
+    abstract val fallbackZone: Property<LicenseZone>
+
+    init {
+        // Backward compat : licenceRouting defaults to false.
+        // Without this convention, querying the property before it is
+        // explicitly set throws MissingValueException (Gradle 9 strictness).
+        licenceRouting.convention(false)
+    }
+
     @TaskAction
     fun pipeline() {
         val file = sourceFile.asFile.get()
-        val output = outputFile.asFile.get()
-        val name = file.name.lowercase()
         val format = when {
-            name.endsWith(".pdf") -> "PDF"
-            name.endsWith(".epub") -> "EPUB"
+            file.name.lowercase().endsWith(".pdf") -> "PDF"
+            file.name.lowercase().endsWith(".epub") -> "EPUB"
             else -> "UNKNOWN"
         }
 
-        logger.lifecycle("[codex] transformCorpusToPdf : ${file.name} (format=$format) → ${output.name}")
+        logger.lifecycle("[codex] transformCorpusToPdf : ${file.name} (format=$format)")
 
         val adocContent = when (format) {
             "PDF" -> extractPdf(file)
@@ -85,9 +122,10 @@ abstract class CodexPipelineTask : DefaultTask() {
         val license = licenseName.orNull ?: LicenseZoneDetector.detect(file.absolutePath).name
         val chunks = chunkMd(mdContent, file.name, license)
 
+        val output = resolveOutput(file, format)
         output.writeText(adocContent)
 
-        logger.lifecycle("[codex] ✓ transformCorpusToPdf termine — ${chunks.size} chunks, format=$format")
+        logger.lifecycle("[codex] ✓ transformCorpusToPdf termine — ${chunks.size} chunks, format=$format → ${output.absolutePath}")
 
         val codexMetadata = CodexMetadata.forBrooklyn(
             type = "pipeline",
@@ -96,6 +134,36 @@ abstract class CodexPipelineTask : DefaultTask() {
             dependencies = listOf("queens")
         )
         CodexMetadata.writeTo(output.parentFile, codexMetadata)
+    }
+
+    /**
+     * Resolves the output file location according to [licenceRouting].
+     *
+     * When routing is disabled (default), the output goes to [outputFile]
+     * (backward compat). When enabled, [PdfLicenseDetector] scans the
+     * source PDF, [LicenseRouter] resolves the target directory under
+     * [baseDir], and the output file name is derived from the source
+     * file name (stem + `.adoc`).
+     */
+    private fun resolveOutput(source: java.io.File, format: String): File {
+        if (!licenceRouting.getOrElse(false)) {
+            return outputFile.asFile.get()
+        }
+        val base = baseDir.asFile.get()
+        val detected = if (format == "PDF") {
+            PdfLicenseDetector.detect(source)
+        } else {
+            LicenseZone.UNKNOWN
+        }
+        val effective = if (detected == LicenseZone.UNKNOWN) {
+            fallbackZone.getOrElse(LicenseZone.UNKNOWN)
+        } else {
+            detected
+        }
+        val routed = LicenseRouter.route(effective, base)
+        routed.mkdirs()
+        val stem = source.nameWithoutExtension
+        return File(routed, "$stem.adoc")
     }
 
     private fun extractPdf(pdfFile: java.io.File): String {

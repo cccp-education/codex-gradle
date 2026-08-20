@@ -1938,3 +1938,68 @@ routing physique + intégration `CodexPipelineTask` (`outputDir` selon
 CDX-6-3 (Cucumber BDD clôture EPIC CDX-6) ou CDX-7-2/3/4 (tests).
 EPIC CDX-3 TERMINÉ, EPIC CDX-4 TERMINÉ, EPIC CDX-5 TERMINÉ. Actions
 reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS (gate CDX-RC-04).
+
+== Session 089 — CDX-6 EPIC TERMINÉ : Pipeline licence routing (CDX-6-1/2/3)
+
+*Date* : 2026-08-20
+*EPIC* : CDX-6 — Intégration OSS/CSS + routing licence
+*Méthode* : baby-step TDD/BDD strict (RED → GREEN → REFACTOR)
+*Résultat* : 495 tests 0 FAIL, `check` VERT, Kover VERT, validatePlugins VERT
+
+=== CDX-6-1 — LicenseRouter routing physique + CodexPipelineTask (7 unit)
+
+`CodexPipelineTask` étendu avec 3 propriétés :
+* `licenceRouting: Property<Boolean>` (default false, backward compat via
+  `init { licenceRouting.convention(false) }`)
+* `baseDir: DirectoryProperty` (@Optional, @InputDirectory, @PathSensitive RELATIVE)
+* `fallbackZone: Property<LicenseZone>` (@Optional, @Input)
+
+Méthode `resolveOutput(source, format)` :
+* Routing disabled → `outputFile.asFile.get()` (backward compat)
+* Routing enabled → `PdfLicenseDetector.detect(source)` → si UNKNOWN,
+  `fallbackZone.getOrElse(UNKNOWN)` → `LicenseRouter.route(effective, base)`
+  → `routed.mkdirs()` → `File(routed, "$stem.adoc")`
+
+Refactor `pipeline()` : extraction `resolveOutput()`, log clarifié.
+Bug `validatePlugins` : `baseDir` @Input → @InputDirectory + @PathSensitive.
+
+7 unit tests `CodexPipelineRoutingTest` : defaults, routing Apache→OSS,
+routing copyright→office, routing disabled→outputFile, fallback zone.
+
+=== CDX-6-2 — DSL `codex { licenceRouting = true }` + wiring (5 unit)
+
+`CodexExtension` +1 property `licenceRouting: Property<Boolean>`.
+`CodexPlugin` wiring `transformCorpusToPdf` : `licenceRouting.convention(extension.licenceRouting)`
++ `fallbackZone.convention(extension.zone)`.
+
+5 unit tests `CodexExtensionRoutingTest` : extension property, writable,
+plugin convention false, wiring licenceRouting→task, wiring zone→fallbackZone.
+
+=== CDX-6-3 — Cucumber BDD `codex_licence_routing.feature` (3 scénarios)
+
+Feature 3 scénarios `@licence @routing` : Apache→OSS, copyright→office,
+disabled→outputFile. Runner dédié `CodexLicencePipelineCucumberRunner`
+(pattern S-082, 4e runner dédié codex) + `LicencePipelineRoutingSteps`
+12 step defs (préfixés "pipeline" pour éviter DuplicateStepDefinition
+avec `LicenceRoutingSteps` CDX-5-3). Tâche `cucumberTestPipelineRouting`
+câblée `build.gradle.kts`.
+
+Bug path assertion : `relativePath` = "routed/OSS" mais `baseDir` déjà
+"routed/" → double nesting. Corrigé : feature utilise "zone {string}",
+step `thePipelineOutputIsWrittenUnderZone`.
+
+=== Résultats
+
+* 495 tests 0 FAIL (baseline 437 → +58 : +7 routing + +5 extension
+  + +6 cucumber dédiés + +40 variations découverte par `test` task)
+* `check` VERT, Kover VERT, validatePlugins VERT
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+* EPIC CDX-6 TERMINÉ 4/4 US. Domaine `codex.licence` (14e) clos.
+
+*Fichiers* — 3 prod modifiés (CodexPipelineTask, CodexExtension, CodexPlugin)
++ 6 test créés (2 unit + 1 runner + 1 steps + 1 feature + build.gradle.kts).
+
+*Prochaine session* : 090 — Démarrer CDX-7-2 `ConvertToMarkdownTaskTest`
+chaîné. Alternatives : CDX-7-3 (`SemanticChunkerTest`) ou CDX-7-4
+(`CodexPipelineIntegrationTest` E2E). EPIC CDX-3/4/5/6 TERMINÉS.
+Actions reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS (gate CDX-RC-04).
