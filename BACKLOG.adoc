@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 087 — CDX-4-3 câblage canal Graphify dans `CodexCompositeContextTask` : `GraphifySectionBuilder` object pur + propriété optionnelle `enrichedJsonFile` + méthode `internal buildGraphifySection()` + wiring `CodexPlugin`, 392 tests 0 FAIL, EPIC CDX-4 3/4 US)_
+_Dernière mise à jour : 2026-08-20 (session 088 — CDX-4-4 Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner` (pattern S-082, 3e runner dédié codex) + `EnrichmentSteps` 13 step defs, 437 tests 0 FAIL, EPIC CDX-4 TERMINÉ 4/4 US)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -252,7 +252,7 @@ objects *calculés* (pas devinés). 3 requêtes archétypales SQL.
 |===
 
 '''
-== 🟡 EPIC CDX-4 — `enrichJsonLdd` (P1-20) — Cadrage S-077
+== ✅ EPIC CDX-4 — `enrichJsonLdd` (P1-20) — Cadrage S-077 — TERMINÉ S-088
 
 _Source_ : `PLAN_GLOBAL.adoc` `[[p1-codex-enrichment]]` P1-20.
 _Doc cadrage_ : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` § EPIC CDX-4.
@@ -282,8 +282,8 @@ sémantique. Peuple `DocumentChunk.entities` placeholder.
 | ✅ TERMINÉ (S-087)
 
 | CDX-4-4
-| Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios `@enrichment`. ~4 scénarios.
-| 🟡 À FAIRE
+| Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner` (pattern S-082, 3e runner dédié codex). 4 scénarios : happy path complet (LDD + chunks + graph → enriched JSON avec rag chunks joints + graphify nodes résolus + densité 0.5 + entities), dégradé silencieux graph manquant, dégradé silencieux JSON invalide, idempotence (exécution double → outputs identiques). `EnrichmentSteps` 13 step defs (Background LDD + chunks + graph json, scénarios 2/3 surchargent `graphFile` après Background pour exercer le dégradé silencieux de `GraphifyFileResolver`). Tâche `cucumberTestEnrichment` câblée `build.gradle.kts` (pattern S-082 inline). Baby-step BDD strict RED (8 tests FAILED PendingException) → GREEN (4/4 scénarios PASSED) → REFACTOR (`check` VERT 2m14s). 437 tests 0 FAIL (baseline S-087 392 → +45 dont +8 cucumber dédiés +37 variations découverte). Zéro bump BOM, zéro secret, zéro régression, backward compat total. Pure BDD — zéro production modifié.
+| ✅ TERMINÉ (S-088)
 |===
 
 '''

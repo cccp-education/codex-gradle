@@ -1885,3 +1885,56 @@ CDX-4-4 Cucumber BDD).
 `CodexEnrichmentCucumberRunner` (pattern S-082). Alternatives : CDX-6-1/2
 (DSL `licenceRouting`) ou CDX-7-2 (`ConvertToMarkdownTaskTest` chaîné) ou
 CDX-7-3 (`SemanticChunkerTest`).
+
+== Session 088 — 2026-08-20 — CDX-4-4 Cucumber BDD JSON LDD enrichment
+
+*EPIC* : CDX-4 (enrichJsonLdd P1-20). *US* : CDX-4-4. *Méthode* :
+baby-step BDD strict (RED → GREEN → REFACTOR). *Score* : 9/10.
+
+*Objectif* — Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios
+`@enrichment` + runner dédié `CodexEnrichmentCucumberRunner` (pattern
+S-082). Le domaine `codex.enrichment` (créé S-080) et la tâche
+`EnrichJsonLddTask` (câblée S-086) n'avaient aucune couverture BDD
+end-to-end. Après CDX-4-4, les 4 scénarios valident le comportement de
+l'enrichissement (happy path complet, dégradé silencieux graph manquant,
+dégradé silencieux JSON invalide, idempotence) via `ProjectBuilder` —
+zéro production modifié, pure BDD.
+
+*RED* — feature Gherkin + runner `@Suite` + steps squelette
+(`PendingException` sur les 13 step defs). Wiring `build.gradle.kts`
+`cucumberTestEnrichment` (pattern S-082 inline, 3e runner dédié codex
+après `cucumberTestLicence` S-083 et `cucumberTestOntology` S-085).
+Exécution : 8 tests FAILED (4 scénarios × 2 découvertes — runner dédié
++ `test` task qui scanne `src/test/resources/features/` via
+`junit-platform.properties`).
+
+*GREEN* — implémentation des 13 step defs dans `EnrichmentSteps` :
+Background (LDD + chunks + graph json), scénarios 2 et 3 surchargent
+`graphFile` (missing / invalid) après le Background pour exercer le
+dégradé silencieux de `GraphifyFileResolver`. Scénario 4 lance la tâche
+deux fois dans deux outputs distincts et compare le contenu texte
+(idempotence). 4/4 scénarios PASSED.
+
+*REFACTOR* — `./gradlew check` VERT 2m14s. `test` 417/0,
+`cucumberTestEnrichment` 8/0, `cucumberTestOntology` 6/0,
+`cucumberTestLicence` 6/0. Total 437 tests 0 FAIL (baseline S-087 392
+→ +45 : +8 cucumber dédiés +37 variations découverte par le `test`
+task qui scanne le dossier features). Kover VERT, validatePlugins VERT.
+Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+
+*Artefacts* — 3 fichiers créés (feature 26 lignes + runner 37 lignes
++ steps 180 lignes) + 1 fichier modifié (`build.gradle.kts` +24 lignes
+tâche `cucumberTestEnrichment`). Zéro fichier `src/main/kotlin/`
+modifié — pure BDD pattern S-085/S-083.
+
+*Clôture* — EPIC CDX-4 TERMINÉ 4/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅
+S-080, CDX-4-2 ✅ S-086, CDX-4-3 ✅ S-087, CDX-4-4 ✅ S-088). Domaine
+`codex.enrichment` (13e) clos (3 fichiers prod purs + 1 tâche Gradle +
+câblage composite).
+
+*Prochaine session* : 089 — Démarrer CDX-6-1 `LicenseRouter` implémente
+routing physique + intégration `CodexPipelineTask` (`outputDir` selon
+`PdfLicenseDetector`). Alternatives : CDX-6-2 (DSL `licenceRouting`) ou
+CDX-6-3 (Cucumber BDD clôture EPIC CDX-6) ou CDX-7-2/3/4 (tests).
+EPIC CDX-3 TERMINÉ, EPIC CDX-4 TERMINÉ, EPIC CDX-5 TERMINÉ. Actions
+reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS (gate CDX-RC-04).

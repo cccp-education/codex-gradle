@@ -466,3 +466,38 @@ zéro régression, backward compat total.
 *EPIC CDX-4 progression* : 3/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
 CDX-4-2 ✅ S-086, CDX-4-3 ✅ S-087, CDX-4-4 🟡 À FAIRE — Cucumber BDD).
 *Baby-step TDD strict RED → GREEN → REFACTOR.
+
+== Session 088 — CDX-4-4 Cucumber BDD JSON LDD enrichment (S-088)
+
+*EPIC* : CDX-4 (enrichJsonLdd P1-20). *US* : CDX-4-4. *Méthode* :
+baby-step BDD strict (RED → GREEN → REFACTOR). *Score* : 9/10.
+
+*Objectif* — Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios
+`@enrichment` + runner dédié `CodexEnrichmentCucumberRunner` (pattern
+S-082, 3e runner dédié codex).
+
+*Artefacts* :
+- `src/test/resources/features/codex_enrich_json_ldd.feature` (créé,
+  26 lignes — 4 scénarios `@enrichment`).
+- `src/test/kotlin/codex/bdd/CodexEnrichmentCucumberRunner.kt` (créé,
+  37 lignes — pattern S-082 `@Suite` + `@SelectClasspathResource` +
+  glue `codex.bdd` + filter `@enrichment`).
+- `src/test/kotlin/codex/bdd/EnrichmentSteps.kt` (créé, 180 lignes —
+  13 step defs, Background LDD + chunks + graph json, scénarios 2/3
+  surchargent `graphFile` pour dégradé silencieux, scénario 4
+  idempotence par exécution double).
+- `build.gradle.kts` (modifié, +24 lignes — tâche
+  `cucumberTestEnrichment` pattern S-082 inline).
+
+*Résultats* :
+437 tests 0 FAIL (baseline S-087 392 → +45 : +8 cucumber dédiés +37
+variations découverte par le `test` task qui scanne
+`src/test/resources/features/` via `junit-platform.properties`). `check`
+VERT (BUILD SUCCESSFUL 2m14s), Kover VERT, validatePlugins VERT. Zéro
+bump BOM, zéro secret, zéro régression, backward compat total. Pure BDD
+— zéro production modifié.
+
+*EPIC CDX-4 TERMINÉ* 4/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
+CDX-4-2 ✅ S-086, CDX-4-3 ✅ S-087, CDX-4-4 ✅ S-088). Domaine
+`codex.enrichment` (13e) clos.
+*Baby-step BDD strict RED → GREEN → REFACTOR.

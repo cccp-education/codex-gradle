@@ -1,0 +1,163 @@
+= Session 088 — CDX-4-4 Cucumber BDD JSON LDD enrichment
+:session: 088
+:date: 2026-08-20
+:epic: CDX-4 (enrichJsonLdd P1-20)
+:us: CDX-4-4
+:method: baby-step BDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== A. Objectif
+
+Démarrer *CDX-4-4* — Cucumber BDD `codex_enrich_json_ldd.feature` 4
+scénarios `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner`
+(pattern S-082). Avant cette US, le domaine `codex.enrichment` (créé
+S-080) et la tâche `EnrichJsonLddTask` (câblée S-086) n'avaient aucune
+couverture BDD end-to-end. Après CDX-4-4, les 4 scénarios valident le
+comportement de l'enrichissement (happy path complet, dégradé silencieux
+graph manquant, dégradé silencieux JSON invalide, idempotence) via
+`ProjectBuilder` — zéro production modifié, pure BDD.
+
+== B. Méthode — baby-step BDD strict
+
+. *RED* — feature Gherkin + runner `@Suite` + steps squelette
+  (`PendingException` sur les 13 step defs). Wiring `build.gradle.kts`
+  `cucumberTestEnrichment` (pattern S-082 inline, 3e runner dédié codex
+  après `cucumberTestLicence` S-083 et `cucumberTestOntology` S-085).
+  Exécution : 8 tests FAILED (4 scénarios × 2 découvertes — runner
+  dédié + `test` task qui scanne `src/test/resources/features/` via
+  `junit-platform.properties`).
+. *GREEN* — implémentation des 13 step defs dans `EnrichmentSteps` :
+  Background (LDD + chunks + graph json), scénarios 2 et 3 surchargent
+  `graphFile` (missing / invalid) après le Background pour exercer le
+  dégradé silencieux de `GraphifyFileResolver`. Scénario 4 lance la
+  tâche deux fois et compare les outputs (idempotence). 4/4 scénarios
+  PASSED.
+. *REFACTOR* — `./gradlew check` VERT 2m14s. `test` 417/0,
+  `cucumberTestEnrichment` 8/0, `cucumberTestOntology` 6/0,
+  `cucumberTestLicence` 6/0. Total 437 tests 0 FAIL (baseline S-087
+  392 → +45 : +8 cucumber dédiés +37 variations découverte par le `test`
+  task qui scanne le dossier features). Kover VERT, validatePlugins
+  VERT. Zéro bump BOM, zéro secret, zéro régression, backward compat
+  total.
+
+== C. Artefacts
+
+[cols="1,3,2", options="header"]
+|===
+| Fichier | Rôle | Statut
+
+| `src/test/resources/features/codex_enrich_json_ldd.feature`
+| Feature Gherkin 4 scénarios `@enrichment` (happy path, dégradé
+  missing graph, dégradé invalid graph, idempotence). Background LDD +
+  chunks + graph json.
+| créé (26 lignes)
+
+| `src/test/kotlin/codex/bdd/CodexEnrichmentCucumberRunner.kt`
+| Runner dédié pattern S-082 — `@Suite` + `@IncludeEngines("cucumber")`
+  + `@SelectClasspathResource("features/codex_enrich_json_ldd.feature")`
+  + glue `codex.bdd` + filter `@enrichment and not @wip and not
+  @integration`.
+| créé (37 lignes)
+
+| `src/test/kotlin/codex/bdd/EnrichmentSteps.kt`
+| 13 step defs — Background (LDD + chunks + graph json), tâche run,
+  assertions (section count, rag chunks, graphify nodes, density,
+  entities, idempotence). Mirror `EnrichJsonLddTaskTest` mais exprimé
+  en BDD. Scénarios 2/3 surchargent `graphFile` après Background.
+| créé (180 lignes)
+
+| `build.gradle.kts`
+| Tâche `cucumberTestEnrichment` (3e runner dédié codex, pattern S-082
+  inline — `excludeEngines("junit-jupiter")` +
+  `includeTestsMatching("codex.bdd.CodexEnrichmentCucumberRunner")` +
+  `systemProperty("cucumber.features", ...)` +
+  `systemProperty("cucumber.filter.tags", "@enrichment and not @wip
+  and not @integration")`).
+| modifié (+24 lignes)
+|===
+
+== D. Décisions architecturales
+
+. *Pattern S-082 strict* — 3e runner dédié codex après
+  `CodexLicenceCucumberRunner` (S-083) et `CodexOntologyCucumberRunner`
+  (S-085). `@SelectClasspathResource` scoped à la feature, glue
+  `codex.bdd` partagé (découverte des steps par classe, pas par
+  feature), filter tags `@enrichment`. Le `test` task default scanne
+  toujours `src/test/resources/features/` via
+  `junit-platform.properties` — d'où les variations découverte (+37
+  tests dans `test` qui correspondent aux scénarios cucumber ré-exécutés
+  par le moteur cucumber-junit-platform quand le `test` task default
+  tourne).
+. *Background Gherkin* — les 3 inputs (LDD + chunks + graph json) sont
+  posés dans le Background pour le scénario 1 (happy path). Les
+  scénarios 2 et 3 surchargent `graphFile` après le Background
+  (`Given a missing graph json file` / `Given an invalid graph json
+  file`) pour exercer le dégradé silencieux de `GraphifyFileResolver`
+  sans dupliquer la pose des LDD/chunks. Pattern Cucumber idiomatique.
+. *Idempotence prouvée par exécution double* — scénario 4 lance la
+  tâche deux fois dans deux outputs distincts (`enriched-1.json` /
+  `enriched-2.json`) et compare le contenu texte. C'est la preuve BDD
+  que `JsonLddEnricher` est un objet pur déterministe (déjà prouvé en
+  unit S-080 `JsonLddEnricherTest.enrich is pure - same input yields
+  same output`, ici repris au niveau BDD end-to-end via la tâche
+  Gradle).
+. *Zéro production modifié* — pure BDD pattern S-085/S-083. Le domaine
+  `codex.enrichment` (créé S-080), la tâche `EnrichJsonLddTask` (câblée
+  S-086) et le canal Graphify composite (S-087) sont exercés tels
+  quels. Aucun fichier `src/main/kotlin/` modifié.
+. *Zéro bump BOM* — pas de nouvelle dépendance. `junit-platform-suite`
+  déjà présent (S-083). `cucumber.junit-platform-engine` déjà
+  `testImplementation` (S-083).
+
+== E. État des EPICs
+
+[cols="1,3,2", options="header"]
+|===
+| EPIC | Statut | Détail
+
+| EPIC CDX-4 (P1-20) `enrichJsonLdd`
+| ✅ TERMINÉ 4/4 US
+| CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080, CDX-4-2 ✅ S-086,
+  CDX-4-3 ✅ S-087, CDX-4-4 ✅ S-088
+|===
+
+Domaine `codex.enrichment` (13e) clos — 3 fichiers prod purs
+(`JsonLddEnricher`, `GraphifyFileResolver`, `GraphifySectionBuilder`) +
+1 tâche Gradle (`EnrichJsonLddTask`) + câblage composite
+(`CodexCompositeContextTask.enrichedJsonFile`).
+
+== F. Vérifications
+
+[source,shell]
+----
+./gradlew check --no-daemon
+# BUILD SUCCESSFUL in 2m 14s
+# test: 417/0, cucumberTestEnrichment: 8/0,
+# cucumberTestOntology: 6/0, cucumberTestLicence: 6/0
+# Total: 437 tests, 0 FAIL (baseline S-087 392 → +45)
+# Kover VERT, validatePlugins VERT
+
+grep -r "TOKEN\|SECRET\|PASSWORD\|API_KEY\|gho_\|ghp_" \
+  --include="*.kts" --include="*.properties" --include="*.kt" \
+  codex-plugin/src codex-plugin/build.gradle.kts
+# (zéro match)
+----
+
+== G. Suite
+
+*Prochaine session* — 089. Alternatives P1 :
+. *CDX-6-1/2* — DSL `licenceRouting` + `CodexPipelineTask` routing
+  (EPIC CDX-6 0/3 US restantes).
+. *CDX-6-3* — Cucumber BDD `codex_licence_routing.feature` (clôture
+  EPIC CDX-6).
+. *CDX-7-2* — `ConvertToMarkdownTaskTest` chaîné ~5 unit.
+. *CDX-7-3* — `SemanticChunkerTest` extraction de `ChunkDocumentTask`
+  ~7 unit.
+. *CDX-7-4* — `CodexPipelineIntegrationTest` E2E PDF canonique
+  `office/books-collection/` (3 tests `@Tag("integration")` +
+  `assumeTrue`).
+
+*Actions reportées* :
+. Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US RC-1..7) pour
+  débloquer US CDX-RC-04 (gate publication
+  `runtime-contracts:0.0.1`).

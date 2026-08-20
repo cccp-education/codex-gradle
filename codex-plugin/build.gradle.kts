@@ -195,3 +195,28 @@ val cucumberTestOntology by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── CDX-4-4 — Dedicated Cucumber runner for JSON LDD enrichment (pattern S-082) ─
+// Scoped to CodexEnrichmentCucumberRunner so only codex_enrich_json_ldd.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestEnrichment by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_enrich_json_ldd.feature Cucumber suite (CDX-4-4 enrichment)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexEnrichmentCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_enrich_json_ldd.feature")
+    systemProperty("cucumber.filter.tags", "@enrichment and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}
