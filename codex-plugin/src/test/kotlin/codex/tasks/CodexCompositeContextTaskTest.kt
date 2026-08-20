@@ -90,4 +90,28 @@ class CodexCompositeContextTaskTest {
         assertEquals("codex", task.pgUser.get())
         assertEquals("codex", task.pgPassword.get())
     }
+
+    // CDX-4-3 : câblage canal Graphify dans CodexCompositeContextTask.
+
+    @Test
+    fun `task exposes optional enrichedJsonFile property`() {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+
+        // Avant CDX-4-3, la task n'exposait pas de propriété enrichedJsonFile —
+        // graphifySection restait hardcodé à "" (canal Graphify muet).
+        // Après CDX-4-3, la propriété optionnelle permet de peupler le canal
+        // depuis le JSON enrichi produit par enrichJsonLdd.
+        assertNotNull(task.enrichedJsonFile)
+    }
+
+    @Test
+    fun `task enrichedJsonFile is optional - unset does not crash configuration`() {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+
+        // Backward compat : la propriété est @Optional, aucune convention
+        // n'est posée. Une task non configurée doit rester instançable.
+        assertTrue(!task.enrichedJsonFile.isPresent, "enrichedJsonFile should be optional (no default)")
+    }
 }

@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 087
-:session: 087
-:date: 2026-08-20
+= PROMPT_REPRISE — Codex — Session 088
+:session: 088
+:date: 2026-08-21
 :status: PRET
 :max-lines: 45
 
@@ -9,43 +9,45 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 365/365 PASS (baseline préservée S-086)
+./gradlew test             # 380/380 PASS (baseline préservée S-087)
 ./gradlew cucumberTestOntology  # 3/3 scénarios CDX-3-3 PASSED
 ```
 
-== Session 086 terminée — CDX-4-2 Tâche enrichJsonLdd + wiring
+== Session 087 terminée — CDX-4-3 Câblage canal Graphify
 
-. *CDX-4-2 TERMINÉ* — `EnrichJsonLddTask` (80 lignes, thin wrapper
-  Gradle pattern `DeriveOntologyTask`) consomme `jsonFile` (LDD) +
-  `chunksFile` (chunks) + `graphifyFile` (graph.json) → appelle
-  `JsonLddEnricher.enrich` → écrit `EnrichedLddNode` JSON.
-  `@DisableCachingByDefault`, 4 properties (3 `@InputFile` + 1
-  `@OutputFile`). `EnrichedLddNode` annoté `@Serializable` (additif,
-  backward compat). Wiring `CodexPlugin` : tâche `enrichJsonLdd` groupe
-  `transform`, `outputFile` default `build/codex/enriched-ldd.json`.
-  KDoc 12 → 13 tâches. Baby-step TDD strict RED → GREEN → REFACTOR.
-. *377 tests 0 FAIL* (365 unit + 6 cucumber licence + 6 cucumber
-  ontology). `check` VERT, Kover VERT, validatePlugins VERT. Zéro
-  bump BOM, zéro secret, zéro régression, backward compat total.
+. *CDX-4-3 TERMINÉ* — `GraphifySectionBuilder` object pur (domaine
+  `codex.enrichment`, 38 lignes, pattern `JsonLddEnricher`) construit
+  le texte du canal Graphify du `CompositeContext` depuis la liste des
+  `EnrichedLddNode`. Sections sans nœuds Graphify omises (économie
+  d'encre). `CodexCompositeContextTask` étendu : propriété optionnelle
+  `enrichedJsonFile` (`@InputFile @Optional`) + méthode `internal
+  buildGraphifySection()` (dégradé silencieux sur fichier absent/vide/
+  JSON invalide → ""). `execute()` consomme `buildGraphifySection()`
+  au lieu de `""`. Wiring `CodexPlugin` : `enrichedJsonFile` lié à
+  `build/codex/enriched-ldd.json` (sortie de `enrichJsonLdd`).
+. *392 tests 0 FAIL* (380 unit/functional + 6 cucumber licence + 6
+  cucumber ontology). `check` VERT, Kover VERT, validatePlugins VERT.
+  Zéro bump BOM, zéro secret, zéro régression, backward compat total.
 
-== Prochaine session — 087
+== Prochaine session — 088
 
-*Mission principale* : *CDX-4-3* câblage canal Graphify dans
-`CodexCompositeContextTask` (`graphifySection` peuplé depuis
-`enrichedJsonFile` au lieu de `""`). ~3 unit. Non-regression : fallback
-`""` si enrichissement absent. Domaine `codex.enrichment` consommé par
-le composite context.
+*Mission principale* : *CDX-4-4* Cucumber BDD `codex_enrich_json_ldd.feature`
+4 scénarios `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner`
+(pattern S-082 — `@Suite` + `@SelectClasspathResource` + glue `codex.bdd`
++ filter `@enrichment`). ~4 scénarios : enrichissement complet (LDD +
+chunks + graph.json → enriched JSON avec rag chunks joints + graphify
+nodes résolus + densité + entities), dégradé silencieux graph manquant,
+dégradé silencieux JSON invalide, idempotence (même entrée → même sortie).
 
 *Alternatives* :
-. *CDX-4-4* (Cucumber BDD `codex_enrich_json_ldd.feature` 4 scénarios
-  `@enrichment` + runner dédié `CodexEnrichmentCucumberRunner`).
 . *CDX-6-1/2* (DSL `licenceRouting` + `CodexPipelineTask` routing).
 . *CDX-7-2* (`ConvertToMarkdownTaskTest` chaîné ~5 unit).
+. *CDX-7-3* (`SemanticChunkerTest` extraction de `ChunkDocumentTask`).
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
 . Domaines purs P1 TERMINÉS (CDX-3-1/4-1/5-1 ✅).
 . Phase tâches Gradle : CDX-5-2 ✅ → CDX-3-2 ✅ → CDX-4-2 ✅ → câblage
-  (CDX-4-3) → DSL (CDX-6-1/2).
+  (CDX-4-3 ✅) → DSL (CDX-6-1/2).
 . Cucumber BDD : CDX-3-3 ✅ → CDX-5-3 ✅ → CDX-4-4 → CDX-6-3.
 
 *Actions reportées* :
@@ -54,7 +56,7 @@ le composite context.
 
 == References
 
-- `.agents/sessions/086-cdx-4-2-enrich-json-ldd-task.adoc`
+- `.agents/sessions/087-cdx-4-3-composite-context-graphify-channel.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
 - `BACKLOG.adoc` § EPIC CDX-4/6/7 (US détaillées)
 - `build.gradle.kts:175` — tâche `cucumberTestOntology` (pattern S-082)

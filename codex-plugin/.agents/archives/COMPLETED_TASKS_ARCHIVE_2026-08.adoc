@@ -422,3 +422,47 @@
 * EPIC CDX-4 progression 2/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
   CDX-4-2 ✅ S-086, CDX-4-3/4 🟡 À FAIRE).
 * Baby-step TDD strict RED → GREEN → REFACTOR.
+
+'''
+
+== CDX-4-3 — Câblage canal Graphify dans CodexCompositeContextTask (S-087)
+
+*Date* : 2026-08-20
+*EPIC* : CDX-4 (enrichJsonLdd P1-20)
+*US* : CDX-4-3
+*Statut* : ✅ TERMINÉ (S-087)
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+*Score* : 9/10
+
+*Résumé* :
+`GraphifySectionBuilder` object pur (domaine `codex.enrichment`, 38
+lignes, pattern `JsonLddEnricher`) construit le texte du canal Graphify
+du `CompositeContext` depuis `List<EnrichedLddNode>` : filtre sections
+sans nœuds Graphify (économie d'encre), une entrée par section (titre +
+ids résolus), déterministe, empty list → "" (fallback backward compat).
+`CodexCompositeContextTask` étendu : propriété optionnelle
+`enrichedJsonFile` (`@InputFile @Optional @PathSensitive RELATIVE`) +
+méthode `internal buildGraphifySection(): String` (dégradé silencieux
+fichier absent/vide/JSON invalide → "", log `warn`). `execute()` consomme
+`buildGraphifySection()` au lieu de `""`. Wiring `CodexPlugin` :
+`enrichedJsonFile` lié à `build/codex/enriched-ldd.json` (sortie
+`enrichJsonLdd`).
+
+*Fichiers* :
+- `src/main/kotlin/codex/enrichment/GraphifySectionBuilder.kt` (créé).
+- `src/test/kotlin/codex/enrichment/GraphifySectionBuilderTest.kt` (créé, 7 unit).
+- `src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt` (modifié).
+- `src/test/kotlin/codex/tasks/CodexCompositeContextGraphifyTest.kt`
+  (créé, 7 functional).
+- `src/test/kotlin/codex/tasks/CodexCompositeContextTaskTest.kt`
+  (modifié, +2 tests).
+- `src/main/kotlin/codex/CodexPlugin.kt` (modifié, +2 lignes wiring).
+
+*Résultats* :
+392 tests 0 FAIL (baseline 377 → +15). `check` VERT (BUILD SUCCESSFUL
+2m 3s), Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret,
+zéro régression, backward compat total.
+
+*EPIC CDX-4 progression* : 3/4 US (CDX-4-0 ✅ S-077, CDX-4-1 ✅ S-080,
+CDX-4-2 ✅ S-086, CDX-4-3 ✅ S-087, CDX-4-4 🟡 À FAIRE — Cucumber BDD).
+*Baby-step TDD strict RED → GREEN → REFACTOR.

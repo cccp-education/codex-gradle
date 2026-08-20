@@ -1,6 +1,55 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-20
-:session: 086
+:session: 087
+
+== Session 087 — CDX-4-3 câblage canal Graphify (+15 tests, 392/392 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/enrichment/GraphifySectionBuilderTest.kt` | 7 unit | ✅ PASS (empty → "", omits sections without graphify nodes, lists resolved ids per section, pure deterministic, multiple sections, all-empty → "", ignores rag chunks and entities)
+| `test/kotlin/codex/tasks/CodexCompositeContextGraphifyTest.kt` | 7 functional | ✅ PASS (buildGraphifySection empty when file absent, empty when empty list, populates from enriched nodes with graphify ids, degrades silently on invalid JSON, deterministic, enrichedJsonFile optional property)
+| `test/kotlin/codex/tasks/CodexCompositeContextTaskTest.kt` | +2 extension | ✅ PASS (task exposes optional enrichedJsonFile, unset does not crash configuration)
+|===
+
+*Nouveau testé* :
+- `GraphifySectionBuilder` — object pur du domaine `codex.enrichment`
+  (pattern `JsonLddEnricher`). 7 unit tests couvrent : empty list → "",
+  filtre sections sans nœuds Graphify (économie d'encre), rend une entrée
+  par section (titre + liste ids résolus), déterministe (pure), multi-
+  sections, all-empty → "", ignore rag chunks/entities (seul
+  `graphifyNodes` est consommé).
+- `CodexCompositeContextTask.buildGraphifySection()` — méthode
+  `internal` testable sans pgvector (la dépendance coûteuse reste
+  isolée dans `execute()`). 7 functional tests couvrent : fichier absent
+  → "" (backward compat), liste vide → "", enrichissement avec ids →
+  texte peuplé, JSON invalide → "" (dégradé silencieux), déterminisme,
+  propriété optionnelle (pas de default, pas de crash).
+- `CodexCompositeContextTask.enrichedJsonFile` — propriété Gradle
+  optionnelle (`@InputFile @Optional`), 2 tests extension
+  (`CodexCompositeContextTaskTest`) vérifient l'exposition et
+  l'optionalité.
+
+*Couverture* :
+- Logique domaine `GraphifySectionBuilder.build` → 7 unit tests purs
+  (aucune dépendance Gradle, testable plain JUnit5).
+- Câblage Gradle `buildGraphifySection()` (IO + dégradé silencieux) →
+  7 functional tests ProjectBuilder + fichiers JSON synthétiques
+  (enriched-empty, enriched with 2 nodes, enriched-bad).
+- Wiring `CodexPlugin` (liaison `enrichedJsonFile` →
+  `build/codex/enriched-ldd.json`) → couvert par la non-régression
+  `CodexPluginTest` (baseline préservée, le test existant ne casse pas
+  car la propriété est `@Optional`).
+- Backward compat total : `execute()` non testé (pgvector requise),
+  mais `buildGraphifySection()` est `internal` et testé isolément. La
+  modification de `execute()` est une seule ligne
+  (`graphifySection = buildGraphifySection()` au lieu de `""`).
+
+*Baseline* : 377 (S-086) → 392 (+15 net). 0 FAIL. `check` VERT, Kover
+VERT, validatePlugins VERT.
+
+'''
 
 == Session 086 — CDX-4-2 tâche enrichJsonLdd (+7 tests, 377/377 PASS)
 

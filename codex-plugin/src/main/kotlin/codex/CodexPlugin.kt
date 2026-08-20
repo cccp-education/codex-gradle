@@ -202,6 +202,11 @@ class CodexPlugin : Plugin<Project> {
             it.pgUser.convention(extension.pgvectorUser)
             it.pgPassword.convention(extension.pgvectorPassword)
             it.outputFile.set(project.layout.buildDirectory.file("codex/composite-context.json"))
+            // CDX-4-3 : câblage canal Graphify — enrichedJsonFile consomme
+            // la sortie de `enrichJsonLdd` (List<EnrichedLddNode> JSON).
+            // Backward compat : la propriété reste @Optional, non configurée
+            // → graphifySection = "" (canal muet, comportement précédent).
+            it.enrichedJsonFile.set(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
         }
 
         project.tasks.register(

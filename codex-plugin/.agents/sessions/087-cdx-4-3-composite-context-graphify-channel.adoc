@@ -1,0 +1,102 @@
+= Session 087 — CDX-4-3 Câblage canal Graphify dans CodexCompositeContextTask
+:session: 087
+:date: 2026-08-20
+:epic: CDX-4 (enrichJsonLdd P1-20)
+:us: CDX-4-3
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:score: 9/10
+
+== A. Objectif
+
+Démarrer *CDX-4-3* — câblage du canal Graphify dans
+`CodexCompositeContextTask`. Avant cette US, `graphifySection` était
+hardcodé à `""` (canal Graphify muet du `CompositeContext`). Après
+CDX-4-3, une propriété optionnelle `enrichedJsonFile` (output de
+`enrichJsonLdd`) permet de peupler le canal via un nouvel objet pur
+`GraphifySectionBuilder` du domaine `codex.enrichment`. Fallback `""`
+si la propriété est absente, le fichier vide, ou le JSON invalide
+(backward compat total).
+
+== B. Réalisation
+
+. *Domaine `codex.enrichment` enrichi* — `GraphifySectionBuilder` object
+  pur (38 lignes, pattern `JsonLddEnricher`) : `build(enrichedNodes):
+  String`. Filtre les sections sans nœuds Graphify (économie d'encre),
+  rend une entrée par section (titre + liste des ids de nœuds résolus).
+  Déterministe, side-effect free, empty list → "" (fallback backward
+  compat).
+. *`CodexCompositeContextTask` étendu* — propriété optionnelle
+  `enrichedJsonFile` (`@InputFile @Optional @PathSensitive RELATIVE`).
+  Méthode `internal buildGraphifySection(): String` (dégradé silencieux
+  sur fichier absent/vide/JSON invalide, log `warn`). `execute()`
+  consomme `buildGraphifySection()` au lieu de `""` (ligne
+  `graphifySection = buildGraphifySection()`).
+. *Wiring `CodexPlugin`* — `generateCompositeContext.enrichedJsonFile`
+  lié à `buildDirectory.file("codex/enriched-ldd.json")` (sortie de
+  `enrichJsonLdd`). Backward compat : la propriété reste `@Optional`,
+  non configurée → `""` (canal muet, comportement précédent).
+
+== C. Baby-step TDD strict
+
+. *RED* — `GraphifySectionBuilderTest` (7 unit) +
+  `CodexCompositeContextGraphifyTest` (7 functional) +
+  `CodexCompositeContextTaskTest` (+2 tests `enrichedJsonFile`).
+  Compilation échoue : `Unresolved reference 'GraphifySectionBuilder'`,
+  `'buildGraphifySection'`, `'enrichedJsonFile'`.
+. *GREEN* — 2 fichiers prod créés (`GraphifySectionBuilder.kt` +
+  modification additive `CodexCompositeContextTask.kt` : imports +6,
+  propriété +6 lignes, méthode `buildGraphifySection` +18 lignes,
+  `execute()` 1 ligne modifiée) + 1 wiring `CodexPlugin.kt` (+2 lignes).
+. *REFACTOR* — `check` VERT (BUILD SUCCESSFUL 2m 3s), Kover VERT,
+  validatePlugins VERT.
+
+== D. Tests
+
+[cols="2,1", options="header"]
+|===
+| Suite | Count
+| `GraphifySectionBuilderTest` (unit, codex.enrichment) | 7
+| `CodexCompositeContextGraphifyTest` (functional, codex.tasks) | 7
+| `CodexCompositeContextTaskTest` (extension, +2 tests) | 9 (was 7)
+|===
+
+*Baseline* : 377 (S-086) → *392 tests 0 FAIL* (+15 net).
+*`check` VERT* — Kover VERT, validatePlugins VERT, cucumberTestLicence
+6/6 + cucumberTestOntology 6/6 (baseline préservée).
+
+== E. Gouvernance
+
+. *Zéro bump BOM* — `agent-contracts`/`codebase-contracts`/BOM
+  inchangés. Domaine `codex.enrichment` (13e) enrichi (2 fichiers prod).
+. *Zéro secret* — `rg TOKEN|SECRET|PASSWORD|API_KEY` → no output.
+. *Zéro régression* — `check` VERT, baseline préservée, backward compat
+  total (propriété optionnelle, fallback `""`).
+. *Loi Économie d'Encre* — sections sans nœuds Graphify omises
+  (`GraphifySectionBuilder.build` filtre `graphifyNodes.isNotEmpty()`).
+  Fallback `""` si enrichissement absent → pas de coût de construction
+  inutile.
+
+== F. EPIC CDX-4 progression
+
+CDX-4-3 ✅ TERMINÉ → EPIC CDX-4 3/4 US. Reste CDX-4-4 (Cucumber BDD
+`codex_enrich_json_ldd.feature` 4 scénarios `@enrichment`).
+
+== G. Fichiers modifiés
+
+[cols="2,1", options="header"]
+|===
+| Fichier | Action
+| `src/main/kotlin/codex/enrichment/GraphifySectionBuilder.kt` | CRÉÉ
+| `src/test/kotlin/codex/enrichment/GraphifySectionBuilderTest.kt` | CRÉÉ
+| `src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt` | MODIFIÉ (+imports, +enrichedJsonFile, +buildGraphifySection, execute())
+| `src/test/kotlin/codex/tasks/CodexCompositeContextGraphifyTest.kt` | CRÉÉ
+| `src/test/kotlin/codex/tasks/CodexCompositeContextTaskTest.kt` | MODIFIÉ (+2 tests)
+| `src/main/kotlin/codex/CodexPlugin.kt` | MODIFIÉ (+2 lignes wiring)
+|===
+
+== H. Score & notes
+
+*9/10* — baby-step TDD strict respecté, zéro régression, backward
+compat total, objet pur testable sans pgvector (la dépendance coûteuse
+reste isolée dans `execute()`). Économie d'encre appliquée au niveau du
+domaine (sections sans nœuds omises) et du câblage (fallback `""`).

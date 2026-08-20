@@ -5,15 +5,21 @@ import contracts.context.CompositeContext
 import contracts.context.CompositeContextConfig
 import contracts.context.ContextChannel
 import codex.Metadata
+import codex.enrichment.EnrichedLddNode
+import codex.enrichment.GraphifySectionBuilder
 import codex.store.CodexVectorStore
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
@@ -49,6 +55,36 @@ abstract class CodexCompositeContextTask : DefaultTask() {
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
+
+    // CDX-4-3 : canal Graphify peuplé depuis le JSON enrichi produit par
+    // `enrichJsonLdd` (List<EnrichedLddNode> sérialisée). Propriété
+    // optionnelle — backward compat : absente → graphifySection = "".
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val enrichedJsonFile: RegularFileProperty
+
+    /**
+     * Builds the Graphify channel section text from the enriched LDD
+     * JSON file. Returns an empty string when the file is absent, empty,
+     * or invalid (degraded silent — backward compat with the previous
+     * `graphifySection = ""` default).
+     */
+    internal fun buildGraphifySection(): String {
+        val file = enrichedJsonFile.asFile.orNull ?: return ""
+        if (!file.exists()) return ""
+        return try {
+            val json = Json { ignoreUnknownKeys = true }
+            val nodes = json.decodeFromString(
+                ListSerializer(EnrichedLddNode.serializer()),
+                file.readText()
+            )
+            GraphifySectionBuilder.build(nodes)
+        } catch (e: Exception) {
+            logger.warn("[codex] graphifySection : enriched JSON unreadable ({}), fallback to empty", e.message)
+            ""
+        }
+    }
 
     @TaskAction
     fun execute() {
@@ -104,7 +140,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val typedCompositeContext = CompositeContext(
             eagerSection = "",
             ragSection = "",
-            graphifySection = "",
+            graphifySection = buildGraphifySection(),
             docsSection = budget.applyBudget(listOf(docsChannel)).first().content,
             config = config
         )

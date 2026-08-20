@@ -1823,3 +1823,65 @@ wiring `CodexPlugin` ~5 functional (1re tâche Gradle enrichment, domaine
 `codex.enrichment` créé S-080). Alternatives : CDX-4-3 (câblage Graphify
 ~3 unit) ou CDX-6-1/2 (DSL `licenceRouting`) ou CDX-7-2
 (`ConvertToMarkdownTaskTest` chaîné).
+
+'''
+
+== Session 087 — CDX-4-3 Câblage canal Graphify dans CodexCompositeContextTask
+
+*Date* : 2026-08-20
+*EPIC* : CDX-4 (enrichJsonLdd P1-20)
+*US* : CDX-4-3
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+*Score* : 9/10
+
+*A. Objectif* :
+Câblage du canal Graphify dans `CodexCompositeContextTask`. Avant cette
+US, `graphifySection` était hardcodé à `""` (canal Graphify muet du
+`CompositeContext`). Après CDX-4-3, une propriété optionnelle
+`enrichedJsonFile` (output de `enrichJsonLdd`) permet de peupler le canal
+via un nouvel objet pur `GraphifySectionBuilder` du domaine
+`codex.enrichment`. Fallback `""` si propriété absente/fichier
+vide/JSON invalide (backward compat total).
+
+*B. Réalisation* :
+. `GraphifySectionBuilder` object pur (38 lignes, domaine
+  `codex.enrichment`, pattern `JsonLddEnricher`) — `build(enrichedNodes):
+  String`. Filtre sections sans nœuds Graphify (économie d'encre), une
+  entrée par section (titre + liste ids résolus), déterministe,
+  side-effect free, empty list → "".
+. `CodexCompositeContextTask` étendu : propriété optionnelle
+  `enrichedJsonFile` (`@InputFile @Optional @PathSensitive RELATIVE`) +
+  méthode `internal buildGraphifySection(): String` (dégradé silencieux
+  fichier absent/vide/JSON invalide → "", log `warn`). `execute()`
+  consomme `buildGraphifySection()` au lieu de `""`.
+. Wiring `CodexPlugin` : `enrichedJsonFile` lié à
+  `build/codex/enriched-ldd.json` (sortie `enrichJsonLdd`).
+
+*C. Fichiers modifiés* :
+- `src/main/kotlin/codex/enrichment/GraphifySectionBuilder.kt` (créé, 38 lignes).
+- `src/test/kotlin/codex/enrichment/GraphifySectionBuilderTest.kt` (créé, 7 unit).
+- `src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt` (modifié —
+  +imports, +enrichedJsonFile, +buildGraphifySection, execute()).
+- `src/test/kotlin/codex/tasks/CodexCompositeContextGraphifyTest.kt`
+  (créé, 7 functional).
+- `src/test/kotlin/codex/tasks/CodexCompositeContextTaskTest.kt`
+  (modifié, +2 tests enrichedJsonFile).
+- `src/main/kotlin/codex/CodexPlugin.kt` (modifié, +2 lignes wiring).
+- `.agents/sessions/087-cdx-4-3-composite-context-graphify-channel.adoc` (créé).
+- `PROMPT_REPRISE.adoc` — mis à jour pour session 088.
+- `.agents/INDEX.adoc` — session 087 + roadmap CDX-4 3/4.
+- `BACKLOG.adoc` — CDX-4-3 statut mis à jour.
+
+*D. Résultats* :
+392 tests 0 FAIL (baseline 377 → +15 : +7 unit `GraphifySectionBuilderTest`
++ +7 functional `CodexCompositeContextGraphifyTest` + +1 net
+`CodexCompositeContextTaskTest`). `check` VERT (BUILD SUCCESSFUL 2m 3s),
+Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro
+régression, backward compat total. EPIC CDX-4 progression 3/4 US (reste
+CDX-4-4 Cucumber BDD).
+
+*Prochaine session* : 088 — Démarrer CDX-4-4 Cucumber BDD
+`codex_enrich_json_ldd.feature` 4 scénarios `@enrichment` + runner dédié
+`CodexEnrichmentCucumberRunner` (pattern S-082). Alternatives : CDX-6-1/2
+(DSL `licenceRouting`) ou CDX-7-2 (`ConvertToMarkdownTaskTest` chaîné) ou
+CDX-7-3 (`SemanticChunkerTest`).
