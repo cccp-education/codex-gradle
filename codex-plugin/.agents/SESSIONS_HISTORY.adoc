@@ -3,6 +3,85 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné
+
+*Date* : 2026-08-21
+*Type* : dev
+*Score* : 9/10
+*EPIC* : CDX-7 (Tests unitaires + intégration P1-23)
+*US* : CDX-7-2
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*A. Objectif* :
+Démarrer *CDX-7-2* — `ConvertToMarkdownTaskTest` chaîné. Les 10 tests
+existants exercent le convertisseur sur des fragments AsciiDoc fabriqués
+à la main. CDX-7-2 ajoute des tests qui exécutent la *vraie* sortie de
+`ExtractBookStructureTask` nourrie dans `ConvertToMarkdownTask`, validant
+la chaîne extraction → conversion sur PDF synthétique.
+
+*B. Constats* :
+. `ConvertToMarkdownTask.convert()` consomme AsciiDoc → Markdown ligne
+  par ligne (headings, code blocks, admonitions, tables, images, links,
+  lists, inline).
+. `ExtractBookStructureTask.extract()` consomme PDF → AsciiDoc (PDFBox +
+  FontStyleDetector + TypographicAnalyzer).
+. Chaining : `outputFile` (AsciiDoc) → `adocFile` (AsciiDoc). Aucun
+  test chaîné existant — tous les tests instantiate une tâche en
+  isolation.
+. `ExtractBookStructureTaskTest.createSyntheticPdf` fournit le pattern
+  de PDF synthétique réutilisable.
+. Sortie réelle observée (scratch test jetable) : AsciiDoc
+  `= Introduction to Programming` / `== Getting Started` / `====
+  Hello World Example` + code block → Markdown
+  `# Introduction to Programming` / `### Getting Started` / `####
+  Hello World Example` + code lines préservées.
+. Characterization tests GREEN (pattern CDX-7-1 S-078) — les deux tâches
+  existent déjà.
+
+*C. Décisions* :
+. 6 tests ajoutés (cadrage ~5, ajusté à 6 pour couverture symétrique) :
+  pipeline non-vide, titre h1, hiérarchie sections, body paragraphs,
+  code lines mono-font, PDF vide dégradé.
+. Helpers factorisés : `createSyntheticBookPdf` (mirror
+  `ExtractBookStructureTaskTest.createSyntheticPdf`),
+  `createExtractTask`, `runChainedPipeline(pdf, md): String`.
+. Assertions tolérantes sur la hiérarchie (`## ou ###`) — l'extracteur
+  mappe parfois Getting Started en h2 ou h3 selon les seuils dynamiques.
+  Test robuste aux variations de seuil sans faux négatif.
+. Zéro code prod modifié, zéro bump BOM, zéro secret, zéro régression.
+
+*D. Implémentation* :
+. `ConvertToMarkdownTaskTest.kt` étendu : KDoc class header CDX-7-2,
+  imports PDFBox, 3 helpers, 6 tests chaînés. 1 fichier test modifié.
+. Zéro fichier prod modifié.
+
+*E. Vérification* :
+. `./gradlew test --tests codex.tasks.ConvertToMarkdownTaskTest
+  --rerun-tasks` : 16/16 PASSED (10 existants + 6 chaînés), 0 FAIL.
+. `./gradlew check` : BUILD SUCCESSFUL in 2m 27s.
+  * `test` task : 475 tests 0 FAIL (baseline 469 → +6).
+  * `cucumberTestPipelineRouting` : 6/6 PASSED.
+  * `cucumberTestEnrichment` : 8/8 PASSED.
+  * `cucumberTestOntology` : 6/6 PASSED.
+  * `cucumberTestLicence` : 6/6 PASSED.
+  * Total session 090 : **501 tests 0 FAIL** (baseline 495 → +6).
+. Kover VERT, validatePlugins VERT.
+. Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+. `git status` : 1 fichier modifié (`ConvertToMarkdownTaskTest.kt`).
+
+*F. Suivi* :
+. EPIC CDX-7 progression 3/5 US (CDX-7-0 ✅ S-077, CDX-7-1 ✅ S-078,
+  CDX-7-2 ✅ S-090, CDX-7-3/4 🟡 À FAIRE).
+. Prochaine session (091) : *CDX-7-3* `SemanticChunkerTest` (extrait
+  de `ChunkDocumentTask`) ~7 unit, ou *CDX-7-4*
+  `CodexPipelineIntegrationTest` E2E PDF canonique
+  `office/books-collection/` (`@Tag("integration")` + `assumeTrue`) ~3
+  tests.
+. Action reportée : démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US
+  RC-1..7) pour débloquer US CDX-RC-04 (gate publication
+  `runtime-contracts:0.0.1`).
+
+'''
 == Session 086 — CDX-4-2 Tâche enrichJsonLdd + wiring CodexPlugin
 
 *Date* : 2026-08-20

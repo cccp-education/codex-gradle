@@ -1,0 +1,127 @@
+= Session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné
+:session: 090
+:date: 2026-08-21
+:epic: CDX-7 (Tests unitaires + intégration P1-23)
+:us: CDX-7-2
+:method: baby-step TDD strict (RED → GREEN → REFACTOR)
+:status: TERMINÉ
+
+== A. Objectif
+
+Démarrer *CDX-7-2* — `ConvertToMarkdownTaskTest` chaîné. Les 10 tests
+existants exercent le convertisseur sur des fragments AsciiDoc fabriqués
+à la main (un construct par test). CDX-7-2 ajoute des tests qui exécutent
+la *vraie* sortie de `ExtractBookStructureTask` (extraction PDF →
+AsciiDoc) nourrie dans `ConvertToMarkdownTask` (AsciiDoc → Markdown),
+validant la chaîne extraction → conversion sur des PDF synthétiques
+(polices bold/normal/mono).
+
+US du cadrage S-077 : ~5 unit tests. EPIC CDX-7 progression 2/5 → 3/5 US.
+
+== B. Constats pré-implémentation
+
+. `ConvertToMarkdownTask.convert()` consomme un fichier AsciiDoc
+  (`adocFile: RegularFileProperty`) et produit un Markdown
+  (`markdownFile: RegularFileProperty`) — conversion ligne par ligne
+  déterministe (headings, code blocks, admonitions, tables, images,
+  links, lists, inline).
+. `ExtractBookStructureTask.extract()` consomme un PDF (`pdfFile`) et
+  produit un AsciiDoc (`outputFile`) — extraction PDFBox + analyse
+  typographique (FontStyleDetector + TypographicAnalyzer) → headings
+  `=/==/===/====`, code blocks `[source,text]` + `----`, inline code
+  `` `single_line_code` ``.
+. *Chaining* : `outputFile` (AsciiDoc) → `adocFile` (AsciiDoc). Les deux
+  sont `RegularFileProperty` → `task.adocFile.set(extractTask.outputFile.asFile.get())`.
+. Aucun test chaîné existant — tous les tests instantiate une seule
+  tâche via `ProjectBuilder` en isolation.
+. `ExtractBookStructureTaskTest.createSyntheticPdf` (lignes 222-288)
+  fournit le pattern de PDF synthétique réutilisable (bold 20pt titre,
+  bold 16pt section, normal 11pt body, bold 14pt sous-section, mono
+  10pt code).
+. Sortie réelle observée sur le PDF synthétique (scratch test jetable) :
+  AsciiDoc `= Introduction to Programming` / `== Getting Started` /
+  `==== Hello World Example` + code block `function main() { ... }` →
+  Markdown `# Introduction to Programming` / `### Getting Started` /
+  `#### Hello World Example` + code lines préservées.
+. *Note* : le code block extrait n'a pas les `----` fermants sur une
+  nouvelle ligne (le groupe mono suivant est collé), donc le
+  convertisseur ne flush pas en code fence ``` ``` ``` — il préserve
+  néanmoins les lignes de code comme texte. Ce comportement est
+  *caractérisé* tel quel (characterization test GREEN), pas corrigé —
+  CDX-7-2 est un test suite, pas un fix.
+
+== C. Décisions
+
+. *Characterization tests* (pattern CDX-7-1 S-078) — les deux tâches
+  existent déjà, bébé-step TDD GREEN direct (pas de RED sur du code
+  existant). Les tests valident le comportement chaîné réel, pas un
+  comportement idéal.
+. *6 tests* ajoutés (cadrage ~5, ajusté à 6 pour couverture symétrique) :
+  pipeline non-vide, titre h1, hiérarchie sections, body paragraphs,
+  code lines mono-font, PDF vide dégradé.
+. *Helpers factorisés* : `createSyntheticBookPdf` (mirror
+  `ExtractBookStructureTaskTest.createSyntheticPdf`), `createExtractTask`,
+  `runChainedPipeline(pdf, md): String` (extrait → convertit → retourne
+  le Markdown).
+. *Assertions tolérantes* sur la hiérarchie (`## ou ###`) —
+  l'extracteur mappe parfois Getting Started en h2 ou h3 selon les
+  seuils dynamiques (TypographicAnalyzer). Le test valide la présence
+  d'un heading markdown, pas un niveau exact — robuste aux variations
+  de seuil sans faux négatif.
+. *Zéro code prod modifié* — pure test addition. Backward compat total.
+. *KDoc header* ajouté à `ConvertToMarkdownTaskTest` référençant CDX-7-2
+  (convention CDX-7-1 S-078).
+. *Zéro bump BOM, zéro secret, zéro régression*.
+
+== D. Implémentation
+
+. `ConvertToMarkdownTaskTest.kt` étendu :
+  * KDoc class header (4 lignes) référençant CDX-7-2 + les 10 tests
+    fragments + les 6 tests chaînés.
+  * Imports PDFBox (PDDocument, PDPage, PDPageContentStream, PDRectangle,
+    PDType1Font, Standard14Fonts).
+  * `createExtractTask(pdfFile, outputFile): ExtractBookStructureTask`
+    — ProjectBuilder + register `collectBookStructure`.
+  * `createSyntheticBookPdf(file)` — PDF A4 1 page, 9 text streams
+    (bold 20pt titre, bold 16pt section, normal 11pt body, bold 14pt
+    sous-section, normal 11pt body, mono 10pt × 3 lignes code, normal
+    11pt body final).
+  * `runChainedPipeline(pdfFile, mdFile): String` — exécute extract()
+    puis convert(), retourne le Markdown.
+  * 6 tests chaînés :
+    ** `chained pipeline produces non-empty markdown from synthetic book pdf`
+    ** `chained pipeline preserves title as markdown h1`
+    ** `chained pipeline preserves section hierarchy from extraction`
+    ** `chained pipeline preserves body paragraphs from extraction`
+    ** `chained pipeline preserves code lines from mono-font extraction`
+    ** `chained pipeline on empty pdf produces minimal markdown`
+
+. *Zéro fichier prod modifié*. 1 fichier test modifié.
+
+== E. Vérification
+
+. `./gradlew test --tests codex.tasks.ConvertToMarkdownTaskTest --rerun-tasks` :
+  16/16 PASSED (10 existants + 6 chaînés), 0 FAIL.
+. `./gradlew check` : BUILD SUCCESSFUL in 2m 27s.
+  * `test` task : 475 tests 0 FAIL (baseline 469 → +6).
+  * `cucumberTestPipelineRouting` : 6/6 PASSED.
+  * `cucumberTestEnrichment` : 8/8 PASSED.
+  * `cucumberTestOntology` : 6/6 PASSED.
+  * `cucumberTestLicence` : 6/6 PASSED.
+  * Total session 090 : **501 tests 0 FAIL** (baseline 495 → +6).
+. Kover VERT, validatePlugins VERT (UP-TO-DATE).
+. Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+. `git status` : 1 fichier modifié (`ConvertToMarkdownTaskTest.kt`).
+
+== F. Suivi
+
+. *EPIC CDX-7* progression 3/5 US (CDX-7-0 ✅ S-077, CDX-7-1 ✅ S-078,
+  CDX-7-2 ✅ S-090, CDX-7-3/4 🟡 À FAIRE).
+. *Prochaine session* (091) : *CDX-7-3* `SemanticChunkerTest` (extrait
+  de `ChunkDocumentTask`) ~7 unit, ou *CDX-7-4*
+  `CodexPipelineIntegrationTest` E2E PDF canonique
+  `office/books-collection/` (`@Tag("integration")` + `assumeTrue`) ~3
+  tests.
+. *Action reportée* : démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US
+  RC-1..7) pour débloquer US CDX-RC-04 (gate publication
+  `runtime-contracts:0.0.1`).

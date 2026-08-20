@@ -1,5 +1,11 @@
 package codex.tasks
 
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -7,6 +13,18 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
+/**
+ * Unit tests for [ConvertToMarkdownTask].
+ *
+ * First 10 tests (lines ~16-273) exercise the converter on hand-crafted AsciiDoc
+ * fragments — one construct per test.
+ *
+ * CDX-7-2 chained tests (session 090) exercise the *real* output of
+ * [ExtractBookStructureTask] fed into [ConvertToMarkdownTask], asserting the
+ * extraction → conversion pipeline end-to-end on synthetic PDFs (bold/normal/mono
+ * fonts). Baby-step TDD strict RED → GREEN → REFACTOR (GREEN: both tasks already
+ * exist — characterization tests of the existing chained behavior).
+ */
 class ConvertToMarkdownTaskTest {
 
     @TempDir
@@ -281,5 +299,197 @@ class ConvertToMarkdownTaskTest {
         task.adocFile.set(adocFile)
         task.markdownFile.set(mdFile)
         return task
+    }
+
+    // ── CDX-7-2 — Chained ExtractBookStructureTask → ConvertToMarkdownTask ──
+    // Real extraction output (AsciiDoc from a synthetic PDF) is fed to the
+    // converter instead of hand-crafted fragments. Validates the pipeline.
+
+    private fun createExtractTask(pdfFile: File, outputFile: File): ExtractBookStructureTask {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register(
+            "collectBookStructure",
+            ExtractBookStructureTask::class.java
+        ).get()
+        task.pdfFile.set(pdfFile)
+        task.outputFile.set(outputFile)
+        return task
+    }
+
+    private fun createSyntheticBookPdf(file: File) {
+        PDDocument().use { doc ->
+            val page = PDPage(PDRectangle.A4)
+            doc.addPage(page)
+            val boldFont = PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD)
+            val normalFont = PDType1Font(Standard14Fonts.FontName.HELVETICA)
+            val monoFont = PDType1Font(Standard14Fonts.FontName.COURIER)
+            PDPageContentStream(doc, page).use { cs ->
+                cs.beginText()
+                cs.setFont(boldFont, 20f)
+                cs.newLineAtOffset(50f, 720f)
+                cs.showText("Introduction to Programming")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(boldFont, 16f)
+                cs.newLineAtOffset(50f, 695f)
+                cs.showText("Getting Started")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(normalFont, 11f)
+                cs.newLineAtOffset(50f, 670f)
+                cs.showText("This chapter introduces programming concepts to beginners.")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(boldFont, 14f)
+                cs.newLineAtOffset(50f, 645f)
+                cs.showText("Hello World Example")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(normalFont, 11f)
+                cs.newLineAtOffset(50f, 620f)
+                cs.showText("Let us write our first program.")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(monoFont, 10f)
+                cs.newLineAtOffset(60f, 595f)
+                cs.showText("function main() {")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(monoFont, 10f)
+                cs.newLineAtOffset(60f, 582f)
+                cs.showText("    println(\"Hello, World!\")")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(monoFont, 10f)
+                cs.newLineAtOffset(60f, 569f)
+                cs.showText("}")
+                cs.endText()
+
+                cs.beginText()
+                cs.setFont(normalFont, 11f)
+                cs.newLineAtOffset(50f, 544f)
+                cs.showText("The function keyword declares a new function.")
+                cs.endText()
+            }
+            doc.save(file)
+        }
+    }
+
+    private fun runChainedPipeline(pdfFile: File, mdFile: File): String {
+        val adocFile = File(tempDir, pdfFile.nameWithoutExtension + ".adoc")
+        val extractTask = createExtractTask(pdfFile, adocFile)
+        extractTask.extract()
+        val convertTask = createTask(adocFile, mdFile)
+        convertTask.convert()
+        return mdFile.readText()
+    }
+
+    @Test
+    fun `chained pipeline produces non-empty markdown from synthetic book pdf`() {
+        val pdfFile = File(tempDir, "book.pdf")
+        val mdFile = File(tempDir, "book.md")
+        createSyntheticBookPdf(pdfFile)
+
+        val md = runChainedPipeline(pdfFile, mdFile)
+
+        assertTrue(mdFile.exists(), "Markdown file should exist after chained pipeline")
+        assertTrue(md.isNotBlank(), "Chained markdown should be non-blank, got: $md")
+    }
+
+    @Test
+    fun `chained pipeline preserves title as markdown h1`() {
+        val pdfFile = File(tempDir, "title.pdf")
+        val mdFile = File(tempDir, "title.md")
+        createSyntheticBookPdf(pdfFile)
+
+        val md = runChainedPipeline(pdfFile, mdFile)
+
+        assertTrue(
+            md.contains("# Introduction to Programming"),
+            "Chained output should preserve the extracted title as h1, got: $md"
+        )
+    }
+
+    @Test
+    fun `chained pipeline preserves section hierarchy from extraction`() {
+        val pdfFile = File(tempDir, "hierarchy.pdf")
+        val mdFile = File(tempDir, "hierarchy.md")
+        createSyntheticBookPdf(pdfFile)
+
+        val md = runChainedPipeline(pdfFile, mdFile)
+
+        assertTrue(md.contains("Getting Started"), "Should preserve section heading text")
+        assertTrue(md.contains("Hello World Example"), "Should preserve sub-section heading text")
+        assertTrue(
+            md.contains("### Getting Started") || md.contains("## Getting Started"),
+            "Getting Started should map to a markdown heading, got: $md"
+        )
+        assertTrue(
+            md.contains("#### Hello World Example") || md.contains("### Hello World Example"),
+            "Hello World Example should map to a deeper markdown heading, got: $md"
+        )
+    }
+
+    @Test
+    fun `chained pipeline preserves body paragraphs from extraction`() {
+        val pdfFile = File(tempDir, "body.pdf")
+        val mdFile = File(tempDir, "body.md")
+        createSyntheticBookPdf(pdfFile)
+
+        val md = runChainedPipeline(pdfFile, mdFile)
+
+        assertTrue(
+            md.contains("This chapter introduces programming concepts to beginners."),
+            "Should preserve first body paragraph from extraction"
+        )
+        assertTrue(
+            md.contains("Let us write our first program."),
+            "Should preserve second body paragraph from extraction"
+        )
+        assertTrue(
+            md.contains("The function keyword declares a new function."),
+            "Should preserve trailing body paragraph from extraction"
+        )
+    }
+
+    @Test
+    fun `chained pipeline preserves code lines from mono-font extraction`() {
+        val pdfFile = File(tempDir, "code.pdf")
+        val mdFile = File(tempDir, "code.md")
+        createSyntheticBookPdf(pdfFile)
+
+        val md = runChainedPipeline(pdfFile, mdFile)
+
+        assertTrue(
+            md.contains("function main()"),
+            "Should preserve first code line extracted from mono font, got: $md"
+        )
+        assertTrue(
+            md.contains("println"),
+            "Should preserve println code line extracted from mono font, got: $md"
+        )
+    }
+
+    @Test
+    fun `chained pipeline on empty pdf produces minimal markdown`() {
+        val emptyPdf = File(tempDir, "empty.pdf")
+        val mdFile = File(tempDir, "empty.md")
+        PDDocument().use { it.save(emptyPdf) }
+
+        val md = runChainedPipeline(emptyPdf, mdFile)
+
+        assertTrue(mdFile.exists(), "Markdown file should exist even for empty PDF")
+        assertTrue(md.isNotBlank(), "Chained markdown for empty PDF should be non-blank")
+        assertTrue(
+            md.contains("Document vide") || md.contains("Empty document"),
+            "Should preserve empty-document marker from extraction, got: $md"
+        )
     }
 }

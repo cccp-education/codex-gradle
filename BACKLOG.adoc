@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-20 (session 089 — CDX-6 EPIC TERMINÉ 4/4 US : CDX-6-1 routing physique CodexPipelineTask +3 props + resolveOutput, CDX-6-2 DSL extension licenceRouting + wiring plugin, CDX-6-3 Cucumber BDD codex_licence_routing.feature 3 scénarios + 4e runner dédié CodexLicencePipelineCucumberRunner, 495 tests 0 FAIL, domaine codex.licence clos)_
+_Dernière mise à jour : 2026-08-21 (session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné : 6 tests ExtractBookStructureTask.extract() → ConvertToMarkdownTask.convert() sur PDF synthétique bold/normal/mono, 501 tests 0 FAIL, EPIC CDX-7 3/5 US)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -367,7 +367,7 @@ ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
 
 | CDX-7-2
 | `ConvertToMarkdownTaskTest` chaîné (sortie réelle `ExtractBookStructureTask`). ~5 unit.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-090)
 
 | CDX-7-3
 | `SemanticChunkerTest` (extrait de `ChunkDocumentTask`). Unification potentielle `CodexPipelineTask.chunkMd` (constat #7). ~7 unit.
