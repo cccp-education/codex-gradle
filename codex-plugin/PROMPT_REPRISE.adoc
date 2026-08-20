@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 091
-:session: 091
+= PROMPT_REPRISE — Codex — Session 092
+:session: 092
 :date: 2026-08-22
 :status: PRET
 :max-lines: 45
@@ -9,47 +9,57 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 475/475 PASS (baseline préservée S-090)
+./gradlew test             # 482/482 PASS (baseline préservée S-091)
 ./gradlew cucumberTestEnrichment  # 8/8 scénarios CDX-4-4 PASSED
 ```
 
-== Session 090 terminée — CDX-7-2 ConvertToMarkdownTaskTest chaîné
+== Session 091 terminée — CDX-7-3 SemanticChunker extraction
 
-. *CDX-7-2 TERMINÉ* — 6 tests chaînés ajoutés à `ConvertToMarkdownTaskTest`
-  : exécutent `ExtractBookStructureTask.extract()` sur un PDF synthétique
-  (bold/normal/mono fonts) → nourrissent `ConvertToMarkdownTask.convert()`
-  → assertent le Markdown réel. Helpers `createSyntheticBookPdf` +
-  `createExtractTask` + `runChainedPipeline`. KDoc header CDX-7-2.
-. *501 tests 0 FAIL* (baseline 495 → +6 : 475 test task + 26 cucumber
-  dédiés). `check` VERT, Kover VERT, validatePlugins VERT. Zéro code
-  prod modifié, zéro bump BOM, zéro secret, zéro régression, backward
-  compat total. EPIC CDX-7 progression 3/5 US.
+. *CDX-7-3 TERMINÉ* — `SemanticChunker` object pur extrait de
+  `ChunkDocumentTask` (pattern CDX-7-1 `TypographicAnalyzer`). 7 unit
+  tests `SemanticChunkerTest` (chunk splitting, no-heading doc, code
+  blocks, deterministic IDs, buildSectionPath hierarchy,
+  extractFirstTwoSentences 2-sentence + null). `ChunkDocumentTask`
+  refactoré : délègue à `SemanticChunker.chunk()` (-153 lignes,
+  `Section`/`buildChunks`/`buildSectionPath`/`extractFirstTwoSentences`/
+  `extractCodeBlocks`/`generateChunkId` supprimés).
+. *Constat #7 documenté* : `CodexPipelineTask.chunkMd` (lignes 364-396)
+  est un duplicate simplifié de `SemanticChunker` (pas de hiérarchie, pas
+  d'overlap, pas de code blocks, IDs positionnels vs SHA-256 path).
+  Unification *différée* — changer `chunkMd` casserait le comportement
+  pipeline (IDs différents → chunks pgvector orphelins).
+. *508 tests 0 FAIL* (baseline 501 → +7 : 482 test + 26 cucumber
+  dédiés). `check` VERT, Kover VERT, validatePlugins VERT. Zéro bump
+  BOM, zéro secret, zéro régression, backward compat total. EPIC CDX-7
+  progression 4/5 US.
 
-== Prochaine session — 091
+== Prochaine session — 092
 
-*Mission principale* : *CDX-7-3* `SemanticChunkerTest` (extrait de
-`ChunkDocumentTask`). Unification potentielle `CodexPipelineTask.chunkMd`
-(constat #7 du cadrage S-077). ~7 unit. EPIC CDX-7 3/5 US
-(CDX-7-0 ✅, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090, CDX-7-3/4 🟡 À FAIRE).
+*Mission principale* : *CDX-7-4* `CodexPipelineIntegrationTest` E2E PDF
+canonique `office/books-collection/`. `@Tag("integration")` +
+`assumeTrue(pdfFile.exists())`. Pipeline complet : extract → markdown →
+chunk → assertions. ~3 tests integration. EPIC CDX-7 4/5 US (reste
+CDX-7-4 only → clôture EPIC CDX-7).
 
 *Alternatives* :
-. *CDX-7-4* (`CodexPipelineIntegrationTest` E2E PDF canonique
-  `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3
-  tests).
+. *Clôture EPIC CDX-7* si CDX-7-4 terminé → EPIC CDX-7 TERMINÉ 5/5 US.
 . *Actions reportées* : Démarrer EPIC RUNTIME-CONTRACTS côté MEMPHIS (US
   RC-1..7) pour débloquer US CDX-RC-04 (gate publication
   `runtime-contracts:0.0.1`).
+. *Unification constat #7* (US future) : `CodexPipelineTask.chunkMd` →
+  délègue à `SemanticChunker`. Casserait IDs chunks → nécessite
+  migration pgvector ou fallback backward compat.
 
 *Enchaînement* (ordre d'exécution du cadrage S-077) :
 . Domaines purs P1 TERMINÉS (CDX-3/4/5 ✅).
 . Phase tâches Gradle TERMINÉE (CDX-3-2/4-2/5-2/6-1/2 ✅).
 . Cucumber BDD TERMINÉ (CDX-3-3/4-4/5-3/6-3 ✅).
-. Tests chaînés : CDX-7-2 ✅, CDX-7-3/4 🟡 (reste EPIC CDX-7).
+. Tests chaînés : CDX-7-1/2/3 ✅, CDX-7-4 🟡 (reste EPIC CDX-7).
 
 == References
 
-- `.agents/sessions/090-cdx-7-2-chained-convert-markdown.adoc`
+- `.agents/sessions/091-cdx-7-3-semantic-chunker-extraction.adoc`
 - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` — doc cadrage 5 EPICs P1
 - `BACKLOG.adoc` § EPIC CDX-7 (US détaillées)
-- `build.gradle.kts:223` — tâche `cucumberTestPipelineRouting` (pattern S-082)
+- `SemanticChunker.kt` — KDoc documente constat #7 unification différée
 - Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.23 (bundle `8dc8e513`)

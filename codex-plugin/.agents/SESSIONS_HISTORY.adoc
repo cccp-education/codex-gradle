@@ -2082,3 +2082,80 @@ step `thePipelineOutputIsWrittenUnderZone`.
 chaîné. Alternatives : CDX-7-3 (`SemanticChunkerTest`) ou CDX-7-4
 (`CodexPipelineIntegrationTest` E2E). EPIC CDX-3/4/5/6 TERMINÉS.
 Actions reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS (gate CDX-RC-04).
+
+'''
+
+== Session 091 — 2026-08-20 — CDX-7-3 SemanticChunker extraction + ChunkDocumentTask delegation
+
+*EPIC* : CDX-7 (Tests unitaires + intégration)
+*US* : CDX-7-3 (`SemanticChunkerTest` extrait de `ChunkDocumentTask`)
+*Méthode* : baby-step TDD strict RED → GREEN → REFACTOR
+*Résultat* : ✅ TERMINÉ
+
+=== Objectif
+
+`SemanticChunkerTest` (extrait de `ChunkDocumentTask`). Unification
+potentielle `CodexPipelineTask.chunkMd` (constat #7 du cadrage S-077).
+~7 unit. EPIC CDX-7 3/5 US → 4/5 US.
+
+=== RED — SemanticChunkerTest (7 unit)
+
+Création `src/test/kotlin/codex/tasks/SemanticChunkerTest.kt` :
+* `chunk splits simple markdown into heading sections` — 3+ chunks, sourceDocument, sectionPath, license
+* `chunk produces single chunk for no-heading document` — headingLevel 0, sourceDocument
+* `chunk extracts code blocks from sections` — JS + Python code blocks
+* `chunk generates deterministic IDs for the same input` — SHA-256 `chk-` prefix
+* `buildSectionPath builds hierarchy from ancestor headings` — direct Section construction, " > " separators, excludes siblings
+* `extractFirstTwoSentences returns first two sentences from lines` — 2-sentence extraction
+* `extractFirstTwoSentences returns null for empty lines` — empty + blank/heading-only → null
+
+Compile fail : `Unresolved reference 'SemanticChunker'` (object n'existe pas).
+
+=== GREEN — SemanticChunker object pur
+
+Création `src/main/kotlin/codex/tasks/SemanticChunker.kt` (object pur,
+pattern CDX-7-1 `TypographicAnalyzer`) :
+* `chunk(text, sourceDocument, license): List<DocumentChunk>` — délègue à `buildChunks` privé
+* `buildSectionPath(sections, currentIndex): String` — public pour test direct
+* `extractFirstTwoSentences(lines): String?` — public pour test direct
+* `Section` data class publique (headingLine/headingLevel/headingText/contentLines)
+* Logique privée préservée verbatim de `ChunkDocumentTask` : heading detection
+  (`#{1,6}` regex), pendingLines accumulation, trimLeadingAndTrailingBlanks,
+  buildContent, extractCodeBlocks (``` fences), generateChunkId (SHA-256
+  `$source:$sectionPath` → `chk-<16hex>`)
+
+7/7 SemanticChunkerTest PASSED.
+
+=== REFACTOR — ChunkDocumentTask delegation + constat #7 documentation
+
+* `ChunkDocumentTask` refactoré : `Section` data class + `buildChunks` +
+  `mergePendingIntoContent` + `trimLeadingAndTrailingBlanks` + `buildContent`
+  + `extractCodeBlocks` + `buildSectionPath` + `extractFirstTwoSentences` +
+  `generateChunkId` supprimés (-153 lignes). `chunk()` délègue à
+  `SemanticChunker.chunk(text, sourceDocument, license)`. `import
+  java.security.MessageDigest` supprimé.
+* KDoc `SemanticChunker` documente le constat #7 : `CodexPipelineTask.chunkMd`
+  (lignes 364-396) est un duplicate simplifié (pas de hiérarchie, pas
+  d'overlap, pas de code blocks, IDs positionnels vs SHA-256 path).
+  L'unification est *différée* — changer `chunkMd` casserait le comportement
+  du pipeline (IDs différents → chunks pgvector orphelins). Le constat est
+  tracé pour une US future (CDX-7-4 ou EPIC dédié).
+* Non-régression : 11/11 ChunkDocumentTaskTest PASSED après refactor (behaviour identique).
+
+=== Résultats
+
+* 508 tests 0 FAIL (baseline 501 → +7 : 482 test task + 26 cucumber dédiés)
+* `check` VERT 1m28s, Kover VERT, validatePlugins VERT
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+* EPIC CDX-7 progression 4/5 US
+
+*Fichiers* — 1 prod créé (SemanticChunker.kt 149 lignes) + 1 test créé
+(SemanticChunkerTest.kt 124 lignes) + 1 prod refactoré (ChunkDocumentTask.kt
+-153 lignes).
+
+*Prochaine session* : 092 — Démarrer CDX-7-4 `CodexPipelineIntegrationTest`
+E2E PDF canonique `office/books-collection/`. `@Tag("integration")` +
+`assumeTrue(pdfFile.exists())`. ~3 tests integration. Clôture EPIC CDX-7
+si terminé. Actions reportées : démarrer EPIC RUNTIME-CONTRACTS MEMPHIS
+(gate CDX-RC-04). Unification constat #7 (US future) : `CodexPipelineTask.chunkMd`
+→ délègue à `SemanticChunker`.

@@ -1,6 +1,42 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-20
-:session: 087
+:session: 091
+
+== Session 091 — CDX-7-3 SemanticChunker extraction (+7 tests, 508/508 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/tasks/SemanticChunkerTest.kt` | 7 unit | ✅ PASS (chunk splitting 3+ sections, no-heading doc → 1 chunk level 0, code blocks JS+Python, deterministic SHA-256 IDs, buildSectionPath hierarchy with " > " separators, extractFirstTwoSentences 2-sentence, extractFirstTwoSentences null for empty/blank/heading-only)
+| `main/kotlin/codex/tasks/SemanticChunker.kt` | (object pur extrait) | ✅ Pattern CDX-7-1 `TypographicAnalyzer` — `chunk()` + `buildSectionPath()` + `extractFirstTwoSentences()` publics, logique privée préservée verbatim de `ChunkDocumentTask`
+| `main/kotlin/codex/tasks/ChunkDocumentTask.kt` | refactor -153 lignes | ✅ Délègue à `SemanticChunker.chunk()`, `Section`/`buildChunks`/helpers supprimés. Non-régression 11/11 ChunkDocumentTaskTest PASSED.
+|===
+
+*Nouveau testé* :
+- `SemanticChunker` — object pur (domaine `codex.tasks`, pattern CDX-7-1
+  `TypographicAnalyzer`). 7 unit tests couvrent : chunk splitting par
+  heading (3+ sections), document sans heading → 1 chunk level 0,
+  extraction code blocks (``` fences JS + Python), IDs déterministes
+  SHA-256 (`chk-<16hex>` prefix), `buildSectionPath` hiérarchie ancêtres
+  avec " > " separators (exclut siblings), `extractFirstTwoSentences`
+  2-sentence extraction + null pour empty/blank/heading-only.
+- `ChunkDocumentTask` delegation — refactor backward compat total.
+  11/11 `ChunkDocumentTaskTest` PASSED après refactor (behaviour
+  identique : même chunks, mêmes IDs, mêmes sectionPaths, mêmes
+  overlaps, mêmes code blocks).
+
+*Constat #7 documenté* : `CodexPipelineTask.chunkMd` (lignes 364-396)
+duplicate simplifié de `SemanticChunker` (pas de hiérarchie, pas
+d'overlap, pas de code blocks, IDs positionnels `$sourceDocument:$i`
+vs SHA-256 `$source:$sectionPath`). Unification *différée* — changer
+`chunkMd` casserait IDs chunks → chunks pgvector orphelins. KDoc
+`SemanticChunker` trace le constat pour US future.
+
+*Coverage impact* : baseline 501 → 508 tests (+7). `check` VERT, Kover
+VERT, validatePlugins VERT. Zéro régression, zéro bump BOM, zéro secret.
+
+'''
 
 == Session 087 — CDX-4-3 câblage canal Graphify (+15 tests, 392/392 PASS)
 

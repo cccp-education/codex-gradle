@@ -1,0 +1,83 @@
+= Session 091 — CDX-7-3 SemanticChunker extraction + ChunkDocumentTask delegation
+:session: 091
+:date: 2026-08-20
+:epic: CDX-7
+:us: CDX-7-3
+:status: TERMINÉ
+:tests: 508 (482 test + 26 cucumber dédiés)
+:baseline: 501 → +7
+
+== Objectif
+
+*CDX-7-3* `SemanticChunkerTest` (extrait de `ChunkDocumentTask`). Unification
+potentielle `CodexPipelineTask.chunkMd` (constat #7 du cadrage S-077).
+~7 unit. EPIC CDX-7 3/5 US (CDX-7-0 ✅, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090,
+CDX-7-3 ✅ S-091, CDX-7-4 🟡 À FAIRE).
+
+== Approche — baby-step TDD strict (RED → GREEN → REFACTOR)
+
+=== RED — SemanticChunkerTest (7 unit)
+
+Création `src/test/kotlin/codex/tasks/SemanticChunkerTest.kt` :
+* `chunk splits simple markdown into heading sections` — 3+ chunks, sourceDocument, sectionPath, license
+* `chunk produces single chunk for no-heading document` — headingLevel 0, sourceDocument
+* `chunk extracts code blocks from sections` — JS + Python code blocks
+* `chunk generates deterministic IDs for the same input` — SHA-256 `chk-` prefix
+* `buildSectionPath builds hierarchy from ancestor headings` — direct Section construction, " > " separators, excludes siblings
+* `extractFirstTwoSentences returns first two sentences from lines` — 2-sentence extraction
+* `extractFirstTwoSentences returns null for empty lines` — empty + blank/heading-only → null
+
+Compile fail : `Unresolved reference 'SemanticChunker'` (object n'existe pas).
+
+=== GREEN — SemanticChunker object pur
+
+Création `src/main/kotlin/codex/tasks/SemanticChunker.kt` (object pur, pattern
+CDX-7-1 `TypographicAnalyzer`) :
+* `chunk(text, sourceDocument, license): List<DocumentChunk>` — délègue à `buildChunks` privé
+* `buildSectionPath(sections, currentIndex): String` — public pour test direct
+* `extractFirstTwoSentences(lines): String?` — public pour test direct
+* `Section` data class publique (headingLine/headingLevel/headingText/contentLines)
+* Logique privée préservée verbatim de `ChunkDocumentTask` : heading detection
+  (`#{1,6}` regex), pendingLines accumulation, trimLeadingAndTrailingBlanks,
+  buildContent, extractCodeBlocks (``` fences), generateChunkId (SHA-256
+  `$source:$sectionPath` → `chk-<16hex>`)
+
+7/7 SemanticChunkerTest PASSED.
+
+=== REFACTOR — ChunkDocumentTask delegation + constat #7 documentation
+
+* `ChunkDocumentTask` refactoré : `Section` data class + `buildChunks` +
+  `mergePendingIntoContent` + `trimLeadingAndTrailingBlanks` + `buildContent`
+  + `extractCodeBlocks` + `buildSectionPath` + `extractFirstTwoSentences` +
+  `generateChunkId` supprimés (-153 lignes). `chunk()` délègue à
+  `SemanticChunker.chunk(text, sourceDocument, license)`. `import
+  java.security.MessageDigest` supprimé.
+* KDoc `SemanticChunker` documente le constat #7 : `CodexPipelineTask.chunkMd`
+  (lignes 364-396) est un duplicate simplifié (pas de hiérarchie, pas
+  d'overlap, pas de code blocks, IDs positionnels vs SHA-256 path).
+  L'unification est *différée* — changer `chunkMd` casserait le comportement
+  du pipeline (IDs différents → chunks pgvector orphelins). Le constat est
+  tracé pour une US future (CDX-7-4 ou EPIC dédié).
+* Non-régression : 11/11 ChunkDocumentTaskTest PASSED après refactor (behaviour identique).
+
+== Vérification
+
+* `./gradlew compileKotlin` VERT (1 warning préexistant EnrichJsonLddTask opt-in, hors scope)
+* `./gradlew test --tests SemanticChunkerTest` — 7/7 PASSED
+* `./gradlew test --tests ChunkDocumentTaskTest --tests SemanticChunkerTest` — 18/18 PASSED
+* `./gradlew check` BUILD SUCCESSFUL in 1m 28s — Kover VERT, validatePlugins VERT
+* Total : 508 tests 0 FAIL (baseline 501 → +7 : 482 test task + 26 cucumber dédiés)
+* Zéro bump BOM, zéro secret, zéro régression, backward compat total
+
+== Fichiers modifiés
+
+* `src/main/kotlin/codex/tasks/SemanticChunker.kt` (nouveau, 149 lignes)
+* `src/test/kotlin/codex/tasks/SemanticChunkerTest.kt` (nouveau, 124 lignes)
+* `src/main/kotlin/codex/tasks/ChunkDocumentTask.kt` (refactor -153 lignes, délègue à SemanticChunker)
+
+== EPIC CDX-7 progression
+
+4/5 US (CDX-7-0 ✅, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090, CDX-7-3 ✅ S-091,
+CDX-7-4 🟡 À FAIRE). Reste CDX-7-4 `CodexPipelineIntegrationTest` E2E PDF
+canonique `office/books-collection/` (`@Tag("integration")` + `assumeTrue`,
+~3 tests).

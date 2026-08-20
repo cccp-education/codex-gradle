@@ -555,3 +555,28 @@ CDX-4-2 ✅ S-086, CDX-4-3 ✅ S-087, CDX-4-4 ✅ S-088). Domaine
 CDX-6-2 ✅ S-089, CDX-6-3 ✅ S-089). Domaine `codex.licence` (14e) clos.
 *Baby-step TDD/BDD strict RED → GREEN → REFACTOR. Zéro bump BOM, zéro
 secret, zéro régression, backward compat total.
+
+---
+
+== Session 091 — CDX-7-3 SemanticChunker extraction (2026-08-20)
+
+*EPIC* : CDX-7 (Tests unitaires + intégration) — progression 4/5 US
+*US* : CDX-7-3 (`SemanticChunkerTest` extrait de `ChunkDocumentTask`)
+*Méthode* : baby-step TDD strict RED → GREEN → REFACTOR
+*Résultat* : ✅ TERMINÉ
+
+*CDX-7-3* — `SemanticChunker` object pur extrait de `ChunkDocumentTask`
+(pattern CDX-7-1 `TypographicAnalyzer`). 7 unit `SemanticChunkerTest`
+(chunk splitting, no-heading doc, code blocks, deterministic IDs,
+buildSectionPath hierarchy, extractFirstTwoSentences 2-sentence + null).
+`ChunkDocumentTask` refactoré : délègue à `SemanticChunker.chunk()`
+(-153 lignes). Constat #7 documenté : `CodexPipelineTask.chunkMd`
+duplicate simplifié, unification différée (casserait IDs chunks →
+pgvector orphelins).
+
+*508 tests 0 FAIL* (baseline 501 → +7). `check` VERT, Kover VERT,
+validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression,
+backward compat total.
+
+*Fichiers* — 1 prod créé (SemanticChunker.kt) + 1 test créé
+(SemanticChunkerTest.kt) + 1 prod refactoré (ChunkDocumentTask.kt -153 lignes).

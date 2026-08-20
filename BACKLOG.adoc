@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-21 (session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné : 6 tests ExtractBookStructureTask.extract() → ConvertToMarkdownTask.convert() sur PDF synthétique bold/normal/mono, 501 tests 0 FAIL, EPIC CDX-7 3/5 US)_
+_Dernière mise à jour : 2026-08-20 (session 091 — CDX-7-3 SemanticChunker object pur extrait de ChunkDocumentTask + 7 unit + delegation refactor -153 lignes, 508 tests 0 FAIL, EPIC CDX-7 4/5 US)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -370,8 +370,8 @@ ExtractTextTask, TypographicAnalyzer, MarkdownConverter, SemanticChunker
 | ✅ TERMINÉ (S-090)
 
 | CDX-7-3
-| `SemanticChunkerTest` (extrait de `ChunkDocumentTask`). Unification potentielle `CodexPipelineTask.chunkMd` (constat #7). ~7 unit.
-| 🟡 À FAIRE
+| `SemanticChunkerTest` (extrait de `ChunkDocumentTask`). `SemanticChunker` object pur extrait (pattern CDX-7-1 `TypographicAnalyzer`), `ChunkDocumentTask` délègue (-153 lignes). Constat #7 documenté : `CodexPipelineTask.chunkMd` duplicate simplifié, unification différée (casserait IDs chunks → pgvector orphelins). 7 unit.
+| ✅ TERMINÉ (S-091)
 
 | CDX-7-4
 | `CodexPipelineIntegrationTest` E2E PDF canonique `office/books-collection/`. `@Tag("integration")` + `assumeTrue`. ~3 tests integration.
