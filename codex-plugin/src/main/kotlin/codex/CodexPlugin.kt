@@ -16,13 +16,14 @@ import codex.tasks.ExtractBookStructureTask
 import codex.tasks.ExtractEpubStructureTask
 import codex.tasks.ExtractTextTask
 import codex.tasks.ImportBookSqlTask
+import codex.tasks.PersistLearnerProfileTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /**
  * Gradle plugin for unstructured document acquisition and transformation.
  *
- * Registers 13 tasks organized into 3 unified taxonomy groups:
+ * Registers 14 tasks organized into 4 unified taxonomy groups:
  *
  * **COLLECT group**:
  * - `collectText` — raw text extraction from PDF
@@ -46,6 +47,9 @@ import org.gradle.api.Project
  *
  * **DEPLOY group**:
  * - `deployKnowledgeBase` — multi-format export (JSON-L, Markdown, AsciiDoc)
+ *
+ * **CODEX-MEMORY group**:
+ * - `persistLearnerProfile` — persist a learner profile JSON to pgvector via SessionMemoryContract RAG bridge
  *
  * Configures a [CodexExtension] for pgvector connection parameters.
  * Automatically detects the license zone ([LicenseZoneDetector]) at load time.
@@ -243,6 +247,19 @@ class CodexPlugin : Plugin<Project> {
             it.group = "transform"
             it.description = "JSON LDD + RAG chunks + Graphify graph.json → enriched LDD nodes JSON (cross-source annotation)"
             it.outputFile.set(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
+        }
+
+        project.tasks.register(
+            "persistLearnerProfile",
+            PersistLearnerProfileTask::class.java
+        ) {
+            it.group = "codex-memory"
+            it.description = "Persiste un profil stagiaire JSON dans pgvector via le pont RAG SessionMemoryContract (memoire de session)"
+            it.pgHost.convention(extension.pgvectorHost)
+            it.pgPort.convention(extension.pgvectorPort)
+            it.pgDatabase.convention(extension.pgvectorDatabase)
+            it.pgUser.convention(extension.pgvectorUser)
+            it.pgPassword.convention(extension.pgvectorPassword)
         }
     }
 }

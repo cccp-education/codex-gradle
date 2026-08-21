@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 093 — cadrage EPIC CDX-UNIFY unification constat #7, gouvernance pure, zéro code modifié)_
+_Dernière mise à jour : 2026-08-22 (session 094 — EPIC CDX-RC-04 TERMINÉ 4/4 baby-steps, pont RAG SessionMemoryContract, domaine codex.profile 12e, 661 tests 0 FAIL)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -100,6 +100,22 @@ parcouru, pas `indexOf`.
   S-073 EPIC CDX-CR3 (3 bugs P0/P1) + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration.
   204 tests, 0 failures.
 
+=== PUB-3.11 — codex-plugin 0.0.5 🟡 À FAIRE (S-095)
+**Priorite** : P1
+**Estimation** : 1 pt
+**Dependances** : runtime-contracts:0.0.1 ✅ Central (MEMPHIS S-022), BOM 0.0.24 ✅ Central
+
+. Bump `codex-plugin/gradle/libs.versions.toml` ligne `codex-plugin = "0.0.4"` → `"0.0.5"`
+  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`).
+. Bump constraint codex `0.0.4` → `0.0.5` côté MEMPHIS (`workspace-bom`).
+. Contenu depuis 0.0.4 : S-077..S-093 EPICs P1 corpus enrichment
+  (CDX-3 ontology, CDX-4 enrichment, CDX-5 licence routing, CDX-6 routing,
+  CDX-7 typographic analysis + SemanticChunker + E2E, CDX-UNIFY) +
+  S-094 CDX-RC-04 pont RAG SessionMemoryContract (domaine codex.profile,
+  PgVectorSessionMemory, persistLearnerProfile). 661 tests, 0 FAIL.
+. `cd foundry/public/codex-gradle/codex-plugin && ../gradlew publishAggregationToCentralPortal --no-daemon`
+. Vérifier sur https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.5
+
 === PUB-2.2 — Mise a jour commentaire relocation dans build.gradle.kts ✅ CADUQUE (S-074)
 **Priorite** : P1
 **Estimation** : 1 pt
@@ -121,7 +137,7 @@ de la spécification rather qu'une exécution.
 | codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.3 publié S-074) |
 
 '''
-== 🟡 EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, DÉBLOQUÉ S-022
+== ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094
 
 _Source_ : `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc` (jardin secret) — EPIC RUNTIME-CONTRACTS-3
 `SessionMemoryContract` + `LearnerProfile` (US EPIC-RC-04, ✅ TERMINÉ côté MEMPHIS S-022).
@@ -130,7 +146,7 @@ _Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié, cadrage unique
 === Contexte cross-borough
 
 L'EPIC RUNTIME-CONTRACTS (MEMPHIS) crée le 8e artefact N0 `runtime-contracts`
-avec 8 US (RC-0 cadrage ✅, RC-1..7 ⏳ À FAIRE). Codex est identifié dans le
+avec 8 US (✅ TERMINÉ côté MEMPHIS S-022). Codex est identifié dans le
 cadrage (ligne 281 du `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc`) comme
 *l'implémenteur privé du pont RAG* pour la US RC-3 `SessionMemoryContract` :
 
@@ -171,7 +187,10 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
   TDD strict : unit (port + adapter fake) → functional (R2DBC in-memory)
   → Cucumber `codex_session_memory.feature` @session-memory.
   ~4 unit + ~3 functional + ~3 scénarios.
-| 🟡 DÉBLOQUÉ (gate MEMPHIS levée S-022 — runtime-contracts:0.0.1 publié Central)
+| ✅ TERMINÉ (S-094 — 4/4 baby-steps : domaine codex.profile 12e +
+  PgVectorSessionMemory adapter R2DBC/ONNX + tâche persistLearnerProfile
+  groupe codex-memory + Cucumber 10 scénarios @session-memory. 661 tests
+  0 FAIL, check VERT, zéro bump BOM, zéro régression)
 |===
 
 === Décisions architecturales (cadrage S-076)
@@ -202,9 +221,11 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
 
 *FAIT côté MEMPHIS* : EPIC RUNTIME-CONTRACTS TERMINÉ S-022 (2026-08-21).
 `runtime-contracts:0.0.1` publié Maven Central.
-*Côté codex* : bump codex `build.gradle.kts`
-`implementation("education.cccp:runtime-contracts:0.0.1")` et démarrer
-l'US CDX-RC-04 en baby-step TDD/BDD.
+*FAIT côté codex* : US CDX-RC-04 TERMINÉE S-094 (2026-08-22) — bump
+`runtime-contracts:0.0.1` + BOM 0.0.24, domaine `codex.profile` (12e),
+adapter `PgVectorSessionMemory`, tâche `persistLearnerProfile`,
+Cucumber 10 scénarios. 661 tests 0 FAIL.
+*Reste* : publication codex-plugin 0.0.5 (voir § EPIC PUB).
 
 '''
 == ✅ EPIC CDX-15 — TDD rétroactif — ✅ CADUQUE (S-076)

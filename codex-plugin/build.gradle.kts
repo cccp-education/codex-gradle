@@ -27,7 +27,7 @@ version = libs.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.23"))
+    implementation(platform("education.cccp:workspace-bom:0.0.24"))
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -49,6 +49,9 @@ dependencies {
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
     implementation("education.cccp:codebase-contracts:0.0.2")
+
+    // N0 runtime contracts — SessionMemoryContract + LearnerProfile (CDX-RC-04 pont RAG session memory)
+    implementation("education.cccp:runtime-contracts:0.0.1")
 
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
@@ -266,6 +269,31 @@ val cucumberTestPipelineUnify by tasks.registering(Test::class) {
     systemProperty("cucumber.junit-platform.naming-strategy", "long")
     systemProperty("cucumber.features", "src/test/resources/features/codex_pipeline_unified_chunking.feature")
     systemProperty("cucumber.filter.tags", "@pipeline and @unify and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}
+
+// ── CDX-RC-04-4 — Dedicated Cucumber runner for session memory (pattern S-082) ─
+// Scoped to CodexSessionMemoryCucumberRunner so only codex_session_memory.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestSessionMemory by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_session_memory.feature Cucumber suite (CDX-RC-04-4 session memory)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexSessionMemoryCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_session_memory.feature")
+    systemProperty("cucumber.filter.tags", "@session-memory and not @wip and not @integration")
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }

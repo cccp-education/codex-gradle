@@ -2256,3 +2256,136 @@ canonique.
   (`CodexPipelineUnifyCucumberRunner.kt`), 1 steps cucumber
   (`UnifiedPipelineChunkingSteps.kt`), 1 feature
   (`codex_pipeline_unified_chunking.feature`).
+
+== Session 094 — EPIC CDX-RC-04 Pont RAG SessionMemoryContract
+
+_Date_ : 2026-08-22
+_EPIC_ : CDX-RC-04
+_Statut_ : ✅ TERMINÉ (4/4 baby-steps TDD/BDD)
+
+=== Objectif
+
+Démarrer l'US CDX-RC-04 — implémentation privée du pont RAG
+`SessionMemoryContract` côté codex N2. Le contrat N0 (MEMPHIS
+`runtime-contracts:0.0.1` publié S-022) est consommé et implémenté via
+pgvector : persistance profil stagiaire dans table dédiée
+`codex_learner_profiles` + embedding ONNX 384-dim calculé depuis
+weakPoints + annotations.
+
+=== CDX-RC-04-1 — Domaine codex.profile (unit TDD)
+
+Baby-step TDD strict RED → GREEN → REFACTOR. 3 objets purs (sans état,
+unit-testables sans DB ni ONNX) :
+
+- `ProfileConfig` — data class config pgvector (mirror CodexVectorStore).
+- `ProfileStatements` — object pur templates SQL (pattern IngestStatements
+  CDX-CR3-1). DDL `codex_learner_profiles` (clé composite
+  `(learner_id, formation_id)`, embedding `vector(384)`, colonnes JSONB
+  castées `$3::jsonb` — limitation R2DBC PostgreSQL), UPSERT ON CONFLICT
+  composite key, SELECT par clé, UPDATE embedding (inline safe literals).
+- `ProfileEmbedding` — object pur calcule texte à embedder (weakPoints +
+  annotations values join, skip completedModules/progressionPct/
+  comprehensionScore/currentModule — IDs et numériques non sémantiques).
+
+4 fichiers test créés (27 unit) :
+- `ProfileConfigTest` (2 unit defaults + custom).
+- `ProfileStatementsTest` (9 unit DDL + upsert + select + updateEmbedding
+  + bind counts + interpolation check).
+- `ProfileEmbeddingTest` (8 unit empty + weakPoints + annotations +
+  concat + completedModules excluded + numerics excluded + currentModule
+  excluded + deterministic).
+
+Bump `build.gradle.kts` : `runtime-contracts:0.0.1` + BOM 0.0.23 → 0.0.24.
+Compile OK.
+
+=== CDX-RC-04-2 — PgVectorSessionMemory adapter (functional testcontainers)
+
+`PgVectorSessionMemory` implémente `SessionMemoryContract` (save/load)
+via R2DBC + ONNX `AllMiniLmL6V2EmbeddingModel` (lazy). Pattern
+`CodexVectorStore`/`CodexIngestTask`.
+
+3 bugs corrigés :
+- (1) `bind(index, value: Any)` n'accepte pas null → `bindNull` pour
+  `currentModule`/`lastInteractionAt` nullables + smart cast via
+  variables locales (propriété d'un autre module).
+- (2) R2DBC lazy — `execute().awaitFirstOrNull()` ne consomme pas le
+  `Result` → INSERT non exécuté. Corrigé en
+  `.awaitFirst().rowsUpdated.awaitFirst()` (consomme le Result,
+  déclenche l'INSERT).
+- (3) JSONB — bind String sur colonne JSONB →
+  `PostgresqlBadGrammarException: column is of type jsonb but expression
+  is of type character varying`. Corrigé via cast `$3::jsonb` dans le SQL
+  (R2DBC PostgreSQL ne cast pas automatiquement String → jsonb).
+
+`PgVectorSessionMemoryIT` (5 functional `@Tag("integration")`) :
+round-trip complet, upsert overwrite, null pour clé inconnue, clé
+composite (même learner ≠ formations = profils distincts), empty profile.
+5/5 PASSED (Testcontainers pgvector/pgvector:pg16).
+
+=== CDX-RC-04-3 — Tâche persistLearnerProfile + wiring (functional)
+
+`PersistLearnerProfileTask` — thin wrapper Gradle (pattern
+`DeriveOntologyTask`). Lit profil JSON (Jackson `KotlinModule` —
+`LearnerProfile` N0 non-`@Serializable`), délègue à
+`PgVectorSessionMemory.save()`. `@InputFile profileFile` + 5 props pg
+`@Input`. Groupe `codex-memory` (mémoire de session, distincte du
+pipeline documentaire collect/transform/deploy).
+
+Wiring `CodexPlugin` : tâche `persistLearnerProfile` groupe
+`codex-memory` (14e tâche, 4e groupe CODEX-MEMORY), props pg convention
+depuis `CodexExtension` (même config que `collectIngest`/`collectRetrieve`).
+KDoc 13 → 14 tâches.
+
+`PersistLearnerProfileTaskIT` (2 functional `@Tag("integration")`) :
+persistance profil JSON → pgvector + vérification reload via
+`PgVectorSessionMemory.load()`, registration + group dans CodexPlugin.
+2/2 PASSED.
+
+=== CDX-RC-04-4 — Cucumber BDD (pure BDD)
+
+`codex_session_memory.feature` 10 scénarios `@session-memory` :
+- 4 scénarios embedding (empty → empty, weakPoints, annotations,
+  completedModules excluded).
+- 5 scénarios save/load (round-trip composite key, same learner
+  different formations distincts, unknown → null, upsert overwrite,
+  FakeSessionMemory in-memory — pas de DB, pure BDD).
+- 1 scénario SQL template (upsert ON CONFLICT, DDL table dédiée +
+  composite PK + embedding 384).
+
+`CodexSessionMemoryCucumberRunner` (pattern S-082, 6e runner codex) +
+`SessionMemorySteps` (24 step defs préfixés "session memory"/"profile"
+pour éviter DuplicateStepDefinition, bug S-088) +
+`FakeSessionMemory` (in-memory map implémente `SessionMemoryContract`).
+Tâche `cucumberTestSessionMemory` câblée `build.gradle.kts`. 10/10
+scénarios PASSED.
+
+=== Résultats
+
+- `./gradlew check` VERT 1m36s.
+- `test` task : 661 tests, 0 failures (baseline S-093 535 → +126 dont
+  +27 unit + +5 functional IT + +2 functional task IT + +20 cucumber
+  dédiés + variations). 214 skip (tests `@Tag("integration")`).
+- Cucumber dédiés : 10/10 session-memory + 4/4 enrichment + 3/3 ontology +
+  3/3 licence + 3/3 pipeline routing + 3/3 pipeline unify = 26 scénarios
+  GREEN (20 tests session-memory — doublés par le `test` task qui scanne
+  la feature via junit-platform.properties).
+- Kover VERT, validatePlugins VERT.
+- `publishToMavenLocal` VERT.
+- Zéro bump BOM (runtime-contracts:0.0.1 + BOM 0.0.24 déjà Central
+  MEMPHIS S-022), zéro secret, zéro régression, backward compat total
+  (nouveau domaine + nouvelle table + nouvelle tâche — zéro impact
+  pipeline documentaire existant).
+- Domaine `codex.profile` (12e) clos — 5 fichiers prod
+  (ProfileConfig, ProfileStatements, ProfileEmbedding, PgVectorSessionMemory,
+  PersistLearnerProfileTask) + 6 fichiers test (4 unit + 2 functional IT)
+  + 1 runner cucumber + 1 steps + 1 feature.
+
+=== Prochaine session — 095
+
+- Publication codex-plugin 0.0.5 (CDX-RC-04 = nouvelle fonctionnalité,
+  bump mineur justifié). Vérifier ordre DAG (runtime-contracts:0.0.1 +
+  BOM 0.0.24 déjà Central). Bump `libs.versions.toml` codex-plugin
+  0.0.4→0.0.5 + BOM constraint codex 0.0.4→0.0.5 côté MEMPHIS.
+  `publishAggregationToCentralPortal --no-daemon`.
+- Alternatives : cleanup KDoc `SemanticChunker.kt` (mention
+  "unification différée" caduque S-093), EPICs P2 non cadrés.

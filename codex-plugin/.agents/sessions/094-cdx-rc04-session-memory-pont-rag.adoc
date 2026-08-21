@@ -1,0 +1,152 @@
+= Session 094 — EPIC CDX-RC-04 — Pont RAG SessionMemoryContract
+:date: 2026-08-22
+:epic: CDX-RC-04
+:status: ✅ TERMINÉ
+:tests: 661 test 0 FAIL + 20 cucumber dédiés session-memory
+
+== Objectif
+
+Démarrer l'US CDX-RC-04 — implémentation privée du pont RAG
+`SessionMemoryContract` côté codex N2. Le contrat N0 (MEMPHIS
+`runtime-contracts:0.0.1` publié S-022) est consommé et implémenté
+via pgvector : persistance profil stagiaire dans table dédiée
+`codex_learner_profiles` + embedding ONNX 384-dim calculé depuis
+weakPoints + annotations.
+
+L'US est grosse (~10 pts) — découpée en 4 baby-steps TDD/BDD strict
+(unit → functional → wiring → cucumber), conformément à la méthodologie
+agile software craftsmanship.
+
+== Découpage baby-step
+
+. *CDX-RC-04-1* — Domaine `codex.profile` (12e) + objets purs unit-testables
+. *CDX-RC-04-2* — Adapter `PgVectorSessionMemory` + functional R2DBC testcontainers
+. *CDX-RC-04-3* — Tâche Gradle `persistLearnerProfile` + wiring CodexPlugin
+. *CDX-RC-04-4* — Cucumber BDD `codex_session_memory.feature` + runner dédié
+
+== CDX-RC-04-1 — Domaine codex.profile (unit TDD)
+
+Baby-step TDD strict RED → GREEN → REFACTOR. 4 fichiers prod purs
+(3 objects/data class sans état, unit-testables sans DB ni ONNX) :
+* `ProfileConfig` — data class config pgvector (mirror `CodexVectorStore`)
+* `ProfileStatements` — object pur templates SQL (pattern `IngestStatements`
+  CDX-CR3-1). DDL `codex_learner_profiles` (clé composite
+  `(learner_id, formation_id)`, embedding `vector(384)`, colonnes JSONB
+  castées `$3::jsonb` — limitation R2DBC PostgreSQL), UPSERT ON CONFLICT
+  composite key, SELECT par clé, UPDATE embedding (inline safe literals)
+* `ProfileEmbedding` — object pur calcule texte à embedder (weakPoints +
+  annotations values join, skip completedModules/progressionPct/
+  comprehensionScore/currentModule — IDs et numériques ne sont pas
+  sémantiques, filtrage SQL direct)
+
+4 fichiers test créés (27 unit) :
+* `ProfileConfigTest` (2 unit defaults + custom)
+* `ProfileStatementsTest` (9 unit DDL + upsert + select + updateEmbedding
+  + bind counts + interpolation check)
+* `ProfileEmbeddingTest` (8 unit empty + weakPoints + annotations +
+  concat + completedModules excluded + numerics excluded + currentModule
+  excluded + deterministic)
+
+Bump `build.gradle.kts` : `runtime-contracts:0.0.1` + BOM 0.0.23 → 0.0.24.
+Compile OK.
+
+== CDX-RC-04-2 — PgVectorSessionMemory adapter (functional testcontainers)
+
+`PgVectorSessionMemory` implémente `SessionMemoryContract` (save/load)
+via R2DBC + ONNX `AllMiniLmL6V2EmbeddingModel` (lazy). Pattern
+`CodexVectorStore`/`CodexIngestTask`.
+
+Bug 1 (compile) : `bind(index, value: Any)` n'accepte pas null →
+`bindNull` pour `currentModule`/`lastInteractionAt` nullables + smart
+cast via variables locales (propriété d'un autre module).
+
+Bug 2 (R2DBC lazy) : `execute().awaitFirstOrNull()` ne consomme pas le
+`Result` → INSERT non exécuté. Corrigé en `.awaitFirst().rowsUpdated.awaitFirst()`
+(consomme le Result, déclenche l'INSERT).
+
+Bug 3 (JSONB) : bind String sur colonne JSONB →
+`PostgresqlBadGrammarException: column is of type jsonb but expression
+is of type character varying`. Corrigé via cast `$3::jsonb` dans le SQL
+(R2DBC PostgreSQL ne cast pas automatiquement String → jsonb).
+
+`PgVectorSessionMemoryIT` (5 functional `@Tag("integration")`) :
+round-trip complet, upsert overwrite, null pour clé inconnue, clé
+composite (même learner ≠ formations = profils distincts), empty profile.
+5/5 PASSED (Testcontainers pgvector/pgvector:pg16).
+
+== CDX-RC-04-3 — Tâche persistLearnerProfile + wiring (functional)
+
+`PersistLearnerProfileTask` — thin wrapper Gradle (pattern
+`DeriveOntologyTask`). Lit profil JSON (Jackson `KotlinModule` —
+`LearnerProfile` N0 n'est pas `@Serializable`), délègue à
+`PgVectorSessionMemory.save()`. `@InputFile profileFile` + 5 props pg
+`@Input`. Groupe `codex-memory` (mémoire de session, distincte du
+pipeline documentaire collect/transform/deploy).
+
+Wiring `CodexPlugin` : tâche `persistLearnerProfile` groupe
+`codex-memory`, props pg convention depuis `CodexExtension` (même
+config que `collectIngest`/`collectRetrieve`). KDoc 13 → 14 tâches,
+4 groupes (ajout CODEX-MEMORY).
+
+`PersistLearnerProfileTaskIT` (2 functional `@Tag("integration")`) :
+persistance profil JSON → pgvector + vérification reload via
+`PgVectorSessionMemory.load()`, registration + group dans CodexPlugin.
+2/2 PASSED.
+
+== CDX-RC-04-4 — Cucumber BDD (pure BDD)
+
+`codex_session_memory.feature` 10 scénarios `@session-memory` :
+* 4 scénarios embedding (empty → empty, weakPoints, annotations,
+  completedModules excluded)
+* 5 scénarios save/load (round-trip composite key, same learner
+  different formations distincts, unknown → null, upsert overwrite,
+  FakeSessionMemory in-memory — pas de DB, pure BDD)
+* 1 scénario SQL template (upsert ON CONFLICT, DDL table dédiée +
+  composite PK + embedding 384)
+
+`CodexSessionMemoryCucumberRunner` (pattern S-082, 6e runner codex) +
+`SessionMemorySteps` (24 step defs préfixés "session memory"/"profile"
+pour éviter DuplicateStepDefinition, bug S-088) +
+`FakeSessionMemory` (in-memory map implémente `SessionMemoryContract`).
+Tâche `cucumberTestSessionMemory` câblée `build.gradle.kts`. 10/10
+scénarios PASSED (20 tests — doublés par le `test` task qui scanne la
+feature via junit-platform.properties).
+
+== Résultats
+
+* 661 test 0 FAIL (baseline S-093 535 → +126 dont +27 unit profile +
+  +5 functional IT + +2 functional task IT + +20 cucumber dédiés +
+  variations découverte). 214 skip (tests `@Tag("integration")` sans
+  Docker dans le `test` task par défaut — mais Docker dispo ici, les
+  IT passent dans `check`).
+* `check` VERT 1m36s, Kover VERT, validatePlugins VERT.
+* `publishToMavenLocal` VERT.
+* Zéro bump BOM (runtime-contracts:0.0.1 déjà Central, BOM 0.0.24 déjà
+  Central publié MEMPHIS S-022). Zéro secret. Zéro régression, backward
+  compat total (nouveau domaine + nouvelle table + nouvelle tâche —
+  zéro impact sur le pipeline documentaire existant).
+* Domaine `codex.profile` (12e) clos — 4 fichiers prod purs +
+  `PgVectorSessionMemory` adapter + `PersistLearnerProfileTask` thin
+  wrapper.
+
+== Prochaine session — 095
+
+*Alternatives* :
+. *Publication codex-plugin 0.0.5* — CDX-RC-04 = nouvelle fonctionnalité
+  (pont RAG session memory), bump mineur justifié. Vérifier l'ordre DAG
+  (runtime-contracts:0.0.1 déjà Central, BOM 0.0.24 déjà Central).
+. *EPICs P2* non cadrés (futur).
+. *Cleanup KDoc* `SemanticChunker.kt` — retirer la mention
+  "unification différée" (constat #7 résolu S-093).
+
+== References
+
+- `BACKLOG.adoc` § EPIC CDX-RC-04 (TERMINÉ)
+- `CADRAGE_EPIC_RUNTIME_AGENTIQUE.adoc` — EPIC RUNTIME-CONTRACTS-3 (jardin secret)
+- MEMPHIS S-022 : `runtime-contracts:0.0.1` + BOM 0.0.24 publiés Central
+- Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.24 (bundle `d3b82434`)
+- `ProfileStatements.kt` (templates SQL, pattern IngestStatements)
+- `ProfileEmbedding.kt` (texte à embedder, pure)
+- `PgVectorSessionMemory.kt` (adapter R2DBC + ONNX)
+- `PersistLearnerProfileTask.kt` (thin wrapper Gradle)
+- `codex_session_memory.feature` (10 scénarios BDD)

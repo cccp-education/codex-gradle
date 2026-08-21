@@ -646,3 +646,52 @@ compat total.
 - 1 runner cucumber créé (`CodexPipelineUnifyCucumberRunner.kt`).
 - 1 steps cucumber créé (`UnifiedPipelineChunkingSteps.kt`).
 - 1 feature créée (`codex_pipeline_unified_chunking.feature`).
+
+== Session 094 — EPIC CDX-RC-04 Pont RAG SessionMemoryContract ✅
+
+_Date_ : 2026-08-22
+_EPIC_ : CDX-RC-04 (cross-borough MEMPHIS N0 → codex N2)
+_Statut_ : ✅ TERMINÉ (4/4 baby-steps TDD/BDD)
+
+*Objectif* : implémentation privée du pont RAG `SessionMemoryContract`
+(contrat N0 MEMPHIS `runtime-contracts:0.0.1` publié S-022) via
+pgvector — persistance profil stagiaire table dédiée
+`codex_learner_profiles` + embedding ONNX 384-dim.
+
+*CDX-RC-04-1 Domaine codex.profile (12e)* : `ProfileConfig` (config
+pgvector), `ProfileStatements` (templates SQL — DDL clé composite
+`(learner_id, formation_id)` + embedding `vector(384)` + UPSERT ON
+CONFLICT + cast `$3::jsonb`), `ProfileEmbedding` (texte à embedder —
+weakPoints + annotations values, skip IDs/numériques). 27 unit. Bump
+`runtime-contracts:0.0.1` + BOM 0.0.24.
+
+*CDX-RC-04-2 PgVectorSessionMemory adapter* : R2DBC + ONNX
+AllMiniLmL6V2 lazy. 3 bugs corrigés : bindNull nullables, R2DBC lazy
+Result consumption `.rowsUpdated.awaitFirst()`, JSONB cast SQL.
+5 functional testcontainers PASSED.
+
+*CDX-RC-04-3 Tâche persistLearnerProfile* : thin wrapper Gradle
+(Jackson KotlinModule — LearnerProfile N0 non-@Serializable) + wiring
+CodexPlugin groupe `codex-memory` (14e tâche, 4e groupe). 2 functional
+PASSED.
+
+*CDX-RC-04-4 Cucumber BDD* : `codex_session_memory.feature` 10
+scénarios `@session-memory` + runner dédié (6e, pattern S-082) +
+SessionMemorySteps 24 step defs + FakeSessionMemory in-memory pure
+BDD. 10/10 PASSED.
+
+*Métriques* : 661 tests 0 FAIL (baseline 535 → +126). `check` VERT
+1m36s, Kover VERT, validatePlugins VERT. Zéro bump BOM (runtime-contracts
+0.0.1 + BOM 0.0.24 déjà Central MEMPHIS S-022), zéro secret, zéro
+régression, backward compat total. Domaine `codex.profile` (12e) clos.
+
+*Fichiers* :
+- 5 prod créés (`codex/profile/ProfileConfig.kt`,
+  `ProfileStatements.kt`, `ProfileEmbedding.kt`,
+  `PgVectorSessionMemory.kt`, `codex/tasks/PersistLearnerProfileTask.kt`).
+- 1 prod modifié (`CodexPlugin.kt` wiring + KDoc 14 tâches).
+- 1 build modifié (`build.gradle.kts` — runtime-contracts + BOM 0.0.24 +
+  tâche `cucumberTestSessionMemory`).
+- 6 test créés (3 unit profile + 2 IT + 1 runner cucumber).
+- 2 test créés (`SessionMemorySteps.kt`, feature
+  `codex_session_memory.feature`).

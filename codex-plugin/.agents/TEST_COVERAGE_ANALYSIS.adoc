@@ -1,6 +1,42 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-08-22
-:session: 093
+:session: 094
+
+== Session 094 — EPIC CDX-RC-04 Pont RAG SessionMemoryContract (+126 tests, 661/661 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/profile/ProfileConfigTest.kt` | 2 unit | ✅ PASS (defaults localhost:5432/codex/codex/codex, custom values)
+| `test/kotlin/codex/profile/ProfileStatementsTest.kt` | 9 unit | ✅ PASS (DDL table dédiée + composite PK + embedding 384, upsert ON CONFLICT + cast `$3::jsonb`, select par clé, updateEmbedding inline safe, bind counts, interpolation check)
+| `test/kotlin/codex/profile/ProfileEmbeddingTest.kt` | 8 unit | ✅ PASS (empty → empty, weakPoints, annotations values, concat, completedModules excluded, numerics excluded, currentModule excluded, deterministic)
+| `test/kotlin/codex/profile/PgVectorSessionMemoryIT.kt` | 5 functional `@Tag("integration")` | ✅ 5/5 PASSED (Testcontainers pgvector/pgvector:pg16 — round-trip complet, upsert overwrite, null clé inconnue, clé composite même learner ≠ formations = profils distincts, empty profile). Valide les 3 fixes R2DBC : bindNull nullables, Result consumption `.rowsUpdated.awaitFirst()`, JSONB cast `$3::jsonb`
+| `test/kotlin/codex/profile/PersistLearnerProfileTaskIT.kt` | 2 functional `@Tag("integration")` | ✅ 2/2 PASSED (persistance profil JSON → pgvector + reload via load(), registration + group codex-memory dans CodexPlugin)
+| `test/kotlin/codex/bdd/SessionMemorySteps.kt` + `FakeSessionMemory` | 24 step defs | ✅ Pure BDD in-memory map implémente SessionMemoryContract — pas de DB. Préfixes "session memory"/"profile" (bug S-088 — évite DuplicateStepDefinition)
+| `test/resources/features/codex_session_memory.feature` | 10 scénarios `@session-memory` | ✅ 10/10 PASSED via `CodexSessionMemoryCucumberRunner` (pattern S-082, 6e runner codex) — 4 embedding + 5 save/load + 1 SQL template
+|===
+
+*Pont RAG CDX-RC-04* : contrat N0 `SessionMemoryContract` (MEMPHIS
+`runtime-contracts:0.0.1`) implémenté côté codex N2 via pgvector.
+Table dédiée `codex_learner_profiles` (clé composite
+`(learner_id, formation_id)`), embedding ONNX AllMiniLmL6V2 384-dim
+calculé sur weakPoints + annotations uniquement.
+
+*Pièges R2DBC documentés* : (1) `bind(index, Any)` n'accepte pas null →
+`bindNull` ; (2) R2DBC lazy — `execute().awaitFirstOrNull()` ne consomme
+pas le Result → INSERT non exécuté, utiliser `.awaitFirst().rowsUpdated.awaitFirst()` ;
+(3) JSONB nécessite cast SQL explicite `$3::jsonb`.
+
+*Coverage impact* : baseline 535 (S-093) → 661 tests (+126 dont +27
+unit profile + +5 functional IT + +2 functional task IT + +20 cucumber
+dédiés session-memory doublés par le `test` task + variations).
+214 skip (`@Tag("integration")` sans Docker dans le `test` task par
+défaut — les IT passent avec Docker dans `check`). `check` VERT 1m36s,
+Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro
+régression, backward compat total.
+
+'''
 
 == Session 093 — CDX-UNIFY unification constat #7 (+50 tests, 535/535 PASS)
 

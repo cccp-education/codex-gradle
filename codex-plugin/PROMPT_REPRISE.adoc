@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 094
-:session: 094
+= PROMPT_REPRISE — Codex — Session 095
+:session: 095
 :date: 2026-08-22
 :status: PRET
 :max-lines: 45
@@ -9,73 +9,54 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 535/535 PASS (baseline préservée S-093)
-./gradlew cucumberTestPipelineUnify  # 3/3 scénarios CDX-UNIFY-2 PASSED
+./gradlew test             # 661/661 PASS (baseline préservée S-094)
+./gradlew cucumberTestSessionMemory  # 10/10 scénarios @session-memory PASSED
 ```
 
-== Session 093 terminée — EPIC CDX-UNIFY TERMINÉ 3/3 US
+== Session 094 terminée — EPIC CDX-RC-04 TERMINÉ 4/4 baby-steps
 
-. *CDX-UNIFY-0* — Cadrage EPIC (gouvernance pure). Audit infirme
-  l'hypothèse de risque S-091 ("pgvector orphelins") : `chunkMd` est
-  éphémère (log-only), hors circuit pgvector. Le chemin pgvector
-  passe par `ChunkDocumentTask` → `SemanticChunker.chunk()` (depuis
-  S-091). 5 constats, 8 décisions. Doc `CADRAGE_EPIC_CDX_UNIFY.adoc`.
-. *CDX-UNIFY-1* — Refactor délégation (baby-step TDD strict RED →
-  GREEN → REFACTOR). Characterization test `CodexPipelineChunkingTest`
-  (4 tests verrouillent le contrat de sortie). Refactor : `chunkMd`
-  (33 lignes) supprimé, appel ligne 123 remplacé par
-  `SemanticChunker.chunk()`, import `MessageDigest` supprimé. -37
-  lignes net sur `CodexPipelineTask.kt`.
-. *CDX-UNIFY-2* — Cucumber BDD `codex_pipeline_unified_chunking.feature`
-  3 scénarios `@pipeline @unify` + runner dédié
-  `CodexPipelineUnifyCucumberRunner` (pattern S-082, 5e runner codex) +
-  `UnifiedPipelineChunkingSteps` 10 step defs préfixés "unified" +
-  tâche `cucumberTestPipelineUnify` câblée. 3/3 PASSED.
-. *Constat #7 RÉSOLU* — `CodexPipelineTask` ne duplique plus la
-  logique de chunking. `SemanticChunker.chunk()` est l'unique
-  implémentation canonique.
-. *535 tests 0 FAIL* (baseline S-092 485 → +50). `check` VERT 2m11s,
+. *CDX-RC-04-1* — Domaine `codex.profile` (12e) + objets purs
+  unit-testables. `ProfileConfig` (config pgvector),
+  `ProfileStatements` (templates SQL — DDL `codex_learner_profiles`
+  clé composite + UPSERT ON CONFLICT + cast `$3::jsonb`), `ProfileEmbedding`
+  (texte à embedder — weakPoints + annotations values, skip IDs/numériques).
+  27 unit. Bump `runtime-contracts:0.0.1` + BOM 0.0.24.
+. *CDX-RC-04-2* — `PgVectorSessionMemory` adapter implémente
+  `SessionMemoryContract` via R2DBC + ONNX. 3 bugs (bindNull nullables,
+  R2DBC lazy Result consume, JSONB cast). 5 functional testcontainers.
+. *CDX-RC-04-3* — `PersistLearnerProfileTask` thin wrapper (Jackson
+  `LearnerProfile` N0 non-`@Serializable`) + wiring CodexPlugin
+  groupe `codex-memory` (14e tâche). 2 functional.
+. *CDX-RC-04-4* — Cucumber BDD `codex_session_memory.feature` 10
+  scénarios `@session-memory` + runner dédié (6e) + `FakeSessionMemory`
+  in-memory. Pure BDD. 10/10 PASSED.
+. *661 tests 0 FAIL* (baseline S-093 535 → +126). `check` VERT 1m36s,
   Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro
-  régression, backward compat total.
+  régression, backward compat total. Domaine `codex.profile` (12e) clos.
 
-== Prochaine session — 094
+== Prochaine session — 095
 
-*Gate MEMPHIS LEVÉE* : EPIC RUNTIME-CONTRACTS TERMINÉ côté MEMPHIS
-(S-022, 2026-08-21). `runtime-contracts:0.0.1` publié Maven Central
-(bundle `04af4f31`) + BOM 0.0.24 (bundle `d3b82434`).
-Les contrats `SessionMemoryContract` + `LearnerProfile` sont disponibles.
+*Priorité 1 — Publication codex-plugin 0.0.5* (justifiée — CDX-RC-04 =
+nouvelle fonctionnalité pont RAG session memory) :
+. Vérifier ordre DAG : `runtime-contracts:0.0.1` déjà Central (MEMPHIS
+  S-022), BOM 0.0.24 déjà Central. Codex n'a pas de dépendance N0
+  non-publiée.
+. Bump `codex-plugin/gradle/libs.versions.toml` ligne `codex-plugin = "0.0.4"` → `"0.0.5"`
+  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`).
+. Bump BOM constraint codex 0.0.4 → 0.0.5 côté MEMPHIS
+  (`workspace-bom/build.gradle.kts`).
+. `./gradlew publishAggregationToCentralPortal --no-daemon`
+  (bundle AUTOMATIC).
+. MàJ BACKLOG § EPIC PUB + INDEX + SESSIONS_HISTORY.
 
-*Priorité 1 — Démarrer US CDX-RC-04* (pont RAG SessionMemoryContract) :
-. Bump codex `build.gradle.kts` :
-  `implementation("education.cccp:runtime-contracts:0.0.1")`
-  + bump `workspace-bom` → `0.0.24` (si plateforme BOM présente).
-. Domaine `codex.profile` (12e) : adapter `PgVectorSessionMemory`
-  implémente `SessionMemoryContract.save(profile)` /
-  `load(learnerId, formationId): LearnerProfile?`.
-. Table dédiée `codex_learner_profiles` (clé composite
-  `(learner_id, formation_id)`, séparée de `codex_documents`/`codex_chunks`).
-. Embedding profil = concaténation `weakPoints` + `annotations` values
-  (sémantique "points faibles + notes pédagogiques" requêtable).
-  Pas d'embedding sur `completedModules` (IDs) ni `progressionPct`/
-  `comprehensionScore` (numériques, filtrage SQL direct).
-. Tâche Gradle `persistLearnerProfile` (groupe `codex-memory`).
-. Baby-step TDD strict : unit (port + adapter fake) → functional
-  (R2DBC in-memory) → Cucumber `codex_session_memory.feature`
-  `@session-memory`. ~4 unit + ~3 functional + ~3 scénarios.
-. Voir détails cadrage : `BACKLOG.adoc` § EPIC CDX-RC-04.
-
-*Alternatives* (si CDX-RC-04 trop lourd pour 1 session) :
+*Alternatives* :
+. *Cleanup KDoc* `SemanticChunker.kt` — retirer mention
+  "unification différée" (constat #7 résolu S-093, caduque).
 . *EPICs P2* non cadrés (futur).
-. *Publication codex-plugin 0.0.5* — refactor CDX-UNIFY = changement
-  mineur (suppression code mort), publication possible mais non
-  urgente.
-. *Cleanup KDoc* `SemanticChunker.kt` — retirer la mention
-  "unification différée" (constat #7 résolu S-093).
 
 == References
 
-- `.agents/sessions/093-cdx-unify-chunkmd-delegation.adoc`
-- `CADRAGE_EPIC_CDX_UNIFY.adoc` — doc cadrage EPIC
-- `BACKLOG.adoc` § EPIC CDX-UNIFY (TERMINÉ) + § EPIC CDX-RC-04 (DÉBLOQUÉ)
-- MEMPHIS S-022 : `runtime-contracts:0.0.1` + BOM 0.0.24 publiés Central
+- `.agents/sessions/094-cdx-rc04-session-memory-pont-rag.adoc`
+- `BACKLOG.adoc` § EPIC CDX-RC-04 (TERMINÉ) + § EPIC PUB
 - Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.24 (bundle `d3b82434`)
+- MEMPHIS S-022 : `runtime-contracts:0.0.1` + BOM 0.0.24 publiés Central
