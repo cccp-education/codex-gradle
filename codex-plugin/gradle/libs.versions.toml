@@ -1,6 +1,6 @@
 [versions]
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
-codex-plugin = "0.0.4"
+codex-plugin = "0.0.5"
 codebase = "0.0.2"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────

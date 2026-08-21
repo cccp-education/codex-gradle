@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 094 — EPIC CDX-RC-04 TERMINÉ 4/4 baby-steps, pont RAG SessionMemoryContract, domaine codex.profile 12e, 661 tests 0 FAIL)_
+_Dernière mise à jour : 2026-08-22 (session 095 — PUB-3.11 publication codex-plugin 0.0.5 Central bundle `8e661086` + cleanup KDoc SemanticChunker, 661 tests 0 FAIL)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -100,21 +100,28 @@ parcouru, pas `indexOf`.
   S-073 EPIC CDX-CR3 (3 bugs P0/P1) + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration.
   204 tests, 0 failures.
 
-=== PUB-3.11 — codex-plugin 0.0.5 🟡 À FAIRE (S-095)
+=== PUB-3.11 — codex-plugin 0.0.5 ✅ TERMINÉ (S-095)
 **Priorite** : P1
 **Estimation** : 1 pt
 **Dependances** : runtime-contracts:0.0.1 ✅ Central (MEMPHIS S-022), BOM 0.0.24 ✅ Central
 
 . Bump `codex-plugin/gradle/libs.versions.toml` ligne `codex-plugin = "0.0.4"` → `"0.0.5"`
-  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`).
-. Bump constraint codex `0.0.4` → `0.0.5` côté MEMPHIS (`workspace-bom`).
+  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`). ✅ FAIT S-095
+. Bump constraint codex `0.0.4` → `0.0.5` côté MEMPHIS (`workspace-bom`
+  `gradle/libs.versions.toml:51`). ✅ FAIT S-095
 . Contenu depuis 0.0.4 : S-077..S-093 EPICs P1 corpus enrichment
   (CDX-3 ontology, CDX-4 enrichment, CDX-5 licence routing, CDX-6 routing,
   CDX-7 typographic analysis + SemanticChunker + E2E, CDX-UNIFY) +
   S-094 CDX-RC-04 pont RAG SessionMemoryContract (domaine codex.profile,
   PgVectorSessionMemory, persistLearnerProfile). 661 tests, 0 FAIL.
-. `cd foundry/public/codex-gradle/codex-plugin && ../gradlew publishAggregationToCentralPortal --no-daemon`
+. `cd foundry/public/codex-gradle/codex-plugin && ../gradlew publishAggregationToCentralPortal --no-daemon` ✅ FAIT S-095
+  — bundle `8e661086-9748-43e8-aaf4-4ed4f08f324c` (AUTOMATIC, BUILD
+  SUCCESSFUL 27s, statut nmcp « deployment is publishing »).
 . Vérifier sur https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.5
+  ⚠️ propagation repo1 non confirmée à la clôture S-095 (délai CDN
+  normal) — à vérifier en ouverture S-096.
+. Cleanup KDoc `SemanticChunker.kt` (mention « unification différée »
+  caduque S-093) ✅ FAIT S-095.
 
 === PUB-2.2 — Mise a jour commentaire relocation dans build.gradle.kts ✅ CADUQUE (S-074)
 **Priorite** : P1
@@ -134,7 +141,7 @@ de la spécification rather qu'une exécution.
 
 | Artefact | URL |
 |---|---|
-| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.3 publié S-074) |
+| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.5 publié S-095, bundle `8e661086` — propagation repo1 à confirmer S-096) |
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094
@@ -225,7 +232,10 @@ publication MEMPHIS `runtime-contracts:0.0.1` (EPIC-RC-07).
 `runtime-contracts:0.0.1` + BOM 0.0.24, domaine `codex.profile` (12e),
 adapter `PgVectorSessionMemory`, tâche `persistLearnerProfile`,
 Cucumber 10 scénarios. 661 tests 0 FAIL.
-*Reste* : publication codex-plugin 0.0.5 (voir § EPIC PUB).
+*FAIT côté codex S-095* : publication codex-plugin 0.0.5 Central
+(bundle `8e661086`) — voir § PUB-3.11.
+*Reste* : confirmer propagation repo1 0.0.5 en ouverture S-096 +
+décider re-publication BOM MEMPHIS (0.0.24 résout encore codex 0.0.4).
 
 '''
 == ✅ EPIC CDX-15 — TDD rétroactif — ✅ CADUQUE (S-076)

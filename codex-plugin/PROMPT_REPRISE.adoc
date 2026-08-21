@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 095
-:session: 095
+= PROMPT_REPRISE — Codex — Session 096
+:session: 096
 :date: 2026-08-22
 :status: PRET
 :max-lines: 45
@@ -9,54 +9,49 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 661/661 PASS (baseline préservée S-094)
-./gradlew cucumberTestSessionMemory  # 10/10 scénarios @session-memory PASSED
+./gradlew test             # 661/661 PASS (baseline préservée S-095)
 ```
 
-== Session 094 terminée — EPIC CDX-RC-04 TERMINÉ 4/4 baby-steps
+== Session 095 terminée — PUB-3.11 Publication codex-plugin 0.0.5
 
-. *CDX-RC-04-1* — Domaine `codex.profile` (12e) + objets purs
-  unit-testables. `ProfileConfig` (config pgvector),
-  `ProfileStatements` (templates SQL — DDL `codex_learner_profiles`
-  clé composite + UPSERT ON CONFLICT + cast `$3::jsonb`), `ProfileEmbedding`
-  (texte à embedder — weakPoints + annotations values, skip IDs/numériques).
-  27 unit. Bump `runtime-contracts:0.0.1` + BOM 0.0.24.
-. *CDX-RC-04-2* — `PgVectorSessionMemory` adapter implémente
-  `SessionMemoryContract` via R2DBC + ONNX. 3 bugs (bindNull nullables,
-  R2DBC lazy Result consume, JSONB cast). 5 functional testcontainers.
-. *CDX-RC-04-3* — `PersistLearnerProfileTask` thin wrapper (Jackson
-  `LearnerProfile` N0 non-`@Serializable`) + wiring CodexPlugin
-  groupe `codex-memory` (14e tâche). 2 functional.
-. *CDX-RC-04-4* — Cucumber BDD `codex_session_memory.feature` 10
-  scénarios `@session-memory` + runner dédié (6e) + `FakeSessionMemory`
-  in-memory. Pure BDD. 10/10 PASSED.
-. *661 tests 0 FAIL* (baseline S-093 535 → +126). `check` VERT 1m36s,
-  Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, zéro
-  régression, backward compat total. Domaine `codex.profile` (12e) clos.
+. *Ordre DAG vérifié* — `runtime-contracts:0.0.1` + `workspace-bom:0.0.24`
+  + `codebase-contracts:0.0.2` tous sur Central (repo1.maven.org).
+. *Bump* `codex-plugin/gradle/libs.versions.toml` `0.0.4` → `0.0.5`.
+. *Bump cross-borough MEMPHIS* — `workspace-bom/gradle/libs.versions.toml`
+  constraint `codex-plugin = "0.0.5"` (ligne 51).
+. *Publication Central* — bundle `8e661086-9748-43e8-aaf4-4ed4f08f324c`
+  (AUTOMATIC, BUILD SUCCESSFUL 27s, statut nmcp « deployment is
+  publishing »). Contenu depuis 0.0.4 : EPICs P1 corpus enrichment
+  (S-077..S-093) + CDX-RC-04 pont RAG session memory (S-094).
+. *Cleanup KDoc* `SemanticChunker.kt` — mention « unification différée »
+  retirée (caduque S-093), remplacée par l'état courant (object canonique
+  unique, ChunkDocumentTask + CodexPipelineTask délèguent).
+. *661 tests 0 FAIL* (baseline S-094 préservée). Zéro secret, zéro
+  régression, backward compat total.
 
-== Prochaine session — 095
+⚠️ *Propagation repo1 non confirmée à la clôture S-095* (délai CDN
+normal 10-30 min après validation AUTOMATIC).
 
-*Priorité 1 — Publication codex-plugin 0.0.5* (justifiée — CDX-RC-04 =
-nouvelle fonctionnalité pont RAG session memory) :
-. Vérifier ordre DAG : `runtime-contracts:0.0.1` déjà Central (MEMPHIS
-  S-022), BOM 0.0.24 déjà Central. Codex n'a pas de dépendance N0
-  non-publiée.
-. Bump `codex-plugin/gradle/libs.versions.toml` ligne `codex-plugin = "0.0.4"` → `"0.0.5"`
-  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`).
-. Bump BOM constraint codex 0.0.4 → 0.0.5 côté MEMPHIS
-  (`workspace-bom/build.gradle.kts`).
-. `./gradlew publishAggregationToCentralPortal --no-daemon`
-  (bundle AUTOMATIC).
-. MàJ BACKLOG § EPIC PUB + INDEX + SESSIONS_HISTORY.
+== Prochaine session — 096
+
+*Priorité 1 — Vérifier propagation codex-plugin 0.0.5 sur Central* :
+. `curl -s https://repo1.maven.org/maven2/education/cccp/codex-plugin/ | grep 0.0.5`
+. Si absent : vérifier statut bundle `8e661086` sur
+  https://central.sonatype.com/publishing (UI) puis re-poller.
+. Si présent : mettre à jour BACKLOG § PUB-5.1 + INDEX (version 0.0.5).
+
+*Priorité 2 — BOM MEMPHIS* : la constraint codex 0.0.5 est dans le
+catalogue workspace-bom mais la BOM n'a pas été re-publiée (toujours
+0.0.24 avec codex 0.0.4 résolu). Décider : bump BOM 0.0.25 + publication
+MEMPHIS, ou reporter au prochain bump amont.
 
 *Alternatives* :
-. *Cleanup KDoc* `SemanticChunker.kt` — retirer mention
-  "unification différée" (constat #7 résolu S-093, caduque).
-. *EPICs P2* non cadrés (futur).
+. EPICs P2 non cadrés (futur — voir BACKLOG).
+. Rattrapage INDEX MEMPHIS (en retard, signalé AGENTS racine).
 
 == References
 
-- `.agents/sessions/094-cdx-rc04-session-memory-pont-rag.adoc`
-- `BACKLOG.adoc` § EPIC CDX-RC-04 (TERMINÉ) + § EPIC PUB
-- Central : codex-plugin 0.0.4 (bundle `8556eea3`), BOM 0.0.24 (bundle `d3b82434`)
+- `.agents/sessions/095-pub-3-11-publication-0-0-5.adoc`
+- `BACKLOG.adoc` § PUB-3.11 (✅ TERMINÉ S-095) + § PUB-5.1
+- Central : codex-plugin 0.0.4 (bundle `8556eea3`) → 0.0.5 (bundle `8e661086`)
 - MEMPHIS S-022 : `runtime-contracts:0.0.1` + BOM 0.0.24 publiés Central

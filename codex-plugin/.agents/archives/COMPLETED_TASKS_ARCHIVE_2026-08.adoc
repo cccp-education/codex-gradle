@@ -695,3 +695,27 @@ régression, backward compat total. Domaine `codex.profile` (12e) clos.
 - 6 test créés (3 unit profile + 2 IT + 1 runner cucumber).
 - 2 test créés (`SessionMemorySteps.kt`, feature
   `codex_session_memory.feature`).
+
+== Session 095 — PUB-3.11 Publication codex-plugin 0.0.5 (2026-08-22)
+
+*PUB-3.11 Publication Maven Central* : codex-plugin 0.0.5 publié
+(bundle `8e661086-9748-43e8-aaf4-4ed4f08f324c`, AUTOMATIC, BUILD
+SUCCESSFUL 27s). Ordre DAG vérifié repo1.maven.org :
+runtime-contracts:0.0.1 + workspace-bom:0.0.24 + codebase-contracts:0.0.2.
+
+*Bumps* : `codex-plugin/gradle/libs.versions.toml` 0.0.4→0.0.5 +
+cross-borough MEMPHIS `workspace-bom/gradle/libs.versions.toml:51`
+constraint codex 0.0.4→0.0.5.
+
+*Cleanup KDoc SemanticChunker.kt* : mention « unification différée »
+caduque S-093 retirée — object canonique unique, ChunkDocumentTask +
+CodexPipelineTask délèguent (état post CDX-UNIFY).
+
+*Contenu 0.0.5 depuis 0.0.4* : EPICs P1 corpus enrichment
+(S-077..S-093 : CDX-3 ontology, CDX-4 enrichment, CDX-5 licence
+routing, CDX-6 routing DSL, CDX-7 typographic + SemanticChunker + E2E,
+CDX-UNIFY) + CDX-RC-04 pont RAG SessionMemoryContract (S-094).
+
+*Métriques* : 661 tests 0 FAIL (baseline S-094 préservée), zéro secret,
+zéro régression, backward compat total. Propagation repo1 à confirmer
+en ouverture S-096.

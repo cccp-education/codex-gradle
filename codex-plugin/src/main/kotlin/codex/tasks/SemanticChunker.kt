@@ -13,10 +13,9 @@ import java.security.MessageDigest
  * verbatim from `ChunkDocumentTask` so `ChunkDocumentTask` can delegate
  * to this object without behaviour change.
  *
- * Not to be confused with `CodexPipelineTask.chunkMd` (constat #7), a
- * simpler duplicate that drops hierarchy, overlap and code blocks. This
- * object is the canonical implementation ; unification of `chunkMd` onto
- * this object is deferred (would change pipeline behaviour).
+ * This object is the single canonical chunking implementation : both
+ * `ChunkDocumentTask` and `CodexPipelineTask` delegate to it (the
+ * former since CDX-7-3, the latter since EPIC CDX-UNIFY).
  */
 object SemanticChunker {
 

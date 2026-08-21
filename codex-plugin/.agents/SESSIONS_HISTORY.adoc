@@ -2389,3 +2389,55 @@ scénarios PASSED.
   `publishAggregationToCentralPortal --no-daemon`.
 - Alternatives : cleanup KDoc `SemanticChunker.kt` (mention
   "unification différée" caduque S-093), EPICs P2 non cadrés.
+
+== Session 095 — PUB-3.11 Publication codex-plugin 0.0.5 + cleanup KDoc
+
+_Date_ : 2026-08-22
+_EPIC_ : EPIC PUB (PUB-3.11)
+_Statut_ : ✅ TERMINÉ
+
+=== Objectif
+
+Priorité 1 du PROMPT_REPRISE S-094 : publier `codex-plugin:0.0.5` sur
+Maven Central. Justification : depuis 0.0.4, le plugin a accumulé les
+EPICs P1 corpus enrichment (S-077..S-093) + le pont RAG session memory
+CDX-RC-04 (S-094) — nouvelle fonctionnalité majeure consommable par les
+boroughs N3/N4.
+
+=== Prérequis vérifiés (ordre DAG)
+
+- `runtime-contracts:0.0.1` ✅ Central (repo1.maven.org — MEMPHIS S-022).
+- `workspace-bom:0.0.24` ✅ Central (repo1.maven.org).
+- `codebase-contracts:0.0.2` ✅ Central (repo1.maven.org).
+- Credentials nmcp présents (`~/.gradle/gradle.properties`, jamais
+  affichés ni loggés). `nmcpSettings` AUTOMATIC 1.5.0 ✅.
+
+=== Réalisations
+
+- Bump `codex-plugin/gradle/libs.versions.toml`
+  `codex-plugin = "0.0.4"` → `"0.0.5"`.
+- Bump cross-borough MEMPHIS — `workspace-bom/gradle/libs.versions.toml`
+  constraint `codex-plugin = "0.0.5"` (ligne 51, consommé par
+  `api(libs.codex.plugin)` build.gradle.kts:110).
+- Publication : `./gradlew publishAggregationToCentralPortal --no-daemon`
+  BUILD SUCCESSFUL 27s. *Bundle* `8e661086-9748-43e8-aaf4-4ed4f08f324c`
+  (AUTOMATIC, statut nmcp « deployment is publishing »).
+- Cleanup KDoc `SemanticChunker.kt` — mention « unification différée »
+  caduque S-093 retirée, remplacée par l'état courant (object canonique
+  unique, ChunkDocumentTask + CodexPipelineTask délèguent).
+
+=== Vérifications
+
+- Baseline préservée : 661 tests, 0 FAIL (`./gradlew test`, 51s).
+- compileKotlin VERT. Zéro secret. Zéro dépendance -SNAPSHOT.
+- Backward compat totale — zéro fichier prod modifié hors KDoc comment.
+- Propagation repo1 non confirmée à la clôture (délai CDN normal
+  10-30 min) — à vérifier en ouverture S-096.
+
+=== Prochaine session
+
+- Priorité 1 : vérifier propagation 0.0.5 sur Central (repo1 + UI
+  central.sonatype.com/publishing bundle `8e661086`).
+- Priorité 2 : BOM MEMPHIS — constraint codex 0.0.5 dans catalogue mais
+  BOM 0.0.24 non re-publiée. Décider bump BOM 0.0.25 ou reporter.
+- Alternatives : EPICs P2 non cadrés, rattrapage INDEX MEMPHIS.

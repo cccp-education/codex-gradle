@@ -1,0 +1,92 @@
+= Session 095 — PUB-3.11 Publication codex-plugin 0.0.5 + cleanup KDoc
+:date: 2026-08-22
+:epic: EPIC PUB (PUB-3.11)
+:status: ✅ TERMINÉ
+:tests: 661 test 0 FAIL (baseline S-094 préservée)
+
+== Objectif
+
+Priorité 1 du PROMPT_REPRISE S-094 : publier `codex-plugin:0.0.5` sur
+Maven Central. La publication est justifiée — depuis 0.0.4 le plugin a
+accumulé les EPICs P1 corpus enrichment (S-077..S-093) + le pont RAG
+session memory CDX-RC-04 (S-094), soit une nouvelle fonctionnalité
+majeure consommable par les boroughs N3/N4.
+
+== Prérequis vérifiés (ordre DAG)
+
+* `runtime-contracts:0.0.1` ✅ Central (vérifié repo1.maven.org — MEMPHIS S-022)
+* `workspace-bom:0.0.24` ✅ Central (vérifié repo1.maven.org)
+* `codebase-contracts:0.0.2` ✅ Central (vérifié repo1.maven.org)
+* Credentials nmcp présents (`ossrhUsername`/`ossrhPassword` dans
+  `~/.gradle/gradle.properties`, jamais affichés ni loggés)
+* `settings.gradle.kts` : plugin `com.gradleup.nmcp.settings` 1.5.0 +
+  `nmcpSettings { centralPortal { publishingType = "AUTOMATIC" } }` ✅
+
+== Réalisations
+
+=== PUB-3.11 — Publication codex-plugin 0.0.5
+
+. *Bump version* — `codex-plugin/gradle/libs.versions.toml`
+  ligne `codex-plugin = "0.0.4"` → `"0.0.5"`
+  (`build.gradle.kts:26` lit `libs.versions.codex.plugin.get()`).
+. *Bump cross-borough MEMPHIS* — `workspace-bom/gradle/libs.versions.toml`
+  constraint `codex-plugin = "0.0.4"` → `"0.0.5"` (ligne 51,
+  référencé par `api(libs.codex.plugin)` build.gradle.kts:110).
+. *Publication* — `./gradlew publishAggregationToCentralPortal --no-daemon`
+  depuis `codex-plugin/`. BUILD SUCCESSFUL 27s.
+  *Bundle* : `8e661086-9748-43e8-aaf4-4ed4f08f324c` (AUTOMATIC).
+  Statut final nmcp : « deployment is publishing ».
+. *Vérification propagation* — polling repo1.maven.org (6 × 45s) :
+  pas encore propagé à la clôture de session (délai CDN normal,
+  10-30 min). Le bundle est VALIDATED côté Central Portal.
+  Vérifier https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.5
+  en ouverture de session 096.
+
+*Contenu 0.0.5 depuis 0.0.4* :
+
+* S-077 cadrage 5 EPICs P1 corpus enrichment
+* S-078..S-079 CDX-7-1 tests FontStyleDetector/TypographicAnalyzer +
+  CDX-3-1 domaine `codex.ontology`
+* S-080..S-083 CDX-4-1 domaine `codex.enrichment` + CDX-5 domaine
+  `codex.licence` (PdfLicenseDetector + LicenseRouter +
+  DeployKnowledgeBaseRoutedTask + Cucumber)
+* S-084..S-085 CDX-3-2/3 tâche `deriveOntology` + Cucumber
+* S-086..S-088 CDX-4-2/3/4 tâche `enrichJsonLdd` + canal Graphify
+  composite context + Cucumber
+* S-089 CDX-6 routing licence pipeline + DSL `licenceRouting`
+* S-090..S-092 CDX-7-2/3/4 ConvertToMarkdown chaîné + extraction
+  SemanticChunker + E2E PDF canonique
+* S-093 EPIC CDX-UNIFY (chunkMd → SemanticChunker.chunk())
+* S-094 EPIC CDX-RC-04 pont RAG SessionMemoryContract (domaine
+  `codex.profile`, PgVectorSessionMemory, persistLearnerProfile)
+
+=== Cleanup KDoc SemanticChunker.kt (alternative PROMPT_REPRISE)
+
+Retrait de la mention « unification différée » dans le KDoc de
+`SemanticChunker.kt` (caduque — constat #7 résolu S-093 par EPIC
+CDX-UNIFY). Remplacée par la description de l'état courant : object
+canonique unique, `ChunkDocumentTask` ET `CodexPipelineTask` délèguent.
+Zéro impact bytecode — vérifié par re-run complet de la suite test.
+
+== Vérifications
+
+* Baseline préservée : *661 tests, 0 FAIL* (`./gradlew test` après bump
+  + cleanup KDoc, 51s)
+* `compileKotlin` VERT
+* Zéro secret (credentials uniquement via `~/.gradle/gradle.properties`)
+* Zéro dépendance `-SNAPSHOT` dans `implementation`
+* Backward compat totale — zéro fichier prod modifié hors KDoc comment
+
+== Méthode
+
+Session publication + gouvernance — pas de baby-step TDD/BDD (zéro code
+prod fonctionnel modifié). Le cleanup KDoc suit le principe d'économie
+de moyens : modification documentaire vérifiée par non-régression
+(661/661).
+
+== Prochaine session — 096
+
+* Priorité 1 : vérifier propagation 0.0.5 sur Central (repo1 +
+  https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.5).
+* Alternatives : EPICs P2 non cadrés (futur), rattrapage INDEX MEMPHIS
+  (constraint BOM 0.0.25 si bump BOM nécessaire pour codex 0.0.5).
