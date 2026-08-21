@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 096
-:session: 096
+= PROMPT_REPRISE — Codex — Session 097
+:session: 097
 :date: 2026-08-22
 :status: PRET
 :max-lines: 45
@@ -9,49 +9,46 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 661/661 PASS (baseline préservée S-095)
+./gradlew test             # 661/661 PASS (baseline préservée S-096)
 ```
 
-== Session 095 terminée — PUB-3.11 Publication codex-plugin 0.0.5
+== Session 096 terminée — Cadrage EPIC CDX-OCR-BOUNDARY (gouvernance pure)
 
-. *Ordre DAG vérifié* — `runtime-contracts:0.0.1` + `workspace-bom:0.0.24`
-  + `codebase-contracts:0.0.2` tous sur Central (repo1.maven.org).
-. *Bump* `codex-plugin/gradle/libs.versions.toml` `0.0.4` → `0.0.5`.
-. *Bump cross-borough MEMPHIS* — `workspace-bom/gradle/libs.versions.toml`
-  constraint `codex-plugin = "0.0.5"` (ligne 51).
-. *Publication Central* — bundle `8e661086-9748-43e8-aaf4-4ed4f08f324c`
-  (AUTOMATIC, BUILD SUCCESSFUL 27s, statut nmcp « deployment is
-  publishing »). Contenu depuis 0.0.4 : EPICs P1 corpus enrichment
-  (S-077..S-093) + CDX-RC-04 pont RAG session memory (S-094).
-. *Cleanup KDoc* `SemanticChunker.kt` — mention « unification différée »
-  retirée (caduque S-093), remplacée par l'état courant (object canonique
-  unique, ChunkDocumentTask + CodexPipelineTask délèguent).
-. *661 tests 0 FAIL* (baseline S-094 préservée). Zéro secret, zéro
-  régression, backward compat total.
+. *Décision pilote actée* : OCR logiciel (Tesseract) = codex l'actionne /
+  OCR assisté IA (vision LLM) = codebase l'actionne.
+. *Audit 6 constats* : pile OCR IA dans codex (`LlmOcrEngine`,
+  `HttpOllamaChatClient`, `OcrPipeline` fallback LLM→Tesseract) ;
+  dépendance inversée N1→N2 (`codebase-plugin/build.gradle.kts:49`) ;
+  `CodexOcrEngineAdapter` + import `TesseractOcrEngine` côté codebase ;
+  duplication moteurs vision ; codex dernier N2 hors hub LLM.
+. *12 décisions* : port = fun interface `codex.ocr.OcrEngine` existante,
+  injection `OcrPipeline` défaut Tesseract seul, adapter
+  `VisionOcrEngineAdapter` côté codebase (zéro cycle N2↔N1), purge pile IA
+  codex sauf `OllamaProbe`, split-brain `CodexVectorStore` HORS SCOPE
+  (EPIC futur).
+. *Priorité 1 ✅* : propagation repo1 codex-plugin 0.0.5 confirmée
+  (repo1 2026-08-21 00:14). BACKLOG § PUB-5.1 + § PUB-3.11 à jour.
+. *Priorité 2* : BOM MEMPHIS 0.0.25 *reporté* au prochain bump amont
+  (BOM 0.0.24 fonctionnelle, publication hors périmètre autorisé).
 
-⚠️ *Propagation repo1 non confirmée à la clôture S-095* (délai CDN
-normal 10-30 min après validation AUTOMATIC).
+== Prochaine session — 097 : CDX-OCR-1
 
-== Prochaine session — 096
+*Baby-step TDD strict RED → GREEN → REFACTOR (~6 unit)* :
+. Characterization tests sur `OcrPipeline` actuelle — verrouiller la sortie
+  AsciiDoc structuré + l'ordre de fallback LLM→Tesseract (avant toute
+  suppression).
+. Injection du port `AiOcrEngine` (= fun interface `codex.ocr.OcrEngine`)
+  dans `OcrPipeline` + propriété optionnelle `CollectOcrTask`.
+. Défaut sans injection = Tesseract seul (dégradé fonctionnel, backward
+  compat). Aucune suppression en US-1.
 
-*Priorité 1 — Vérifier propagation codex-plugin 0.0.5 sur Central* :
-. `curl -s https://repo1.maven.org/maven2/education/cccp/codex-plugin/ | grep 0.0.5`
-. Si absent : vérifier statut bundle `8e661086` sur
-  https://central.sonatype.com/publishing (UI) puis re-poller.
-. Si présent : mettre à jour BACKLOG § PUB-5.1 + INDEX (version 0.0.5).
-
-*Priorité 2 — BOM MEMPHIS* : la constraint codex 0.0.5 est dans le
-catalogue workspace-bom mais la BOM n'a pas été re-publiée (toujours
-0.0.24 avec codex 0.0.4 résolu). Décider : bump BOM 0.0.25 + publication
-MEMPHIS, ou reporter au prochain bump amont.
-
-*Alternatives* :
-. EPICs P2 non cadrés (futur — voir BACKLOG).
-. Rattrapage INDEX MEMPHIS (en retard, signalé AGENTS racine).
+*Ensuite* : CDX-OCR-2 (adapter codebase + nettoyage sens inverse) →
+CDX-OCR-3 (purge pile IA codex) → CDX-OCR-4 (Cucumber BDD).
+Doc cadrage : `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`.
 
 == References
 
-- `.agents/sessions/095-pub-3-11-publication-0-0-5.adoc`
-- `BACKLOG.adoc` § PUB-3.11 (✅ TERMINÉ S-095) + § PUB-5.1
-- Central : codex-plugin 0.0.4 (bundle `8556eea3`) → 0.0.5 (bundle `8e661086`)
-- MEMPHIS S-022 : `runtime-contracts:0.0.1` + BOM 0.0.24 publiés Central
+- `.agents/sessions/096-cdx-ocr-boundary-cadrage.adoc`
+- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (constats, décisions, US)
+- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY + § PUB-5.1
+- Central : codex-plugin 0.0.5 confirmé repo1 (bundle `8e661086`)

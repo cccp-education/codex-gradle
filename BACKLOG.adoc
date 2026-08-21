@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 095 — PUB-3.11 publication codex-plugin 0.0.5 Central bundle `8e661086` + cleanup KDoc SemanticChunker, 661 tests 0 FAIL)_
+_Dernière mise à jour : 2026-08-22 (session 096 — cadrage EPIC CDX-OCR-BOUNDARY + confirmation propagation repo1 codex-plugin 0.0.5, gouvernance pure zéro code)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -118,8 +118,8 @@ parcouru, pas `indexOf`.
   — bundle `8e661086-9748-43e8-aaf4-4ed4f08f324c` (AUTOMATIC, BUILD
   SUCCESSFUL 27s, statut nmcp « deployment is publishing »).
 . Vérifier sur https://central.sonatype.com/artifact/education.cccp/codex-plugin/0.0.5
-  ⚠️ propagation repo1 non confirmée à la clôture S-095 (délai CDN
-  normal) — à vérifier en ouverture S-096.
+  ✅ FAIT S-096 — propagation repo1 *confirmée* (directory listing repo1
+  0.0.5/ daté 2026-08-21 00:14, maven-metadata.xml 00:21).
 . Cleanup KDoc `SemanticChunker.kt` (mention « unification différée »
   caduque S-093) ✅ FAIT S-095.
 
@@ -141,7 +141,84 @@ de la spécification rather qu'une exécution.
 
 | Artefact | URL |
 |---|---|
-| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.5 publié S-095, bundle `8e661086` — propagation repo1 à confirmer S-096) |
+| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.5 publié S-095, bundle `8e661086` — propagation repo1 *confirmée S-096*, repo1 2026-08-21 00:14) |
+
+*FAIT côté codex S-096* : propagation repo1 0.0.5 *confirmée*. BOM MEMPHIS
+0.0.25 : *reporté* au prochain bump amont (publication Central hors
+périmètre autorisé S-096 ; la BOM 0.0.24 reste fonctionnelle — les
+consommateurs résolvent codex 0.0.4 jusqu'au bump).
+
+'''
+== 🔴 EPIC CDX-OCR-BOUNDARY — OCR software = codex / OCR assisté IA = codebase — Cadrage S-096
+
+_Source_ : décision pilote session 096 (« le OCR software c'est codex qui
+l'actionne mais le OCR assisté par IA c'est codebase qui l'actionne »).
+_Doc cadrage_ : `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`.
+_Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié.
+_Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
+
+=== Constats (audit S-096)
+
+. codex possède une pile OCR IA complète (`LlmOcrEngine`, `HttpOllamaChatClient`,
+  `OcrPipeline` fallback LLM→Tesseract) — violation de la règle.
+. Dépendance inversée N1→N2 : `codebase-plugin/build.gradle.kts:49`
+  `implementation(libs.codex.plugin)`.
+. `CodexOcrEngineAdapter` (codebase) fait actionner le Tesseract codex par codebase.
+. `OcrTask` codebase importe `codex.ocr.TesseractOcrEngine`.
+. Duplication moteurs vision : `LlmOcrEngine` (codex) vs `VisionProvider`
+  Gemini/Ollama (codebase).
+. Pattern socle déjà généralisé (PLN-LLM-HUB, SLD-8.1, CAP-ARCH-1) — codex
+  est le dernier N2 hors hub.
+
+=== Décisions clés
+
+. codex GARDE : types purs, Tesseract, cache, `CollectOcrTask`, contrat pages,
+  orchestration fallback. RETIRE : `LlmOcrEngine`, `HttpOllamaChatClient`,
+  `OllamaChatClient` (`OllamaProbe` conservé pour tests intégration).
+. Port = `codex.ocr.OcrEngine` fun interface existante — injection dans
+  `OcrPipeline`, défaut sans injection = Tesseract seul (dégradé fonctionnel).
+. Adapter `VisionOcrEngineAdapter` côté codebase (wrappe `VisionProvider`) —
+  zéro cycle N2↔N1 (interdit formel).
+. Split-brain `CodexVectorStore` (5 fichiers koog codebase, N1→N2) HORS SCOPE
+  — EPIC futur dédié.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-OCR-0
+| Cadrage EPIC (gouvernance pure)
+| ✅ TERMINÉ (S-096)
+| 1
+
+| CDX-OCR-1
+| codex — characterization tests `OcrPipeline` + injection port `AiOcrEngine`
+  (défaut Tesseract seul). ~6 unit. RED → GREEN.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-2
+| codebase — `VisionOcrEngineAdapter` (~4 unit) + suppression
+  `CodexOcrEngineAdapter` + retrait import `TesseractOcrEngine` de `OcrTask`.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-3
+| codex — purge pile IA (`LlmOcrEngine`, `HttpOllamaChatClient`,
+  `OllamaChatClient` + tests), migration tests intégration sur fake,
+  `check` VERT.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-4
+| Cucumber BDD `ocr-pipeline.feature` mis à jour — fake AiOcrEngine,
+  degraded Tesseract-only, cache hit skip engine.
+| 🔲 À FAIRE
+| 2
+
+|===
+
+*Total* : ~9 pts (4 US restantes)
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094
@@ -234,8 +311,9 @@ adapter `PgVectorSessionMemory`, tâche `persistLearnerProfile`,
 Cucumber 10 scénarios. 661 tests 0 FAIL.
 *FAIT côté codex S-095* : publication codex-plugin 0.0.5 Central
 (bundle `8e661086`) — voir § PUB-3.11.
-*Reste* : confirmer propagation repo1 0.0.5 en ouverture S-096 +
-décider re-publication BOM MEMPHIS (0.0.24 résout encore codex 0.0.4).
+*FAIT côté codex S-096* : propagation repo1 0.0.5 confirmée.
+*Reste* : BOM MEMPHIS 0.0.25 reporté au prochain bump amont + cadrage
+EPIC inversion `CodexVectorStore` (N1→N2, hors scope OCR).
 
 '''
 == ✅ EPIC CDX-15 — TDD rétroactif — ✅ CADUQUE (S-076)

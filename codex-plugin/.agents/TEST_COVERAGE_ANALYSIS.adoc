@@ -576,3 +576,10 @@ proprement hors workspace local (CI, fresh clone). System property
 *Non-régression* : 485 tests 0 FAIL, 26 cucumber dédiés GREEN (8
 enrichment + 3 ontology + 3 licence + 3 pipeline routing), zéro
 production modifié.
+
+== Session 096 — Cadrage CDX-OCR-BOUNDARY (aucun test modifié)
+
+Gouvernance pure — zéro code, zéro test. Baseline vérifiée : 661 tests,
+0 FAIL (214 skip intégration). L'EPIC cadré impactera la couverture dès
+S-097 : characterization tests `OcrPipeline` (US-1), migration tests
+intégration sur fake engine après purge pile IA (US-3).

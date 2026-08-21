@@ -719,3 +719,11 @@ CDX-UNIFY) + CDX-RC-04 pont RAG SessionMemoryContract (S-094).
 *Métriques* : 661 tests 0 FAIL (baseline S-094 préservée), zéro secret,
 zéro régression, backward compat total. Propagation repo1 à confirmer
 en ouverture S-096.
+
+=== S-096 — Cadrage EPIC CDX-OCR-BOUNDARY (gouvernance pure)
+
+Règle pilote actée : OCR logiciel (Tesseract) = codex / OCR assisté IA
+= codebase. Audit 6 constats cross-borough (codex + codebase), 12 décisions
+(doc `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`), 4 US restantes ~8 pts.
++ Priorité 1 S-096 ✅ propagation repo1 codex-plugin 0.0.5 confirmée.
++ BOM MEMPHIS 0.0.25 reporté au prochain bump amont. Zéro code modifié.

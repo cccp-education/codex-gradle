@@ -2441,3 +2441,42 @@ boroughs N3/N4.
 - Priorité 2 : BOM MEMPHIS — constraint codex 0.0.5 dans catalogue mais
   BOM 0.0.24 non re-publiée. Décider bump BOM 0.0.25 ou reporter.
 - Alternatives : EPICs P2 non cadrés, rattrapage INDEX MEMPHIS.
+
+== Session 096 — Cadrage EPIC CDX-OCR-BOUNDARY + confirmation propagation 0.0.5
+
+_Date_ : 2026-08-22
+_EPIC_ : EPIC CDX-OCR-BOUNDARY (CDX-OCR-0) + PUB-5.1
+_Statut_ : ✅ TERMINÉ
+_Type_ : gouvernance pure (pattern S-057/S-063)
+
+=== Objectif
+
+Priorités PROMPT_REPRISE S-096 : (1) vérifier propagation repo1 codex-plugin
+0.0.5, (2) décider BOM MEMPHIS 0.0.25. Arbitrage pilote en cours de session :
+cadrer la frontière OCR — règle actée « OCR logiciel = codex / OCR assisté IA
+= codebase ».
+
+=== Réalisations
+
+- Propagation repo1 0.0.5 *confirmée* (directory listing repo1, 0.0.5/
+  daté 2026-08-21 00:14). BACKLOG § PUB-5.1 + § PUB-3.11 mis à jour.
+- BOM MEMPHIS 0.0.25 : *report* au prochain bump amont (BOM 0.0.24
+  fonctionnelle ; publication Central hors périmètre autorisé).
+- Cadrage EPIC CDX-OCR-BOUNDARY — doc `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` :
+  audit 6 constats des deux boroughs (pile IA dans codex, dépendance N1→N2
+  `codebase-plugin/build.gradle.kts:49`, `CodexOcrEngineAdapter`,
+  import `TesseractOcrEngine` dans OcrTask codebase, duplication moteurs
+  vision, codex dernier N2 hors hub), 12 décisions architecturales,
+  découpage 4 US ~8 pts restants.
+- INDEX/BACKLOG/PROMPT_REPRISE synchronisés (session 097 = CDX-OCR-1).
+
+=== Vérifications
+
+- Build VERT (`build -x test`), baseline 661 tests 0 FAIL (214 skip
+  intégration assumeTrue) — zéro fichier production modifié.
+- Zéro secret. Zéro bump BOM.
+
+=== Prochaine session
+
+- CDX-OCR-1 : characterization tests `OcrPipeline` + injection port
+  `AiOcrEngine`, défaut Tesseract seul. Baby-step TDD strict RED → GREEN.

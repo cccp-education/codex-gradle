@@ -1,0 +1,175 @@
+= CADRAGE EPIC CDX-OCR-BOUNDARY — Qui actionne quoi : OCR software vs OCR assisté IA
+
+:toc: macro
+:sectnums:
+:date: 2026-08-22
+:source: Session 096 (gouvernance pure, pattern S-057/S-063)
+
+toc::[]
+
+== Contexte — La règle du pilote
+
+Le pilote a tranché (session 096) :
+
+* *OCR logiciel* (Tesseract, mécanique) → *codex* (Brooklyn N2) l'actionne.
+* *OCR assisté IA* (vision LLM) → *codebase* (Queens N1) l'actionne.
+
+Cette répartition n'était pas formalisée dans la gouvernance. L'état du code
+la viole des deux côtés. Ce document cadre l'EPIC de remise en boundary.
+
+== Audit — 6 constats
+
+[cols="1,3,3", options="header"]
+|===
+| # | Constat | Preuve
+
+| 1
+| codex possède une pile OCR IA complète (violation directe de la règle)
+| `codex/ocr/LlmOcrEngine.kt` + `HttpOllamaChatClient.kt` + `OllamaChatClient.kt` +
+`OcrPipeline.kt` (chaîne fallback LLM→Tesseract) + `OllamaProbe.kt`. Codex parle
+directement à Ollama `/api/chat` — duplication du socle LLM codebase.
+
+| 2
+| Dépendance inversée N1→N2 : codebase dépend de l'artefact codex
+| `codebase-plugin/build.gradle.kts:49` — `implementation(libs.codex.plugin)`.
+Un borough socle N1 importe un borough métier N2 — inversion de couche.
+
+| 3
+| `CodexOcrEngineAdapter` fait actionner le Tesseract codex PAR codebase
+| `codebase/koog/llm/CodexOcrEngineAdapter.kt` — wrappe `codex.ocr.OcrEngine`
+(pur, sans IA) dans la chaîne de fallback vision codebase. Sous la règle,
+le software OCR ne doit pas être actionné par codebase.
+
+| 4
+| `OcrTask` codebase importe `TesseractOcrEngine` codex
+| `codebase/ocr/OcrTask.kt` — `import codex.ocr.TesseractOcrEngine`.
+Même violation que #3 : codebase actionne du software OCR.
+
+| 5
+| Duplication moteurs vision IA
+| codex `LlmOcrEngine` (prompt chat Ollama) vs codebase `OllamaOcrProvider` +
+`GeminiVisionProvider` (interface `VisionProvider`). Deux implémentations du
+même besoin, deux clients HTTP, deux prompts.
+
+| 6
+| Le pattern de sortie existe déjà ailleurs
+| PLN-LLM-HUB (Manhattan S-072), SLD-8 US-8.1 (slider), CAP-ARCH-1 (capsule) :
+les N2 consomment le socle LLM codebase via port/adapter. Codex est le seul
+N2 resté hors du hub — il précède la généralisation (S-072).
+
+|===
+
+== Décisions architecturales (cadrage S-096)
+
+. *EPIC cross-borough* Brooklyn (codex) + Queens (codebase). Priorité P1 —
+la frontière licence/métier et la cohérence du DAG en dépendent.
+
+. *codex GARDE* (son métier READ — acquisition documentaire) :
+ `OcrRequest`/`OcrResult`/`OcrConfig` (types purs), `TesseractOcrEngine`
+ (software OCR — LA règle), `DiskCacheStorage`/`OcrResultCache` (économie
+ d'encre), `CollectOcrTask` + contrat pages N2↔N2 (`NNN-<pageId>.adoc`),
+ orchestration `OcrPipeline` (fallback AI→software).
+
+. *codex RETIRE* : `LlmOcrEngine`, `HttpOllamaChatClient`, `OllamaChatClient`.
+ `OllamaProbe` est *conservé* (utilitaire de test `assumeTrue`, plage
+ 11437-11465 — pas un moteur IA).
+
+. *Port d'injection* : PAS de nouveau type. `codex.ocr.OcrEngine` (fun
+ interface existante) EST le port. `OcrPipeline` reçoit l'engine IA par
+ injection ; défaut sans injection = Tesseract seul (dégradé fonctionnel,
+ backward compat).
+
+. *Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` vit côté codebase*
+ — wrappe `VisionProvider` (IA) derrière le port codex. Zéro circularité :
+ codebase a déjà `libs.codex.plugin` (constat #2). Sens unique : N1 offre,
+ le consommateur câble.
+
+. *Zéro nouvelle dépendance codex→codebase* — un `implementation(libs.codebase.plugin)`
+ créerait un CYCLE N2↔N1 interdit. Le wiring se fait au composition root
+ (consommateur : training/runner/tests) ou en test (fake).
+
+. *Suppression `CodexOcrEngineAdapter`* (codebase) — sens inverse de la
+ boundary (exposait le software comme VisionProvider). `CodebaseOcrExtension`
+/`OcrTask` deviennent IA-uniquement (Gemini/Ollama via `VisionProvider`) ;
+ plus d'import `TesseractOcrEngine`.
+
+. *Split-brain `CodexVectorStore` HORS SCOPE* — 5 fichiers koog codebase
+ utilisent `codex.store.CodexVectorStore` (CompositeContextBuilder,
+ CodebaseCompositeContextTask, KoogAugmentedContextGraph,
+ MultiChannelContextGraph, KoogPlanningOrchestrator). L'inversion N1→N2
+ dépasse l'OCR. EPIC futur dédié (cadrage séparé requis).
+
+. *Parité comportementale* : avant toute suppression, characterization tests
+ verrouillent la sortie AsciiDoc structuré de la chaîne actuelle. La qualité
+ OCR IA doit être équivalente via les providers codebase.
+
+. *Non-régression* : `collectOcr` sans provider IA câblé → Tesseract seul
+ (fonctionnel). Avec adapter câblé → même chaîne qu'aujourd'hui. Contrat
+ pages inchangé. Cache hash inchangé.
+
+. *English only* — code, commentaires, Gherkin (règle transverse).
+
+. *Méthode* : baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR,
+ 3 niveaux (unit → functional → Cucumber).
+
+== Découpage US (~9 pts)
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-OCR-0
+| Cadrage EPIC (gouvernance pure, zéro code — cette session)
+| ✅ TERMINÉ (S-096)
+| 1
+
+| CDX-OCR-1
+| *codex — characterization + port* : characterization tests sur `OcrPipeline`
+ actuelle (sortie AsciiDoc, ordre fallback LLM→Tesseract) puis injection
+ `AiOcrEngine` (type = `OcrEngine`) dans `OcrPipeline`/`CollectOcrTask`
+ (propriété optionnelle). Défaut sans injection = Tesseract seul. RED → GREEN.
+ ~6 unit.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-2
+| *codebase — adapter* : `VisionOcrEngineAdapter` (implémente
+ `codex.ocr.OcrEngine`, wrappe `VisionProvider`, mapping bytes/mimeType →
+ `OcrRequest`). ~4 unit. Suppression `CodexOcrEngineAdapter` + retrait import
+ `TesseractOcrEngine` de `OcrTask` (IA-uniquement). Gate non-régression
+ codebase (661 tests codex intacts côté Brooklyn).
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-3
+| *codex — purge pile IA* : suppression `LlmOcrEngine` + `HttpOllamaChatClient`
+ + `OllamaChatClient` + leurs tests ; migration des tests intégration vers
+ fake/injected engine ; `OllamaProbe` conservé. `check` VERT.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-4
+| *Cucumber BDD* : mise à jour `ocr-pipeline.feature` — scénarios fallback
+ avec fake `AiOcrEngine`, degraded Tesseract-only (aucun engine IA),
+ cache hit skip engine. Runner dédié inchangé. Pure BDD.
+| 🔲 À FAIRE
+| 2
+
+|===
+
+== Ordre d'exécution (baby-step)
+
+. CDX-OCR-1 (codex, port + défaut dégradé) — fondation, zéro suppression.
+. CDX-OCR-2 (codebase, adapter + nettoyage sens inverse).
+. CDX-OCR-3 (codex, purge) — gated par 1+2.
+. CDX-OCR-4 (Cucumber, validation comportement).
+
+== Gates et risques
+
+* *Cycle N2↔N1* : interdit formel — d'où la décision 6 (adapter côté codebase).
+* *Qualité OCR IA* : les prompts de `LlmOcrEngine` sont perdus à la
+ suppression ; si la parité n'est pas atteinte via `VisionProvider`,
+ porter le prompt canonique dans le provider codebase (décision à acter
+ en US-2 si constaté).
+* *Consommateurs actuels de `collectOcr`* : flux Tombouctou FPA (livre
+ scanné) — vérifier le wiring chez le consommateur après purge (US-3).

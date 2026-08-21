@@ -1,0 +1,80 @@
+= Session 096 — Cadrage EPIC CDX-OCR-BOUNDARY + confirmation propagation 0.0.5
+
+_Date_ : 2026-08-22
+_Type_ : gouvernance pure (pattern S-057/S-063) + vérification publication
+_Borough_ : Brooklyn (codex-gradle) — portée cross-borough Queens (codebase)
+
+== Contexte d'ouverture
+
+PROMPT_REPRISE S-096 : (1) vérifier propagation repo1 codex-plugin 0.0.5,
+(2) décider BOM MEMPHIS 0.0.25, alternatives EPICs P2 non cadrés.
+
+Le pilote a arbitré en cours de session : la question « qui actionne l'OCR »
+n'avait jamais été tranchée formellement. Règle énoncée :
+
+* OCR *logiciel* (Tesseract) → codex l'actionne
+* OCR *assisté IA* (vision LLM) → codebase l'actionne
+
+== Réalisations
+
+=== Priorité 1 — Propagation repo1 ✅ CONFIRMÉE
+
+`curl https://repo1.maven.org/maven2/education/cccp/codex-plugin/` :
+`0.0.5/` daté 2026-08-21 00:14, `maven-metadata.xml` 00:21. BACKLOG § PUB-5.1
++ § PUB-3.11 mis à jour.
+
+=== Priorité 2 — BOM MEMPHIS : REPORT
+
+BOM 0.0.24 reste fonctionnelle (consommateurs résolvent codex 0.0.4).
+Publication Central hors périmètre autorisé cette session (commit/push
+uniquement). Reporté au prochain bump amont — documenté INDEX/BACKLOG.
+
+=== Cadrage EPIC CDX-OCR-BOUNDARY (gouvernance pure, zéro code)
+
+Audit des deux boroughs :
+
+* codex `codex/ocr/` contient la pile IA complète (`LlmOcrEngine`,
+  `HttpOllamaChatClient`, `OllamaChatClient`, `OcrPipeline` fallback
+  LLM→Tesseract, `OllamaProbe`) — violation de la règle.
+* codebase dépend de l'artefact codex (`codebase-plugin/build.gradle.kts:49`
+  `implementation(libs.codex.plugin)`) — inversion N1→N2.
+* `CodexOcrEngineAdapter` (codebase koog.llm) expose le moteur pur codex
+  comme `VisionProvider` — codebase actionne du software OCR.
+* `OcrTask` codebase importe `codex.ocr.TesseractOcrEngine`.
+* Duplication moteurs vision : `LlmOcrEngine` vs `VisionProvider`
+  Gemini/Ollama codebase.
+* Pattern hub déjà généralisé ailleurs (PLN-LLM-HUB S-072, SLD-8 US-8.1,
+  CAP-ARCH-1) — codex est le dernier N2 hors hub.
+
+12 décisions architecturales (doc `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`) :
+
+. Port = fun interface `codex.ocr.OcrEngine` existante (pas de nouveau type).
+. Injection dans `OcrPipeline`/`CollectOcrTask` ; défaut sans injection =
+  Tesseract seul (dégradé fonctionnel, backward compat).
+. Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` côté codebase
+  (wrappe `VisionProvider`) — zéro cycle N2↔N1 (interdit formel).
+. Purge pile IA codex : `LlmOcrEngine`, `HttpOllamaChatClient`,
+  `OllamaChatClient`. `OllamaProbe` conservé (utilitaire tests assumeTrue).
+. Suppression `CodexOcrEngineAdapter` + retrait import Tesseract de
+  `OcrTask` (codebase devient IA-uniquement).
+. Split-brain `CodexVectorStore` (5 fichiers koog codebase, N1→N2)
+  HORS SCOPE — EPIC futur dédié.
+. Parité comportementale via characterization tests avant suppression.
+. English only, baby-step DDD/TDD/BDD strict.
+
+Découpage : CDX-OCR-0 cadrage (✅ S-096) → CDX-OCR-1 port+characterization
+(~6 unit) → CDX-OCR-2 adapter codebase (~4 unit) → CDX-OCR-3 purge →
+CDX-OCR-4 Cucumber. Total ~8 pts restants.
+
+== Vérifications
+
+* Build VERT (`./gradlew build -x test`), baseline 661 tests 0 FAIL
+  (214 skip intégration assumeTrue).
+* Zéro fichier production modifié — gouvernance pure.
+* Zéro secret.
+
+== Prochaine session — 097
+
+CDX-OCR-1 : characterization tests sur `OcrPipeline` actuelle puis injection
+du port `AiOcrEngine`, défaut Tesseract seul. Baby-step TDD strict
+RED → GREEN → REFACTOR.
