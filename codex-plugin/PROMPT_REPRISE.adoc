@@ -1,37 +1,32 @@
-= PROMPT_REPRISE — Codex — Session 097
-:session: 097
+= PROMPT_REPRISE — Codex — Session 098
+:session: 098
 :date: 2026-08-22
 :status: PRET
-:max-lines: 45
+:max-lines: 50
 
 == Quick Start
 
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 661/661 PASS (baseline préservée S-096)
+./gradlew test             # 661/661 PASS (baseline préservée S-097)
 ```
 
-== Session 096 terminée — Cadrage EPIC CDX-OCR-BOUNDARY (gouvernance pure)
+== Sessions 096-097 terminées — Deux cadrages de gouvernance (zéro code)
 
-. *Décision pilote actée* : OCR logiciel (Tesseract) = codex l'actionne /
-  OCR assisté IA (vision LLM) = codebase l'actionne.
-. *Audit 6 constats* : pile OCR IA dans codex (`LlmOcrEngine`,
-  `HttpOllamaChatClient`, `OcrPipeline` fallback LLM→Tesseract) ;
-  dépendance inversée N1→N2 (`codebase-plugin/build.gradle.kts:49`) ;
-  `CodexOcrEngineAdapter` + import `TesseractOcrEngine` côté codebase ;
-  duplication moteurs vision ; codex dernier N2 hors hub LLM.
-. *12 décisions* : port = fun interface `codex.ocr.OcrEngine` existante,
+. *S-096 — EPIC CDX-OCR-BOUNDARY* ✅ : OCR logiciel (Tesseract) = codex /
+  OCR assisté IA = codebase. Port = `codex.ocr.OcrEngine` existant,
   injection `OcrPipeline` défaut Tesseract seul, adapter
-  `VisionOcrEngineAdapter` côté codebase (zéro cycle N2↔N1), purge pile IA
-  codex sauf `OllamaProbe`, split-brain `CodexVectorStore` HORS SCOPE
-  (EPIC futur).
-. *Priorité 1 ✅* : propagation repo1 codex-plugin 0.0.5 confirmée
-  (repo1 2026-08-21 00:14). BACKLOG § PUB-5.1 + § PUB-3.11 à jour.
-. *Priorité 2* : BOM MEMPHIS 0.0.25 *reporté* au prochain bump amont
-  (BOM 0.0.24 fonctionnelle, publication hors périmètre autorisé).
+  `VisionOcrEngineAdapter` côté codebase, purge pile IA codex.
+  + propagation repo1 codex-plugin 0.0.5 confirmée.
+. *S-097 — EPIC CDX-RAG-SOCLE* ✅ : le RAG appartient au socle. Store
+  vectoriel migre de codex N2 vers codebase N1 (`codebase.store` +
+  `RagVectorStore` verbatim), SQL migre avec le store, tables pgvector
+  INCHANGÉES (zéro re-vectorisation), codex dépendra de codebase /
+  codebase retire `libs.codex.plugin` (flèche unique N2→N1).
+  Gate d'ordre strict : OCR-1 + OCR-2 terminées avant RAG-3/RAG-4.
 
-== Prochaine session — 097 : CDX-OCR-1
+== Prochaine session — 098 : CDX-OCR-1 (gate de la chaîne OCR → RAG)
 
 *Baby-step TDD strict RED → GREEN → REFACTOR (~6 unit)* :
 . Characterization tests sur `OcrPipeline` actuelle — verrouiller la sortie
@@ -42,13 +37,12 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 . Défaut sans injection = Tesseract seul (dégradé fonctionnel, backward
   compat). Aucune suppression en US-1.
 
-*Ensuite* : CDX-OCR-2 (adapter codebase + nettoyage sens inverse) →
-CDX-OCR-3 (purge pile IA codex) → CDX-OCR-4 (Cucumber BDD).
-Doc cadrage : `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`.
+*Ensuite* (ordre) : CDX-OCR-2 → CDX-OCR-3 → CDX-OCR-4 → CDX-RAG-1 →
+RAG-2 → RAG-3 → RAG-4 → RAG-5.
 
 == References
 
-- `.agents/sessions/096-cdx-ocr-boundary-cadrage.adoc`
-- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (constats, décisions, US)
-- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY + § PUB-5.1
-- Central : codex-plugin 0.0.5 confirmé repo1 (bundle `8e661086`)
+- `.agents/sessions/097-cdx-rag-socle-cadrage.adoc`
+- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (constats, décisions, US)
+- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY + § EPIC CDX-RAG-SOCLE

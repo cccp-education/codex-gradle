@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 096 — cadrage EPIC CDX-OCR-BOUNDARY + confirmation propagation repo1 codex-plugin 0.0.5, gouvernance pure zéro code)_
+_Dernière mise à jour : 2026-08-22 (session 097 — cadrage EPIC CDX-RAG-SOCLE, gouvernance pure zéro code ; S-096 = cadrage EPIC CDX-OCR-BOUNDARY)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -219,6 +219,101 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 |===
 
 *Total* : ~9 pts (4 US restantes)
+
+'''
+== 🔴 EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1) — Cadrage S-097
+
+_Source_ : décision pilote session 097 (« le RAG est un élément du contexte
+augmenté, donc le RAG se fait dans codebase »).
+_Doc cadrage_ : `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`.
+_Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié.
+_Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
+
+=== Constats (audit S-097)
+
+. Le store vectoriel vit dans codex N2 (`codex/store/CodexVectorStore.kt`,
+  `IngestStatements`, tables `codex_documents`/`codex_chunks`) au lieu du
+  socle N1.
+. Accrétion historique : codex P0 (CDX-8/CDX-9, S-013/S-014) précède la
+  montée de codebase N1.
+. Inversion N1→N2 : 6 fichiers codebase importent `codex.store.CodexVectorStore`
+  (`CodebasePlugin`, `CompositeContextBuilder`, `CodebaseCompositeContextTask`,
+  `KoogAugmentedContextGraph`, `MultiChannelContextGraph`,
+  `KoogPlanningOrchestrator`) — le split-brain mis HORS SCOPE en S-096.
+. Deux stores coexistent côté codebase : `codebase.rag.VectorStore` (JDBC,
+  schéma code-index, `initSchema` DROP CASCADE destructif) VS l'emprunt codex
+  (R2DBC) — duplication + divergence technique.
+. Surface API consommée par codebase : minimale — constructeur +
+  `searchBlocking(query, topK)` sur 3 call sites. Migration mécanique.
+. codex consomme son store en interne : `CodexCompositeContextTask` (canal
+  Docs), `CodexIngestTask`, `CodexRetrieveTask`. Pattern mirroré par
+  `codex.profile.PgVectorSessionMemory` (session memory ≠ corpus RAG).
+. Dépendance build inversée : `codebase-plugin/build.gradle.kts:49`
+  `implementation(libs.codex.plugin)`.
+. Loi de l'Économie d'Encre : embeddings déjà stockés = vérité — ni
+  renommage de tables, ni re-vectorisation.
+
+=== Décisions clés
+
+. Nouveau domaine `codebase.store` côté socle — `RagVectorStore` (nom neutre)
+  reprend la logique verbatim de `CodexVectorStore`.
+. Les templates SQL migrent avec le store (`IngestStatements` → propriété du
+  socle). Les tâches codex deviennent thin wrappers (pattern PLN-LLM-HUB).
+. Tables pgvector INCHANGÉES (`codex_documents`/`codex_chunks`) — backward
+  compat total, zéro migration de données.
+. codex dépend de codebase (`implementation(libs.codebase.plugin)`) ; codebase
+  retire `libs.codex.plugin` → flèche unique N2→N1, zéro cycle.
+. Contrat N0 MEMPHIS rejeté pour cette itération (store = service implémenté,
+  pas des types purs ; pattern LlmBuildService fait foi).
+. Consolidation `codebase.rag.VectorStore` JDBC legacy HORS SCOPE (EPIC futur
+  CB-STORE-UNIFY).
+. Gate d'ordre : CDX-OCR-1 + CDX-OCR-2 terminées avant RAG-3/RAG-4.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-RAG-0
+| Cadrage EPIC (gouvernance pure)
+| ✅ TERMINÉ (S-097)
+| 1
+
+| CDX-RAG-1
+| codebase — domaine `codebase.store` : `RagVectorStore` migré verbatim +
+  `StoreStatements` + characterization tests (mirror tests codex). ~8 unit.
+| 🔲 À FAIRE
+| 2
+
+| CDX-RAG-2
+| codebase — bascule interne : 6 call sites `CodexVectorStore` →
+  `RagVectorStore` (API identique). Gate non-régression.
+| 🔲 À FAIRE
+| 1
+
+| CDX-RAG-3
+| codex — dep `libs.codebase.plugin` ajoutée ; `CodexCompositeContextTask` /
+  `CodexIngestTask` / `CodexRetrieveTask` délèguent au socle ; suppression
+  `codex.store.CodexVectorStore` + `IngestStatements` + `IngestIndexing` ;
+  KDoc profile actualisé. Gate : CDX-OCR-1/2 terminées.
+| 🔲 À FAIRE
+| 3
+
+| CDX-RAG-4
+| codebase — retrait `implementation(libs.codex.plugin)`
+  (`build.gradle.kts:49`) après vérification `rg "import codex\."` = zéro
+  résultat. CI verte. L'inversion N1→N2 est morte.
+| 🔲 À FAIRE
+| 1
+
+| CDX-RAG-5
+| Cucumber BDD — scénarios composite context canal Docs + retrieval koog sur
+  store socle (fake in-memory). Pure BDD.
+| 🔲 À FAIRE
+| 2
+
+|===
+
+*Total* : ~10 pts (5 US restantes)
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094

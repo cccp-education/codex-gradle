@@ -2480,3 +2480,30 @@ cadrer la frontière OCR — règle actée « OCR logiciel = codex / OCR assist�
 
 - CDX-OCR-1 : characterization tests `OcrPipeline` + injection port
   `AiOcrEngine`, défaut Tesseract seul. Baby-step TDD strict RED → GREEN.
+
+== Session 097 — Cadrage EPIC CDX-RAG-SOCLE (2026-08-22)
+
+*Type* : gouvernance pure — zéro code modifié (pattern S-057/S-063).
+*Déclencheur* : question pilote — le RAG est un élément du contexte
+augmenté, donc le RAG devrait se faire dans codebase N1.
+*Audit* : 8 constats cross-borough. Le store vectoriel vit dans codex
+(`codex/store/CodexVectorStore.kt` R2DBC + ONNX, `IngestStatements`/
+`IngestIndexing`, tables `codex_documents`/`codex_chunks`) ; 6 fichiers
+codebase importent `codex.store.CodexVectorStore` (inversion N1→N2, split-brain
+HORS SCOPE S-096) ; duplication deux stores côté codebase (JDBC legacy vs
+R2DBC emprunté) ; surface API consommée minimale (`searchBlocking` × 3).
+*10 décisions* : domaine `codebase.store` + `RagVectorStore` verbatim ; SQL
+migre avec le store ; tables pgvector INCHANGÉES (zéro re-vectorisation) ;
+codex dépend de codebase / codebase retire `libs.codex.plugin` (flèche unique
+N2→N1) ; contrat N0 MEMPHIS rejeté (pattern LlmBuildService) ; consolidation
+JDBC legacy HORS SCOPE (CB-STORE-UNIFY futur) ; gate OCR-1/OCR-2 avant
+RAG-3/RAG-4.
+*Découpage* : 5 US ~10 pts (RAG-1→RAG-5).
+*Doc cadrage* : `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`.
+*Baseline* : 661 tests 0 FAIL préservée.
+
+=== Prochaine session
+
+- CDX-OCR-1 : characterization tests `OcrPipeline` + injection port
+  `AiOcrEngine` (gate de la chaîne OCR → RAG-SOCLE). Baby-step TDD strict
+  RED → GREEN.

@@ -1,0 +1,98 @@
+= Session 097 — Cadrage EPIC CDX-RAG-SOCLE (gouvernance pure)
+
+:revdate: 2026-08-22
+:status: ✅ TERMINÉE
+
+== Mission
+
+Cadrer l'EPIC CDX-RAG-SOCLE suite à la question du pilote : « l'intégration
+du RAG dans codex — normalement le RAG est un élément du contexte augmenté,
+donc le RAG devrait se faire dans codebase ». Gouvernance pure, zéro code
+modifié (pattern S-057/S-063).
+
+== Contexte d'ouverture
+
+Session ouverte juste après la clôture S-096 (cadrage EPIC CDX-OCR-BOUNDARY,
+commit `d82716d` poussé). Incident credential gh transitoire résolu
+(keyring redevenu accessible — `gh auth status` sain, compte cheroliv ;
+aucune config modifiée durablement).
+
+== Travail réalisé
+
+=== Audit cross-borough (8 constats)
+
+. Store vectoriel dans codex N2 : `codex/store/CodexVectorStore.kt`
+   (R2DBC + ONNX AllMiniLmL6V2), `IngestStatements.kt`, `IngestIndexing.kt`,
+   tables `codex_documents`/`codex_chunks`.
+. Accrétion historique P0 (CDX-8/CDX-9 S-013/S-014) antérieure à codebase N1.
+. Inversion N1→N2 : 6 fichiers codebase importent
+   `codex.store.CodexVectorStore` (CodebasePlugin, CompositeContextBuilder,
+   CodebaseCompositeContextTask, KoogAugmentedContextGraph,
+   MultiChannelContextGraph, KoogPlanningOrchestrator).
+. Duplication : `codebase.rag.VectorStore` JDBC legacy (DROP CASCADE dans
+   `initSchema`) VS emprunt codex R2DBC.
+. Surface API consommée minimale : constructeur + `searchBlocking(query, topK)`
+   × 3 call sites.
+. Usage interne codex : CodexCompositeContextTask (canal Docs),
+   CodexIngestTask, CodexRetrieveTask ; mirror par codex.profile.
+. Dépendance build inversée : `codebase-plugin/build.gradle.kts:49`
+   `implementation(libs.codex.plugin)`.
+. Loi Économie d'Encre : embeddings stockés = vérité, ni renommage ni
+   re-vectorisation.
+
+=== Décisions (10)
+
+Voir `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`. Clés :
+
+* Nouveau domaine `codebase.store` côté socle — `RagVectorStore` verbatim.
+* SQL migre avec le store ; tâches codex = thin wrappers (PLN-LLM-HUB).
+* Tables pgvector INCHANGÉES — backward compat total.
+* Flèche unique : codex→codebase ajoutée, codebase→codex retirée (zéro cycle).
+* Contrat N0 MEMPHIS rejeté pour cette itération.
+* Gate d'ordre : OCR-1/OCR-2 avant RAG-3/RAG-4.
+
+=== Découpage
+
+5 US restantes ~10 pts (RAG-1 socle → RAG-2 bascule interne → RAG-3 bascule +
+purge codex → RAG-4 retrait dépendance → RAG-5 Cucumber BDD).
+
+== Fichiers créés/modifiés
+
+[cols="2,1"]
+|===
+| Fichier | Action
+
+| `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`
+| CRÉÉ
+
+| `BACKLOG.adoc` (section EPIC CDX-RAG-SOCLE)
+| MODIFIÉ
+
+| `.agents/INDEX.adoc` (en-tête, table sessions, roadmap)
+| MODIFIÉ
+
+| `PROMPT_REPRISE.adoc` (mission S-098)
+| MODIFIÉ
+
+| `.agents/SESSIONS_HISTORY.adoc`, `TEST_COVERAGE_ANALYSIS.adoc`,
+  `archives/COMPLETED_TASKS_ARCHIVE_2026-08.adoc`
+| MODIFIÉS
+
+| AGENTS.adoc racine (ligne Brooklyn + historique)
+| MODIFIÉ (hors git — jardin secret)
+
+|===
+
+Zéro fichier source modifié.
+
+== Vérifications
+
+* Baseline intacte : build VERT, 661 tests 0 FAIL (aucun code touché).
+* Zéro secret introduit.
+* Marqueurs backlog synchronisés (seuls les marqueurs légitimes des US
+  restantes subsistent).
+
+== Prochaine session (098)
+
+CDX-OCR-1 (priorité du gate) : characterization tests `OcrPipeline` +
+injection port `AiOcrEngine` — puis la chaîne OCR → RAG-SOCLE.

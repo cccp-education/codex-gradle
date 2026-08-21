@@ -583,3 +583,11 @@ Gouvernance pure — zéro code, zéro test. Baseline vérifiée : 661 tests,
 0 FAIL (214 skip intégration). L'EPIC cadré impactera la couverture dès
 S-097 : characterization tests `OcrPipeline` (US-1), migration tests
 intégration sur fake engine après purge pile IA (US-3).
+
+== Session 097 — Cadrage CDX-RAG-SOCLE (aucun test modifié)
+
+Gouvernance pure — zéro code, zéro test. Baseline vérifiée : 661 tests,
+0 FAIL. Impact couverture futur : characterization tests `CodexVectorStore`/
+`IngestStatements` migrés verbatim vers `codebase.store.RagVectorStore`
+(RAG-1), tests codex re-pointés après bascule + purge (RAG-3), Cucumber BDD
+canal Docs sur store socle (RAG-5).

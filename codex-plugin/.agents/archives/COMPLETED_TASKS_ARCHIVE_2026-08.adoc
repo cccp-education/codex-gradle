@@ -727,3 +727,14 @@ Règle pilote actée : OCR logiciel (Tesseract) = codex / OCR assisté IA
 (doc `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`), 4 US restantes ~8 pts.
 + Priorité 1 S-096 ✅ propagation repo1 codex-plugin 0.0.5 confirmée.
 + BOM MEMPHIS 0.0.25 reporté au prochain bump amont. Zéro code modifié.
+
+== Session 097 — Cadrage EPIC CDX-RAG-SOCLE ✅ (2026-08-22)
+
+Décision pilote actée : le RAG est un élément du contexte augmenté, donc le
+RAG se fait dans codebase N1. Audit 8 constats cross-borough (store vectoriel
+dans codex N2, inversion N1→N2 sur 6 fichiers codebase, duplication deux
+stores, surface API minimale). 10 décisions (doc
+`CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`) : domaine `codebase.store` + `RagVectorStore`
+verbatim, tables pgvector inchangées (zéro re-vectorisation), flèche unique
+N2→N1, gate OCR avant RAG. 5 US restantes ~10 pts. Zéro code modifié.
+Baseline 661 tests 0 FAIL préservée.

@@ -1,0 +1,192 @@
+= CADRAGE EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1)
+
+:toc: macro
+:sectnums:
+:date: 2026-08-22
+:source: Session 097 (gouvernance pure, pattern S-057/S-063)
+
+toc::[]
+
+== Contexte — La règle du pilote
+
+Le pilote acte (session 097) : *le RAG est un élément du contexte augmenté,
+donc le RAG se fait dans codebase* (Queens N1). La gouvernance racine
+l'écrit déjà (« Queens fournit le RAG socle pgvector aux N2 ») mais le code
+n'a jamais suivi. Ce document cadre l'EPIC de migration.
+
+== Audit — 8 constats
+
+[cols="1,3,3", options="header"]
+|===
+| # | Constat | Preuve
+
+| 1
+| Le store vectoriel vit dans un borough métier N2 au lieu du socle N1
+| `codex/store/CodexVectorStore.kt` (R2DBC + ONNX AllMiniLmL6V2 384 dim,
+`searchBlocking`/`search`, tables `codex_documents`/`codex_chunks`) +
+`IngestStatements.kt` + `IngestIndexing.kt`.
+
+| 2
+| Accrétion historique
+| codex a été construit P0 (CDX-8 `codexIngest` S-013, CDX-9 `codexRetrieve`
+S-014) *avant* que codebase n'émerge comme socle N1. Comme pour l'OCR et le
+hub LLM, codex est le dernier borough non aligné.
+
+| 3
+| Inversion N1→N2 : 6 fichiers codebase importent le store codex
+| `CodebasePlugin.kt`, `rag/CompositeContextBuilder.kt`,
+`rag/CodebaseCompositeContextTask.kt`, `koog/KoogAugmentedContextGraph.kt`
+(l.125 `CodexVectorStore()` instancié directement),
+`koog/MultiChannelContextGraph.kt`, `koog/KoogPlanningOrchestrator.kt`.
+C'est le split-brain mis HORS SCOPE dans le cadrage OCR (S-096).
+
+| 4
+| Deux stores coexistent côté codebase — duplication et divergence technique
+| `codebase.rag.VectorStore` (JDBC DriverManager, tables génériques
+`documents`/`chunks` schéma code-index package/class/repo, `initSchema`
+avec `DROP TABLE IF EXISTS chunks CASCADE` destructif) VS l'emprunt
+`codex.store.CodexVectorStore` (R2DBC). Deux clients, deux styles.
+
+| 5
+| Surface API réellement consommée par codebase : minimale
+| Uniquement constructeur (params pg) + `searchBlocking(query, topK)` —
+3 call sites (CompositeContextBuilder.kt:65, CodebaseCompositeContextTask.kt:42,
+MultiChannelContextGraph.kt:143). Migration mécanique.
+
+| 6
+| codex consomme son store en interne sur 3 chemins
+| `CodexCompositeContextTask` (canal Docs du composite context),
+`CodexIngestTask` (UPSERT via IngestStatements), `CodexRetrieveTask`.
+Le pattern R2DBC est aussi mirroré par `codex.profile.PgVectorSessionMemory`
+(S-094) — session memory ≠ corpus RAG (décision RC-04 inchangée).
+
+| 7
+| Dépendance build inversée
+| `codebase-plugin/build.gradle.kts:49` — `implementation(libs.codex.plugin)`.
+Un socle N1 dépend d'un artefact métier N2.
+
+| 8
+| Loi de l'Économie d'Encre — contrainte de migration
+| Les embeddings déjà stockés en pgvector sont la vérité. Toute migration ne
+doit NI renommer les tables NI re-vectoriser : seuls les binaires bougent,
+les données restent.
+
+|===
+
+== Décisions architecturales (cadrage S-097)
+
+. *EPIC cross-borough* Brooklyn (codex) + Queens (codebase). Priorité P1.
+Exécution *après* CDX-OCR-BOUNDARY (gate : US-2 OCR terminée avant RAG-4 —
+sinon codebase garde des imports `codex.ocr.*` et ne peut pas retirer la
+dépendance).
+
+. *Nouveau domaine `codebase.store`* côté socle — `RagVectorStore` (nom neutre)
+reprend la logique verbatim de `CodexVectorStore` : factory R2DBC, embedding
+ONNX AllMiniLmL6V2, `searchBlocking`/`search`. Même API, autre domicile.
+
+. *Les templates SQL migrent avec le store* — `IngestStatements` (DDL/UPSERT
+tables `codex_*`) devient propriété du socle : c'est lui qui possède l'accès
+schéma. Les tâches codex orchestrent (lire fichiers, chunker, appeler le
+socle) — thin wrappers, pattern PLN-LLM-HUB.
+
+. *Tables pgvector INCHANGÉES* — `codex_documents`/`codex_chunks` gardent leur
+nom (backward compat total, zéro migration de données, zéro re-vectorisation).
+La convention de nommage historique reste ; le socle documente que ces tables
+hébergent le corpus documentaire codex.
+
+. *codex dépend de codebase* — `implementation(libs.codebase.plugin)` ajouté
+côté codex. Pattern établi : planner/slider/capsule consomment déjà le socle
+N1 ainsi. Simultanément *codebase retire `libs.codex.plugin`* → zéro cycle
+(l'interdit formel N2↔N1 cyclique est respecté : flèche unique N2→N1).
+
+. *Contrat N0 MEMPHIS rejeté pour cette itération* — le store est un service
+implémenté (R2DBC+ONNX), pas des types purs. Le pattern LlmBuildService
+(dépendance directe au socle) fait foi. Un contrat N0 pourra être extrait
+plus tard si un 3e consommateur apparaît.
+
+. *Consolidation `codebase.rag.VectorStore` (JDBC legacy) HORS SCOPE* —
+c'est l'indexeur code-index interne de Queens, distinct du corpus
+documentaire. Sa fusion avec `RagVectorStore` est candidate à un EPIC futur
+(CB-STORE-UNIFY). Son `initSchema` destructif (DROP CASCADE) est signalé
+comme smell à ne PAS reproduire dans le nouveau domaine.
+
+. *`codex.profile.PgVectorSessionMemory` inchangé* — session memory ≠ corpus
+RAG (décision RC-04 S-076 réaffirmée). Seul le KDoc mentionnant
+« pattern CodexVectorStore » sera actualisé.
+
+. *Non-régression runner-gradle (N3)* — `assembleCompositeContext` consomme
+les contrats N0 (contexts-contracts) déjà stables ; zéro impact attendu.
+Vérification gate en clôture de RAG-3.
+
+. *English only*, baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR,
+3 niveaux (unit → functional → Cucumber).
+
+== Découpage US (~10 pts)
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-RAG-0
+| Cadrage EPIC (gouvernance pure, zéro code — cette session)
+| ✅ TERMINÉ (S-097)
+| 1
+
+| CDX-RAG-1
+| *codebase — domaine `codebase.store`* : `RagVectorStore` migré verbatim +
+`StoreStatements` (ex-IngestStatements) + characterization tests (mirror
+`CodexVectorStoreTest`/`IngestStatementsTest`). ~8 unit. GREEN codebase seul.
+| 🔲 À FAIRE
+| 2
+
+| CDX-RAG-2
+| *codebase — bascule interne* : 6 call sites `codex.store.CodexVectorStore`
+→ `codebase.store.RagVectorStore` (API identique). Gate non-régression :
+tests existants verts.
+| 🔲 À FAIRE
+| 1
+
+| CDX-RAG-3
+| *codex — bascule + purge* : dep `libs.codebase.plugin` ajoutée ;
+`CodexCompositeContextTask`/`CodexIngestTask`/`CodexRetrieveTask` délèguent
+au socle ; suppression `codex.store.CodexVectorStore` + `IngestStatements` +
+`IngestIndexing` ; tests migrés ; KDoc profile actualisé. `check` VERT.
+Gate : CDX-OCR-1 et CDX-OCR-2 terminées.
+| 🔲 À FAIRE
+| 3
+
+| CDX-RAG-4
+| *codebase — retrait dépendance* : suppression `implementation(libs.codex.plugin)`
+(`build.gradle.kts:49`) après vérification `rg "import codex\."` = zéro
+résultat. CI verte. L'inversion N1→N2 est morte.
+| 🔲 À FAIRE
+| 1
+
+| CDX-RAG-5
+| *Cucumber BDD* : scénarios composite context canal Docs + retrieval koog
+sur store socle (fake in-memory). Pure BDD, zéro prod modifié.
+| 🔲 À FAIRE
+| 2
+
+|===
+
+*Total* : ~10 pts (5 US restantes)
+
+== Ordre d'exécution (baby-step)
+
+. CDX-OCR-1 → CDX-OCR-2 *(EPIC OCR, prérequis)*
+. CDX-RAG-1 (socle, nouveau domaine pur)
+. CDX-RAG-2 (bascule codebase)
+. CDX-RAG-3 (bascule + purge codex)
+. CDX-RAG-4 (retrait dépendance — l'objectif final)
+. CDX-RAG-5 (validation BDD)
+
+== Gates et risques
+
+* *Cycle N2↔N1* : impossible par construction — RAG-4 est gated par RAG-3,
+lui-même gated par OCR-1/OCR-2. Vérification mécanique (`rg import codex.`).
+* *Qualité de recherche* : logique migrée verbatim + characterization tests
+avant suppression → zéro changement comportemental attendu.
+* *Consommateurs indirects* : training (TRN-5) passe par runner-gradle
+(`assembleCompositeContext`) — aucun impact tant que les contrats N0 sont
+stables.
