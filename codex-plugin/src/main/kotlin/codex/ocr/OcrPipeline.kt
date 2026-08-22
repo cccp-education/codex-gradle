@@ -8,9 +8,10 @@ package codex.ocr
  * engine returns empty text or zero confidence, the pipeline falls back
  * to the next one.
  *
- * Canonical chain (configured by the Gradle task):
- * 1. [LlmOcrEngine] — Ollama vision (gpt-oss:120b-cloud) → structured AsciiDoc
- * 2. [TesseractOcrEngine] — local Tesseract CLI → raw text fallback
+ * Chain composition is the caller's responsibility. Since CDX-OCR-1
+ * (boundary rule — AI-assisted OCR belongs to the codebase socle):
+ * - with an injected AI engine: AI engine → [TesseractOcrEngine]
+ * - without injection (degraded, functional): [TesseractOcrEngine] alone
  *
  * If all engines fail, returns an empty [OcrResult] with zero confidence.
  *

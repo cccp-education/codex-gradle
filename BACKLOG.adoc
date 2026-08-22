@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 097 — cadrage EPIC CDX-RAG-SOCLE, gouvernance pure zéro code ; S-096 = cadrage EPIC CDX-OCR-BOUNDARY)_
+_Dernière mise à jour : 2026-08-22 (session 098 — CDX-OCR-1 injection port AI OCR TERMINÉ ; S-097 = cadrage EPIC CDX-RAG-SOCLE)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -194,7 +194,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | CDX-OCR-1
 | codex — characterization tests `OcrPipeline` + injection port `AiOcrEngine`
   (défaut Tesseract seul). ~6 unit. RED → GREEN.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-098)
 | 2
 
 | CDX-OCR-2

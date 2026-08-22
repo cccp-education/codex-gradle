@@ -1,0 +1,108 @@
+= Session 098 — CDX-OCR-1 : Injection du port AI OCR dans CollectOcrTask
+
+_Date_ : 2026-08-22
+_Type_ : dev (baby-step TDD strict RED → GREEN → REFACTOR)
+_EPIC_ : CDX-OCR-BOUNDARY (US-1 sur 4)
+_Borough_ : Brooklyn (codex-gradle) — portée locale, zéro cross-borough
+
+== Mission (PROMPT_REPRISE S-098)
+
+Characterization tests sur `OcrPipeline` actuelle puis injection du port
+`AiOcrEngine` (= interface existante `codex.ocr.OcrEngine`) dans
+`OcrPipeline`/`CollectOcrTask`, propriété optionnelle, défaut sans
+injection = Tesseract seul (dégradé fonctionnel). Zéro suppression de
+classe en US-1. ~6 unit.
+
+== Constats pré-implémentation
+
+. La characterization mécanique de la pipeline existe déjà :
+  `OcrPipelineTest` (S-072, 6 tests) verrouille l'ordre de fallback et le
+  passthrough du texte structuré via stubs — toujours verte en ouverture.
+. `OcrPipeline` est déjà générique (`List<OcrEngine>`) — aucune
+  modification logique nécessaire côté pipeline.
+. `CollectOcrTask.collectOcr()` hardcode la chaîne
+  `LlmOcrEngine(HttpOllamaChatClient(host, port), config)` →
+  `TesseractOcrEngine()` (violations #1 de l'audit S-096).
+. `TesseractOcrEngine` dégrade silencieusement (résultat vide, pas de
+  throw) si le CLI est absent — testable sans binaire.
+. Les tests contrat pages (`CollectOcrPagesContractTest`) forcent
+  `ollamaPort=1` pour échouer les deux moteurs — après bascule défaut
+  Tesseract-seul, ces tests restent verts et plus rapides (pas d'appel
+  réseau).
+
+== Implémentation (GREEN)
+
+*`CollectOcrTask.kt`* :
+. Nouvelle propriété `@get:Internal abstract val aiEngine: Property<OcrEngine>`
+  (`@Internal` car instance non sérialisable ; tâche déjà
+  `DisableCachingByDefault`). Défaut non renseignée → dégradé.
+. Chaîne construite par injection :
+  `aiEngine.orNull?.let { OcrPipeline(listOf(it, TesseractOcrEngine())) }
+  ?: OcrPipeline(listOf(TesseractOcrEngine()))`.
+. Suppression des lectures inertes `host/port/modelName/config` et de la
+  construction `LlmOcrEngine` dans l'action (les classes restent dans
+  `codex.ocr` jusqu'à la purge CDX-OCR-3). Log de chaîne explicite :
+  `chain=AI(<Engine>) → tesseract` ou `chain=tesseract-only`.
+. Imports `HttpOllamaChatClient`/`LlmOcrEngine`/`OcrConfig` retirés de la
+  tâche.
+
+*REFACTOR* :
+. `OcrEngine` converti en `fun interface` (additif — ergonomie SAM pour
+  l'adapter codebase US-2 ; cadrage S-096 décision 4 le décrit ainsi).
+. KDoc mis à jour sur `OcrEngine` (port + boundary), `OcrPipeline`
+  (composition par le caller, défaut Tesseract-seul) et `CollectOcrTask`
+  (règle de chaîne, props ollama marquées inertes jusqu'à purge US-3).
+
+== Tests (RED → GREEN)
+
+Nouvelle suite `codex.tasks.CollectOcrAiEngineInjectionTest` — 6 unit :
+
+. `task exposes an optional aiEngine property` — propriété existe,
+  orNull null par défaut.
+. `plugin apply leaves aiEngine unset` — le plugin ne pré-câble AUCUN
+  engine IA : le wiring appartient au composition root consommateur.
+. `injected AI engine structured AsciiDoc flows to page adoc file` —
+  fake engine retourne AsciiDoc structuré → contenu exact du fichier
+  `001-page-001.adoc`.
+. `AI engine failure falls back to Tesseract degraded marker` — engine
+  vide/confiance 0 → fallback Tesseract → marqueur
+  `[page vide ou OCR échec]` (ordre fallback préservé).
+. `injected AI engine also feeds legacy outputFile backward compat` —
+  sortie legacy concaténée toujours écrite avec header `= OCR Book` +
+  `== Page 1`.
+. `no images short-circuits before any engine runs` — compteur d'appels
+  = 0 quand inputDir vide (économie d'encre, même avec engine injecté).
+
+RED vérifié strictement : 7× `Unresolved reference 'aiEngine'`
+(compileTestKotlin FAILED) → GREEN 6/6 PASSED en 0.9s.
+
+== Vérifications
+
+- `check` BUILD SUCCESSFUL 1m27s — Kover VERT, validatePlugins VERT.
+- Task `test` : 667 exécutés (baseline 661 → +6), 0 FAIL, 214 skipped
+  (variations découverte cucumber — pattern CR-10/S-082 connu).
+- Cucumber dédiés : 52 scénarios PASSED (enrichment 8, licence 6,
+  ontology 6, pipeline-routing 6, pipeline-unify 6, session-memory 20).
+- Zéro bump BOM, zéro nouvelle dépendance, zéro secret.
+- Backward compat total : extension/conventions ollama inchangées
+  (props conservées, inertes, suppression en CDX-OCR-3).
+
+== Décisions
+
+. Le port EST `codex.ocr.OcrEngine` — aucun nouveau type (décision 4
+  cadrage S-096 respectée à la lettre).
+. Le défaut Tesseract-seul s'applique dès US-1 : c'est la règle de
+  boundary actée (« collectOcr sans provider IA câblé → Tesseract seul
+  (fonctionnel) »). Les props ollama deviennent inertes mais restent
+  câblées au plugin (backward compat build des consommateurs).
+. L'AI engine n'est PAS résolu depuis l'extension codex — il sera fourni
+  par le composition root (consommateur training/runner/tests) ou un
+  adapter codebase en US-2.
+
+== Prochaine session
+
+- *CDX-OCR-2* (cross-borough Queens/codebase) : `VisionOcrEngineAdapter`
+  implémente `codex.ocr.OcrEngine` en wrapant `VisionProvider` (~4 unit),
+  suppression `CodexOcrEngineAdapter`, retrait import
+  `TesseractOcrEngine` de `OcrTask` (IA-uniquement), gate non-régression
+  codebase.

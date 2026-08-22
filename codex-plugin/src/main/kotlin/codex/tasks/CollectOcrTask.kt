@@ -1,9 +1,7 @@
 package codex.tasks
 
 import codex.ocr.DiskCacheStorage
-import codex.ocr.HttpOllamaChatClient
-import codex.ocr.LlmOcrEngine
-import codex.ocr.OcrConfig
+import codex.ocr.OcrEngine
 import codex.ocr.OcrPipeline
 import codex.ocr.OcrRequest
 import codex.ocr.OcrResult
@@ -15,6 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -28,17 +27,24 @@ import java.security.MessageDigest
 /**
  * Collects OCR results from a directory of page images.
  *
- * For each image in [inputDir], runs the [OcrPipeline] (LLM → Tesseract fallback)
- * and produces one AsciiDoc file per page in [outputDir] (the N2 ↔ N2 bridge
- * with document-gradle DOC-11). This is the contract consumed by document-gradle
+ * For each image in [inputDir], runs the [OcrPipeline] and produces one
+ * AsciiDoc file per page in [outputDir] (the N2 ↔ N2 bridge with
+ * document-gradle DOC-11). This is the contract consumed by document-gradle
  * `BookAssembler` (New Orleans) to assemble a full book from photos of pages.
+ *
+ * Engine chain (CDX-OCR-1 boundary rule):
+ * - If [aiEngine] is injected by the composition root, the chain is
+ *   AI engine → Tesseract (fallback order preserved).
+ * - Without injection, the chain degrades to Tesseract-only (functional).
+ *   AI-assisted OCR is actioned by the codebase socle — codex never wires
+ *   an AI engine itself.
  *
  * Inputs:
  * - [inputDir] directory containing image files (.png, .jpg, .jpeg, .tif, .tiff, .bmp)
- * - [ollamaHost] Ollama server host (default: localhost)
- * - [ollamaPort] Ollama server port (default: 11437, rotation range 11437-11465)
- * - [model] LLM vision model (default: gpt-oss:120b-cloud)
+ * - [aiEngine] optional injected AI OCR port ([OcrEngine]) — see boundary rule above
  * - [language] ISO 639-1 language hint (default: fr)
+ * - [ollamaHost]/[ollamaPort]/[model] legacy Ollama conventions — inert since
+ *   CDX-OCR-1 (kept for backward compat until CDX-OCR-3 purge)
  *
  * Outputs:
  * - [outputDir] primary output — one `.adoc` file per page, named `NNN-<pageId>.adoc`
@@ -89,13 +95,18 @@ abstract class CollectOcrTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val cacheDir: DirectoryProperty
 
+    // CDX-OCR-1 : port AI OCR injectable (boundary rule — AI-assisted OCR is
+    // actioned by the codebase socle, not by codex). The port is the existing
+    // [OcrEngine] interface; the AI engine (e.g. a VisionProvider adapter from
+    // codebase) is wired by the composition root. Unset by default → degraded
+    // Tesseract-only mode (functional, backward compatible).
+    @get:Internal
+    abstract val aiEngine: Property<OcrEngine>
+
     @TaskAction
     fun collectOcr() {
         val input = inputDir.asFile.get()
         val lang = language.getOrElse("fr")
-        val host = ollamaHost.getOrElse("localhost")
-        val port = ollamaPort.getOrElse("11437").toInt()
-        val modelName = model.getOrElse("gpt-oss:120b-cloud")
 
         val images = listImageFiles(input).sortedBy { it.nameWithoutExtension }
         if (images.isEmpty()) {
@@ -108,21 +119,14 @@ abstract class CollectOcrTask : DefaultTask() {
         }
 
         logger.lifecycle("[codex] collectOcr : ${images.size} images in ${input.name}")
-        logger.lifecycle("[codex]           model=$modelName host=$host port=$port lang=$lang")
 
-        val config = OcrConfig(
-            provider = "ollama",
-            model = modelName,
-            maxTokens = 4096,
-            temperature = 0.0,
-            endpoint = "http://$host:$port"
-        )
-        val pipeline = OcrPipeline(
-            listOf(
-                LlmOcrEngine(HttpOllamaChatClient(host, port), config),
-                TesseractOcrEngine()
-            )
-        )
+        val pipeline = aiEngine.orNull?.let { ai ->
+            logger.lifecycle("[codex]           chain=AI(${ai.javaClass.simpleName}) → tesseract")
+            OcrPipeline(listOf(ai, TesseractOcrEngine()))
+        } ?: run {
+            logger.lifecycle("[codex]           chain=tesseract-only (no AI engine injected)")
+            OcrPipeline(listOf(TesseractOcrEngine()))
+        }
 
         // US-CDX-13-1 : cache OCR par hash d'image (économise les tokens LLM).
         val cache = cacheDir.orNull?.let {

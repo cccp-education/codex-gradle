@@ -2507,3 +2507,55 @@ RAG-3/RAG-4.
 - CDX-OCR-1 : characterization tests `OcrPipeline` + injection port
   `AiOcrEngine` (gate de la chaîne OCR → RAG-SOCLE). Baby-step TDD strict
   RED → GREEN.
+
+== Session 098 — CDX-OCR-1 Injection port AI OCR dans CollectOcrTask (2026-08-22)
+
+*Type* : dev — baby-step TDD strict (RED → GREEN → REFACTOR).
+*EPIC* : CDX-OCR-BOUNDARY (US-1/4, ~2 pts).
+*Mission S-098* : characterization `OcrPipeline` + injection port
+`AiOcrEngine` (= interface existante `codex.ocr.OcrEngine`) dans
+`CollectOcrTask`, défaut sans injection = Tesseract seul, zéro
+suppression de classe.
+
+=== Constats pré-implémentation
+
+- Characterization mécanique déjà verrouillée par `OcrPipelineTest`
+  (S-072, 6 tests ordre fallback + passthrough AsciiDoc) — toujours
+  verte en ouverture.
+- `CollectOcrTask` hardcodait `LlmOcrEngine(HttpOllamaChatClient)` →
+  `TesseractOcrEngine()` (constat #1 audit S-096).
+- `TesseractOcrEngine` dégrade silencieusement sans binaire → testable.
+
+=== Implémentation
+
+- RED : 6 unit `CollectOcrAiEngineInjectionTest` → 7× `Unresolved
+  reference 'aiEngine'` (compileTestKotlin FAILED).
+- GREEN : propriété `@get:Internal aiEngine: Property<OcrEngine>`
+  (`@Internal`, instance non sérialisable ; tâche déjà
+  `DisableCachingByDefault`). Chaîne = AI injecté → Tesseract, sinon
+  Tesseract seul. Construction hardcodée LLM retirée de l'action ;
+  classes `LlmOcrEngine`/`HttpOllamaChatClient` conservées (purge US-3).
+- REFACTOR : `OcrEngine` converti `fun interface` (additif, ergonomie
+  adapter US-2) + KDoc boundary à jour sur task/pipeline/port ; props
+  ollama marquées inertes mais conservées (backward compat).
+
+=== Tests
+
+- 6 unit : propriété exposée + plugin ne pré-câble pas d'engine IA +
+  AsciiDoc structuré injecté → page .adoc + fallback ordre préservé +
+  legacy outputFile compat + short-circuit no-images (économie d'encre).
+- GREEN 6/6 PASSED en 0.9s.
+
+=== Vérifications
+
+- `check` BUILD SUCCESSFUL 1m27s : 667 tests 0 FAIL (baseline 661 → +6,
+  214 skip découverte CR-10) + 52 cucumber dédiés PASSED. Kover VERT,
+  validatePlugins VERT.
+- Zéro bump BOM, zéro nouvelle dépendance, zéro secret.
+
+=== Prochaine session
+
+- CDX-OCR-2 (cross-borough Queens/codebase) : `VisionOcrEngineAdapter :
+  codex.ocr.OcrEngine` wrappe `VisionProvider` (~4 unit), suppression
+  `CodexOcrEngineAdapter`, retrait import `TesseractOcrEngine` de
+  `OcrTask` (IA-uniquement). Gate non-régression codebase.

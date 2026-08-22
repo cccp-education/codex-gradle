@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 098
-:session: 098
+= PROMPT_REPRISE — Codex — Session 099
+:session: 099
 :date: 2026-08-22
 :status: PRET
 :max-lines: 50
@@ -9,40 +9,38 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 661/661 PASS (baseline préservée S-097)
+./gradlew test             # 667/667 PASS (baseline 661 + 6 CDX-OCR-1)
 ```
 
-== Sessions 096-097 terminées — Deux cadrages de gouvernance (zéro code)
+== Session 098 terminée — CDX-OCR-1 ✅ (port AI OCR injecté)
 
-. *S-096 — EPIC CDX-OCR-BOUNDARY* ✅ : OCR logiciel (Tesseract) = codex /
-  OCR assisté IA = codebase. Port = `codex.ocr.OcrEngine` existant,
-  injection `OcrPipeline` défaut Tesseract seul, adapter
-  `VisionOcrEngineAdapter` côté codebase, purge pile IA codex.
-  + propagation repo1 codex-plugin 0.0.5 confirmée.
-. *S-097 — EPIC CDX-RAG-SOCLE* ✅ : le RAG appartient au socle. Store
-  vectoriel migre de codex N2 vers codebase N1 (`codebase.store` +
-  `RagVectorStore` verbatim), SQL migre avec le store, tables pgvector
-  INCHANGÉES (zéro re-vectorisation), codex dépendra de codebase /
-  codebase retire `libs.codex.plugin` (flèche unique N2→N1).
-  Gate d'ordre strict : OCR-1 + OCR-2 terminées avant RAG-3/RAG-4.
+. Characterization : `OcrPipelineTest` (S-072) verrouillait déjà l'ordre
+  fallback + sortie AsciiDoc — complété par task-level
+  `CollectOcrAiEngineInjectionTest` (6 unit RED→GREEN).
+. `CollectOcrTask` : propriété `@Internal aiEngine: Property<OcrEngine>`
+  ajoutée ; chaîne = AI injecté → Tesseract, défaut sans injection =
+  Tesseract seul (dégradé fonctionnel acté). Props ollama inertes mais
+  conservées (purge en OCR-3).
+. `OcrEngine` converti `fun interface` + KDoc boundary à jour.
+. `check` VERT : 667 tests 0 FAIL + 52 cucumber dédiés PASSED.
 
-== Prochaine session — 098 : CDX-OCR-1 (gate de la chaîne OCR → RAG)
+== Prochaine session — 099 : CDX-OCR-2 (cross-borough Queens/codebase)
 
-*Baby-step TDD strict RED → GREEN → REFACTOR (~6 unit)* :
-. Characterization tests sur `OcrPipeline` actuelle — verrouiller la sortie
-  AsciiDoc structuré + l'ordre de fallback LLM→Tesseract (avant toute
-  suppression).
-. Injection du port `AiOcrEngine` (= fun interface `codex.ocr.OcrEngine`)
-  dans `OcrPipeline` + propriété optionnelle `CollectOcrTask`.
-. Défaut sans injection = Tesseract seul (dégradé fonctionnel, backward
-  compat). Aucune suppression en US-1.
+*Baby-step TDD strict RED → GREEN → REFACTOR (~4 unit)* :
+. Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` côté codebase —
+  wrappe `VisionProvider` (IA), mapping bytes/mimeType → `OcrRequest`.
+. Suppression `CodexOcrEngineAdapter` (sens inverse de la boundary).
+. Retrait import `TesseractOcrEngine` de `OcrTask` codebase
+  (IA-uniquement).
+. Gate non-régression codebase (666+ tests Queens intacts).
 
-*Ensuite* (ordre) : CDX-OCR-2 → CDX-OCR-3 → CDX-OCR-4 → CDX-RAG-1 →
-RAG-2 → RAG-3 → RAG-4 → RAG-5.
+*Ensuite* (ordre) : CDX-OCR-3 (purge pile IA codex, gated par 1+2) →
+CDX-OCR-4 (Cucumber fake engine) → RAG-1 → RAG-2 → gate levée →
+RAG-3 → RAG-4 → RAG-5.
 
 == References
 
-- `.agents/sessions/097-cdx-rag-socle-cadrage.adoc`
-- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`
-- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (constats, décisions, US)
-- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY + § EPIC CDX-RAG-SOCLE
+- `.agents/sessions/098-cdx-ocr-1-ai-engine-injection.adoc`
+- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (US-2 : décisions 5, 7, 8)
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (gate OCR-1/2 avant RAG-3/4)
+- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY

@@ -591,3 +591,31 @@ Gouvernance pure — zéro code, zéro test. Baseline vérifiée : 661 tests,
 `IngestStatements` migrés verbatim vers `codebase.store.RagVectorStore`
 (RAG-1), tests codex re-pointés après bascule + purge (RAG-3), Cucumber BDD
 canal Docs sur store socle (RAG-5).
+
+== Session 098 — CDX-OCR-1 Injection port AI OCR (+6 tests, 667 exécutés 0 FAIL)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `test/kotlin/codex/tasks/CollectOcrAiEngineInjectionTest.kt` | 6 unit | ✅ 6/6 PASSED — propriété `aiEngine` exposée + orNull null par défaut ; plugin apply ne pré-câble AUCUN engine IA (wiring = responsabilité composition root) ; AsciiDoc structuré du fake engine → contenu exact `001-page-001.adoc` ; engine vide/confiance 0 → fallback Tesseract → marqueur `[page vide ou OCR échec]` (ordre préservé) ; legacy outputFile backward compat (`= OCR Book` + `== Page 1` + contenu injecté) ; short-circuit no-images → 0 appel engine (économie d'encre)
+|===
+
+*RED vérifié strictement* : 7× `Unresolved reference 'aiEngine'`
+(compileTestKotlin FAILED) avant implémentation. GREEN 6/6 en 0.9s.
+
+*Characterization cadrage US-1* : la mécanique pipeline (ordre fallback,
+passthrough texte structuré) était déjà verrouillée par
+`OcrPipelineTest` (S-072, 6 stub-based tests) — la nouvelle suite ajoute
+la characterization *task-level* du point d'injection.
+
+*Coverage impact* : baseline 661 (S-095..S-097) → 667 tests exécutés
+(+6 unit). 214 skip inchangé (variations découverte cucumber CR-10 +
+intégration assumeTrue). Cucumber dédiés : 52 scénarios PASSED (8
+enrichment + 20 session-memory + 6 licence + 6 ontology + 6
+pipeline-routing + 6 pipeline-unify). `check` VERT 1m27s, Kover VERT,
+validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression.
+
+*Impact futur* : CDX-OCR-3 (purge pile IA) migrera `LlmOcrEngineTest` +
+`LlmOcrEngineIntegrationTest` sur fake/injected engine — la surface de
+test est déjà prête via le port injectable.

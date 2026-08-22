@@ -738,3 +738,17 @@ stores, surface API minimale). 10 décisions (doc
 verbatim, tables pgvector inchangées (zéro re-vectorisation), flèche unique
 N2→N1, gate OCR avant RAG. 5 US restantes ~10 pts. Zéro code modifié.
 Baseline 661 tests 0 FAIL préservée.
+
+== Session 098 — CDX-OCR-1 Injection port AI OCR ✅ (2026-08-22)
+
+US-1/4 EPIC CDX-OCR-BOUNDARY (~2 pts) — baby-step TDD strict RED →
+GREEN → REFACTOR. Port = fun interface existante `codex.ocr.OcrEngine`
+(aucun nouveau type). `CollectOcrTask` : propriété `@Internal aiEngine`
+injectable, chaîne AI injecté → Tesseract, **défaut sans injection =
+Tesseract seul** (dégradé fonctionnel acté S-096). Construction
+hardcodée `LlmOcrEngine(HttpOllamaChatClient)` retirée de l'action ;
+classes conservées jusqu'à purge CDX-OCR-3. `OcrEngine` converti
+`fun interface`. 6 unit `CollectOcrAiEngineInjectionTest` RED → GREEN.
+`check` VERT : 667 tests 0 FAIL (+6) + 52 cucumber dédiés PASSED,
+Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, backward
+compat total.

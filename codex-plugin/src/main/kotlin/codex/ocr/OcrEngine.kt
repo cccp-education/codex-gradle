@@ -1,14 +1,18 @@
 package codex.ocr
 
 /**
- * Contrat pour un moteur OCR — transforme une [OcrRequest] en [OcrResult].
+ * Port for an OCR engine — transforms an [OcrRequest] into an [OcrResult].
  *
- * Implémentations :
- * - [TesseractOcrEngine] : OCR classique sans IA (CLI tesseract)
+ * Boundary rule (EPIC CDX-OCR-BOUNDARY): software OCR (Tesseract) is
+ * actioned by codex; AI-assisted OCR is actioned by the codebase socle.
+ * This fun interface IS the injection port consumed by [OcrPipeline]:
  *
- * Consommé par codebase-gradle (Queens) via un adapter qui wrap l'engine
- * dans un `VisionProvider` pour la chaîne de fallback Gemini→Ollama→Tesseract.
+ * - [TesseractOcrEngine]: local software OCR without AI (codex-owned)
+ * - AI engines live outside codex — the codebase socle implements this
+ *   port (e.g. an adapter wrapping its `VisionProvider`) and the
+ *   composition root injects it into [codex.tasks.CollectOcrTask].
+ *   Without injection, the pipeline degrades to Tesseract-only.
  */
-interface OcrEngine {
+fun interface OcrEngine {
     fun process(request: OcrRequest): OcrResult
 }
