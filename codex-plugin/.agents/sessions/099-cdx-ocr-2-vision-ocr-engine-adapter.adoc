@@ -1,0 +1,84 @@
+= Session 099 — CDX-OCR-2 : VisionOcrEngineAdapter côté codebase + OcrTask IA-uniquement
+
+_Date_ : 2026-08-22
+_Type_ : dev cross-borough (baby-step TDD strict RED → GREEN → REFACTOR)
+_EPIC_ : CDX-OCR-BOUNDARY (US-2 sur 4)
+_Borough_ : Brooklyn pilote (codex-gradle) — code modifié côté Queens (codebase-gradle)
+
+== Mission (PROMPT_REPRISE S-099)
+
+Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` côté codebase —
+wrappe `VisionProvider` (IA), mapping bytes/mimeType → `OcrRequest`.
+Suppression `CodexOcrEngineAdapter` (sens inverse de la boundary).
+Retrait import `TesseractOcrEngine` de `OcrTask` codebase (IA-uniquement).
+Gate non-régression codebase. ~4 unit.
+
+== Implémentation (Queens / codebase-gradle)
+
+*RED → GREEN* :
+. Nouvelle suite `codebase.koog.llm.adapter.VisionOcrEngineAdapterTest` —
+  4 unit RED (`Unresolved reference 'VisionOcrEngineAdapter'`) :
+  délégation bytes/mime/langue au provider, structuredText = sortie
+  provider, metadata miroir de la requête (language/sourceFormat/model),
+  model/maxTokens configurés transmis au provider.
+. `VisionOcrEngineAdapter` créé dans le domaine existant
+  `codebase.koog.llm.adapter` (pattern `LlmProviderChatModelAdapter`) :
+  implémente le port codex `codex.ocr.OcrEngine` (fun interface, US-1),
+  wrappe `VisionProvider`, bridge suspend → `runBlocking`,
+  `OcrResult(structuredText, confidence=1.0, language, sourceFormat,
+  generatedAt, model)`. Zéro nouveau type — le port est celui de codex.
+
+*Suppression (sens inverse de la boundary)* :
+. `CodexOcrEngineAdapter.kt` supprimé — il exposait le software OCR codex
+  comme `VisionProvider` codebase (violation #3 audit S-096).
+. `OcrTask.kt` : imports `CodexOcrEngineAdapter`/`TesseractOcrEngine`
+  retirés ; propriété `tesseractOcrProvider` supprimée ; provider
+  `"tesseract"` → `GradleException(AI_ONLY_ERROR_MESSAGE)` ; chaîne
+  `gemini+ollama` : double échec IA → `GradleException` (plus de fallback
+  software). Nouvelle const `AI_ONLY_ERROR_MESSAGE` pointant vers codex
+  `collectOcr`. KDoc boundary à jour.
+. `CodebaseOcrExtension`/`OcrInputFile` : KDoc alignés (valeurs gemini/
+  ollama/gemini+ollama ; tesseract rejeté).
+
+*Migration tests* :
+. `OcrTaskTesseractFallbackTest` supprimé, remplacé par
+  `OcrTaskAiOnlyBoundaryTest` (2 unit : tesseract rejeté avec message
+  boundary ; gemini+ollama double échec → erreur sans fallback software).
+. `OcrSteps.kt` : imports codex retirés ; steps tesseract/double-échec
+  capturent l'erreur (`lastError` pattern batch existant).
+. `ocr.feature` : scénario « Tesseract processes image without IA » →
+  « Tesseract provider is rejected — software OCR belongs to codex » ;
+  scénario « falls back to Tesseract when both fail » → « raises error
+  when both Gemini and Ollama fail — no software fallback in codebase ».
+  2 scénarios PASSED.
+
+== Gate non-régression
+
+. `cucumberTestEpicOcr` : 29 PASSED (dont les 2 nouveaux scénarios
+  boundary), 2 SKIPPED préexistants (glue hors OCR du runner partagé).
+. `./gradlew check` BUILD SUCCESSFUL 41m26s (67 tasks) — zéro secret,
+  zéro bump BOM, zéro régression.
+. 3 échecs préexistants au baseline vérifiés par `git stash` → re-run :
+  `VersionCatalogTransitiveVersionsTest` ×1 (agent-contracts absent du
+  catalogue local) et EPIC Z-6 Autofocus ×2 (flaky order-dependent).
+  Aucun imputable à CDX-OCR-2.
+
+== Boundary après US-2
+
+----
+codex (Brooklyn N2)      : types purs + Tesseract + cache + CollectOcrTask
+                           + OcrPipeline (port OcrEngine injectable, US-1)
+codebase (Queens N1)     : VisionOcrEngineAdapter (port codex ← VisionProvider)
+composition root         : injecte l'adapter dans CollectOcrTask.aiEngine
+défaut sans injection    : Tesseract seul (dégradé fonctionnel)
+----
+
+Tesseract reste intégralement dans codex — zéro suppression côté Brooklyn
+(purge pile IA = CDX-OCR-3, gated par US-1+US-2 désormais levée).
+
+== Prochaine session — 100 : CDX-OCR-3 (purge pile IA codex)
+
+Suppression `LlmOcrEngine` + `HttpOllamaChatClient` + `OllamaChatClient`
++ leurs tests ; migration des tests intégration sur fake/injected engine ;
+`OllamaProbe` conservé ; props ollama inertes de `CollectOcrTask`
+supprimées ; `check` VERT codex.

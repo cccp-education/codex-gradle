@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 099
-:session: 099
+= PROMPT_REPRISE — Codex — Session 100
+:session: 100
 :date: 2026-08-22
 :status: PRET
 :max-lines: 50
@@ -9,38 +9,37 @@
 ```
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 667/667 PASS (baseline 661 + 6 CDX-OCR-1)
+./gradlew test             # 667/667 PASS (baseline S-098 inchangée)
 ```
 
-== Session 098 terminée — CDX-OCR-1 ✅ (port AI OCR injecté)
+== Session 099 terminée — CDX-OCR-2 ✅ (cross-borough Queens/codebase)
 
-. Characterization : `OcrPipelineTest` (S-072) verrouillait déjà l'ordre
-  fallback + sortie AsciiDoc — complété par task-level
-  `CollectOcrAiEngineInjectionTest` (6 unit RED→GREEN).
-. `CollectOcrTask` : propriété `@Internal aiEngine: Property<OcrEngine>`
-  ajoutée ; chaîne = AI injecté → Tesseract, défaut sans injection =
-  Tesseract seul (dégradé fonctionnel acté). Props ollama inertes mais
-  conservées (purge en OCR-3).
-. `OcrEngine` converti `fun interface` + KDoc boundary à jour.
-. `check` VERT : 667 tests 0 FAIL + 52 cucumber dédiés PASSED.
+. `VisionOcrEngineAdapter` créé côté codebase (`codebase.koog.llm.adapter`)
+  — implémente le port codex `codex.ocr.OcrEngine`, wrappe `VisionProvider`
+  (IA), bridge suspend → runBlocking. 4 unit RED→GREEN.
+. `CodexOcrEngineAdapter` supprimé (sens inverse de la boundary).
+. `OcrTask` codebase IA-uniquement : plus d'import `TesseractOcrEngine`,
+  provider "tesseract" → GradleException pointant vers codex `collectOcr`,
+  double échec gemini+ollama → erreur sans fallback software.
+. Tests migrés : `OcrTaskAiOnlyBoundaryTest` (2 unit) + `ocr.feature`
+  2 scénarios boundary PASSED. Gate : check VERT 41m26s, cucumberTestEpicOcr
+  29 PASSED ; 3 échecs préexistants au baseline (stash vérifié).
 
-== Prochaine session — 099 : CDX-OCR-2 (cross-borough Queens/codebase)
+== Prochaine session — 100 : CDX-OCR-3 (purge pile IA codex, gate levée)
 
-*Baby-step TDD strict RED → GREEN → REFACTOR (~4 unit)* :
-. Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` côté codebase —
-  wrappe `VisionProvider` (IA), mapping bytes/mimeType → `OcrRequest`.
-. Suppression `CodexOcrEngineAdapter` (sens inverse de la boundary).
-. Retrait import `TesseractOcrEngine` de `OcrTask` codebase
-  (IA-uniquement).
-. Gate non-régression codebase (666+ tests Queens intacts).
+*Baby-step TDD strict* :
+. Suppression `LlmOcrEngine`, `HttpOllamaChatClient`, `OllamaChatClient`
+  + leurs tests (`LlmOcrEngineIntegrationTest` → migration fake/injected).
+. `OllamaProbe` CONSERVÉ (utilitaire assumeTrue, plage 11437-11465).
+. `CollectOcrTask` : props ollama inertes supprimées (host/port/modelName/config).
+. `check` VERT codex (661+ tests intacts) + cucumber dédiés.
 
-*Ensuite* (ordre) : CDX-OCR-3 (purge pile IA codex, gated par 1+2) →
-CDX-OCR-4 (Cucumber fake engine) → RAG-1 → RAG-2 → gate levée →
-RAG-3 → RAG-4 → RAG-5.
+*Ensuite* (ordre) : CDX-OCR-4 (Cucumber fake engine) → RAG-1 → RAG-2 →
+gate levée → RAG-3 → RAG-4 → RAG-5.
 
 == References
 
-- `.agents/sessions/098-cdx-ocr-1-ai-engine-injection.adoc`
-- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (US-2 : décisions 5, 7, 8)
+- `.agents/sessions/099-cdx-ocr-2-vision-ocr-engine-adapter.adoc`
+- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (US-3 : décisions 3, 9, 10)
 - `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (gate OCR-1/2 avant RAG-3/4)
 - `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY

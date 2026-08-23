@@ -619,3 +619,20 @@ validatePlugins VERT. Zéro bump BOM, zéro secret, zéro régression.
 *Impact futur* : CDX-OCR-3 (purge pile IA) migrera `LlmOcrEngineTest` +
 `LlmOcrEngineIntegrationTest` sur fake/injected engine — la surface de
 test est déjà prête via le port injectable.
+
+== Session 099 — CDX-OCR-2 VisionOcrEngineAdapter (côté Queens, +4/-2 tests)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `codebase: test/.../adapter/VisionOcrEngineAdapterTest.kt` | 4 unit | ✅ 4/4 PASSED (délégation bytes/mime/langue, structuredText provider, metadata miroir, model/maxTokens transmis)
+| `codebase: test/.../ocr/OcrTaskAiOnlyBoundaryTest.kt` | 2 unit | ✅ 2/2 PASSED (tesseract rejeté message boundary ; double échec IA sans fallback software)
+| `codebase: test/features/ocr.feature` | 2 scénarios réécrits | ✅ PASSED (boundary tesseract → codex ; erreur sans fallback)
+| `codex: baseline inchangée` | 667 unit | ✅ zéro fichier codex modifié cette session
+|===
+
+*Coverage impact* : côté codebase +6 net (4 adapter + 2 boundary, -1
+fichier legacy remplacé). Côté codex : zéro modification — la session
+CDX-OCR-2 est entièrement cross-borough (Queens). Gate `check` VERT
+41m26s. 3 échecs préexistants au baseline vérifiés par stash.

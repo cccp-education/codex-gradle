@@ -752,3 +752,17 @@ classes conservées jusqu'à purge CDX-OCR-3. `OcrEngine` converti
 `check` VERT : 667 tests 0 FAIL (+6) + 52 cucumber dédiés PASSED,
 Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, backward
 compat total.
+
+== Session 099 — CDX-OCR-2 (2026-08-22) ✅ TERMINÉ
+
+*EPIC CDX-OCR-BOUNDARY US-2/4 (cross-borough Queens/codebase)* —
+`VisionOcrEngineAdapter` créé côté codebase (implémente le port codex
+`codex.ocr.OcrEngine`, wrappe `VisionProvider`, 4 unit RED→GREEN) ;
+`CodexOcrEngineAdapter` supprimé ; `OcrTask` codebase IA-uniquement
+(provider tesseract + fallback software → GradleException pointant vers
+codex `collectOcr`) ; tests migrés (`OcrTaskAiOnlyBoundaryTest` +
+`ocr.feature` 2 scénarios boundary). Gate : `check` VERT 41m26s,
+cucumberTestEpicOcr 29 PASSED, échecs préexistants vérifiés par stash.
+Tesseract reste intégralement dans codex. Zéro bump BOM, zéro secret.
+
+*Prochaine* : CDX-OCR-3 purge pile IA codex (gate levée).

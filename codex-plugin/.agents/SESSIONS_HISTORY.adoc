@@ -2559,3 +2559,42 @@ suppression de classe.
   codex.ocr.OcrEngine` wrappe `VisionProvider` (~4 unit), suppression
   `CodexOcrEngineAdapter`, retrait import `TesseractOcrEngine` de
   `OcrTask` (IA-uniquement). Gate non-régression codebase.
+
+'''
+== Session 099 — CDX-OCR-2 VisionOcrEngineAdapter côté codebase + OcrTask IA-uniquement (2026-08-22)
+
+*Date* : 2026-08-22
+*Type* : dev cross-borough
+*Score* : 9/10
+*EPIC* : CDX-OCR-BOUNDARY (US-2/4)
+*Borough* : Brooklyn pilote — code modifié côté Queens (codebase-gradle)
+*Méthode* : baby-step TDD strict (RED → GREEN → REFACTOR)
+
+*A. Objectif* :
+Adapter `VisionOcrEngineAdapter : codex.ocr.OcrEngine` côté codebase —
+wrappe `VisionProvider` (IA), mapping bytes/mimeType → `OcrRequest`.
+Suppression `CodexOcrEngineAdapter` + retrait import `TesseractOcrEngine`
+de `OcrTask` codebase (IA-uniquement). Gate non-régression.
+
+*B. Implémentation* (codebase-gradle, commit dédié Queens) :
+. RED : 4 unit `VisionOcrEngineAdapterTest` — `Unresolved reference`.
+. GREEN : `VisionOcrEngineAdapter` dans `codebase.koog.llm.adapter`
+  (pattern `LlmProviderChatModelAdapter`) — implémente le port codex
+  `codex.ocr.OcrEngine`, wrappe `VisionProvider`, bridge suspend→runBlocking.
+. Suppression : `CodexOcrEngineAdapter.kt`, propriété
+  `tesseractOcrProvider` de `OcrTask`, provider "tesseract" et fallback
+  software de la chaîne gemini+ollama → `GradleException(AI_ONLY_ERROR_MESSAGE)`
+  pointant vers codex `collectOcr`. KDoc extension/input alignés.
+. Migration tests : `OcrTaskAiOnlyBoundaryTest` (2 unit) remplace
+  `OcrTaskTesseractFallbackTest` ; `OcrSteps` capture d'erreur ;
+  `ocr.feature` 2 scénarios boundary réécrits.
+
+*C. Gate non-régression* :
+`cucumberTestEpicOcr` 29 PASSED (2 SKIPPED préexistants) ;
+`check` VERT 41m26s ; 3 échecs préexistants au baseline vérifiés par
+stash (`VersionCatalogTransitiveVersionsTest` ×1, EPIC Z-6 Autofocus ×2
+flaky order-dependent). Zéro bump BOM, zéro secret. Tesseract reste
+intégralement dans codex (Brooklyn).
+
+*D. Prochaine session* :
+CDX-OCR-3 (purge pile IA codex, gate levée par US-1+US-2).

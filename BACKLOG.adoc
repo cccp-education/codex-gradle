@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-22 (session 098 — CDX-OCR-1 injection port AI OCR TERMINÉ ; S-097 = cadrage EPIC CDX-RAG-SOCLE)_
+_Dernière mise à jour : 2026-08-22 (session 099 — CDX-OCR-2 VisionOcrEngineAdapter côté codebase + OcrTask IA-uniquement TERMINÉ ; S-098 = CDX-OCR-1, S-097 = cadrage EPIC CDX-RAG-SOCLE)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -200,7 +200,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | CDX-OCR-2
 | codebase — `VisionOcrEngineAdapter` (~4 unit) + suppression
   `CodexOcrEngineAdapter` + retrait import `TesseractOcrEngine` de `OcrTask`.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-099)
 | 2
 
 | CDX-OCR-3
@@ -218,7 +218,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 
 |===
 
-*Total* : ~9 pts (4 US restantes)
+*Total* : ~9 pts (3 US restantes — OCR-3, OCR-4)
 
 '''
 == 🔴 EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1) — Cadrage S-097
@@ -268,6 +268,8 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 . Consolidation `codebase.rag.VectorStore` JDBC legacy HORS SCOPE (EPIC futur
   CB-STORE-UNIFY).
 . Gate d'ordre : CDX-OCR-1 + CDX-OCR-2 terminées avant RAG-3/RAG-4.
+  *MAJ S-099* : gate LEVÉE (OCR-1 ✅ S-098, OCR-2 ✅ S-099) — reste
+  OCR-3/OCR-4 (purge codex + Cucumber) en parallèle possible de RAG-1/RAG-2.
 
 [cols="1,3,2,1", options="header"]
 |===
