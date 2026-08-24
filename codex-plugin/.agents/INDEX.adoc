@@ -134,6 +134,7 @@ _Session en cours_ : —
 | EPIC CDX-6 (P1) | Intégration OSS/CSS + routing licence (DSL `licenceRouting`) — cadrage S-077 | ✅ TERMINÉ (CDX-6-0 ✅ S-077, CDX-6-1 ✅ S-089, CDX-6-2 ✅ S-089, CDX-6-3 ✅ S-089) | P1
 | EPIC CDX-7 (P1) | Tests unitaires + intégration (FontStyleDetector/TypographicAnalyzer/SemanticChunker/E2E PDF) — cadrage S-077 | ✅ TERMINÉ (CDX-7-0 ✅ S-077, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090, CDX-7-3 ✅ S-091, CDX-7-4 ✅ S-092) | P1
 | EPIC CDX-UNIFY | Unification constat #7 (chunkMd → SemanticChunker.chunk()) — cadrage S-093 | ✅ TERMINÉ (CDX-UNIFY-0 ✅ S-093, CDX-UNIFY-1 ✅ S-093, CDX-UNIFY-2 ✅ S-093) | P1
+| EPIC CB-STORE-UNIFY | Consolidation `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE — EPIC futur | 🟡 À PLANIFIER (gated par CDX-RAG-SOCLE RAG-1→4) | P2
 |===
 
 '''

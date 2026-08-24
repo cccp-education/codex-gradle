@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-24 (session 100 — CDX-OCR-3 purge pile IA codex TERMINÉ ; S-099 = CDX-OCR-2, S-098 = CDX-OCR-1, S-097 = cadrage EPIC CDX-RAG-SOCLE)_
+_Dernière mise à jour : 2026-08-24 (session 100 — clarification vision codex = READ, RAG → codebase N1 + formalisation EPIC CB-STORE-UNIFY)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -624,3 +624,113 @@ L'unification est un refactor sécuritaire.
 |===
 
 *Total* : ~5 pts (3 US)
+
+'''
+== 🟤 EPIC CB-STORE-UNIFY — Consolidation `codebase.rag.VectorStore` JDBC legacy (EPIC futur)
+
+_Statut_ : 🟡 À PLANIFIER (gated par EPIC CDX-RAG-SOCLE RAG-1→4).
+_Source_ : décision archi S-097 (consolidation JDBC legacy HORS SCOPE
+de CDX-RAG-SOCLE, reportée à un EPIC futur dédié).
+_Pattern_ : gouvernance pure puis baby-step TDD — à cadrer.
+
+=== Contexte
+
+Après la migration `RagVectorStore` (RAG-1→4) vers `codebase.store`,
+deux stores coexisteront côté codebase :
+
+. `codebase.store.RagVectorStore` (R2DBC, migré verbatim depuis
+   `codex.store.CodexVectorStore` — socle canonique, tables pgvector
+   `codex_documents`/`codex_chunks` inchangées).
+. `codebase.rag.VectorStore` (JDBC legacy, schéma `code-index`,
+   `initSchema` DROP CASCADE destructif — ancêtre P0 précédant la
+   montée de codebase N1).
+
+Le store JDBC legacy est un risque technique : DROP CASCADE destructif,
+schéma divergent, double surface de maintenance. L'EPIC CB-STORE-UNIFY
+consolide les deux en supprimant le store JDBC legacy après migration
+des éventuels consommateurs résiduels vers `RagVectorStore`.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CB-STORE-UNIFY-0
+| Cadrage EPIC (gouvernance pure) — audit consommateurs résiduels de
+  `codebase.rag.VectorStore`, mapping schéma `code-index` vs
+  `codex_documents`/`codex_chunks`, plan de migration/cleanup.
+| 🔲 À PLANIFIER
+| 1
+
+| CB-STORE-UNIFY-1
+| Migration des consommateurs résiduels vers `RagVectorStore` (API
+  identique `searchBlocking`). Characterization tests. Gate non-
+  régression.
+| 🔲 À PLANIFIER
+| 2
+
+| CB-STORE-UNIFY-2
+| Suppression `codebase.rag.VectorStore` + schéma `code-index` (DROP
+  CASCADE destructif retiré). `check` VERT codebase. Zéro régression.
+| 🔲 À PLANIFIER
+| 2
+
+| CB-STORE-UNIFY-3
+| Cucumber BDD — scénarios retrieval sur store unifié (fake in-memory).
+  Pure BDD.
+| 🔲 À PLANIFIER
+| 1
+|===
+
+*Total* : ~6 pts (4 US — gate : CDX-RAG-SOCLE RAG-1→4 terminées).
+
+'''
+== 🟡 Vision — Codex = READ (acquisition documentaire), RAG → codebase N1
+
+_Décision de gouvernance_ : 2026-08-24 (session 100 — clarification
+vision post-CDX-OCR-3).
+
+=== Clarification
+
+Avant la clarification, codex était positionné comme `READ + RAG` —
+socle documentaire ET hub de contexte augmenté. La vision correcte
+(actée par les EPICs CDX-OCR-BOUNDARY + CDX-RAG-SOCLE) est :
+
+----
+codex (Brooklyn N2)      = READ pur (acquisition PDF/EPUB → corpus + chunks)
+codebase (Queens N1)     = socle RAG (store vectoriel, contexte augmenté)
+création de contenu       = points d'entrée qui consomment le RAG via codebase
+  document, plantuml, slider, bakery, hyperframes, training, capsule
+----
+
+Le RAG (store vectoriel, hub de contexte augmenté) appartient à
+**codebase**, pas à codex. Codex est un producteur de corpus (PDF/EPUB →
+AsciiDoc → chunks), pas un hub de contexte. Les briques de création de
+contenu sont les consommateurs du RAG, et elles l'atteignent via
+codebase N1 — jamais directement via codex.
+
+=== Implications
+
+. `AGENT.adoc` règle 4 : `Codex est le contrat` → `Codex est le contrat
+  READ` + paragraphe RAG appartient à codebase. ✅ FAIT S-100.
+. `AGENT.adoc` règle 4bis : `IMPORTABLE par runner-gradle → contexte
+  augmenté via codebase N1`. `Codex = READ, Document = WRITE + PUBLISH.
+  Le RAG est actionné par codebase N1, pas par codex`. ✅ FAIT S-100.
+. `AGENT.adoc` Mission : reformulée `produire le corpus qui alimente
+  le RAG`. `collectIngest`/`collectRetrieve`/`generateCompositeContext`
+  marqués thin wrappers délégant au socle codebase après RAG-3. ✅ FAIT
+  S-100.
+. `INDEX.adoc` en-tête + règle 7 alignés. ✅ FAIT S-100.
+. AGENTS.adoc racine + configuration/AGENTS.adoc : table boroughs
+  Brooklyn + chaîne de valeur + description New Orleans (document)
+  alignés. ✅ FAIT S-100 (jardin secret, hors git repo).
+
+=== EPICs portant cette vision
+
+. **CDX-OCR-BOUNDARY** (S-096→S-100) : OCR software = codex / OCR IA =
+  codebase. Codex ne contient plus de moteur IA, client HTTP Ollama,
+  ni config IA. 3/4 US ✅ (reste US-4 Cucumber BDD).
+. **CDX-RAG-SOCLE** (S-097, gated) : store vectoriel migre de
+  `codex.store` vers `codebase.store`. Inversion N1→N2 résolue. 1/6 US
+  ✅ (cadrage, reste RAG-1→5).
+. **CB-STORE-UNIFY** (À PLANIFIER, gated par RAG-1→4) : consolidation
+  `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE.
