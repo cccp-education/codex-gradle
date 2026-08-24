@@ -4,8 +4,8 @@
 _Date de creation_ : 2026-05-06
 _Derniere mise a jour_ : 2026-06-08 (Architecture boundary review Codex↔Document)
 _Projet_ : `foundry/public/codex-gradle/`
-_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (conformement a la Regle 4bis)
-_Boundary_ : Codex = READ + RAG, Document = WRITE + PUBLISH. Les deux sont paralleles N2, pas empiles.
+_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (conformement a la Regle 4bis)
+_Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Codex est un producteur de corpus, pas un hub de contexte. Les briques de creation de contenu (document, plantuml, slider, bakery, hyperframes, training, capsule) consomment le RAG via codebase, jamais directement via codex. Document (New Orleans) = WRITE + PUBLISH. Les deux sont paralleles N2, pas empiles.
 
 '''
 == Regle 1 — COMMITS/GIT : INTERDICTION FORMELLE sans permission explicite
@@ -40,24 +40,34 @@ ZERO credential (API key, token, password, secret) dans `build.gradle.kts` ou `g
 Tout parametre sensible remonte depuis `configuration/settings/` ou `configuration/.agents/`.
 
 '''
-== Regle 4 — Codex est le contrat
+== Regle 4 — Codex est le contrat READ
 
 Les types partages (BlockType, ExtractedBlock, ExtractedDocument, DocExtractor)
 vivent dans `codex-gradle/src/main/kotlin/`.
 Les sous-projets (codex-pdf, codex-epub) importent `codex` comme dependance via mavenLocal.
-Pas de module doc-extractor separe — `codex` est le contrat.
+Pas de module doc-extractor separe — `codex` est le contrat d'acquisition documentaire.
+
+Le RAG (store vectoriel, contexte augmente) n'appartient PAS a codex. Apres
+l'EPIC CDX-RAG-SOCLE (RAG-1→4), le store vectoriel migre vers codebase N1
+(domaine `codebase.store`). Codex ne fait que produire le corpus (PDF/EPUB →
+AsciiDoc → chunks), codebase l'ingere et l'expose aux briques de creation de
+contenu via son hub de contexte augmente.
 
 '''
 == Regle 4bis — DAG : N2, publiable
 
-*IMPORTABLE par* : N3 runner-gradle (`assembleCompositeContext` → RAG pgvector enrichi)
+*IMPORTABLE par* : N3 runner-gradle (assembleCompositeContext → contexte augmente via codebase N1)
 *IMPORTE* : N0 graphify-gradle (knowledge graph pour extraction d'entités)
 *Importe aussi* : `office/books-collection/` (source PDFs, jamais modifié)
+*Apres CDX-RAG-SOCLE (RAG-1→4)* : `implementation(libs.codebase.plugin)` — codex
+  delegue le RAG au socle N1. Le store vectoriel (`RagVectorStore`) vit dans
+  `codebase.store`, plus dans `codex.store`.
 *Publie* : MavenLocal + Sonatype (Apache 2.0)
 *NE JAMAIS IMPORTER* : N3 runner-gradle (dependance cyclique interdite)
 *NE JAMAIS IMPORTER document-gradle* : Codex et Document sont paralleles en N2.
-  Codex = READ + RAG, Document = WRITE + PUBLISH. Aucune dependance directe.
-  Les deux exposent leur output a runner-gradle (N3) via metadata.json.
+  Codex = READ (acquisition documentaire), Document = WRITE + PUBLISH. Aucune
+  dependance directe. Les deux exposent leur output a runner-gradle (N3) via
+  metadata.json. Le RAG est actionne par codebase N1, pas par codex.
 
 '''
 == Regle 5 — Non-Répétition des Opérations Coûteuses — Loi de l'Économie d'Encre
@@ -87,24 +97,35 @@ Pas de module doc-extractor separe — `codex` est le contrat.
 '''
 == Mission
 
-Industrialiser l'acquisition de documents non-structurés (PDF, EPUB) pour alimenter
-la base de connaissance du pipeline d'augmentation de contexte :
+Industrialiser l'acquisition de documents non-structurés (PDF, EPUB) pour produire
+le corpus qui alimente le RAG du pipeline d'augmentation de contexte :
 
 - `collectBookStructure` — extraction hierarchique PDF→AsciiDoc avec detection typographique
 - `collectEpubStructure` — extraction EPUB via Tika → AsciiDoc structure
 - `transformToMarkdown` — conversion AsciiDoc vers Markdown
 - `transformChunk` — decoupage semantique par section
 - `deployKnowledgeBase` — export vers JSON-L / Markdown / AsciiDoc
-- `collectIngest` — vectorisation ONNX → pgvector
-- `collectRetrieve` — recherche semantique cosine similarity
-- `generateCompositeContext` — composite-context.json pour N3 runner-gradle
+- `collectIngest` — vectorisation ONNX → pgvector (thin wrapper deleguant au socle
+  codebase `codebase.store.RagVectorStore` apres CDX-RAG-SOCLE RAG-3)
+- `collectRetrieve` — recherche semantique cosine similarity (thin wrapper deleguant
+  au socle codebase apres RAG-3)
+- `generateCompositeContext` — composite-context.json pour N3 runner-gradle (canal
+  Docs alimente par le store socle codebase apres RAG-3)
+- `persistLearnerProfile` — pont RAG SessionMemoryContract (domaine `codex.profile`,
+  memoire de session stagiaire, separee du corpus documentaire)
 
 Sans Codex, le pipeline d'augmentation de contexte est borgne sur la connaissance
-livresque. Codex est le sens de la lecture du pipeline.
+livresque. Codex est le sens de la lecture du pipeline — il produit le corpus,
+codebase l'ingere et l'expose aux briques de creation de contenu.
 
-*Ce que Codex ne fait PAS* : la conversion multi-format vers HTML/PDF/EPUB/DocBook/ManPage.
-C'est le role de document-gradle (New Orleans), le pair N2 WRITE + PUBLISH.
-Codex exporte en knowledge base (JSON-LD) pour le RAG, pas pour la publication stagiaire.
+*Ce que Codex ne fait PAS* :
+. La conversion multi-format vers HTML/PDF/EPUB/DocBook/ManPage — c'est le role
+   de document-gradle (New Orleans), le pair N2 WRITE + PUBLISH.
+. Le RAG (store vectoriel, hub de contexte augmente) — c'est le role de codebase
+   N1. Apres CDX-RAG-SOCLE, codex delegue le store au socle. Les briques de
+   creation de contenu (document, plantuml, slider, bakery, hyperframes,
+   training, capsule) consomment le RAG via codebase, jamais directement via
+   codex.
 
 '''
 == Portefeuille Transverse — Relations avec les autres agents
@@ -112,9 +133,9 @@ Codex exporte en knowledge base (JSON-LD) pour le RAG, pas pour la publication s
 |===
 | Projet | Niveau DAG | Relation
 | `graphify-gradle` | N0 | Fournit le knowledge graph pour extraction d'entités
-| `codebase-gradle` | N1 | Modele metier SQL/DDD, contrats ContextChannel/CompositeContext (contexts-contracts)
-| `runner-gradle` | N3 | Consommateur final — RAG pgvector enrichi par codex via assembleCompositeContext
-| `document-gradle` (New Orleans) | N2 | *Pair parallele* — Codex READ + RAG, Document WRITE + PUBLISH. Pas de dependance directe. Un meme AsciiDoc source est consommable par les deux. Voir `.agents/ARCHITECTURE_BOUNDARY.adoc`.
+| `codebase-gradle` | N1 | Socle RAG (store vectoriel `codebase.store.RagVectorStore` apres CDX-RAG-SOCLE), hub de contexte augmente, contrats ContextChannel/CompositeContext. Codex delegue le RAG a ce socle.
+| `runner-gradle` | N3 | Consommateur final — contexte augmente via codebase N1 (assembleCompositeContext)
+| `document-gradle` (New Orleans) | N2 | *Pair parallele* — Codex READ (acquisition documentaire), Document WRITE + PUBLISH. Pas de dependance directe. Un meme AsciiDoc source est consommable par les deux. Voir `.agents/ARCHITECTURE_BOUNDARY.adoc`.
 | `plantuml-gradle` | N2 | Pair — diagrammes de la chaine documentaire
 | `office/` | Zone 2 | Source des PDFs (`books-collection/`), jamais modifie
 |===

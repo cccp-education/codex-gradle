@@ -3,8 +3,8 @@
 
 _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
-_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ + RAG (Regle 4bis)
-_Boundary_ : Codex = READ + RAG. Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
+_DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (Regle 4bis)
+_Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
 _Derniere mise a jour_ : 2026-08-24 (session 100 — CDX-OCR-3 purge pile IA codex : LlmOcrEngine/HttpOllamaChatClient/OllamaChatClient/OcrConfig supprimés + props ollama inertes retirées, baby-step TDD strict)
 _Session terminee_ : 100 ✅ — CDX-OCR-3 TERMINÉ (US-3/4 EPIC CDX-OCR-BOUNDARY). Pile IA codex purgée : `LlmOcrEngine` (83 lignes), `HttpOllamaChatClient` (99), `OllamaChatClient` (25), `OcrConfig` (77) supprimés — 284 lignes prod. `OllamaProbe` CONSERVÉ (utilitaire tests intégration). `CollectOcrTask` : props `ollamaHost`/`ollamaPort`/`model` supprimées. `CodexExtension` : 3 properties ollama retirées. `CodexPlugin` : wiring ollama retiré, description "AI engine → Tesseract fallback". Tests : 4 fichiers supprimés (21 tests pile IA), `CollectOcrTaskTest`/`CollectOcrPagesContractTest` mis à jour, `OcrPipelineSteps` nettoyé (imports/step LlmOcrEngine retirés), `ocr-pipeline.feature` : scénario LlmOcrEngine supprimé, 2 scénarios renommés. `check` VERT 2m20s — 639 tests 0 FAIL (baseline 667 → -28). Cucumber dédiés VERTS. Zéro bump BOM, zéro secret. EPIC CDX-OCR-BOUNDARY 3/4 US (reste US-4 Cucumber BDD).
@@ -21,7 +21,7 @@ _Session en cours_ : —
 === 4. Codex est le contrat — types partages dans codex/
 === 5. DAG N2 — importable par N3 runner-gradle, jamais importe N3
 === 6. PROCEDURE DE FIN DE SESSION — 6 ETAPES OBLIGATOIRES
-=== 7. BOUNDARY DOCUMENT — Codex READ + RAG, Document WRITE + PUBLISH (parallele N2, pas de dependance directe)
+=== 7. BOUNDARY DOCUMENT — Codex READ (acquisition documentaire), Document WRITE + PUBLISH (parallele N2, pas de dependance directe). Le RAG est actionne par codebase N1, pas par codex.
 
 '''
 == Sessions
