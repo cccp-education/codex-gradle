@@ -50,6 +50,10 @@ dependencies {
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
     implementation("education.cccp:codebase-contracts:0.0.2")
 
+    // N1 codebase socle — RAG store (RagVectorStore + StoreStatements + RetrieveResult + DocumentChunk + IngestIndexing).
+    // EPIC CDX-RAG-3: codex delegates the vector store to the N1 socle (single N2->N1 edge).
+    implementation(libs.codebase.plugin)
+
     // N0 runtime contracts — SessionMemoryContract + LearnerProfile (CDX-RC-04 pont RAG session memory)
     implementation("education.cccp:runtime-contracts:0.0.1")
 
@@ -80,6 +84,17 @@ dependencies {
     testImplementation(libs.junit.platform.suite)
 
     testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+// EPIC CDX-RAG-3: adding `codebase-plugin` as implementation triggers
+// `pluginUnderTestMetadata` and `validatePlugins` validation errors
+// (java-gradle-plugin complains about the implicit dependency on the jar
+// output). Declare them explicitly.
+tasks.named("pluginUnderTestMetadata") {
+    dependsOn("jar")
+}
+tasks.named("validatePlugins") {
+    dependsOn("jar")
 }
 
 gradlePlugin {

@@ -2,7 +2,7 @@ package codex.bdd
 
 import codex.LicenseZone
 import codex.LicenseZoneDetector
-import codex.tasks.RetrieveResult
+import codebase.store.RetrieveResult
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then

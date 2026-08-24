@@ -2815,3 +2815,41 @@ BDD.
 
 EPIC CDX-RAG-SOCLE RAG-1 (domaine `codebase.store` + `RagVectorStore`
 migré verbatim, cross-borough Queens). Gate levée.
+
+== Session 102 (2026-08-24) — EPIC CDX-RAG-SOCLE RAG-2/3/5 + RAG-4 partiel
+
+=== A. Sujet
+
+EPIC CDX-RAG-SOCLE — RAG-2/3/5 TERMINÉ + RAG-4 partiel (cross-borough
+Brooklyn codex + Queens codebase).
+
+=== B. Réalisations
+
+. RAG-2 : 6 call sites codebase `CodexVectorStore` → `RagVectorStore`
+  (API identique, 6 fichiers). Gate non-régression VERT.
+. RAG-3 : codex délègue au socle `codebase.store` — dep
+  `libs.codebase.plugin`, 3 tâches thin wrappers, suppression
+  `codex.store.*` (3 prod + 3 tests), `CodexRetrieveTask` refondu.
+  Fix `pluginUnderTestMetadata`/`validatePlugins`. `check` VERT 679
+  tests 0 FAIL.
+. RAG-4 : PARTIEL — `codex.store.*` imports éliminés, mais
+  `libs.codex.plugin` conservé pour le port OCR
+  (`VisionOcrEngineAdapter` S-099). Gate : EPIC futur
+  CDX-OCR-CONTRACTS (extraction `codex.ocr` en N0).
+. RAG-5 : Cucumber BDD `@rag-socle` 6 scénarios codebase +
+  `RagSocleCucumberRunner` + `StubRagStore` fake + `RagVectorStore`
+  `open`. 6/6 PASSED.
+
+=== C. État EPIC
+
+. CDX-RAG-0 ✅ S-097 (cadrage)
+. CDX-RAG-1 ✅ S-199 (socle codebase.store)
+. CDX-RAG-2 ✅ S-102 (bascule call sites)
+. CDX-RAG-3 ✅ S-102 (codex délègue + purge)
+. CDX-RAG-4 🟡 PARTIEL S-102 (gate OCR port)
+. CDX-RAG-5 ✅ S-102 (Cucumber BDD)
+
+=== D. Prochaine session
+
+RAG-4 final (extraction `codex.ocr` en N0) OU EPIC CB-STORE-UNIFY
+(consolidation JDBC legacy).

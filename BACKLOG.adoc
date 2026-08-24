@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-24 (session 100 — clarification vision codex = READ, RAG → codebase N1 + formalisation EPIC CB-STORE-UNIFY)_
+_Dernière mise à jour : 2026-08-24 (session 102 — RAG-2/3/5 TERMINÉ, RAG-4 partiel gate OCR port, EPIC CDX-RAG-SOCLE 5/6 US ✅)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -293,7 +293,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | CDX-RAG-2
 | codebase — bascule interne : 6 call sites `CodexVectorStore` →
   `RagVectorStore` (API identique). Gate non-régression.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-102)
 | 1
 
 | CDX-RAG-3
@@ -301,25 +301,29 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
   `CodexIngestTask` / `CodexRetrieveTask` délèguent au socle ; suppression
   `codex.store.CodexVectorStore` + `IngestStatements` +
   `IngestIndexing` ; KDoc profile actualisé. Gate : CDX-OCR-1 et CDX-OCR-2 terminées.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-102)
 | 3
 
 | CDX-RAG-4
 | codebase — retrait `implementation(libs.codex.plugin)`
   (`build.gradle.kts:49`) après vérification `rg "import codex\."` = zéro
   résultat. CI verte. L'inversion N1→N2 est morte.
-| 🔲 À FAIRE
+| 🟡 PARTIEL (S-102) — `codex.store.*` imports éliminés (RAG inversion
+  morte), mais `libs.codex.plugin` conservé pour le port OCR
+  (`codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` consommés par
+  `VisionOcrEngineAdapter` S-099). Gate : extraction `codex.ocr` en artefact
+  N0 (EPIC futur CDX-OCR-CONTRACTS).
 | 1
 
 | CDX-RAG-5
 | Cucumber BDD — scénarios composite context canal Docs + retrieval koog sur
   store socle (fake in-memory). Pure BDD.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-102)
 | 2
 
 |===
 
-*Total* : ~10 pts (2/6 US ✅ — reste 4 US ~7 pts)
+*Total* : ~10 pts (5/6 US ✅ — RAG-4 partiel, reste extraction OCR port)
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094

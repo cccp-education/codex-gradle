@@ -1,6 +1,7 @@
 package codex.tasks
 
-import codex.store.IngestStatements
+import codebase.store.DocumentChunk
+import codebase.store.StoreStatements
 import dev.langchain4j.data.segment.TextSegment
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
@@ -24,10 +25,12 @@ import org.gradle.work.DisableCachingByDefault
 /**
  * Vectorizes document chunks with ONNX AllMiniLmL6V2 and stores them in pgvector.
  *
- * Reads a JSON file containing a list of [DocumentChunk], groups them by source
- * document, computes 384-dimensional embeddings via ONNX, and persists both
- * documents and chunks in PostgreSQL pgvector tables (`codex_documents`,
- * `codex_chunks`) using R2DBC.
+ * EPIC CDX-RAG-3: thin wrapper consuming the N1 socle
+ * [codebase.store.StoreStatements] SQL templates and
+ * [codebase.store.DocumentChunk] type. The R2DBC orchestration (embedding +
+ * UPSERT) stays here — the store owns the schema, the task owns the Gradle
+ * wiring. Tables `codex_documents` / `codex_chunks` are unchanged (full
+ * backward compat, zero re-vectorisation — Ink Economy Law).
  *
  * @property chunksFile input JSON chunks file
  * @property pgHost PostgreSQL host
@@ -83,7 +86,7 @@ abstract class CodexIngestTask : DefaultTask() {
     private suspend fun initSchema(factory: ConnectionFactory) {
         val conn = factory.create().awaitFirst()
         try {
-            IngestStatements.initSchema().forEach { conn.createStatement(it).execute().awaitFirst() }
+            StoreStatements.initSchema().forEach { conn.createStatement(it).execute().awaitFirst() }
         } finally { conn.close().awaitFirstOrNull() }
     }
 
@@ -94,28 +97,28 @@ abstract class CodexIngestTask : DefaultTask() {
 
         for ((source, docChunks) in groups) {
             val license = docChunks.first().license
-            val docId = conn.createStatement(IngestStatements.insertDocument())
+            val docId = conn.createStatement(StoreStatements.insertDocument())
                 .bind(0, source).bind(1, docChunks.size).bind(2, license)
                 .execute().awaitFirst().map { r, _ -> r.get("id", Long::class.java)!! }.awaitFirst()
 
             logger.lifecycle("[codex]   $source (${docChunks.size} chunks, batch=$effectiveBatchSize)")
 
             var stored = 0
-            // CDX-CR3-3 : compteur local par document au lieu de chunks.indexOf(chunk)
-            // qui retourne la première occurrence pour les chunks dupliqués.
+            // CDX-CR3-3: local counter per document instead of chunks.indexOf(chunk)
+            // which returns the first occurrence for duplicated chunks.
             for ((localIndex, chunk) in docChunks.withIndex()) {
-                val chunkId = conn.createStatement(IngestStatements.insertChunk())
+                val chunkId = conn.createStatement(StoreStatements.insertChunk())
                     .bind(0, docId).bind(1, localIndex).bind(2, chunk.content)
                     .bind(3, chunk.sectionPath).bind(4, chunk.headingLevel)
                     .execute().awaitFirst().map { r, _ -> r.get("id", Long::class.java)!! }.awaitFirst()
 
                 val vec = computeEmbedding(chunk.content)
-                // CDX-CR3-1 : le chunkId (Long généré par PostgreSQL via
-                // RETURNING id) et le vecteur (nombres ONNX) sont safe à
-                // inliner — aucune entrée utilisateur. R2DBC/pgvector ne
-                // supporte pas le binding paramétré du vecteur dans un
-                // contexte SET (limitation documentée dans IngestStatements).
-                conn.createStatement(IngestStatements.updateEmbedding(vec, chunkId))
+                // CDX-CR3-1: the chunkId (Long produced by PostgreSQL via
+                // RETURNING id) and the vector (ONNX numbers) are safe to
+                // inline — no user input. R2DBC/pgvector does not support
+                // parameterised vector binding in a SET context (limitation
+                // documented in StoreStatements).
+                conn.createStatement(StoreStatements.updateEmbedding(vec, chunkId))
                     .execute().awaitFirst()
                 stored++
             }

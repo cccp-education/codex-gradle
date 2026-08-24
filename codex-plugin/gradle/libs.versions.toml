@@ -2,6 +2,7 @@
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
 codex-plugin = "0.0.5"
 codebase = "0.0.2"
+codebase-plugin = "0.0.8"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
 kotlin = "2.4.10"
@@ -36,6 +37,9 @@ cucumber = "7.21.0"
 [libraries]
 # ── Kotlin ────────────────────────────────────────────────────────────────────
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
+
+# ── N1 codebase socle (RAG store, LLM hub, koog orchestration) ────────────────
+codebase-plugin = { module = "education.cccp:codebase-plugin", version.ref = "codebase-plugin" }
 
 # ── PDF/Extraction ────────────────────────────────────────────────────────────
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }

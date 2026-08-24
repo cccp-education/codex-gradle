@@ -3,7 +3,7 @@ package codex.profile
 /**
  * EPIC CDX-RC-04-1 — Configuration de connexion pgvector session memory.
  *
- * Data class pur (mirror `CodexVectorStore` / `CodexIngestTask` params)
+ * Data class pur (mirror `RagVectorStore` / `CodexIngestTask` params)
  * portant les credentials de la base `codex`. La table `codex_learner_profiles`
  * vit dans la même base que `codex_documents`/`codex_chunks` (voir
  * [ProfileStatements.initSchema]) mais est séparée logiquement.

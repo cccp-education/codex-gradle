@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 102
-:session: 102
+= PROMPT_REPRISE — Codex — Session 103
+:session: 103
 :date: 2026-08-24
 :status: PRET
 :max-lines: 50
@@ -9,49 +9,44 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # baseline préservée (0 FAIL)
+./gradlew check           # baseline preserved (0 FAIL)
 ----
 
-== Session 101 terminée — CDX-OCR-4 ✅ (EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4)
+== Session 102 terminee — EPIC CDX-RAG-SOCLE 5/6 US
 
-. 3 scénarios `@ocr-boundary` ajoutés à `ocr-pipeline.feature` :
-  fake AI engine succès direct (counting Tesseract 0 calls),
-  degraded Tesseract-only sans injection, cache hit skip engine
-  (Économie d'Encre — counting OCR engine 0 calls).
-. `OcrBoundarySteps.kt` créé (152 lignes) — counting engines via
-  `AtomicInteger`, in-memory `CacheStorage`, préfixe "boundary"
-  anti-collision S-088 (DuplicateStepDefinition avec `OcrPipelineSteps`).
-. `CodexOcrCucumberRunner.kt` créé (7e runner codex, pattern S-082).
-  Tâche `cucumberTestOcr` câblée `build.gradle.kts`.
-. `check` VERT 4m37s — 775 tests 0 FAIL. Zéro production modifié
-  (pure BDD). Zéro bump BOM, zéro secret.
+. RAG-2 : 6 call sites codebase `CodexVectorStore` → `RagVectorStore`
+  (API identique, 6 fichiers). Gate non-regression codebase VERT.
+. RAG-3 : codex delegue au socle `codebase.store` — dep
+  `libs.codebase.plugin` ajoutee, 3 taches thin wrappers
+  (CodexCompositeContextTask/CodexIngestTask/CodexRetrieveTask),
+  suppression `codex.store.*` (3 prod + 3 tests mirrores),
+  `CodexRetrieveTask` refondu. Fix `pluginUnderTestMetadata`.
+. RAG-4 : PARTIEL — `codex.store.*` imports elimines (RAG inversion
+  morte), mais `libs.codex.plugin` conserve pour le port OCR
+  (`codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` consommes par
+  `VisionOcrEngineAdapter` S-099). Gate : extraction `codex.ocr` en
+  artefact N0 (EPIC futur CDX-OCR-CONTRACTS).
+. RAG-5 : Cucumber BDD `@rag-socle` 6 scenarios cote codebase +
+  `RagSocleCucumberRunner` + `StubRagStore` fake + `RagVectorStore`
+  `open` pour testabilite. 6/6 PASSED.
+. `check` VERT codex 679 tests 0 FAIL + codebase check VERT. Zero
+  bump BOM, zero secret, zero regression.
 
-== Prochaine session — 102 : EPIC CDX-RAG-SOCLE (RAG-1)
+== Prochaine session — 103 : RAG-4 final OU CB-STORE-UNIFY
 
-*Gate levée* : OCR-1/2/3/4 tous ✅. RAG-3/RAG-4 débloqués.
+*Option A* : RAG-4 final — extraire `codex.ocr` port types
+(`OcrEngine`, `OcrRequest`, `OcrResult`) en artefact N0
+`codex-contracts` (MEMPHIS ou standalone). Retirer `libs.codex.plugin`
+de codebase apres `rg "import codex."` = zero. L'inversion N1->N2
+est totalement morte.
 
-*Baby-step TDD strict* (cross-borough Queens/codebase) :
-. RAG-1 : domaine `codebase.store` côté codebase — `RagVectorStore`
-  migré verbatim depuis `codex.store.CodexVectorStore` +
-  `StoreStatements` (SQL migrent avec le store) + characterization
-  tests (mirror tests codex). ~8 unit. Tables pgvector INCHANGÉES
-  (`codex_documents`/`codex_chunks` — zéro re-vectorisation, Loi
-  Économie d'Encre).
-. RAG-2 : bascule interne codebase — 6 call sites
-  `CodexVectorStore` → `RagVectorStore` (API identique
-  `searchBlocking`). Gate non-régression.
-. RAG-3 : codex — `implementation(libs.codebase.plugin)` ajoutée ;
-  `CodexCompositeContextTask`/`CodexIngestTask`/`CodexRetrieveTask`
-  délèguent au socle ; suppression `codex.store.CodexVectorStore` +
-  `IngestStatements` + `IngestIndexing` ; KDoc profile actualisé.
-. RAG-4 : codebase — retrait `implementation(libs.codex.plugin)`
-  (`build.gradle.kts:49`). `rg "import codex\."` = zéro résultat.
-  L'inversion N1→N2 est morte.
-. RAG-5 : Cucumber BDD — scénarios composite context canal Docs +
-  retrieval koog sur store socle (fake in-memory). Pure BDD.
+*Option B* : EPIC CB-STORE-UNIFY — consolidation
+`codebase.rag.VectorStore` JDBC legacy (DROP CASCADE destructif) apres
+migration RAG-SOCLE. Gate : RAG-1→4 (RAG-4 partiel OK — le store
+RAG est migre, le JDBC legacy est independant).
 
 == References
 
-- `.agents/sessions/101-cdx-ocr-4-cucumber-bdd-boundary.adoc`
-- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (RAG-1→5, gate levée)
-- `BACKLOG.adoc` § EPIC CDX-RAG-SOCLE
+- `.agents/sessions/102-cdx-rag-socle-rag-2-3-5.adoc`
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (RAG-4 gate OCR port)
+- `BACKLOG.adoc` § EPIC CDX-RAG-SOCLE + § EPIC CB-STORE-UNIFY

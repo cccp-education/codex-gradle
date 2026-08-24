@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 /**
  * TDD — EPIC CDX-RC-04-1 : configuration de connexion pgvector session memory.
  *
- * [ProfileConfig] est un data class pur (mirror `CodexVectorStore` params)
+ * [ProfileConfig] is a pure data class (mirror `RagVectorStore` params)
  * portant les credentials de la base `codex`. Objet pur — unit-testable
  * sans base de données.
  */

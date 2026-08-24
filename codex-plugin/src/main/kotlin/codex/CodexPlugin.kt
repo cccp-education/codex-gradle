@@ -35,7 +35,7 @@ import org.gradle.api.Project
  * - `collectOcr` — LLM OCR pipeline on image directory → AsciiDoc (consumed by DOC-11)
  *
  * **GENERATE group**:
- * - `generateCompositeContext` — semantic search via CodexVectorStore → composite-context.json
+ * - `generateCompositeContext` — semantic search via RagVectorStore (codebase.store) → composite-context.json
  *
  * **TRANSFORM group**:
  * - `transformToJsonLdd` — AsciiDoc → JSON LDD
@@ -197,7 +197,7 @@ class CodexPlugin : Plugin<Project> {
             CodexCompositeContextTask::class.java
         ) {
             it.group = "generate"
-            it.description = "Semantic search via CodexVectorStore → composite-context.json (runner-compatible)"
+            it.description = "Semantic search via RagVectorStore (codebase.store) → composite-context.json (runner-compatible)"
             it.query.set(project.providers.gradleProperty("query").orElse("architecture du workspace"))
             it.topK.set(project.providers.gradleProperty("topK").orElse("10"))
             // CDX-CR3-2 : wiring pg depuis l'extension (avant fix, hardcodé localhost:5432)

@@ -4,10 +4,11 @@ import contracts.context.ChannelBudget
 import contracts.context.CompositeContext
 import contracts.context.CompositeContextConfig
 import contracts.context.ContextChannel
+import codebase.store.RagVectorStore
+import codebase.store.RetrieveResult
 import codex.Metadata
 import codex.enrichment.EnrichedLddNode
 import codex.enrichment.GraphifySectionBuilder
-import codex.store.CodexVectorStore
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -34,11 +35,10 @@ abstract class CodexCompositeContextTask : DefaultTask() {
     @get:Optional
     abstract val topK: Property<String>
 
-    // CDX-CR3-2 : propriétés pg exposées et wirees depuis CodexExtension.
-    // Avant fix, la task instançait CodexVectorStore() avec localhost:5432
-    // en dur — inutilisable hors localhost.
-    // Les conventions garantissent le backward compat (localhost:5432/codex)
-    // si la task est utilisée sans le plugin ou sans configurer l'extension.
+    // CDX-CR3-2: pg properties exposed and wired from CodexExtension.
+    // Before fix, the task instantiated the store with localhost:5432 hardcoded.
+    // EPIC CDX-RAG-3: delegates to the codebase.store.RagVectorStore socle
+    // (single N2->N1 edge, zero cycle).
     @get:Input abstract val pgHost: Property<String>
     @get:Input abstract val pgPort: Property<String>
     @get:Input abstract val pgDatabase: Property<String>
@@ -91,14 +91,14 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val q = query.orNull ?: "architecture du workspace"
         val k = topK.orNull?.toIntOrNull() ?: 10
 
-        val store = CodexVectorStore(
+        val store = RagVectorStore(
             host = pgHost.get(),
             port = pgPort.get().toInt(),
             database = pgDatabase.get(),
             username = pgUser.get(),
             password = pgPassword.get()
         )
-        val results = store.searchBlocking(q, k)
+        val results: List<RetrieveResult> = store.searchBlocking(q, k)
 
         // ── JSON compatible N3/N4 (inchangé) ──
         val entries = results.map { r ->

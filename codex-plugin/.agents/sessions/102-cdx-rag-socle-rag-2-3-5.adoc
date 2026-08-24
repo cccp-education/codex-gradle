@@ -1,0 +1,114 @@
+= Session 102 — EPIC CDX-RAG-SOCLE RAG-2/3/5 TERMINÉ + RAG-4 partiel
+:date: 2026-08-24
+:session: 102
+:epic: CDX-RAG-SOCLE
+:borough: Brooklyn (codex) + Queens (codebase)
+:status: TERMINÉ
+
+== Résumé
+
+Session cross-borough Brooklyn (codex) + Queens (codebase). L'EPIC
+CDX-RAG-SOCLE progresse à 5/6 US (RAG-4 partiel — gate OCR port).
+
+. *RAG-2* : bascule 6 call sites codebase `CodexVectorStore` →
+  `RagVectorStore` (API identique). 6 fichiers modifiés côté codebase.
+  Gate non-régression : codebase `test` 9960 tests, 3 échecs
+  préexistants (EPIC Z-6 Autofocus flaky + VersionCatalogTransitive),
+  zéro échec lié au store.
+. *RAG-3* : codex délègue au socle. Dep `libs.codebase.plugin` (0.0.8)
+  ajoutée. 3 tâches thin wrappers (`CodexCompositeContextTask`,
+  `CodexIngestTask`, `CodexRetrieveTask`) consommant
+  `codebase.store.RagVectorStore`/`StoreStatements`/`DocumentChunk`/
+  `RetrieveResult`. Suppression `codex.store.*` (3 prod + 3 tests
+  mirrorés, 24 unit). `CodexRetrieveTask` refondu (-107 lignes).
+  Fix `pluginUnderTestMetadata`/`validatePlugins` `dependsOn("jar")`.
+  `check` VERT codex 679 tests 0 FAIL.
+. *RAG-4* : PARTIEL. `codex.store.*` imports éliminés du codebase
+  (RAG inversion morte). `libs.codex.plugin` conservé pour le port
+  OCR (`VisionOcrEngineAdapter` S-099 consomme
+  `codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult`). Gate : extraction
+  `codex.ocr` en artefact N0 (EPIC futur CDX-OCR-CONTRACTS).
+. *RAG-5* : Cucumber BDD `@rag-socle` 6 scénarios côté codebase +
+  `RagSocleCucumberRunner` (pattern S-082) + `RagSocleWorld` +
+  `StubRagStore` fake + `RagVectorStore` `open` pour testabilité (1
+  keyword + 2 `open fun`). `RagSocleSteps` (pure BDD, no Gradle task,
+  no network). `cucumberTestRagSocle` (40e `CucumberTaskSpec`).
+  Baby-step BDD RED → GREEN (6/6 PASSED).
+
+== Constats
+
+. `codebase-plugin` 0.0.8 n'était pas en mavenLocal avec le store
+  RAG-1 — republié en début de session (`publishToMavenLocal`).
+. Ajout d'une dep `implementation(libs.codebase.plugin)` déclenche
+  `pluginUnderTestMetadata`/`validatePlugins` validation Gradle 9.x
+  (implicit dependency sur jar output) — fix `dependsOn("jar")`.
+. Messages Français dans `CompositeContextBuilder` ("non configure",
+  "indisponible") — assertions BDD alignées.
+. `RagVectorStore` `open` pour testabilité (1 keyword + 2 `open fun`)
+  — prod change minimal pour fake `StubRagStore`.
+
+== Décisions
+
+. RAG-4 partiel acté — la gate est l'extraction `codex.ocr` en N0
+  (EPIC futur CDX-OCR-CONTRACTS), pas un blocage de RAG-SOCLE.
+. Tables pgvector INCHANGÉES (zéro re-vectorisation — Loi Économie
+  d'Encre).
+. Zéro bump BOM, zéro secret, zéro régression, backward compat total.
+
+== Fichiers modifiés
+
+=== Brooklyn (codex)
+. `codex-plugin/build.gradle.kts` — dep `libs.codebase.plugin` + fix
+  `pluginUnderTestMetadata`/`validatePlugins`.
+. `codex-plugin/gradle/libs.versions.toml` — `codebase-plugin` +
+  `codebase.plugin` library.
+. `codex-plugin/src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt`
+  — `RagVectorStore` + `RetrieveResult` socle.
+. `codex-plugin/src/main/kotlin/codex/tasks/CodexIngestTask.kt` —
+  `StoreStatements` + `DocumentChunk` socle.
+. `codex-plugin/src/main/kotlin/codex/tasks/CodexRetrieveTask.kt` —
+  refondu, délégation pure au socle.
+. `codex-plugin/src/main/kotlin/codex/CodexPlugin.kt` — KDoc.
+. `codex-plugin/src/main/kotlin/codex/profile/PgVectorSessionMemory.kt`
+  + `ProfileConfig.kt` — KDoc.
+. `codex-plugin/src/test/kotlin/codex/bdd/PipelineSteps.kt` — import
+  `codebase.store.RetrieveResult`.
+. `codex-plugin/src/test/kotlin/codex/tasks/CodexIngestRetrieveIT.kt`
+  — import `codebase.store.RetrieveResult`.
+. `codex-plugin/src/test/kotlin/codex/profile/ProfileConfigTest.kt` —
+  KDoc.
+. Suppressions : `codex.store.CodexVectorStore.kt`,
+  `IngestStatements.kt`, `IngestIndexing.kt` + 3 tests mirrorés.
+
+=== Queens (codebase)
+. `codebase-plugin/src/main/kotlin/codebase/rag/CodebaseCompositeContextTask.kt`
+  — `RagVectorStore`.
+. `codebase-plugin/src/main/kotlin/codebase/rag/CompositeContextBuilder.kt`
+  — `RagVectorStore`.
+. `codebase-plugin/src/main/kotlin/codebase/koog/KoogAugmentedContextGraph.kt`
+  — `RagVectorStore`.
+. `codebase-plugin/src/main/kotlin/codebase/koog/MultiChannelContextGraph.kt`
+  — `RagVectorStore`.
+. `codebase-plugin/src/main/kotlin/codebase/koog/KoogPlanningOrchestrator.kt`
+  — `RagVectorStore`.
+. `codebase-plugin/src/main/kotlin/codebase/CodebasePlugin.kt` —
+  description string.
+. `codebase-plugin/src/main/kotlin/codebase/store/RagVectorStore.kt`
+  — `open` class + `open fun` pour testabilité.
+. `codebase-plugin/build.gradle.kts` — `cucumberTestRagSocle` + KDoc
+  `libs.codex.plugin` gate OCR.
+. Ajouts : `codebase_rag_socle.feature` + `RagSocleCucumberRunner.kt`
+  + `RagSocleWorld.kt` + `RagSocleSteps.kt`.
+
+== Tests
+
+. Codex `check` VERT — 679 tests 0 FAIL (baseline 775 → -96 : 24
+  tests store supprimés + 72 variations découverte cucumber).
+. Codebase `test` VERT — 9960 tests, 3 échecs préexistants (non liés).
+. Codebase `cucumberTestRagSocle` — 6/6 scénarios PASSED.
+. Codebase `compileKotlin`/`compileTestKotlin`/`validatePlugins` VERT.
+
+== Prochaine session (103)
+
+RAG-4 final (extraction `codex.ocr` en N0) OU EPIC CB-STORE-UNIFY
+(consolidation JDBC legacy).

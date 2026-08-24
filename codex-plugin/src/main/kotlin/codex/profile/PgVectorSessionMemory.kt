@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
  * 384-dim ONNX calculé depuis les weakPoints + annotations (voir
  * [ProfileEmbedding]).
  *
- * Pattern `CodexVectorStore` / `CodexIngestTask` :
+ * Pattern `RagVectorStore` (codebase.store) / `CodexIngestTask` :
  * - ONNX `AllMiniLmL6V2EmbeddingModel` pour l'embedding (lazy).
  * - R2DBC `PostgresqlConnectionFactory` pour la persistance.
  * - `runBlocking` sync wrappers pour usage depuis tâche Gradle.
