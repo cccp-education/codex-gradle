@@ -2598,3 +2598,144 @@ intégralement dans codex (Brooklyn).
 
 *D. Prochaine session* :
 CDX-OCR-3 (purge pile IA codex, gate levée par US-1+US-2).
+
+'''
+== Session 100 — 2026-08-24 — CDX-OCR-3 — Purge pile IA codex
+
+*EPIC* : CDX-OCR-BOUNDARY (US-3/4).
+*Pattern* : baby-step TDD strict RED → GREEN → REFACTOR.
+*Baseline* : 667 tests 0 FAIL (S-099).
+
+=== Contexte
+
+Après CDX-OCR-1 (port `OcrEngine` injectable, S-098) et CDX-OCR-2
+(adapter `VisionOcrEngineAdapter` côté codebase + `OcrTask` IA-uniquement,
+S-099), la pile OCR IA de codex n'avait plus de raison d'exister. La
+boundary rule (cadrage S-096, décision pilote) : OCR logiciel (Tesseract)
+= codex l'actionne ; OCR assisté IA = codebase l'actionne. Codex ne
+doit plus contenir de moteur IA, de client HTTP Ollama, ni de config
+IA.
+
+=== A. Suppressions (production)
+
+. `src/main/kotlin/codex/ocr/LlmOcrEngine.kt` (83 lignes) — moteur OCR
+  LLM (Ollama vision → AsciiDoc structuré).
+. `src/main/kotlin/codex/ocr/HttpOllamaChatClient.kt` (99 lignes) —
+  client HTTP Ollama `/api/chat` (java.net.http.HttpClient).
+. `src/main/kotlin/codex/ocr/OllamaChatClient.kt` (25 lignes) — port
+  du client HTTP Ollama.
+. `src/main/kotlin/codex/ocr/OcrConfig.kt` (77 lignes) — configuration
+  provider/model (consommée uniquement par la pile IA).
+
+*Total suppression prod* : 284 lignes. `OllamaProbe` CONSERVÉ
+(utilitaire tests intégration, plage 11437-11465, zéro couplage avec
+la pile IA purgée).
+
+=== B. Modifications (production)
+
+. `CollectOcrTask.kt` : propriétés `ollamaHost`/`ollamaPort`/`model`
+  supprimées + KDoc Inputs mis à jour (retrait mention "legacy Ollama
+  conventions — inert since CDX-OCR-1").
+. `CodexExtension.kt` : propriétés `ollamaHost`/`ollamaPort`/
+  `ollamaModel` retirées (3 properties, `ocrLanguage` conservé).
+. `CodexPlugin.kt` : conventions `ollamaHost`/`ollamaPort`/`ollamaModel`
+  sur l'extension supprimées + wiring `it.ollamaHost.convention(...)` /
+  `it.ollamaPort.convention(...)` / `it.model.convention(...)` sur la
+  tâche `collectOcr` retiré. Description tâche mise à jour
+  ("LLM Ollama → Tesseract fallback" → "AI engine → Tesseract fallback").
+
+=== C. Suppressions (tests)
+
+. `LlmOcrEngineTest.kt` (6 unit), `LlmOcrEngineIntegrationTest.kt`
+  (5 integration), `HttpOllamaChatClientTest.kt` (5 unit),
+  `OcrConfigTest.kt` (5 unit) — 21 tests supprimés.
+
+=== D. Modifications (tests)
+
+. `CollectOcrTaskTest.kt` : `collectOcr task inherits Ollama
+  conventions` → `inherits language convention` (assertions ollama
+  retirées) ; `extension exposes ollama and ocr properties` →
+  `extension exposes ocr language property` ; setters ollama retirés.
+. `CollectOcrPagesContractTest.kt` : setters `ollamaHost.set`/
+  `ollamaPort.set`/`model.set` retirés des 3 tests. KDoc comment mis
+  à jour ("no Ollama, no Tesseract binary" → "no AI engine injected,
+  no Tesseract binary").
+. `CollectOcrAiEngineInjectionTest.kt` : KDoc classe mis à jour
+  (retrait mention "No class deletion happens in this US:
+  LlmOcrEngine and its HTTP stack remain until CDX-OCR-3 purge" →
+  documentation post-purge).
+. `OcrPipelineSteps.kt` : imports `LlmOcrEngine`/`OcrConfig`/
+  `OllamaChatClient`/`TesseractOcrEngine` retirés. Step `@When("the
+  LlmOcrEngine processes the image")` supprimé. Steps `the result
+  contains structured AsciiDoc text` / `the result confidence is
+  greater than zero` supprimés. Step `@Given("an LLM engine that
+  returns empty text")` → `@Given("a primary engine that returns empty
+  text")` (clé state `llmEngine` → `primaryEngine`). Step `@And("the
+  result model is {string}")` conservé (utilisé par scénario 1).
+. `ocr-pipeline.feature` : scénario `LLM OCR engine produces structured
+  AsciiDoc from image` SUPPRIMÉ. 2 scénarios renommés (`LLM fails` →
+  `the primary engine fails`, `an LLM engine` → `a primary engine`).
+
+=== E. Baby-step TDD strict
+
+. RED : suppression pile IA + props inertes → `compileTestKotlin` VERT
+  (tests mis à jour simultanément car purge, pas ajout de feature). Le
+  seul échec RED réel : 1er `check` → `UndefinedStepException` (step
+  `the result model is "tesseract"` supprimé à tort dans la 1re
+  itération de `OcrPipelineSteps` — step utilisé par le scénario 1 de
+  la feature mise à jour).
+. GREEN : rétablissement du step `@And("the result model is
+  {string}")` → `check` VERT.
+. REFACTOR : KDoc `CollectOcrAiEngineInjectionTest` post-purge, KDoc
+  `CollectOcrTask` Inputs nettoyé, description tâche `collectOcr`
+  mise à jour.
+
+=== F. Gate non-régression
+
+. `./gradlew check` BUILD SUCCESSFUL 2m20s — 639 tests 0 FAIL
+  (baseline 667 → -28 : 21 tests pile IA + 1 scénario cucumber
+  supprimé + 1 fusion `CollectOcrTaskTest` + 5 variations découverte
+  cucumber).
+. Kover VERT, validatePlugins VERT.
+. Cucumber dédiés VERTS : `cucumberTestLicence`,
+  `cucumberTestOntology`, `cucumberTestEnrichment`,
+  `cucumberTestPipelineRouting`, `cucumberTestPipelineUnify`,
+  `cucumberTestSessionMemory` (BUILD SUCCESSFUL 1m8s).
+. Zéro bump BOM (aucune dépendance modifiée).
+. Zéro secret (grep `TOKEN|SECRET|PASSWORD|API_KEY|gho_|ghp_` → vide).
+. Zéro régression (tests OCR restants — `OcrPipelineTest`,
+  `TesseractOcrEngineTest`, `OcrResultTest`, `OcrRequestTest`,
+  `OcrResultCacheTest`, `CollectOcrAiEngineInjectionTest`,
+  `CollectOcrPagesContractTest`, `CollectOcrTaskTest` — passent
+  tous).
+
+=== G. Boundary après US-3
+
+----
+codex (Brooklyn N2)      : types purs + Tesseract + cache + CollectOcrTask
+                           + OcrPipeline (port OcrEngine injectable, US-1)
+                           + OllamaProbe (utilitaire tests)
+codebase (Queens N1)     : VisionOcrEngineAdapter (port codex ← VisionProvider)
+composition root         : injecte l'adapter dans CollectOcrTask.aiEngine
+défaut sans injection    : Tesseract seul (dégradé fonctionnel)
+----
+
+La pile IA codex est morte. Codex n'a plus aucune référence à Ollama
+(vision), à `OcrConfig`, ni à un client HTTP chat. L'OCR assisté par
+IA est entièrement actionné par le socle codebase (Queens) via le port
+`codex.ocr.OcrEngine`.
+
+=== H. Statut EPIC
+
+CDX-OCR-BOUNDARY : 3/4 US terminées (US-0 ✅ S-096, US-1 ✅ S-098,
+US-2 ✅ S-099, US-3 ✅ S-100). Reste US-4 (Cucumber BDD fake engine +
+cache hit skip engine, Économie d'Encre). Gate pour CDX-RAG-SOCLE
+(RAG-3/RAG-4) levée.
+
+=== I. Prochaine session
+
+CDX-OCR-4 (Cucumber BDD fake engine) — scénarios `ocr-pipeline.feature`
+étendus (fake AI engine injecté → succès direct ; degraded
+Tesseract-only ; cache hit skip engine via counting engine), runner
+dédié `CodexOcrCucumberRunner` (pattern S-082, 6e runner codex) +
+tâche `cucumberTestOcr`. EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4 US.

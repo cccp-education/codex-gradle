@@ -34,14 +34,11 @@ class CollectOcrTaskTest {
     }
 
     @Test
-    fun `collectOcr task inherits Ollama conventions from extension`() {
+    fun `collectOcr task inherits language convention from extension`() {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
-        assertEquals("localhost", task.ollamaHost.get())
-        assertEquals("11437", task.ollamaPort.get())
-        assertEquals("gpt-oss:120b-cloud", task.model.get())
         assertEquals("fr", task.language.get())
     }
 
@@ -56,9 +53,6 @@ class CollectOcrTaskTest {
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         task.inputDir.set(emptyDir)
         task.outputFile.set(outputFile)
-        task.ollamaHost.set("localhost")
-        task.ollamaPort.set("11437")
-        task.model.set("gpt-oss:120b-cloud")
         task.language.set("fr")
 
         task.collectOcr()
@@ -69,14 +63,11 @@ class CollectOcrTaskTest {
     }
 
     @Test
-    fun `extension exposes ollama and ocr properties`() {
+    fun `extension exposes ocr language property`() {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 
         val extension = project.extensions.findByName("codex") as CodexExtension
-        assertEquals("localhost", extension.ollamaHost.get())
-        assertEquals("11437", extension.ollamaPort.get())
-        assertEquals("gpt-oss:120b-cloud", extension.ollamaModel.get())
         assertEquals("fr", extension.ocrLanguage.get())
     }
 }

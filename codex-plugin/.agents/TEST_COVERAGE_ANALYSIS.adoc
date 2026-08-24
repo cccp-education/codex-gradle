@@ -636,3 +636,32 @@ test est déjà prête via le port injectable.
 fichier legacy remplacé). Côté codex : zéro modification — la session
 CDX-OCR-2 est entièrement cross-borough (Queens). Gate `check` VERT
 41m26s. 3 échecs préexistants au baseline vérifiés par stash.
+
+'''
+== Session 100 — CDX-OCR-3 Purge pile IA codex (-28 tests, 639/639 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| *Supprimé* `test/kotlin/codex/ocr/LlmOcrEngineTest.kt` | 6 unit | ✅ SUPPRIMÉ (pile IA purgée)
+| *Supprimé* `test/kotlin/codex/ocr/LlmOcrEngineIntegrationTest.kt` | 5 integration | ✅ SUPPRIMÉ (pile IA purgée)
+| *Supprimé* `test/kotlin/codex/ocr/HttpOllamaChatClientTest.kt` | 5 unit | ✅ SUPPRIMÉ (pile IA purgée)
+| *Supprimé* `test/kotlin/codex/ocr/OcrConfigTest.kt` | 5 unit | ✅ SUPPRIMÉ (pile IA purgée)
+| `test/kotlin/codex/tasks/CollectOcrTaskTest.kt` | 3 unit (was 4) | ✅ PASS (2 tests fusionnés/renommés, setters ollama retirés)
+| `test/kotlin/codex/tasks/CollectOcrPagesContractTest.kt` | 4 unit | ✅ PASS (setters ollama retirés, fallback par défaut sans aiEngine)
+| `test/kotlin/codex/tasks/CollectOcrAiEngineInjectionTest.kt` | 6 unit | ✅ PASS (KDoc post-purge, tests inchangés)
+| `test/kotlin/codex/bdd/OcrPipelineSteps.kt` | 18 step defs (was 23) | ✅ PASS (imports/step LlmOcrEngine retirés, step `primary engine` renommé)
+| `test/resources/features/ocr-pipeline.feature` | 5 scénarios (was 6) | ✅ PASS (scénario LlmOcrEngine supprimé, 2 renommés)
+|===
+
+*Delta* : 667 → 639 tests (-28). 21 tests pile IA supprimés + 1 scénario
+cucumber supprimé + 1 fusion `CollectOcrTaskTest` + 5 variations
+découverte cucumber. Zéro régression — tests OCR restants
+(`OcrPipelineTest`, `TesseractOcrEngineTest`, `OcrResultTest`,
+`OcrRequestTest`, `OcrResultCacheTest`, `CollectOcrAiEngineInjectionTest`,
+`CollectOcrPagesContractTest`, `CollectOcrTaskTest`) passent tous.
+
+*Couverture* : Kover VERT (seuil préservé). La purge retire du code
+non-couvert par construction (pile IA sans usage production), donc la
+couverture relative augmente mécaniquement.

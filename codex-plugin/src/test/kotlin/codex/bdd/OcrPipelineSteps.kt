@@ -1,13 +1,9 @@
 package codex.bdd
 
-import codex.ocr.LlmOcrEngine
-import codex.ocr.OcrConfig
 import codex.ocr.OcrEngine
 import codex.ocr.OcrPipeline
 import codex.ocr.OcrRequest
 import codex.ocr.OcrResult
-import codex.ocr.OllamaChatClient
-import codex.ocr.TesseractOcrEngine
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -30,37 +26,9 @@ class OcrPipelineSteps {
         )
     }
 
-    @When("the LlmOcrEngine processes the image")
-    fun theLlmOcrEngineProcessesTheImage() {
-        val fakeClient = object : OllamaChatClient {
-            override fun chat(config: OcrConfig, prompt: String, images: List<String>): String =
-                "= Title\n\nStructured content."
-        }
-        val engine = LlmOcrEngine(fakeClient, OcrConfig.defaultConfig())
-        state["result"] = engine.process(state["request"] as OcrRequest)
-    }
-
-    @Then("the result contains structured AsciiDoc text")
-    fun theResultContainsStructuredAsciiDocText() {
-        val result = state["result"] as OcrResult
-        assertTrue(result.structuredText.startsWith("= "), "Result should be AsciiDoc starting with title")
-    }
-
-    @And("the result model is {string}")
-    fun theResultModelIs(model: String) {
-        val result = state["result"] as OcrResult
-        assertEquals(model, result.model)
-    }
-
-    @And("the result confidence is greater than zero")
-    fun theResultConfidenceIsGreaterThanZero() {
-        val result = state["result"] as OcrResult
-        assertTrue(result.confidence > 0.0)
-    }
-
-    @Given("an LLM engine that returns empty text")
-    fun anLlmEngineThatReturnsEmptyText() {
-        state["llmEngine"] = stubEngine("", 0.0, "gpt-oss:120b-cloud")
+    @Given("a primary engine that returns empty text")
+    fun aPrimaryEngineThatReturnsEmptyText() {
+        state["primaryEngine"] = stubEngine("", 0.0, "primary")
     }
 
     @And("a Tesseract engine that returns {string}")
@@ -72,7 +40,7 @@ class OcrPipelineSteps {
     @When("the OcrPipeline processes the image")
     fun theOcrPipelineProcessesTheImage() {
         val engines = listOfNotNull(
-            state["llmEngine"] as? OcrEngine,
+            state["primaryEngine"] as? OcrEngine,
             state["tesseractEngine"] as? OcrEngine
         )
         val pipeline = OcrPipeline(engines)
@@ -83,6 +51,12 @@ class OcrPipelineSteps {
     fun theResultTextIs(expected: String) {
         val result = state["result"] as OcrResult
         assertEquals(expected, result.structuredText)
+    }
+
+    @And("the result model is {string}")
+    fun theResultModelIs(model: String) {
+        val result = state["result"] as OcrResult
+        assertEquals(model, result.model)
     }
 
     @And("the result model is tesseract")

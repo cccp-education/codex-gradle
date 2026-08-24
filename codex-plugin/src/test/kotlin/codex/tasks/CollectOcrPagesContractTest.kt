@@ -60,10 +60,7 @@ class CollectOcrPagesContractTest {
         task.inputDir.set(imagesDir)
         task.outputDir.set(outputDir)
         // Force both OCR engines to fail so we get the fallback "[page vide ou OCR échec]"
-        // text — avoids any network call in the test (no Ollama, no Tesseract binary).
-        task.ollamaHost.set("localhost")
-        task.ollamaPort.set("1") // closed port → immediate connection refused
-        task.model.set("gpt-oss:120b-cloud")
+        // text — avoids any network call in the test (no AI engine injected, no Tesseract binary).
         task.language.set("fr")
 
         task.collectOcr()
@@ -107,9 +104,6 @@ class CollectOcrPagesContractTest {
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         task.inputDir.set(imagesDir)
         task.outputDir.set(outputDir)
-        task.ollamaHost.set("localhost")
-        task.ollamaPort.set("1")
-        task.model.set("gpt-oss:120b-cloud")
         task.language.set("fr")
 
         task.collectOcr()
@@ -141,9 +135,6 @@ class CollectOcrPagesContractTest {
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         task.inputDir.set(emptyDir)
         task.outputDir.set(outputDir)
-        task.ollamaHost.set("localhost")
-        task.ollamaPort.set("1")
-        task.model.set("gpt-oss:120b-cloud")
         task.language.set("fr")
 
         task.collectOcr()

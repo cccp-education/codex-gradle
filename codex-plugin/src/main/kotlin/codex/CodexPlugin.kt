@@ -69,9 +69,6 @@ class CodexPlugin : Plugin<Project> {
         extension.pgvectorDatabase.convention("codex")
         extension.pgvectorUser.convention("codex")
         extension.pgvectorPassword.convention("codex")
-        extension.ollamaHost.convention("localhost")
-        extension.ollamaPort.convention("11437")
-        extension.ollamaModel.convention("gpt-oss:120b-cloud")
         extension.ocrLanguage.convention("fr")
         extension.licenceRouting.convention(false)
 
@@ -222,10 +219,7 @@ class CodexPlugin : Plugin<Project> {
             CollectOcrTask::class.java
         ) {
             it.group = "collect"
-            it.description = "OCR pipeline (LLM Ollama → Tesseract fallback) sur un dossier d'images → AsciiDoc pages (consumed by document-gradle DOC-11)"
-            it.ollamaHost.convention(extension.ollamaHost)
-            it.ollamaPort.convention(extension.ollamaPort)
-            it.model.convention(extension.ollamaModel)
+            it.description = "OCR pipeline (AI engine → Tesseract fallback) sur un dossier d'images → AsciiDoc pages (consumed by document-gradle DOC-11)"
             it.language.convention(extension.ocrLanguage)
             // US-CDX-13-3 : outputDir primary output (one .adoc file per page, N2↔N2 bridge)
             it.outputDir.convention(project.layout.buildDirectory.dir("codex/ocr-pages"))

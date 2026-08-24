@@ -22,8 +22,11 @@ import java.io.File
  * no new type. The AI engine is injected by the composition root
  * (consumer); without injection the pipeline degrades to Tesseract-only.
  *
- * No class deletion happens in this US: LlmOcrEngine and its HTTP stack
- * remain until CDX-OCR-3 purge.
+ * CDX-OCR-3 (S-100) purge: the codex IA stack (`LlmOcrEngine`,
+ * `HttpOllamaChatClient`, `OllamaChatClient`, `OcrConfig`) and the
+ * inert `ollamaHost`/`ollamaPort`/`model` properties on
+ * [CollectOcrTask] / [codex.CodexExtension] have been removed. Codex
+ * no longer wires an AI engine itself — only Tesseract remains.
  */
 class CollectOcrAiEngineInjectionTest {
 

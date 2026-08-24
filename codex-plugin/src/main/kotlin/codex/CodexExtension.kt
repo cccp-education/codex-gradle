@@ -31,9 +31,6 @@ abstract class CodexExtension {
     abstract val pgvectorUser: Property<String>
     abstract val pgvectorPassword: Property<String>
 
-    abstract val ollamaHost: Property<String>
-    abstract val ollamaPort: Property<String>
-    abstract val ollamaModel: Property<String>
     abstract val ocrLanguage: Property<String>
 
     /**

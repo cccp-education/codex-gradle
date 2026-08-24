@@ -766,3 +766,37 @@ cucumberTestEpicOcr 29 PASSED, échecs préexistants vérifiés par stash.
 Tesseract reste intégralement dans codex. Zéro bump BOM, zéro secret.
 
 *Prochaine* : CDX-OCR-3 purge pile IA codex (gate levée).
+
+'''
+== Session 100 — 2026-08-24 — CDX-OCR-3 Purge pile IA codex ✅
+
+*EPIC* : CDX-OCR-BOUNDARY (US-3/4).
+*Méthode* : baby-step TDD strict RED → GREEN → REFACTOR.
+*Baseline* : 667 tests 0 FAIL (S-099) → 639 tests 0 FAIL (S-100).
+
+*Suppressions production* : `LlmOcrEngine.kt` (83 lignes),
+`HttpOllamaChatClient.kt` (99), `OllamaChatClient.kt` (25),
+`OcrConfig.kt` (77) — 284 lignes. `OllamaProbe` CONSERVÉ.
+
+*Modifications production* : `CollectOcrTask` (props
+`ollamaHost`/`ollamaPort`/`model` supprimées), `CodexExtension` (3
+properties ollama retirées), `CodexPlugin` (wiring + conventions
+ollama retirés, description tâche "AI engine → Tesseract fallback").
+
+*Suppressions tests* : 4 fichiers (21 tests pile IA).
+
+*Modifications tests* : `CollectOcrTaskTest` (2 tests fusionnés),
+`CollectOcrPagesContractTest` (setters ollama retirés),
+`CollectOcrAiEngineInjectionTest` (KDoc post-purge),
+`OcrPipelineSteps` (imports/step LlmOcrEngine retirés, step renommé),
+`ocr-pipeline.feature` (scénario LlmOcrEngine supprimé, 2 renommés).
+
+*Gate* : `check` VERT 2m20s, 639 tests 0 FAIL, Kover VERT,
+validatePlugins VERT, 6 cucumber dédiés VERTS. Zéro bump BOM, zéro
+secret, zéro régression.
+
+*Statut EPIC* : CDX-OCR-BOUNDARY 3/4 US (reste US-4 Cucumber BDD fake
+engine). Gate pour CDX-RAG-SOCLE (RAG-3/RAG-4) levée.
+
+*Prochaine* : CDX-OCR-4 Cucumber BDD fake engine + cache hit skip
+engine (Économie d'Encre).

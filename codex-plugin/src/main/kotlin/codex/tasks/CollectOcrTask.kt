@@ -43,8 +43,6 @@ import java.security.MessageDigest
  * - [inputDir] directory containing image files (.png, .jpg, .jpeg, .tif, .tiff, .bmp)
  * - [aiEngine] optional injected AI OCR port ([OcrEngine]) — see boundary rule above
  * - [language] ISO 639-1 language hint (default: fr)
- * - [ollamaHost]/[ollamaPort]/[model] legacy Ollama conventions — inert since
- *   CDX-OCR-1 (kept for backward compat until CDX-OCR-3 purge)
  *
  * Outputs:
  * - [outputDir] primary output — one `.adoc` file per page, named `NNN-<pageId>.adoc`
@@ -70,18 +68,6 @@ abstract class CollectOcrTask : DefaultTask() {
     @get:OutputFile
     @get:Optional
     abstract val outputFile: RegularFileProperty
-
-    @get:Input
-    @get:Optional
-    abstract val ollamaHost: Property<String>
-
-    @get:Input
-    @get:Optional
-    abstract val ollamaPort: Property<String>
-
-    @get:Input
-    @get:Optional
-    abstract val model: Property<String>
 
     @get:Input
     @get:Optional
