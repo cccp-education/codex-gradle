@@ -2739,3 +2739,79 @@ CDX-OCR-4 (Cucumber BDD fake engine) — scénarios `ocr-pipeline.feature`
 Tesseract-only ; cache hit skip engine via counting engine), runner
 dédié `CodexOcrCucumberRunner` (pattern S-082, 6e runner codex) +
 tâche `cucumberTestOcr`. EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4 US.
+
+'''
+== Session 101 — CDX-OCR-4 Cucumber BDD (EPIC CDX-OCR-BOUNDARY clôture)
+
+*Date* : 2026-08-24
+*Type* : dev (BDD)
+*Score* : 9/10
+
+=== A. Mission
+
+Clôturer l'EPIC CDX-OCR-BOUNDARY (4/4 US) avec le dernier US —
+CDX-OCR-4 : Cucumber BDD `ocr-pipeline.feature` étendu avec 3 scénarios
+`@ocr-boundary` (fake AI engine succès direct + degraded Tesseract-only +
+cache hit skip engine — Économie d'Encre), runner dédié
+`CodexOcrCucumberRunner` (pattern S-082, 7e runner codex) + tâche
+`cucumberTestOcr` câblée `build.gradle.kts`.
+
+=== B. Baby-step BDD strict — RED → GREEN → REFACTOR
+
+RED : 3 scénarios `@ocr-boundary` ajoutés. `OcrBoundarySteps.kt` créé
+avec counting engines (`AtomicInteger`), in-memory `CacheStorage`,
+préfixe "boundary" anti-collision S-088. `CodexOcrCucumberRunner.kt`
+créé (7e runner). Tâche `cucumberTestOcr` câblée.
+
+1er run : compilation fail — `cache.lookup` retourne `OcrResult?`,
+`state["cacheResult"]` est `MutableMap<String, Any>` non-nullable.
+Corrigé : smart cast `if (cached != null)`.
+
+2e run : 6 failures — `DuplicateStepDefinitionException` sur
+`the result text is` / `the result model is` (déjà dans
+`OcrPipelineSteps`). Corrigé : préfixe "boundary" appliqué.
+
+3e run : 1 failure — `NullPointerException` scénario 2 (state isolé
+entre `OcrPipelineSteps` et `OcrBoundarySteps`). Corrigé : step dédié
+`a boundary Tesseract engine that returns`.
+
+GREEN : `cucumberTestOcr` BUILD SUCCESSFUL — 3/3 scénarios PASSED
+(7 non-`@ocr-boundary` skipped par filtre).
+
+REFACTOR : `./gradlew check` BUILD SUCCESSFUL 4m37s — 775 tests 0
+FAIL. Kover VERT, validatePlugins VERT. Zéro production modifié — pure
+BDD.
+
+=== C. Fichiers créés
+
+. `src/test/kotlin/codex/bdd/OcrBoundarySteps.kt` (152 lignes) —
+  steps dédiés `@ocr-boundary` (counting engines via `AtomicInteger`,
+  in-memory `CacheStorage`, préfixe "boundary" anti-collision S-088).
+. `src/test/kotlin/codex/bdd/CodexOcrCucumberRunner.kt` (45 lignes) —
+  7e runner cucumber codex (pattern S-082, filtre `@ocr-boundary`).
+
+=== D. Fichiers modifiés
+
+. `src/test/resources/features/ocr-pipeline.feature` — +21 lignes
+  (3 scénarios `@ocr-boundary`).
+. `build.gradle.kts` — +22 lignes (tâche `cucumberTestOcr`).
+
+=== E. Métriques
+
+. Baseline S-100 : 639 tests 0 FAIL.
+. Post-session : `check` VERT 4m37s, 775 tests 0 FAIL.
+. Zéro production modifié — pure BDD.
+. Zéro bump BOM, zéro secret, zéro régression.
+
+=== F. EPIC CDX-OCR-BOUNDARY — TERMINÉ 4/4 US
+
+. CDX-OCR-0 ✅ S-096 (cadrage)
+. CDX-OCR-1 ✅ S-098 (port injection)
+. CDX-OCR-2 ✅ S-099 (VisionOcrEngineAdapter codebase)
+. CDX-OCR-3 ✅ S-100 (purge pile IA)
+. CDX-OCR-4 ✅ S-101 (Cucumber BDD)
+
+=== G. Prochaine session
+
+EPIC CDX-RAG-SOCLE RAG-1 (domaine `codebase.store` + `RagVectorStore`
+migré verbatim, cross-borough Queens). Gate levée.

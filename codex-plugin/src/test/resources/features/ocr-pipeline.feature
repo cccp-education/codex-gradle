@@ -47,3 +47,30 @@ Feature: OCR pipeline (CDX-13)
     Given an empty image directory
     When the collectOcr task writes pages to outputDir
     Then the outputDir contains 0 adoc files
+
+  # ── CDX-OCR-4 — Boundary BDD: AI injection, degraded, cache hit (Économie d'Encre) ──
+
+  @ocr-boundary
+  Scenario: Injected AI engine succeeds directly without calling Tesseract
+    Given an AI engine that returns "ai extracted text" with confidence 0.9
+    And a counting Tesseract engine that returns "tesseract fallback text"
+    When the OcrPipeline processes the image with both engines
+    Then the boundary result text is "ai extracted text"
+    And the boundary result model is "ai"
+    And the counting Tesseract engine was called 0 times
+
+  @ocr-boundary
+  Scenario: Degraded Tesseract-only mode when no AI engine is injected
+    Given no AI engine is injected
+    And a boundary Tesseract engine that returns "tesseract degraded text"
+    When the OcrPipeline processes the image with Tesseract only
+    Then the boundary result text is "tesseract degraded text"
+    And the boundary result model is "tesseract"
+
+  @ocr-boundary
+  Scenario: Cache hit skips the OCR engine (Economie d'Encre)
+    Given an OCR cache pre-populated for page "page-1" with text "cached text"
+    And a counting OCR engine that returns "fresh ai text" with confidence 0.9
+    When the pipeline checks the cache for page "page-1"
+    Then the cache returns "cached text"
+    And the counting OCR engine was called 0 times

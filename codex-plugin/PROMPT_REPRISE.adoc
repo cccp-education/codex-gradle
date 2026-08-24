@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 101
-:session: 101
+= PROMPT_REPRISE — Codex — Session 102
+:session: 102
 :date: 2026-08-24
 :status: PRET
 :max-lines: 50
@@ -9,51 +9,49 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew test             # 639/639 PASS (baseline S-100 inchangée)
+./gradlew test             # baseline préservée (0 FAIL)
 ----
 
-== Session 100 terminée — CDX-OCR-3 ✅ (purge pile IA codex)
+== Session 101 terminée — CDX-OCR-4 ✅ (EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4)
 
-. Suppression production : `LlmOcrEngine` (83 lignes),
-  `HttpOllamaChatClient` (99), `OllamaChatClient` (25), `OcrConfig`
-  (77) — 284 lignes. `OllamaProbe` CONSERVÉ (tests intégration).
-. `CollectOcrTask` : props `ollamaHost`/`ollamaPort`/`model`
-  supprimées. `CodexExtension` : `ollamaHost`/`ollamaPort`/
-  `ollamaModel` supprimées (3 properties). `CodexPlugin` : wiring
-  ollama retiré, description tâche "AI engine → Tesseract fallback".
-. Tests : 4 fichiers supprimés (21 tests pile IA),
-  `CollectOcrTaskTest`/`CollectOcrPagesContractTest` mis à jour,
-  `OcrPipelineSteps` nettoyé (imports LlmOcrEngine/OcrConfig/
-  OllamaChatClient retirés, step `the LlmOcrEngine processes the
-  image` supprimé, step `an LLM engine that returns empty text` →
-  `a primary engine that returns empty text`). Feature
-  `ocr-pipeline.feature` : scénario LlmOcrEngine supprimé, 2
-  scénarios renommés.
-. `check` VERT 2m20s — 639 tests 0 FAIL (baseline 667 → -28).
-  Cucumber dédiés VERTS. Zéro bump BOM, zéro secret.
+. 3 scénarios `@ocr-boundary` ajoutés à `ocr-pipeline.feature` :
+  fake AI engine succès direct (counting Tesseract 0 calls),
+  degraded Tesseract-only sans injection, cache hit skip engine
+  (Économie d'Encre — counting OCR engine 0 calls).
+. `OcrBoundarySteps.kt` créé (152 lignes) — counting engines via
+  `AtomicInteger`, in-memory `CacheStorage`, préfixe "boundary"
+  anti-collision S-088 (DuplicateStepDefinition avec `OcrPipelineSteps`).
+. `CodexOcrCucumberRunner.kt` créé (7e runner codex, pattern S-082).
+  Tâche `cucumberTestOcr` câblée `build.gradle.kts`.
+. `check` VERT 4m37s — 775 tests 0 FAIL. Zéro production modifié
+  (pure BDD). Zéro bump BOM, zéro secret.
 
-== Prochaine session — 101 : CDX-OCR-4 (Cucumber BDD fake engine)
+== Prochaine session — 102 : EPIC CDX-RAG-SOCLE (RAG-1)
 
-*Baby-step BDD strict* :
-. Scénarios `ocr-pipeline.feature` étendus : fake AI engine injecté
-  dans `OcrPipeline` → succès direct ; degraded Tesseract-only sans
-  injection ; cache hit skip engine (Économie d'Encre — le moteur
-  n'est pas appelé si cache hit).
-. Runner dédié `CodexOcrCucumberRunner` (pattern S-082, 6e runner
-  codex) + tâche `cucumberTestOcr` câblée `build.gradle.kts`.
-. Steps `OcrPipelineSteps` étendus (fake AI engine + cache hit
-  assertion via counting engine).
-. `check` VERT codex. EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4 US.
+*Gate levée* : OCR-1/2/3/4 tous ✅. RAG-3/RAG-4 débloqués.
 
-*Ensuite* (gate levée) : EPIC CDX-RAG-SOCLE — RAG-1 (domaine
-`codebase.store` + `RagVectorStore` migré verbatim) → RAG-2 (bascule
-interne 6 call sites) → RAG-3 (codex délègue + suppression
-`CodexVectorStore`/`IngestStatements`/`IngestIndexing`) → RAG-4
-(codebase retrait `libs.codex.plugin`) → RAG-5 (Cucumber BDD).
+*Baby-step TDD strict* (cross-borough Queens/codebase) :
+. RAG-1 : domaine `codebase.store` côté codebase — `RagVectorStore`
+  migré verbatim depuis `codex.store.CodexVectorStore` +
+  `StoreStatements` (SQL migrent avec le store) + characterization
+  tests (mirror tests codex). ~8 unit. Tables pgvector INCHANGÉES
+  (`codex_documents`/`codex_chunks` — zéro re-vectorisation, Loi
+  Économie d'Encre).
+. RAG-2 : bascule interne codebase — 6 call sites
+  `CodexVectorStore` → `RagVectorStore` (API identique
+  `searchBlocking`). Gate non-régression.
+. RAG-3 : codex — `implementation(libs.codebase.plugin)` ajoutée ;
+  `CodexCompositeContextTask`/`CodexIngestTask`/`CodexRetrieveTask`
+  délèguent au socle ; suppression `codex.store.CodexVectorStore` +
+  `IngestStatements` + `IngestIndexing` ; KDoc profile actualisé.
+. RAG-4 : codebase — retrait `implementation(libs.codex.plugin)`
+  (`build.gradle.kts:49`). `rg "import codex\."` = zéro résultat.
+  L'inversion N1→N2 est morte.
+. RAG-5 : Cucumber BDD — scénarios composite context canal Docs +
+  retrieval koog sur store socle (fake in-memory). Pure BDD.
 
 == References
 
-- `.agents/sessions/100-cdx-ocr-3-purge-pile-ia-codex.adoc`
-- `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` (US-4)
-- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (gate OCR-1/2 levée, RAG-1→5)
-- `BACKLOG.adoc` § EPIC CDX-OCR-BOUNDARY + § EPIC CDX-RAG-SOCLE
+- `.agents/sessions/101-cdx-ocr-4-cucumber-bdd-boundary.adoc`
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (RAG-1→5, gate levée)
+- `BACKLOG.adoc` § EPIC CDX-RAG-SOCLE

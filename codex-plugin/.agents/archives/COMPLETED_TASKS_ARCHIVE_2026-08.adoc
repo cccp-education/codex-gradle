@@ -800,3 +800,31 @@ engine). Gate pour CDX-RAG-SOCLE (RAG-3/RAG-4) levée.
 
 *Prochaine* : CDX-OCR-4 Cucumber BDD fake engine + cache hit skip
 engine (Économie d'Encre).
+
+'''
+== Session 101 (2026-08-24) — CDX-OCR-4 Cucumber BDD (EPIC clôture)
+
+=== US CDX-OCR-4 — Cucumber BDD `@ocr-boundary` (TERMINÉ)
+
+* *Valeur* : Clôturer l'EPIC CDX-OCR-BOUNDARY (4/4 US) avec le dernier
+  US — Cucumber BDD validant les 3 contrats boundary : (1) AI engine
+  injecté réussit sans appeler Tesseract (counting engine prouve 0
+  calls), (2) mode dégradé Tesseract-only sans injection, (3) cache
+  hit skip engine (Économie d'Encre — LLM metered non ré-invoqué).
+* *Implémentation* :
+  - 3 scénarios `@ocr-boundary` ajoutés à `ocr-pipeline.feature`
+  - `OcrBoundarySteps.kt` créé (152 lignes — counting engines via
+    `AtomicInteger`, in-memory `CacheStorage`, préfixe "boundary"
+    anti-collision S-088 DuplicateStepDefinition avec `OcrPipelineSteps`)
+  - `CodexOcrCucumberRunner.kt` créé (7e runner codex, pattern S-082)
+  - Tâche `cucumberTestOcr` câblée `build.gradle.kts`
+* *Baby-step BDD strict* : RED (3 iterations — nullable cast,
+  DuplicateStepDefinition, NullPointerException state isolé) →
+  GREEN (3/3 scénarios PASSED) → REFACTOR (`check` VERT 4m37s).
+* *Métriques* : 775 tests 0 FAIL. Zéro production modifié — pure BDD.
+  Zéro bump BOM, zéro secret, zéro régression.
+* *Statut EPIC* : CDX-OCR-BOUNDARY TERMINÉ 4/4 US.
+  Gate pour CDX-RAG-SOCLE (RAG-1→5) entièrement levée.
+
+*Prochaine* : EPIC CDX-RAG-SOCLE RAG-1 (domaine `codebase.store` +
+`RagVectorStore` migré verbatim, cross-borough Queens).

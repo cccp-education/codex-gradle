@@ -213,12 +213,12 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | CDX-OCR-4
 | Cucumber BDD `ocr-pipeline.feature` mis à jour — fake AiOcrEngine,
   degraded Tesseract-only, cache hit skip engine.
-| 🔲 À FAIRE
+| ✅ TERMINÉ (S-101)
 | 2
 
 |===
 
-*Total* : ~9 pts (1 US restante — OCR-4)
+*Total* : ~9 pts (EPIC TERMINÉ 4/4 US)
 
 '''
 == 🔴 EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1) — Cadrage S-097
@@ -270,6 +270,8 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 . Gate d'ordre : CDX-OCR-1 + CDX-OCR-2 terminées avant RAG-3/RAG-4.
   *MAJ S-099* : gate LEVÉE (OCR-1 ✅ S-098, OCR-2 ✅ S-099) — reste
   OCR-3/OCR-4 (purge codex + Cucumber) en parallèle possible de RAG-1/RAG-2.
+  *MAJ S-101* : EPIC CDX-OCR-BOUNDARY TERMINÉ 4/4 US. Gate entièrement
+  levée pour RAG-1→5.
 
 [cols="1,3,2,1", options="header"]
 |===

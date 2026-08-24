@@ -665,3 +665,24 @@ découverte cucumber. Zéro régression — tests OCR restants
 *Couverture* : Kover VERT (seuil préservé). La purge retire du code
 non-couvert par construction (pile IA sans usage production), donc la
 couverture relative augmente mécaniquement.
+
+'''
+== Session 101 — CDX-OCR-4 Cucumber BDD (EPIC CDX-OCR-BOUNDARY clôture)
+
+*Delta* : 639 → 642 tests (+3 cucumber `@ocr-boundary`). `check` VERT
+4m37s, 775 tests 0 FAIL (variations découverte cucumber incluses).
+
+[cols="2,2,2", options="header"]
+|===
+| Fichier | Tests | Statut
+| `test/kotlin/codex/bdd/OcrBoundarySteps.kt` (nouveau) | 11 step defs | ✅ PASS (counting engines `AtomicInteger`, in-memory `CacheStorage`, préfixe "boundary" anti-collision S-088)
+| `test/kotlin/codex/bdd/CodexOcrCucumberRunner.kt` (nouveau) | 1 runner suite | ✅ PASS (7e runner codex, pattern S-082, filtre `@ocr-boundary`)
+| `test/resources/features/ocr-pipeline.feature` | 10 scénarios (was 7) | ✅ PASS (3 scénarios `@ocr-boundary` ajoutés : AI injection + degraded + cache hit)
+| `build.gradle.kts` | +1 tâche `cucumberTestOcr` | ✅ PASS (pattern S-082 inline)
+|===
+
+*Couverture* : Kover VERT (seuil préservé). Zéro production modifié —
+pure BDD. Les 3 scénarios `@ocr-boundary` valident les contrats
+boundary sans modifier le code de production (counting fake engines +
+in-memory cache prouvent l'économie d'encre et la non-invocation de
+Tesseract).

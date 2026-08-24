@@ -1,0 +1,129 @@
+= Session 101 — CDX-OCR-4 Cucumber BDD (EPIC CDX-OCR-BOUNDARY clôture)
+:session: 101
+:date: 2026-08-24
+:type: dev (BDD)
+:epic: CDX-OCR-BOUNDARY
+:status: TERMINÉ
+
+== Mission
+
+Clôturer l'EPIC CDX-OCR-BOUNDARY (4/4 US) avec le dernier US —
+CDX-OCR-4 : Cucumber BDD `ocr-pipeline.feature` étendu avec 3 scénarios
+`@ocr-boundary` (fake AI engine succès direct + degraded Tesseract-only +
+cache hit skip engine — Économie d'Encre), runner dédié
+`CodexOcrCucumberRunner` (pattern S-082, 7e runner codex) + tâche
+`cucumberTestOcr` câblée `build.gradle.kts`.
+
+== Constat de départ
+
+- Baseline S-100 : 639 tests 0 FAIL (build VERT, Kover VERT).
+- `ocr-pipeline.feature` : 7 scénarios existants (fallback, all-fail,
+  pages, empty, 3 `@n2-bridge`).
+- `OcrPipeline` : fallback chain `List<OcrEngine>`, premier succès gagne.
+- `CollectOcrTask` : port `aiEngine: Property<OcrEngine>` injecté (US-1),
+  cache `OcrResultCache` (US-CDX-13-1), pile IA purgée (US-3).
+- 6 runners cucumber dédiés existants (pattern S-082).
+
+== Baby-step BDD strict — RED → GREEN → REFACTOR
+
+=== RED
+
+3 scénarios `@ocr-boundary` ajoutés à `ocr-pipeline.feature` :
+
+. *Injected AI engine succeeds directly without calling Tesseract* —
+  fake AI engine + counting Tesseract → succès direct, Tesseract 0 calls.
+. *Degraded Tesseract-only mode when no AI engine is injected* —
+  sans injection, Tesseract seul → texte Tesseract.
+. *Cache hit skips the OCR engine (Economie d'Encre)* —
+  cache pré-populé → lookup hit, counting engine 0 calls.
+
+`OcrBoundarySteps.kt` créé (steps dédiés, préfixés "boundary" pour
+éviter DuplicateStepDefinition avec `OcrPipelineSteps` — bug S-088).
+`CodexOcrCucumberRunner.kt` créé (7e runner, pattern S-082).
+`cucumberTestOcr` tâche câblée `build.gradle.kts`.
+
+1er run : compilation fail — `cache.lookup` retourne `OcrResult?`,
+`state["cacheResult"]` est `MutableMap<String, Any>` (non-nullable).
+Corrigé : smart cast `if (cached != null)` au lieu de stockage nullable.
+
+2e run : 6 failures — `DuplicateStepDefinitionException` sur
+`the result text is {string}` et `the result model is {string}`
+(déjà définis dans `OcrPipelineSteps`). Corrigé : préfixe "boundary"
+appliqué aux steps de assertion (`the boundary result text is...`).
+
+3e run : 1 failure — `NullPointerException` sur scénario 2 (degraded
+Tesseract-only). Cause : `a Tesseract engine that returns` met
+`tesseractEngine` dans le state de `OcrPipelineSteps`, mais
+`theOcrPipelineProcessesWithTesseractOnly` cherche dans le state de
+`OcrBoundarySteps` (instances séparées). Corrigé : step dédié
+`a boundary Tesseract engine that returns` créé.
+
+=== GREEN
+
+`cucumberTestOcr` BUILD SUCCESSFUL — 3/3 scénarios `@ocr-boundary`
+PASSED (7 scénarios non-`@ocr-boundary` skipped par le filtre).
+
+=== REFACTOR
+
+`./gradlew check` BUILD SUCCESSFUL en 4m37s — 775 tests, 0 failures,
+0 errors. Kover VERT, validatePlugins VERT. Non-régression confirmée.
+
+== Fichiers créés
+
+. `src/test/kotlin/codex/bdd/OcrBoundarySteps.kt` (152 lignes) —
+  steps dédiés `@ocr-boundary` (counting engines via `AtomicInteger`,
+  in-memory `CacheStorage`, préfixe "boundary" anti-collision S-088).
+. `src/test/kotlin/codex/bdd/CodexOcrCucumberRunner.kt` (45 lignes) —
+  7e runner cucumber codex (pattern S-082, filtre `@ocr-boundary`).
+
+== Fichiers modifiés
+
+. `src/test/resources/features/ocr-pipeline.feature` — +21 lignes
+  (3 scénarios `@ocr-boundary` : AI injection, degraded, cache hit).
+. `build.gradle.kts` — +22 lignes (tâche `cucumberTestOcr` pattern
+  S-082 inline, mirror `cucumberTestSessionMemory`).
+
+== Métriques
+
+. Baseline S-100 : 639 tests 0 FAIL.
+. Post-session : `check` VERT 4m37s, 775 tests 0 FAIL (dont +3 cucumber
+  `@ocr-boundary` + variations découverte).
+. Zéro production modifié — pure BDD.
+. Zéro bump BOM, zéro secret, zéro régression.
+
+== EPIC CDX-OCR-BOUNDARY — TERMINÉ 4/4 US
+
+[cols="1,3,2", options="header"]
+|===
+| US | Description | Statut
+
+| CDX-OCR-0
+| Cadrage EPIC (gouvernance pure)
+| ✅ TERMINÉ (S-096)
+
+| CDX-OCR-1
+| codex — port `OcrEngine` injection + characterization tests
+| ✅ TERMINÉ (S-098)
+
+| CDX-OCR-2
+| codebase — `VisionOcrEngineAdapter` + suppression `CodexOcrEngineAdapter`
+| ✅ TERMINÉ (S-099)
+
+| CDX-OCR-3
+| codex — purge pile IA (`LlmOcrEngine`/`HttpOllamaChatClient`/`OcrConfig`)
+| ✅ TERMINÉ (S-100)
+
+| CDX-OCR-4
+| Cucumber BDD `@ocr-boundary` — fake AI engine + degraded + cache hit
+| ✅ TERMINÉ (S-101)
+|===
+
+== Prochaine session — 102 : EPIC CDX-RAG-SOCLE
+
+Gate levée (OCR-1 ✅ S-098, OCR-2 ✅ S-099, OCR-3 ✅ S-100, OCR-4 ✅
+S-101). Démarrer RAG-1 : domaine `codebase.store` + `RagVectorStore`
+migré verbatim depuis `codex.store.CodexVectorStore` + `StoreStatements`
++ characterization tests (mirror tests codex). ~8 unit. Cross-borough
+Queens (codebase).
+
+Voir `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (RAG-1→5, ~10 pts restants).

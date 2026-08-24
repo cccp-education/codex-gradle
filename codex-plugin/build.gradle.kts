@@ -297,3 +297,28 @@ val cucumberTestSessionMemory by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── CDX-OCR-4 — Dedicated Cucumber runner for OCR boundary (pattern S-082) ─────
+// Scoped to CodexOcrCucumberRunner so only ocr-pipeline.feature @ocr-boundary
+// scenarios run, not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestOcr by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the ocr-pipeline.feature @ocr-boundary Cucumber suite (CDX-OCR-4 boundary)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexOcrCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/ocr-pipeline.feature")
+    systemProperty("cucumber.filter.tags", "@ocr-boundary and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}
