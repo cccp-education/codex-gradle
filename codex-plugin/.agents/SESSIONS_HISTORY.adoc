@@ -2853,3 +2853,41 @@ Brooklyn codex + Queens codebase).
 
 RAG-4 final (extraction `codex.ocr` en N0) OU EPIC CB-STORE-UNIFY
 (consolidation JDBC legacy).
+
+'''
+== Session 103 (2026-08-24) — Cadrage EPIC CDX-OCR-CONTRACTS
+
+=== A. Sujet
+
+EPIC CDX-OCR-CONTRACTS — extraction du port OCR `codex.ocr.{OcrEngine,
+OcrRequest,OcrResult}` en artefact N0 `ocr-contracts` MEMPHIS (9e).
+RAG-4 final gated par cette extraction.
+
+=== B. Réalisations
+
+. Cadrage EPIC (gouvernance pure, pattern S-057/S-063, zéro code).
+. Audit 6 constats : 3 types purs port OCR, Jackson helpers polluent N0,
+  deux OcrEngine coexistent, surface API codebase minimale, surface API
+  codex interne, MEMPHIS 8 artefacts pattern établi.
+. 10 décisions archi : artefact N0 `ocr-contracts` 9e MEMPHIS, package
+  `contracts.ocr`, 3 types purs sans Jackson, Jackson helpers restent
+  codex (extension functions), backward compat via typealiases, codebase
+  bascule directe 3 imports + retrait `libs.codex.plugin` = RAG-4 final,
+  publication `ocr-contracts:0.0.1` Central + bump codex 0.0.6.
+. 5 US ~7 pts (US-0 ✅, US-1→4 À FAIRE).
+. Doc `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc` créé.
+. BACKLOG/INDEX/PROMPT_REPRISE mis à jour.
+. Baseline vérifiée : build VERT, 679 tests 0 FAIL.
+
+=== C. État EPIC
+
+. CDX-OCR-CONTRACTS-0 ✅ S-103 (cadrage)
+. CDX-OCR-CONTRACTS-1 🔲 À FAIRE (MEMPHIS artefact)
+. CDX-OCR-CONTRACTS-2 🔲 À FAIRE (codex typealiases)
+. CDX-OCR-CONTRACTS-3 🔲 À FAIRE (codebase bascule + retrait dep)
+. CDX-OCR-CONTRACTS-4 🔲 À FAIRE (Cucumber BDD)
+
+=== D. Prochaine session
+
+US-1 MEMPHIS — artefact `ocr-contracts` module standalone + 3 types
+purs + ~10 unit + publication Central.

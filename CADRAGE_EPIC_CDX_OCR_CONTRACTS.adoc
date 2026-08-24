@@ -1,0 +1,212 @@
+= CADRAGE EPIC CDX-OCR-CONTRACTS — Extraction du port OCR en artefact N0
+
+:toc: macro
+:sectnums:
+:date: 2026-08-24
+:source: Session 103 (gouvernance pure, pattern S-057/S-063)
+
+toc::[]
+
+== Contexte — La dernière inversion N1→N2
+
+L'EPIC CDX-RAG-SOCLE (S-097→S-102) a migré le store vectoriel de codex
+vers `codebase.store`. L'inversion N1→N2 est morte pour le RAG — mais
+**une dépendance résiduelle subsiste** : `codebase-plugin/build.gradle.kts:55`
+garde `implementation(libs.codex.plugin)` car `VisionOcrEngineAdapter`
+(codebase, S-099) consomme les types du port OCR codex :
+
+----
+src/main/kotlin/codebase/koog/llm/adapter/VisionOcrEngineAdapter.kt:
+    import codex.ocr.OcrEngine   // fun interface
+    import codex.ocr.OcrRequest  // data class
+    import codex.ocr.OcrResult   // data class
+----
+
+L'EPIC CDX-OCR-BOUNDARY (S-096→S-101) a établi la règle : OCR logiciel
+(Tesseract) = codex, OCR assisté IA = codebase. Le port `codex.ocr.OcrEngine`
+est l'injection point qui permet à codebase de brancher sa `VisionProvider`
+IA dans le `OcrPipeline` de codex sans cycle N2↔N1. Mais ce port vit dans
+un artefact N2 (codex-plugin) — un socle N1 ne devrait pas dépendre d'un
+borough métier N2 pour un contrat partagé.
+
+Cet EPIC extrait les 3 types du port OCR en artefact N0 MEMPHIS
+`ocr-contracts` (9e artefact N0). Après migration, codebase et codex
+dépendent tous deux de N0 — la flèche N1→N2 disparaît, CDX-RAG-SOCLE
+RAG-4 est finalisé.
+
+== Audit — 6 constats
+
+[cols="1,3,3", options="header"]
+|===
+| # | Constat | Preuve
+
+| 1
+| 3 types purs constituent le port OCR cross-borough
+| `codex/ocr/OcrEngine.kt` (fun interface, 1 méthode `process(OcrRequest): OcrResult`),
+  `codex/ocr/OcrRequest.kt` (data class 4 champs + Jackson helpers),
+  `codex/ocr/OcrResult.kt` (data class 7 champs + Jackson helpers + factory `of`).
+  Aucune dépendance Gradle/AGP — types purs Kotlin.
+
+| 2
+| Jackson helpers polluent la pureté N0
+| `OcrRequest` et `OcrResult` ont des companion objects avec `fromFile`/`writeTo`
+  (ObjectMapper + KotlinModule + INDENT_OUTPUT) + `OcrResult.of` (factory pure).
+  Les helpers Jackson (`fromFile`/`writeTo`) ne sont PAS consommés par codebase —
+  seul le constructeur data class et `OcrResult.of` le sont (via
+  `VisionOcrEngineAdapter`). Les helpers sont utilisés uniquement en interne codex
+  (tests + `DiskCacheStorage`).
+
+| 3
+| Deux interfaces `OcrEngine` coexistent — confusion nominative
+| `codex.ocr.OcrEngine` (fun interface, `process(OcrRequest): OcrResult` — port
+  cross-borough) VS `codebase.ocr.OcrEngine` (fun interface,
+  `process(input: String, language, model, maxTokens): String` — interne
+  codebase pour `OcrTask` AI-only). Signatures totalement différentes, noms
+  identiques. L'extraction en `contracts.ocr.OcrEngine` lève l'ambiguïté.
+
+| 4
+| Surface API consommée par codebase : minimale
+| `VisionOcrEngineAdapter` (1 fichier prod + 1 test) — implémente
+  `OcrEngine`, construit `OcrRequest` (lire fields), construit `OcrResult`
+  (constructor). N'utilise PAS `fromFile`/`writeTo`/`of`. Migration
+  mécanique : 3 imports à changer.
+
+| 5
+| Surface API consommée par codex : interne
+| `CollectOcrTask` (9 imports `codex.ocr.*`), `OcrPipeline` (même package),
+  `TesseractOcrEngine` (même package), `DiskCacheStorage` (même package),
+  `OcrResultCache` (même package), tests (3 fichiers). Tous dans le même
+  package `codex.ocr` — aucun import explicite needed sauf `CollectOcrTask`.
+
+| 6
+| MEMPHIS a déjà 8 artefacts N0 — pattern établi
+| `agent-contracts`, `codebase-contracts`, `vibecoding-contracts`,
+  `llm-pool-contracts`, `pipeline-contracts`, `i18n-contracts`,
+  `opencode-session-contracts`, `runtime-contracts`. Tous sont des
+  libraries pures Kotlin (stdlib + au plus 1-2 contrats inter-N0).
+  `ocr-contracts` serait le 9e — pattern `runtime-contracts` (build.gradle.kts
+  standalone, `java-library` + `maven-publish` + signing, nmcp).
+|===
+
+== Décisions architecturales (cadrage S-103)
+
+. *EPIC cross-borough* Brooklyn (codex) + Queens (codebase) + MEMPHIS (N0).
+  Priorité P1. Exécution *après* CDX-RAG-SOCLE RAG-2/3/5 (✅ S-102) — c'est
+  la dernière US (RAG-4 final).
+
+. *Nouvel artefact N0 `ocr-contracts`* côté MEMPHIS — 9e artefact. Package
+  `contracts.ocr`. Contient les 3 types purs :
+  ** `OcrEngine` — fun interface `process(request: OcrRequest): OcrResult`
+  ** `OcrRequest` — data class pure (4 champs, sans Jackson helpers)
+  ** `OcrResult` — data class pure (7 champs + factory `of` companion, sans
+     Jackson helpers)
+
+. *Jackson helpers restent côté codex* — `fromFile`/`writeTo` sont des
+  utilitaires de sérialisation utilisés uniquement en interne codex
+  (`DiskCacheStorage`, tests). Ils deviennent des extension functions dans
+  `codex.ocr.OcrRequestJson` / `codex.ocr.OcrResultJson` (pattern : le
+  contrat est pur N0, l'implémentation utilitaire reste N2).
+
+. *Backward compat via typealiases* — codex garde `codex.ocr.OcrEngine`/
+  `OcrRequest`/`OcrResult` comme `typealias` vers `contracts.ocr.*`. Les
+  imports `codex.ocr.*` existants (CollectOcrTask, OcrPipeline, tests)
+  résolvent transparentment. Zéro modification de code consommateur codex
+  (sauf ajout dep `ocr-contracts`). La factory `OcrResult.of` reste
+  accessible via le typealias (companion object resolution Kotlin).
+
+. *codebase bascule directe* — `VisionOcrEngineAdapter` + test : 3 imports
+  `codex.ocr.*` → `contracts.ocr.*`. Retrait `implementation(libs.codex.plugin)`
+  de `build.gradle.kts:55`. Vérification `rg "import codex\."` = zéro.
+
+. *Tables pgvector INCHANGÉES* — zéro impact données. Les types OCR ne
+  touchent pas au schéma.
+
+. *Publication MEMPHIS* — `ocr-contracts:0.0.1` publié Maven Central (nmcp,
+  pattern `runtime-contracts`). Bump BEMPHIS BOM constraint. codex ajoute
+  `implementation(libs.ocr.contracts)` (ou via BOM).
+
+. *Bump codex-plugin* — après migration, codex-plugin 0.0.5 → 0.0.6
+  (nouvelle dep `ocr-contracts`, typealiases). Publication Maven Central
+  (PUB-3.12 futur).
+
+. *English only*, baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR,
+  3 niveaux (unit → functional → Cucumber).
+
+. *Non-régression runner-gradle (N3)* — zéro impact (contrats N0 stables,
+  codex-plugin API publique préservée via typealiases).
+
+== Découpage US (~7 pts)
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-OCR-CONTRACTS-0
+| Cadrage EPIC (gouvernance pure, zéro code — cette session)
+| ✅ TERMINÉ (S-103)
+| 1
+
+| CDX-OCR-CONTRACTS-1
+| *MEMPHIS — artefact `ocr-contracts`* : module standalone pattern
+  `runtime-contracts` (settings.gradle.kts + build.gradle.kts + gradlew +
+  libs.versions.toml). 3 types purs package `contracts.ocr` :
+  `OcrEngine` fun interface, `OcrRequest` data class (4 champs, sans
+  Jackson), `OcrResult` data class (7 champs + `of` companion factory).
+  ~10 unit (mirror `OcrRequestTest`/`OcrResultTest` sans Jackson).
+  Publication `ocr-contracts:0.0.1` Maven Central (nmcp). Bump BOM
+  constraint.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-CONTRACTS-2
+| *codex — typealiases + extension functions* : dep `ocr-contracts` ajoutée.
+  `codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` deviennent `typealias`
+  vers `contracts.ocr.*`. Jackson helpers `fromFile`/`writeTo` extraits en
+  extension functions (`OcrRequestJson.kt`/`OcrResultJson.kt`). Tests
+  existants inchangés (typealias transparent). `check` VERT. Bump
+  codex-plugin 0.0.5 → 0.0.6.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-CONTRACTS-3
+| *codebase — bascule imports + retrait dépendance* :
+  `VisionOcrEngineAdapter` + `VisionOcrEngineAdapterTest` : 3 imports
+  `codex.ocr.*` → `contracts.ocr.*` (via dep `ocr-contracts` ou BOM).
+  Retrait `implementation(libs.codex.plugin)` de `build.gradle.kts:55`.
+  Vérification `rg "import codex\."` = zéro. `check` VERT. **RAG-4 final —
+  l'inversion N1→N2 est totalement morte.**
+| 🔲 À FAIRE
+| 1
+
+| CDX-OCR-CONTRACTS-4
+| *Cucumber BDD* — scénarios boundary OCR sur port N0 (fake AI engine +
+  degraded Tesseract + cache hit). Validation end-to-end du contrat N0.
+  Pure BDD, zéro prod modifié. Clôture EPIC + RAG-4 final.
+| 🔲 À FAIRE
+| 1
+
+|===
+
+*Total* : ~7 pts (5 US)
+
+== Ordre d'exécution (baby-step)
+
+. CDX-OCR-CONTRACTS-0 → 1 (MEMPHIS socle pur)
+. CDX-OCR-CONTRACTS-2 (codex typealiases + extension functions)
+. CDX-OCR-CONTRACTS-3 (codebase bascule + retrait dep — **RAG-4 final**)
+. CDX-OCR-CONTRACTS-4 (Cucumber BDD — clôture EPIC)
+
+== Gates et risques
+
+* *Companion object via typealias* : vérifier que `OcrResult.of(...)`
+  résout à travers `typealias OcrResult = contracts.ocr.OcrResult`. Si non,
+  ajouter une extension `fun OcrResult.Companion.of(...)` ou un wrapper
+  companion dans codex. (Test baby-step US-2 levera l'incertitude.)
+* *Cycle N0↔N0* : `ocr-contracts` ne dépend d'aucun autre artefact N0
+  (types purs, zéro dep inter-N0). Pas de cycle possible.
+* *Publication ordre DAG* : `ocr-contracts:0.0.1` doit être sur Central
+  avant bump codex 0.0.6 et retrait `libs.codex.plugin` codebase.
+* *Backward compat externe* : codex-plugin 0.0.5 déjà publié Central. Les
+  typealiases préservent la compatibilité source Kotlin. Un consommateur
+  Java ne serait pas compatible (typealiases sont erased) — mais il n'y a
+  aucun consommateur Java externe. Bump 0.0.6 signale le changement.

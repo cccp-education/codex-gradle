@@ -1,0 +1,85 @@
+= Session 103 — Cadrage EPIC CDX-OCR-CONTRACTS
+:session: 103
+:date: 2026-08-24
+:type: governance
+:epic: CDX-OCR-CONTRACTS
+:status: TERMINÉ
+:pattern: S-057/S-063 (gouvernance pure, zéro code)
+
+== Sujet
+
+Cadrage EPIC CDX-OCR-CONTRACTS — extraction du port OCR
+`codex.ocr.{OcrEngine, OcrRequest, OcrResult}` en artefact N0
+`ocr-contracts` (9e MEMPHIS). RAG-4 final gated par cette extraction.
+
+== Contexte
+
+Session 102 a terminé EPIC CDX-RAG-SOCLE RAG-2/3/5 + RAG-4 partiel.
+`libs.codex.plugin` conservé côté codebase car `VisionOcrEngineAdapter`
+(S-099) consomme les types du port OCR codex. L'inversion N1→N2 n'est
+pas totalement morte — cet EPIC l'élimine.
+
+== Audit (6 constats)
+
+. 3 types purs constituent le port OCR cross-borough (`OcrEngine` fun
+  interface, `OcrRequest` data class 4 champs, `OcrResult` data class 7
+  champs). Aucune dépendance Gradle/AGP.
+. Jackson helpers (`fromFile`/`writeTo`) polluent la pureté N0 —
+  utilisés uniquement en interne codex (DiskCacheStorage, tests), non
+  consommés par codebase.
+. Deux interfaces `OcrEngine` coexistent — `codex.ocr.OcrEngine`
+  (`process(OcrRequest): OcrResult`) VS `codebase.ocr.OcrEngine`
+  (`process(String, language, model, maxTokens): String`). Signatures
+  différentes, noms identiques.
+. Surface API consommée par codebase : minimale — `VisionOcrEngineAdapter`
+  (1 fichier prod + 1 test, 3 imports, constructor + fields only).
+. Surface API consommée par codex : interne (même package, 9 imports
+  CollectOcrTask, tests).
+. MEMPHIS a déjà 8 artefacts N0 — pattern `runtime-contracts` établi.
+
+== Décisions architecturales (10)
+
+. EPIC cross-borough MEMPHIS (N0) + Brooklyn (codex N2) + Queens
+  (codebase N1). Priorité P1.
+. Nouvel artefact N0 `ocr-contracts` (9e MEMPHIS) — package
+  `contracts.ocr`. 3 types purs sans Jackson helpers.
+. Jackson helpers restent côté codex (extension functions
+  `OcrRequestJson`/`OcrResultJson`).
+. Backward compat via typealiases — `codex.ocr.OcrEngine`/
+  `OcrRequest`/`OcrResult` → `contracts.ocr.*`. Imports existants
+  résolvent transparentment.
+. codebase bascule directe — 3 imports `codex.ocr.*` → `contracts.ocr.*`
+  + retrait `libs.codex.plugin`.
+. Publication `ocr-contracts:0.0.1` Central (nmcp) + BOM constraint.
+. Bump codex-plugin 0.0.5 → 0.0.6 (nouvelle dep, typealiases).
+. Tables pgvector INCHANGÉES — zéro impact données.
+. English only, baby-step DDD/TDD/BDD strict, 3 niveaux.
+. Non-régression runner-gradle N3 (contrats N0 stables, API préservée).
+
+== Découpage US (5 US ~7 pts)
+
+. CDX-OCR-CONTRACTS-0 ✅ TERMINÉ (S-103) — cadrage (cette session)
+. CDX-OCR-CONTRACTS-1 🔲 — MEMPHIS artefact `ocr-contracts` + 3 types
+  purs + ~10 unit + publication Central
+. CDX-OCR-CONTRACTS-2 🔲 — codex typealiases + extension functions +
+  bump 0.0.6
+. CDX-OCR-CONTRACTS-3 🔲 — codebase bascule imports + retrait
+  `libs.codex.plugin` (**RAG-4 final**)
+. CDX-OCR-CONTRACTS-4 🔲 — Cucumber BDD + clôture EPIC
+
+== Livrables
+
+. `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc` créé (192 lignes)
+. `BACKLOG.adoc` — section EPIC CDX-OCR-CONTRACTS ajoutée
+. `.agents/INDEX.adoc` — session 103, roadmap, prochaine session
+. `PROMPT_REPRISE.adoc` — session 104 (US-1 MEMPHIS)
+. `.agents/SESSIONS_HISTORY.adoc` — session 103 ajoutée
+. Zéro code modifié — gouvernance pure
+
+== Vérifications
+
+. `./gradlew build -x test` : BUILD SUCCESSFUL 1m16s
+. Baseline : 679 tests 0 FAIL (préservée)
+. `rg "import codex\."` côté codebase : 2 fichiers (1 prod + 1 test
+  VisionOcrEngineAdapter) — confirmera zéro après US-3
+. Zéro secret, zéro bump BOM, zéro régression

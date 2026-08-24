@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-24 (session 102 — RAG-2/3/5 TERMINÉ, RAG-4 partiel gate OCR port, EPIC CDX-RAG-SOCLE 5/6 US ✅)_
+_Dernière mise à jour : 2026-08-24 (session 103 — cadrage EPIC CDX-OCR-CONTRACTS, RAG-4 final gated par extraction OCR port N0, EPIC CDX-RAG-SOCLE 5/6 US ✅ + RAG-4 partiel)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -690,6 +690,83 @@ des éventuels consommateurs résiduels vers `RagVectorStore`.
 |===
 
 *Total* : ~6 pts (4 US — gate : CDX-RAG-SOCLE RAG-1→4 terminées).
+
+'''
+== 🔴 EPIC CDX-OCR-CONTRACTS — Extraction du port OCR en artefact N0 `ocr-contracts` — Cadrage S-103
+
+_Source_ : décision S-102 (RAG-4 partiel — `libs.codex.plugin` conservé
+pour port OCR `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` consommés par
+`VisionOcrEngineAdapter` codebase).
+_Doc cadrage_ : `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`.
+_Pattern_ : gouvernance pure S-057/S-063 — zéro code modifié.
+_Portée_ : cross-borough MEMPHIS (N0) + Brooklyn (codex N2) + Queens (codebase N1).
+
+=== Constats (audit S-103)
+
+. 3 types purs constituent le port OCR cross-borough (`OcrEngine` fun
+  interface, `OcrRequest` data class, `OcrResult` data class) — aucune
+  dépendance Gradle/AGP.
+. Jackson helpers (`fromFile`/`writeTo`) polluent la pureté N0 — utilisés
+  uniquement en interne codex (DiskCacheStorage, tests), non consommés
+  par codebase.
+. Deux interfaces `OcrEngine` coexistent (codex.ocr vs codebase.ocr) —
+  confusion nominative, signatures différentes.
+. Surface API consommée par codebase : minimale (1 fichier prod + 1 test,
+  3 imports, constructor + fields only).
+. Surface API consommée par codex : interne (même package, 9 imports
+  CollectOcrTask, tests).
+. MEMPHIS a déjà 8 artefacts N0 — pattern établi (runtime-contracts).
+
+=== Décisions clés
+
+. Nouvel artefact N0 `ocr-contracts` (9e MEMPHIS) — package `contracts.ocr`.
+  3 types purs sans Jackson helpers.
+. Jackson helpers restent côté codex (extension functions).
+. Backward compat via typealiases (`codex.ocr.OcrEngine` →
+  `contracts.ocr.OcrEngine`).
+. codebase bascule directe (3 imports) + retrait `libs.codex.plugin`.
+. Publication `ocr-contracts:0.0.1` Central + bump codex 0.0.5 → 0.0.6.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CDX-OCR-CONTRACTS-0
+| Cadrage EPIC (gouvernance pure, zéro code)
+| ✅ TERMINÉ (S-103)
+| 1
+
+| CDX-OCR-CONTRACTS-1
+| MEMPHIS — artefact `ocr-contracts` : module standalone pattern
+  `runtime-contracts`. 3 types purs package `contracts.ocr`. ~10 unit.
+  Publication `ocr-contracts:0.0.1` Central. Bump BOM constraint.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-CONTRACTS-2
+| codex — typealiases + extension functions : dep `ocr-contracts` ajoutée.
+  `codex.ocr.*` → `typealias contracts.ocr.*`. Jackson helpers extraits
+  en extension functions. `check` VERT. Bump codex-plugin 0.0.6.
+| 🔲 À FAIRE
+| 2
+
+| CDX-OCR-CONTRACTS-3
+| codebase — bascule imports + retrait dépendance :
+  `VisionOcrEngineAdapter` + test : 3 imports → `contracts.ocr.*`.
+  Retrait `implementation(libs.codex.plugin)`. `rg "import codex\."` =
+  zéro. **RAG-4 final — l'inversion N1→N2 est totalement morte.**
+| 🔲 À FAIRE
+| 1
+
+| CDX-OCR-CONTRACTS-4
+| Cucumber BDD — scénarios boundary OCR sur port N0. Validation
+  end-to-end. Pure BDD. Clôture EPIC + RAG-4 final.
+| 🔲 À FAIRE
+| 1
+
+|===
+
+*Total* : ~7 pts (5 US — US-0 ✅, reste US-1→4)
 
 '''
 == 🟡 Vision — Codex = READ (acquisition documentaire), RAG → codebase N1

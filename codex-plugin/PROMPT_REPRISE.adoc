@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 103
-:session: 103
+= PROMPT_REPRISE — Codex — Session 104
+:session: 104
 :date: 2026-08-24
 :status: PRET
 :max-lines: 50
@@ -12,41 +12,37 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew check           # baseline preserved (0 FAIL)
 ----
 
-== Session 102 terminee — EPIC CDX-RAG-SOCLE 5/6 US
+== Session 103 terminee — Cadrage EPIC CDX-OCR-CONTRACTS
 
-. RAG-2 : 6 call sites codebase `CodexVectorStore` → `RagVectorStore`
-  (API identique, 6 fichiers). Gate non-regression codebase VERT.
-. RAG-3 : codex delegue au socle `codebase.store` — dep
-  `libs.codebase.plugin` ajoutee, 3 taches thin wrappers
-  (CodexCompositeContextTask/CodexIngestTask/CodexRetrieveTask),
-  suppression `codex.store.*` (3 prod + 3 tests mirrores),
-  `CodexRetrieveTask` refondu. Fix `pluginUnderTestMetadata`.
-. RAG-4 : PARTIEL — `codex.store.*` imports elimines (RAG inversion
-  morte), mais `libs.codex.plugin` conserve pour le port OCR
-  (`codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` consommes par
-  `VisionOcrEngineAdapter` S-099). Gate : extraction `codex.ocr` en
-  artefact N0 (EPIC futur CDX-OCR-CONTRACTS).
-. RAG-5 : Cucumber BDD `@rag-socle` 6 scenarios cote codebase +
-  `RagSocleCucumberRunner` + `StubRagStore` fake + `RagVectorStore`
-  `open` pour testabilite. 6/6 PASSED.
-. `check` VERT codex 679 tests 0 FAIL + codebase check VERT. Zero
-  bump BOM, zero secret, zero regression.
+. RAG-4 partiel S-102 : `libs.codex.plugin` conservé car
+  `VisionOcrEngineAdapter` (codebase) consomme
+  `codex.ocr.{OcrEngine,OcrRequest,OcrResult}`.
+. Cadrage EPIC CDX-OCR-CONTRACTS (gouvernance pure, zéro code) :
+  extraction 3 types en artefact N0 `ocr-contracts` (9e MEMPHIS).
+. 6 constats, 10 décisions archi (typealiases backward compat,
+  Jackson helpers restent codex, package `contracts.ocr`).
+. 5 US ~7 pts (US-0 ✅, US-1→4 À FAIRE).
+. Doc `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`.
+. Baseline vérifiée : build VERT, 679 tests 0 FAIL.
 
-== Prochaine session — 103 : RAG-4 final OU CB-STORE-UNIFY
+== Prochaine session — 104 : EPIC CDX-OCR-CONTRACTS US-1
 
-*Option A* : RAG-4 final — extraire `codex.ocr` port types
-(`OcrEngine`, `OcrRequest`, `OcrResult`) en artefact N0
-`codex-contracts` (MEMPHIS ou standalone). Retirer `libs.codex.plugin`
-de codebase apres `rg "import codex."` = zero. L'inversion N1->N2
-est totalement morte.
+*US-1 MEMPHIS* : artefact `ocr-contracts` module standalone pattern
+`runtime-contracts` (settings.gradle.kts + build.gradle.kts + gradlew
++ libs.versions.toml). 3 types purs package `contracts.ocr` :
+`OcrEngine` fun interface, `OcrRequest` data class (4 champs, sans
+Jackson), `OcrResult` data class (7 champs + `of` companion factory).
+~10 unit (mirror OcrRequestTest/OcrResultTest sans Jackson).
+Publication `ocr-contracts:0.0.1` Central (nmcp). Bump BOM constraint.
 
-*Option B* : EPIC CB-STORE-UNIFY — consolidation
-`codebase.rag.VectorStore` JDBC legacy (DROP CASCADE destructif) apres
-migration RAG-SOCLE. Gate : RAG-1→4 (RAG-4 partiel OK — le store
-RAG est migre, le JDBC legacy est independant).
+Enchaîner US-2 (codex typealiases + extension functions + bump 0.0.6)
+si temps restant.
+
+*Baby-step TDD strict* : RED → GREEN → REFACTOR, 3 niveaux
+(unit → functional → Cucumber).
 
 == References
 
-- `.agents/sessions/102-cdx-rag-socle-rag-2-3-5.adoc`
-- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` (RAG-4 gate OCR port)
-- `BACKLOG.adoc` § EPIC CDX-RAG-SOCLE + § EPIC CB-STORE-UNIFY
+- `.agents/sessions/103-cdx-ocr-contracts-cadrage.adoc`
+- `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc` (10 décisions archi)
+- `BACKLOG.adoc` § EPIC CDX-OCR-CONTRACTS
