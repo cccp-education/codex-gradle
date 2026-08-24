@@ -34,7 +34,7 @@ ocr-contracts 0.0.1 + BOM 0.0.26), publier codebase-plugin 0.0.9 (POM slim
 sans codex transitif — accord pilote), sync INDEX MEMPHIS en retard.
 
 *Option B (dev)* : EPIC CB-STORE-UNIFY cadrage (consolidation JDBC legacy
-`codebase.rag.VectorStore` — débloqué par RAG-SOCLE terminé).
+`codebase.rag.VectorStore` — débloqué par RAG-SOCLE terminé). ✅ DONE
 
 *Option C (dev codex)* : backlog P2 restants ou dogfooding collectOcr ↔
 document bookPipeline.

@@ -662,9 +662,9 @@ des éventuels consommateurs résiduels vers `RagVectorStore`.
 
 | CB-STORE-UNIFY-0
 | Cadrage EPIC (gouvernance pure) — audit consommateurs résiduels de
-  `codebase.rag.VectorStore`, mapping schéma `code-index` vs
-  `codex_documents`/`codex_chunks`, plan de migration/cleanup.
-| 🔲 À PLANIFIER
+|   `codebase.rag.VectorStore`, mapping schéma `code-index` vs
+|   `codex_documents`/`codex_chunks`, plan de migration/cleanup.
+| ✅ TERMINÉ (S-105)
 | 1
 
 | CB-STORE-UNIFY-1
