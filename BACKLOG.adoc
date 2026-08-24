@@ -284,8 +284,10 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 
 | CDX-RAG-1
 | codebase — domaine `codebase.store` : `RagVectorStore` migré verbatim +
-  `StoreStatements` + characterization tests (mirror tests codex). ~8 unit.
-| 🔲 À FAIRE
+  `StoreStatements` + `IngestIndexing` + types `RetrieveResult`/`DocumentChunk`
+  + characterization tests (mirror tests codex). 25/25 PASSED. Domaine autonome
+  (zéro import `codex.tasks.*`).
+| ✅ TERMINÉ (S-199)
 | 2
 
 | CDX-RAG-2
@@ -297,8 +299,8 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | CDX-RAG-3
 | codex — dep `libs.codebase.plugin` ajoutée ; `CodexCompositeContextTask` /
   `CodexIngestTask` / `CodexRetrieveTask` délèguent au socle ; suppression
-  `codex.store.CodexVectorStore` + `IngestStatements` + `IngestIndexing` ;
-  KDoc profile actualisé. Gate : CDX-OCR-1/2 terminées.
+  `codex.store.CodexVectorStore` + `IngestStatements` +
+  `IngestIndexing` ; KDoc profile actualisé. Gate : CDX-OCR-1 et CDX-OCR-2 terminées.
 | 🔲 À FAIRE
 | 3
 
@@ -317,7 +319,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 
 |===
 
-*Total* : ~10 pts (5 US restantes)
+*Total* : ~10 pts (2/6 US ✅ — reste 4 US ~7 pts)
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094
