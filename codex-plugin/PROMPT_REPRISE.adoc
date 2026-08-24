@@ -9,36 +9,41 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline preserved (0 FAIL)
+./gradlew check           # baseline preserved (679 tests 0 FAIL)
 ----
 
-== Session 104 terminee — CDX-OCR-CONTRACTS US-2
+== Session 104 terminee — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
 
-. US-1 MEMPHIS : artefact N0 `ocr-contracts:0.0.1` (3 types purs
-  `contracts.ocr`, 14/14 unit PASSED, publié mavenLocal).
-. US-2 codex : typealiases `codex.ocr.{OcrEngine,OcrRequest,OcrResult}`
-  → `contracts.ocr.*`. Jackson helpers extraits en top-level functions
-  (`OcrRequestJson.kt`/`OcrResultJson.kt`) — typealias ne propage pas le
-  companion object. Tests migrés. Gate VERT.
-. Bump codex-plugin 0.0.5 → 0.0.6.
-. Cross-borough : US-3 codebase livrée en parallèle S-201
-  (`libs.codex.plugin` retiré, imports basculés `contracts.ocr.*`)
-  — **RAG-4 FINAL : l'inversion N1→N2 est morte**.
+. US-1 MEMPHIS : artefact N0 `ocr-contracts:0.0.1` publié Central (bundle
+  `0d81da46`) — 3 types purs package `contracts.ocr`, 14 unit VERT.
+  BOM 0.0.26 publié (bundle `43e7da4c`, constraint ocr-contracts + codex 0.0.6).
+. US-2 codex : typealiases `codex.ocr.*` → `contracts.ocr.*` (@file:JvmName),
+  Jackson helpers extraits (`OcrRequestJson`/`OcrResultJson`), dep
+  `libs.ocr.contracts`, bump codex-plugin **0.0.6** publié Central.
+  `check` VERT 679 tests 0 FAIL (baseline préservée).
+. US-3 codebase (Queens) : imports → `contracts.ocr.*`, retrait
+  `libs.codex.plugin` — **RAG-4 FINAL, l'inversion N1→N2 est morte**.
+  Adapter 4/4 + boundary 2/2 + cucumber @ocr-contracts 5/5 PASSED.
+. US-4 : validation end-to-end par suites existantes (@ocr-boundary codex +
+  @ocr-contracts codebase) — zéro nouveau scénario (Économie d'Encre).
 
-== Prochaine session — 105 : EPIC CDX-OCR-CONTRACTS US-4
+== Prochaine session — 105 : options
 
-*US-4 Cucumber BDD* — scénarios boundary OCR sur port N0 (fake AI engine +
-degraded Tesseract + cache hit). Validation end-to-end du contrat N0.
-Pure BDD, zéro prod modifié. Clôture EPIC + RAG-4 final.
+*Option A (maintenance)* : vérifier propagation repo1 (codex 0.0.6 +
+ocr-contracts 0.0.1 + BOM 0.0.26), publier codebase-plugin 0.0.9 (POM slim
+sans codex transitif — accord pilote), sync INDEX MEMPHIS en retard.
 
-Ensuite : publication codex-plugin 0.0.6 Maven Central (PUB-3.12) +
-publication MEMPHIS ocr-contracts:0.0.1 Central + BOM 0.0.26 (accord pilote requis).
+*Option B (dev)* : EPIC CB-STORE-UNIFY cadrage (consolidation JDBC legacy
+`codebase.rag.VectorStore` — débloqué par RAG-SOCLE terminé).
 
-*Baby-step TDD strict* : RED → GREEN → REFACTOR, 3 niveaux
-(unit → functional → Cucumber).
+*Option C (dev codex)* : backlog P2 restants ou dogfooding collectOcr ↔
+document bookPipeline.
+
+*Methode* : baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux
+(unit → functional → Cucumber), English only.
 
 == References
 
-- `.agents/sessions/104-cdx-ocr-contracts-us2-typealiases.adoc`
-- `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc` (10 décisions archi)
-- BACKLOG § EPIC CDX-OCR-CONTRACTS
+- `.agents/sessions/104-cdx-ocr-contracts-n0-extraction.adoc`
+- `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`
+- `BACKLOG.adoc` § EPIC CDX-OCR-CONTRACTS (✅ TERMINÉ)

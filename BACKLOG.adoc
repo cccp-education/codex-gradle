@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-24 (session 103 — cadrage EPIC CDX-OCR-CONTRACTS, RAG-4 final gated par extraction OCR port N0, EPIC CDX-RAG-SOCLE 5/6 US ✅ + RAG-4 partiel)_
+_Dernière mise à jour : 2026-08-24 (session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US + US-0, artefact N0 ocr-contracts:0.0.1 Central + BOM 0.0.26 + codex 0.0.6 publiés, codebase retrait libs.codex.plugin — RAG-4 FINAL, inversion N1→N2 morte)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -308,11 +308,8 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 | codebase — retrait `implementation(libs.codex.plugin)`
   (`build.gradle.kts:49`) après vérification `rg "import codex\."` = zéro
   résultat. CI verte. L'inversion N1→N2 est morte.
-| 🟡 PARTIEL (S-102) — `codex.store.*` imports éliminés (RAG inversion
-  morte), mais `libs.codex.plugin` conservé pour le port OCR
-  (`codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` consommés par
-  `VisionOcrEngineAdapter` S-099). Gate : extraction `codex.ocr` en artefact
-  N0 (EPIC futur CDX-OCR-CONTRACTS).
+| ✅ TERMINÉ (S-104) — `libs.codex.plugin` retiré, imports OCR basculés sur
+  l'artefact N0 `ocr-contracts` (EPIC CDX-OCR-CONTRACTS TERMINÉ).
 | 1
 
 | CDX-RAG-5
@@ -323,7 +320,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 
 |===
 
-*Total* : ~10 pts (5/6 US ✅ — RAG-4 partiel, reste extraction OCR port)
+*Total* : ~10 pts — **EPIC TERMINÉ 6/6 US (RAG-4 final S-104)**
 
 '''
 == ✅ EPIC CDX-RC-04 — Pont RAG SessionMemoryContract (cross-borough MEMPHIS N0 → codex N2) — Cadrage S-076, TERMINÉ S-094
@@ -636,7 +633,8 @@ L'unification est un refactor sécuritaire.
 '''
 == 🟤 EPIC CB-STORE-UNIFY — Consolidation `codebase.rag.VectorStore` JDBC legacy (EPIC futur)
 
-_Statut_ : 🟡 À PLANIFIER (gated par EPIC CDX-RAG-SOCLE RAG-1→4).
+_Statut_ : 🟡 DÉBLOQUÉ (gate levée S-104 — EPIC CDX-RAG-SOCLE TERMINÉ 6/6 US,
+RAG-4 final). Prochaine session candidate : cadrage CB-STORE-UNIFY-0.
 _Source_ : décision archi S-097 (consolidation JDBC legacy HORS SCOPE
 de CDX-RAG-SOCLE, reportée à un EPIC futur dédié).
 _Pattern_ : gouvernance pure puis baby-step TDD — à cadrer.
@@ -689,10 +687,10 @@ des éventuels consommateurs résiduels vers `RagVectorStore`.
 | 1
 |===
 
-*Total* : ~6 pts (4 US — gate : CDX-RAG-SOCLE RAG-1→4 terminées).
+*Total* : ~6 pts (4 US — gate LEVÉE S-104 : CDX-RAG-SOCLE TERMINÉ).
 
 '''
-== 🔴 EPIC CDX-OCR-CONTRACTS — Extraction du port OCR en artefact N0 `ocr-contracts` — Cadrage S-103
+== ✅ EPIC CDX-OCR-CONTRACTS — Extraction du port OCR en artefact N0 `ocr-contracts` — Cadrage S-103, TERMINÉ S-104
 
 _Source_ : décision S-102 (RAG-4 partiel — `libs.codex.plugin` conservé
 pour port OCR `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` consommés par
@@ -738,35 +736,40 @@ _Portée_ : cross-borough MEMPHIS (N0) + Brooklyn (codex N2) + Queens (codebase 
 
 | CDX-OCR-CONTRACTS-1
 | MEMPHIS — artefact `ocr-contracts` : module standalone pattern
-  `runtime-contracts`. 3 types purs package `contracts.ocr`. ~10 unit.
-  Publication `ocr-contracts:0.0.1` Central. Bump BOM constraint.
-| 🔲 À FAIRE
+  `runtime-contracts`. 3 types purs package `contracts.ocr`. 14 unit VERT.
+  Publication `ocr-contracts:0.0.1` Central (bundle `0d81da46`) + BOM 0.0.26
+  Central (bundle `43e7da4c`).
+| ✅ TERMINÉ (S-104)
 | 2
 
 | CDX-OCR-CONTRACTS-2
 | codex — typealiases + extension functions : dep `ocr-contracts` ajoutée.
-  `codex.ocr.*` → `typealias contracts.ocr.*`. Jackson helpers extraits
-  en extension functions. `check` VERT. Bump codex-plugin 0.0.6.
-| 🔲 À FAIRE
+  `codex.ocr.*` → `typealias contracts.ocr.*` (@file:JvmName). Jackson helpers
+  extraits (`OcrRequestJson`/`OcrResultJson`). `check` VERT 679 tests 0 FAIL.
+  Bump codex-plugin 0.0.6 publié Central.
+| ✅ TERMINÉ (S-104)
 | 2
 
 | CDX-OCR-CONTRACTS-3
 | codebase — bascule imports + retrait dépendance :
   `VisionOcrEngineAdapter` + test : 3 imports → `contracts.ocr.*`.
-  Retrait `implementation(libs.codex.plugin)`. `rg "import codex\."` =
-  zéro. **RAG-4 final — l'inversion N1→N2 est totalement morte.**
-| 🔲 À FAIRE
+  Retrait `implementation(libs.codex.plugin)`. `grep "import codex\."` =
+  zéro. Gates : adapter 4/4 + boundary 2/2 + cucumber @ocr-contracts 5/5 PASSED.
+  **RAG-4 final — l'inversion N1→N2 est totalement morte.**
+| ✅ TERMINÉ (S-104)
 | 1
 
 | CDX-OCR-CONTRACTS-4
-| Cucumber BDD — scénarios boundary OCR sur port N0. Validation
-  end-to-end. Pure BDD. Clôture EPIC + RAG-4 final.
-| 🔲 À FAIRE
+| Validation end-to-end du contrat N0 — couverte par les suites existantes :
+  codex `@ocr-boundary` 3 scénarios via typealiases + codebase
+  `@ocr-contracts` 5 scénarios via N0 direct. Zéro nouveau scénario
+  (Économie d'Encre).
+| ✅ TERMINÉ (S-104)
 | 1
 
 |===
 
-*Total* : ~7 pts (5 US — US-0 ✅, reste US-1→4)
+*Total* : ~7 pts — **EPIC TERMINÉ 5/5 US (S-104). RAG-SOCLE clôturé (RAG-4 final).**
 
 '''
 == 🟡 Vision — Codex = READ (acquisition documentaire), RAG → codebase N1
@@ -811,11 +814,11 @@ codebase N1 — jamais directement via codex.
 
 === EPICs portant cette vision
 
-. **CDX-OCR-BOUNDARY** (S-096→S-100) : OCR software = codex / OCR IA =
+. **CDX-OCR-BOUNDARY** (S-096→S-101) : OCR software = codex / OCR IA =
   codebase. Codex ne contient plus de moteur IA, client HTTP Ollama,
-  ni config IA. 3/4 US ✅ (reste US-4 Cucumber BDD).
-. **CDX-RAG-SOCLE** (S-097, gated) : store vectoriel migre de
-  `codex.store` vers `codebase.store`. Inversion N1→N2 résolue. 1/6 US
-  ✅ (cadrage, reste RAG-1→5).
-. **CB-STORE-UNIFY** (À PLANIFIER, gated par RAG-1→4) : consolidation
+  ni config IA. ✅ TERMINÉ 4/4 US.
+. **CDX-RAG-SOCLE** (S-097→S-104) : store vectoriel migre de
+  `codex.store` vers `codebase.store`. Inversion N1→N2 morte
+  (RAG-4 final S-104 via artefact N0 `ocr-contracts`). ✅ TERMINÉ 6/6 US.
+. **CB-STORE-UNIFY** (DÉBLOQUÉ S-104) : consolidation
   `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE.

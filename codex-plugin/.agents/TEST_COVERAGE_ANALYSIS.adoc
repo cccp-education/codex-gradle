@@ -1,6 +1,26 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-08-22
-:session: 094
+:date: 2026-08-24
+:session: 104
+
+== Session 104 — EPIC CDX-OCR-CONTRACTS (679/679 PASS — baseline préservée, typealiases transparents)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+
+| `workspace-bom/ocr-contracts/src/test/kotlin/contracts/ocr/OcrEngineTest.kt` | 3 unit | ✅ PASS (fun interface lambda, process forwarding, throwing engine)
+| `workspace-bom/ocr-contracts/src/test/kotlin/contracts/ocr/OcrRequestTest.kt` | 5 unit | ✅ PASS (4 champs, prompt custom, equals contenu imageData, hashCode cohérent, toString sans raw bytes)
+| `workspace-bom/ocr-contracts/src/test/kotlin/contracts/ocr/OcrResultTest.kt` | 6 unit | ✅ PASS (7 champs, metadata default, factory `of` defaults + metadata, equals data class, equals diffère sur metadata)
+| `codex-plugin/src/test/kotlin/codex/ocr/OcrRequestTest.kt` | tests migrés | ✅ PASS — helpers companion → top-level functions (`writeOcrRequestToJsonFile`/`readOcrRequestFromJsonFile`)
+| `codex-plugin/src/test/kotlin/codex/ocr/OcrResultTest.kt` | tests migrés | ✅ PASS — idem (`writeOcrResultToJsonFile`/`readOcrResultFromJsonFile`) + roundtrip preserved
+| `codex-plugin/src/test/kotlin/codex/bdd/*` (7 cucumber dédiés) | scénarios inchangés | ✅ PASSED — typealiases transparents, zéro modification des steps/features
+|===
+
+*Point clé* : le passage par typealiases est *transparent* pour la suite de
+tests existante — zéro test modifié hors les 2 fichiers consommant les
+helpers Jackson déplacés. La baseline 679 tests 0 FAIL est préservée à
+l'identique (S-103 = S-104). Côté codebase (Queens) : adapter 4/4 +
+boundary 2/2 + cucumber @ocr-contracts 5/5 PASSED après bascule imports.
 
 == Session 094 — EPIC CDX-RC-04 Pont RAG SessionMemoryContract (+126 tests, 661/661 PASS)
 

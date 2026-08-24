@@ -1,5 +1,32 @@
 = COMPLETED_TASKS_ARCHIVE — Août 2026 — codex-gradle
 
+== Session 104 (2026-08-24) — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
+
+=== EPIC CDX-OCR-CONTRACTS — Extraction port OCR en artefact N0 (TERMINÉ)
+
+* *Valeur* : L'inversion N1→N2 est totalement morte — codebase N1 ne
+  dépend plus du borough métier codex N2. Les 3 types du port OCR
+  (`OcrEngine`, `OcrRequest`, `OcrResult`) vivent dans l'artefact N0
+  `education.cccp:ocr-contracts:0.0.1` (9e artefact MEMPHIS). EPIC
+  CDX-RAG-SOCLE clôturé (RAG-4 final).
+* *Implémentation* :
+  - US-1 MEMPHIS : module standalone `ocr-contracts` pattern
+    `runtime-contracts` (nmcp 1.5.0, java-library, signing), package
+    `contracts.ocr`, 3 types purs sans Jackson, 14 unit VERT.
+  - US-2 codex : typealiases `codex.ocr.*` → `contracts.ocr.*`
+    (@file:JvmName), factory `of` résout via companion, Jackson helpers
+    extraits `OcrRequestJson.kt`/`OcrResultJson.kt`, dep
+    `libs.ocr.contracts`, BOM 0.0.26, bump 0.0.6.
+  - US-3 codebase : imports `VisionOcrEngineAdapter` → `contracts.ocr.*`,
+    retrait `implementation(libs.codex.plugin)` + entrée catalogue.
+  - US-4 : validation end-to-end par suites existantes — zéro nouveau
+    scénario (Économie d'Encre).
+* *Publications Central* : ocr-contracts:0.0.1 (bundle `0d81da46`),
+  workspace-bom:0.0.26 (bundle `43e7da4c`), codex-plugin:0.0.6.
+* *Tests* : codex `check` VERT 679 tests 0 FAIL (baseline préservée) ;
+  codebase adapter 4/4 + boundary 2/2 + cucumber @ocr-contracts 5/5 PASSED ;
+  grep "import codex." codebase = zéro.
+
 == Session 090 (2026-08-21) — CDX-7-2 ConvertToMarkdownTaskTest chaîné
 
 === US CDX-7-2 — Tests chaînés ExtractBookStructure → ConvertToMarkdown (TERMINÉ)

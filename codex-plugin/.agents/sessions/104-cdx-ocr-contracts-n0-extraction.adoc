@@ -1,0 +1,103 @@
+= Session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
+
+_Date_ : 2026-08-24
+_Type_ : dev + publish (cross-borough MEMPHIS + Queens)
+_Statut_ : ✅ TERMINÉ
+
+== Mission
+
+PROMPT_REPRISE S-104 : US-1 MEMPHIS artefact `ocr-contracts` (+US-2 si temps).
+Exécuté : US-1 → US-2 → US-3 → US-4 — **EPIC clôturé en 1 session, RAG-4 final.**
+
+== Réalisations
+
+=== US-1 MEMPHIS — artefact N0 `ocr-contracts:0.0.1`
+
+. Module standalone pattern `runtime-contracts` (settings.gradle.kts nmcp 1.5.0 +
+  build.gradle.kts java-library/maven-publish/signing + gradlew + libs.versions.toml
+  Kotlin 2.4.10). Package `contracts.ocr`, 3 types purs sans Jackson :
+  `OcrEngine` (fun interface), `OcrRequest` (4 champs, equals/hashCode par contenu),
+  `OcrResult` (7 champs + factory `of` companion).
+. 14 unit tests (3 OcrEngineTest + 5 OcrRequestTest + 6 OcrResultTest) — VERT.
+. Publication Maven Central : bundle `0d81da46-9f15-42a1-aaf6-807934476241` (AUTOMATIC).
+. BOM bump 0.0.25 → 0.0.26 : constraint `education.cccp:ocr-contracts:0.0.1` +
+  catalogue `ocr-contracts = "0.0.1"` + library alias + constraint `codex-plugin`
+  anticipée 0.0.5 → 0.0.6. Publication Central : bundle `43e7da4c-41e0-4002-9e2c-3ffa196fe249`.
+
+=== US-2 codex — typealiases + extension functions
+
+. Dep `implementation(libs.ocr.contracts)` ajoutée (`gradle/libs.versions.toml`
+  + `build.gradle.kts`). BOM import 0.0.24 → 0.0.26.
+. `codex.ocr.OcrEngine`/`OcrRequest`/`OcrResult` convertis typealiases vers
+  `contracts.ocr.*` (@file:JvmName pour stabilité binaire). Zéro modification
+  des consommateurs (OcrPipeline/OcrBoundarySteps/tests) — typealias transparent.
+. Factory `OcrResult.of` résout via companion à travers le typealias (gate cadrage
+  confirmée : pas de wrapper nécessaire).
+. Jackson helpers extraits : `OcrRequestJson.kt` / `OcrResultJson.kt`
+  (`readOcrRequestFromJsonFile`/`writeOcrRequestToJsonFile`/
+  `readOcrResultFromJsonFile`/`writeOcrResultToJsonFile`) — le contrat N0 est pur,
+  la sérialisation reste N2. Tests mis à jour.
+. Bump `codex-plugin` 0.0.5 → 0.0.6.
+. Gate : `check` VERT 2m30s — 679 tests 0 FAIL (baseline S-103 préservée exactement),
+  Kover VERT, validatePlugins VERT, 7 cucumber dédiés VERTS.
+
+=== US-3 codebase (Queens) — bascule + retrait dépendance
+
+. `VisionOcrEngineAdapter` + test : imports `codex.ocr.*` → `contracts.ocr.*`.
+. Retrait `implementation(libs.codex.plugin)` de `codebase-plugin/build.gradle.kts`
+  + entrée catalogue supprimée. Ajout `implementation("education.cccp:ocr-contracts:0.0.1")`.
+. Vérification `grep -rn "import codex\."` codebase = **zéro**.
+. Gates : compileKotlin OK, full test 10110 tests 3 échecs préexistants documentés
+  (VersionCatalogTransitiveVersionsTest + Z-6 flaky, identiques S-099/S-102),
+  VisionOcrEngineAdapterTest 4/4 PASSED, OcrTaskAiOnlyBoundaryTest 2/2 PASSED,
+  cucumberTestOcrContracts 5/5 PASSED.
+. *RAG-4 FINAL — l'inversion N1→N2 est totalement morte* : flèche unique N2→N1
+  (codex → codebase socle RAG), contrats partagés via N0.
+
+=== US-4 — validation end-to-end contrat N0
+
+Couverte par les 2 suites existantes (zéro nouveau scénario — Économie d'Encre) :
+. codex `@ocr-boundary` 3 scénarios (fake AI engine / degraded Tesseract-only /
+  cache hit) — exécutés à travers les typealiases, PASSED dans `check`.
+. codebase `@ocr-contracts` 5 scénarios (port N0 direct, miroir métadonnées,
+  stateless réutilisable, rejet tesseract, AI-only no fallback) — PASSED.
+
+=== Publication codex-plugin 0.0.6 Maven Central
+
+`publishAggregationToCentralPortal` BUILD SUCCESSFUL (nmcp AUTOMATIC,
+même procédure PUB-3.11 S-095). Propagation repo1 à confirmer prochaine session.
+
+== Métriques
+
+|===
+| Repo | Delta | Gate
+
+| workspace-bom
+| ocr-contracts/ nouveau (untracked → commit), BOM 0.0.26, toml +3 entrées
+| build VERT 14 tests
+
+| codex-gradle
+| 3 typealiases + 2 Json helpers + dep ocr-contracts + bump 0.0.6
+| check VERT 679 tests 0 FAIL
+
+| codebase-gradle
+| 2 fichiers imports basculés, libs.codex.plugin retiré
+| adapter 4/4 + boundary 2/2 + cucumber 5/5 PASSED
+|===
+
+== Décisions notables
+
+. Typealiases avec @file:JvmName ("OcrEngineAlias" etc.) — évite collision
+  fichiers class Kotlin générés.
+. Companion `of` résout à travers typealias sans wrapper — incertitude cadrage
+  levée positivement.
+. US-4 sans nouveau scénario — suites existantes couvrent le contrat N0 des
+  deux côtés de la boundary.
+. Entrée catalogue codex `codex-plugin` conservée côté MEMPHIS (bump 0.0.6),
+  supprimée côté codebase (dépendance morte).
+
+== Reste à faire (prochaines sessions)
+
+. Confirmer propagation repo1 codex-plugin 0.0.6 + ocr-contracts 0.0.1 + BOM 0.0.26.
+. Codebase : publication 0.0.9 (POM slim sans codex transitif) — accord pilote.
+. EPIC CB-STORE-UNIFY débloqué (RAG-SOCLE entièrement terminé).

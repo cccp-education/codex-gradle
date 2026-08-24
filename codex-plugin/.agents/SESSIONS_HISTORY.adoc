@@ -3,27 +3,40 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
-== Session 104 — CDX-OCR-CONTRACTS US-2 typealiases
+== Session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
 
 *Date* : 2026-08-24
-*Type* : dev
+*Type* : dev + publish (cross-borough MEMPHIS + Queens)
 *EPIC* : CDX-OCR-CONTRACTS
-*US* : CDX-OCR-CONTRACTS-2
+*US* : US-1 → US-4 (clôture EPIC en 1 session)
 
 *A. Objectif* :
-Basculer le port OCR codex sur l'artefact N0 `ocr-contracts` (US-1 MEMPHIS
-livrée en parallèle) via typealiases backward compat.
+PROMPT_REPRISE S-104 : US-1 MEMPHIS artefact `ocr-contracts` (+US-2 si temps).
+Exécuté : US-1 → US-2 → US-3 → US-4 — EPIC clôturé, RAG-4 final.
 
 *B. Actions* :
-Typealias `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` → `contracts.ocr.*`.
-Jackson helpers extraits du companion (non propagé par typealias) en
-top-level functions `OcrRequestJson`/`OcrResultJson`. Tests migrés.
-Dep `ocr-contracts:0.0.1` + bump 0.0.5→0.0.6. Gate `codex.ocr.*` VERT.
+US-1 MEMPHIS : module standalone `ocr-contracts` (pattern runtime-contracts,
+nmcp 1.5.0), 3 types purs package `contracts.ocr` sans Jackson, 14 unit VERT,
+publication Central bundle `0d81da46` + BOM 0.0.26 Central bundle `43e7da4c`
+(constraints ocr-contracts 0.0.1 + codex anticipé 0.0.6). US-2 codex :
+typealiases `codex.ocr.*` → `contracts.ocr.*` (@file:JvmName), factory `of`
+résout via companion (gate cadrage confirmée), Jackson helpers extraits
+`OcrRequestJson`/`OcrResultJson`, dep `libs.ocr.contracts`, BOM 0.0.26,
+bump 0.0.6 publié Central. US-3 codebase : imports basculés + retrait
+`libs.codex.plugin` + entrée catalogue. US-4 : validation end-to-end par
+suites existantes (@ocr-boundary codex + @ocr-contracts codebase) — zéro
+nouveau scénario, Économie d'Encre.
 
 *C. Résultats* :
-EPIC 3/5 US (reste US-4 Cucumber BDD). Cross-borough : US-3 codebase
-livrée S-201 — RAG-4 FINAL, inversion N1→N2 morte. Zéro régression,
-zéro secret. Rapport : `.agents/sessions/104-cdx-ocr-contracts-us2-typealiases.adoc`.
+EPIC TERMINÉ 5/5 US (~7 pts). *RAG-4 FINAL — l'inversion N1→N2 est
+totalement morte* (flèche unique N2→N1). Gates : codex `check` VERT 679
+tests 0 FAIL (baseline préservée) ; codebase adapter 4/4 + boundary 2/2 +
+cucumberTestOcrContracts 5/5 PASSED (full suite 10110 tests, 3 échecs
+préexistants documentés S-099/S-102) ; grep "import codex." = zéro.
+3 publications Central : ocr-contracts:0.0.1, workspace-bom:0.0.26,
+codex-plugin:0.0.6. Zéro régression, zéro secret. Rapport :
+`.agents/sessions/104-cdx-ocr-contracts-n0-extraction.adoc`.
+CB-STORE-UNIFY DÉBLOQUÉ (gate RAG-SOCLE levée).
 
 '''
 == Session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné
