@@ -1,0 +1,27 @@
+= Session 105 — CB-STORE-UNIFY vérification — Aucun travail nécessaire dans codex
+
+:session: 105
+:date: 2026-08-25
+:status: TERMINÉ
+:max-lines: 50
+
+== Bilan de la session
+
+Nous avons vérifié que l'EPIC CB-STORE-UNIFY (consolidation du store vectoriel JDBC legacy dans codebase) ne nécessite aucun travail dans le projet codex-gradle (borough codex) pour les raisons suivantes :
+
+- Le store vectoriel de codex (`CodexVectorStore`) a déjà été migré vers `codebase.store.RagVectorStore` lors de l'EPIC CDX-RAG-SOCLE (RAG-4 final).
+- Le projet codex dépend désormais de `codebase.store` via `implementation(libs.codebase.plugin)` et ne possède plus de store vectoriel propre.
+- Aucune consommation résiduelle du store JDBC legacy `codebase.rag.VectorStore` n'existe dans le projet codex-gradle, car toutes les dépendances ont été mises à jour vers `codebase.store` lors de la migration RAG-SOCLE.
+
+Aucun code n'a été modifié, conformément à la méthodologie baby-step TDD strict RED → GREEN → REFACTOR et à la règle de gouvernance pure (zéro code modifié pour cet EPIC dans codex).
+
+== Références
+
+- `CADRAGE_EPIC_CB_STORE_UNIFY.adoc` — cadrage de l'EPIC CB-STORE-UNIFY
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` — cadrage de l'EPIC CDX-RAG-SOCLE (migration du store)
+- `BACKLOG.adoc` § EPIC CB-STORE-UNIFY (état : 🟡 DÉBLOQUÉ, sous-tâches CB-STORE-UNIFY-1, -2, -3 à planifier)
+- PROMPT_REPRISE.adoc (version précédente) — mission de la session
+
+== Prochaine session
+
+La prochaine session s'attaquera aux sous-tâches CB-STORE-UNIFY-1, -2, -3 dans le projet codebase-gradle (borough codebase), car le travail concerne la consolidation du store côté codebase.

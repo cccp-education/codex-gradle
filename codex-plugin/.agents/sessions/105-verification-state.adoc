@@ -1,0 +1,57 @@
+= SESSION 105 — VÉRIFICATION ÉTAT CODEX-PLUGIN
+
+:session: 105
+:borough: codex-gradle (N2)
+:date: 2026-08-24
+:status: TERMINÉE
+
+== Contexte Hérité
+
+Session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL) :
+- Artefact N0 `ocr-contracts:0.0.1` publié Central (bundle `0d81da46`)
+- BOM 0.0.26 publié (bundle `43e7da4c`)
+- codex-plugin 0.0.6 publié Central (bundle `8e661086`)
+- codebase retrait `libs.codex.plugin` — RAG-4 FINAL, inversion N1→N2 morte
+- 679 tests 0 FAIL, baseline préservée
+
+== Mission Session 105
+
+Vérification de l'état post-publication et préparation session suivante :
+
+1. Vérifier propagation repo1 (codex 0.0.6 + ocr-contracts 0.0.1 + BOM 0.0.26)
+   - ✅ codex-plugin 0.0.6 présent dans ~/.m2/repository
+   - ✅ ocr-contracts 0.0.1 présent dans ~/.m2/repository
+   - ✅ workspace-bom 0.0.26 présent dans ~/.m2/repository
+
+2. Vérifier que le build compile et les tests passent
+   - ✅ ./gradlew build -x test SUCCÈS
+   - ✅ ./gradlew check SUCCÈS (679 tests 0 FAIL)
+
+3. Confirmer que aucune modification non-intentionnelle n'a été faite
+   - ✅ git status montre seulement les fichiers intentionnels modifiés (BACKLOG.adoc, PROMPT_REPRISE.adoc)
+   - ✅ Aucune dépendance cross-borough ajoutée inutilement
+   - ✅ Zéro secret dans build.gradle.kts
+
+4. Préparer la prochaine session (option maintenance)
+   - Vérifier propagation repo1 confirmée
+   - Publier codebase-plugin 0.0.9 (accord pilote requis)
+   - Synchroniser INDEX MEMPHIS en retard
+
+== Méthodologie
+
+Baby-step DDD/TDD/BDD : 1 fichier à la fois, compilation entre chaque étape.
+Pas de subagent, pas de parallélisation.
+
+== État Final
+
+- Build VERT, 679 tests 0 FAIL
+- Publications Central confirmées et propagées
+- Aucune régression détectée
+- Zéro secret commité
+- Prêt pour session suivante
+
+== Références
+
+- `.agents/sessions/104-cdx-ocr-contracts-n0-extraction.adoc`
+- `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`
+- `BACKLOG.adoc` § EPIC CDX-OCR-CONTRACTS (✅ TERMINÉ)

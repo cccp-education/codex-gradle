@@ -1,0 +1,33 @@
+= Session 105 — CB-STORE-UNIFY cadrage — Consolidation du store vectoriel
+
+:session: 105
+:date: 2026-08-25
+:status: EN COURS
+:max-lines: 50
+
+== Objectifs de la session
+
+Travailler sur l'EPIC CB-STORE-UNIFY (consolidation du store vectoriel côté codebase) :
+- CB-STORE-UNIFY-1 : Migration des consommateurs résiduels vers `RagVectorStore` (API identique `searchBlocking`).
+- CB-STORE-UNIFY-2 : Suppression du store JDBC legacy `codebase.rag.VectorStore` et de son schéma `code-index`.
+- CB-STORE-UNIFY-3 : Scénarios Cucumber BDD pour le store unifié.
+
+== Méthodologie
+
+Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux :
+1. Unit tests d'abord (RED)
+2. Puis implementation pour passer les tests (GREEN)
+3. Enfin refactorisation propre (REFACTOR)
+Puis même approche pour les tests fonctionnels
+Enfin les scénarios Cucumber BDD
+English only dans le code, les commentaires, les noms de tests, les messages de commit.
+
+== Références
+
+- `CADRAGE_EPIC_CB_STORE_UNIFY.adoc` — cadrage de l'EPIC
+- `BACKLOG.adoc` § EPIC CB-STORE-UNIFY
+- PROMPT_REPRISE.adoc (ce fichier) — mission de la session
+
+== Prochaine session
+
+À déterminer basée sur la terminée de l'EPIC CB-STORE-UNIFY.
