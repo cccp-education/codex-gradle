@@ -3,6 +3,29 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 104 — CDX-OCR-CONTRACTS US-2 typealiases
+
+*Date* : 2026-08-24
+*Type* : dev
+*EPIC* : CDX-OCR-CONTRACTS
+*US* : CDX-OCR-CONTRACTS-2
+
+*A. Objectif* :
+Basculer le port OCR codex sur l'artefact N0 `ocr-contracts` (US-1 MEMPHIS
+livrée en parallèle) via typealiases backward compat.
+
+*B. Actions* :
+Typealias `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` → `contracts.ocr.*`.
+Jackson helpers extraits du companion (non propagé par typealias) en
+top-level functions `OcrRequestJson`/`OcrResultJson`. Tests migrés.
+Dep `ocr-contracts:0.0.1` + bump 0.0.5→0.0.6. Gate `codex.ocr.*` VERT.
+
+*C. Résultats* :
+EPIC 3/5 US (reste US-4 Cucumber BDD). Cross-borough : US-3 codebase
+livrée S-201 — RAG-4 FINAL, inversion N1→N2 morte. Zéro régression,
+zéro secret. Rapport : `.agents/sessions/104-cdx-ocr-contracts-us2-typealiases.adoc`.
+
+'''
 == Session 090 — CDX-7-2 ConvertToMarkdownTaskTest chaîné
 
 *Date* : 2026-08-21

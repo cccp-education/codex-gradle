@@ -79,7 +79,7 @@ class OcrRequestTest {
     @Test
     fun `writeTo creates json file with metadata only`(@TempDir tempDir: File) {
         val request = OcrRequest(ByteArray(10), "image/jpeg", "en", prompt = "test")
-        val file = OcrRequest.writeTo(tempDir, request)
+        val file = writeOcrRequestToJsonFile(tempDir, request)
         assertTrue(file.exists())
         assertEquals("ocr-request.json", file.name)
         assertTrue(file.length() > 0)
@@ -88,8 +88,8 @@ class OcrRequestTest {
     @Test
     fun `fromFile roundtrip preserves metadata fields`(@TempDir tempDir: File) {
         val original = OcrRequest(ByteArray(64), "image/tiff", "de", prompt = "ocr this")
-        OcrRequest.writeTo(tempDir, original)
-        val reloaded = OcrRequest.fromFile(File(tempDir, "ocr-request.json"))
+        writeOcrRequestToJsonFile(tempDir, original)
+        val reloaded = readOcrRequestFromJsonFile(File(tempDir, "ocr-request.json"))
         assertEquals("image/tiff", reloaded.format)
         assertEquals("de", reloaded.language)
         assertEquals("ocr this", reloaded.prompt)

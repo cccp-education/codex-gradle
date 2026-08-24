@@ -67,7 +67,7 @@ class OcrResultTest {
             language = "fr",
             model = "gpt-oss:120b-cloud"
         )
-        val file = OcrResult.writeTo(tempDir, result)
+        val file = writeOcrResultToJsonFile(tempDir, result)
         assertTrue(file.exists())
         assertEquals("ocr-result.json", file.name)
         assertTrue(file.length() > 0)
@@ -84,8 +84,8 @@ class OcrResultTest {
             model = "gpt-oss:120b-cloud",
             metadata = mapOf("dpi" to "300", "rotation" to "0")
         )
-        OcrResult.writeTo(tempDir, original)
-        val reloaded = OcrResult.fromFile(File(tempDir, "ocr-result.json"))
+        writeOcrResultToJsonFile(tempDir, original)
+        val reloaded = readOcrResultFromJsonFile(File(tempDir, "ocr-result.json"))
         assertEquals(original, reloaded)
     }
 
@@ -97,7 +97,7 @@ class OcrResultTest {
             language = "fr",
             model = "test-model"
         )
-        OcrResult.writeTo(tempDir, result)
+        writeOcrResultToJsonFile(tempDir, result)
         val json = File(tempDir, "ocr-result.json").readText()
         assertTrue(json.contains("\"structuredText\""))
         assertTrue(json.contains("\"confidence\""))
@@ -116,7 +116,7 @@ class OcrResultTest {
             language = "en",
             model = "test-model"
         )
-        val file = OcrResult.writeTo(nested, result)
+        val file = writeOcrResultToJsonFile(nested, result)
         assertTrue(nested.exists())
         assertTrue(file.exists())
     }

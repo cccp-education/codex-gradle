@@ -27,7 +27,7 @@ version = libs.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.24"))
+    implementation(platform("education.cccp:workspace-bom:0.0.26"))
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -56,6 +56,9 @@ dependencies {
 
     // N0 runtime contracts — SessionMemoryContract + LearnerProfile (CDX-RC-04 pont RAG session memory)
     implementation("education.cccp:runtime-contracts:0.0.1")
+
+    // N0 OCR contracts — cross-borough port (EPIC CDX-OCR-CONTRACTS US-2 typealiases)
+    implementation(libs.ocr.contracts)
 
     // RAG/Embedding — ONNX pgvector (R2DBC)
     implementation(libs.langchain4j)
