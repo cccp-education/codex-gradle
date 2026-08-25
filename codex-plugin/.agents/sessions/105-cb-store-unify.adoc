@@ -1,0 +1,36 @@
+= Session Report 105 — CB-STORE-UNIFY preparation
+
+:session: 105
+:date: 2026-08-25
+:status: TERMINÉ
+:sujet: Préparation de l'EPIC CB-STORE-UNIFY (consolidation du store vectoriel) dans le borough codex-gradle
+
+== Résumé
+
+Cette session avait pour objectif de préparer le travail sur l'EPIC CB-STORE-UNIFY (consolidation du store vectoriel JDBC legacy dans codebase) dans le projet codex-gradle. Après analyse, il a été déterminé qu'aucune modification n'était nécessaire dans le projet codex-gradle pour les raisons suivantes :
+
+- Le store vectoriel de codex (`CodexVectorStore`) a déjà été migré vers `codebase.store.RagVectorStore` lors de l'EPIC CDX-RAG-SOCLE (RAG-4 final).
+- Le projet codex dépend désormais de `codebase.store` via `implementation(libs.codebase.plugin)` et ne possède plus de store vectoriel propre.
+- Aucune consommation résiduelle du store JDBC legacy `codebase.rag.VectorStore` n'existe dans le projet codex-gradle, car toutes les dépendances ont été mises à jour vers `codebase.store` lors de la migration RAG-SOCLE.
+
+Aucun code n'a été modifié, conformément à la méthodologie baby-step TDD strict RED → GREEN → REFACTOR et à la règle de gouvernance pure (zéro code modifié pour cet EPIC dans codex).
+
+== Travaux réalisés
+
+- Création des fichiers de documentation de session :
+  - `.agents/sessions/105-cb-store-unify-cadrage.adoc` : cadrage de l'EPIC CB-STORE-UNIFY
+  - `.agents/sessions/105-cb-store-unify-check.adoc` : vérification qu'aucun travail n'est nécessaire dans codex-gradle
+  - `.agents/sessions/105-verification-state.adoc` : état de la vérification
+- Mise à jour de `PROMPT_REPRISE.adoc` pour définir les objectifs de la session 105
+- Commit et push des modifications
+
+== Conclusion
+
+L'EPIC CB-STORE-UNIFY sera traité dans le projet codebase-gradle (borough codebase), car le travail concerne la consolidation du store côté codebase. Aucune action n'est requise dans codex-gradle pour cet EPIC.
+
+== Références
+
+- `CADRAGE_EPIC_CB_STORE_UNIFY.adoc` — cadrage de l'EPIC CB-STORE-UNIFY
+- `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` — cadrage de l'EPIC CDX-RAG-SOCLE (migration du store)
+- `BACKLOG.adoc` § EPIC CB-STORE-UNIFY (état : 🟡 DÉBLOQUÉ, sous-tâches CB-STORE-UNIFY-1, -2, -3 à planifier)
+- PROMPT_REPRISE.adoc (version précédente) — mission de la session

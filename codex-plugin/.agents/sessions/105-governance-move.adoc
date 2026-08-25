@@ -1,0 +1,47 @@
+= Session 105 — Gouvernance : déplacement .adoc vers codex-plugin/.agents/
+
+:session: 105
+:date: 2026-08-25
+:status: TERMINÉ
+
+== Objectif
+
+L'utilisateur a signalé que les fichiers de gouvernance (.adoc) du borough
+codex-gradle se trouvaient à la racine du borough au lieu du dossier du
+plugin (`codex-plugin/.agents/`).
+
+== Actions réalisées
+
+. Déplacement de 8 fichiers .adoc de la racine `codex-gradle/` vers
+  `codex-plugin/.agents/` :
+  - `AGENT.adoc`
+  - `BACKLOG.adoc`
+  - `CADRAGE_EPIC_CB_STORE_UNIFY.adoc`
+  - `CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc`
+  - `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`
+  - `CADRAGE_EPIC_CDX_RAG_SOCLE.adoc`
+  - `CADRAGE_EPIC_CDX_UNIFY.adoc`
+  - `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc`
+. Vérification compilation : `./gradlew compileKotlin` BUILD SUCCESSFUL.
+. Vérification tests : `./gradlew check` BUILD SUCCESSFUL (679 tests, 0 FAIL,
+  baseline préservée).
+
+== Constat CB-STORE-UNIFY
+
+Le PROMPT_REPRISE session 105 indique comme objectif l'EPIC CB-STORE-UNIFY
+(consolidation du store vectoriel côté codebase). Audit préliminaire :
+aucune consommation résiduelle de `codebase.rag.VectorStore` n'existe dans
+le projet codex-gradle — toutes les dépendances ont été mises à jour vers
+`codebase.store` lors de la migration RAG-SOCLE. Le travail de migration
+(CB-STORE-UNIFY-1/2/3) relève du borough Queens (codebase-gradle), pas
+Brooklyn (codex-gradle).
+
+== Méthode
+
+Baby-step TDD strict. Gouvernance pure (pattern S-057/S-063) pour le
+déplacement des fichiers. Vérification non-régression via `check` VERT.
+
+== Références
+
+- `codex-plugin/.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY
+- `codex-plugin/PROMPT_REPRISE.adoc` — mission session 105

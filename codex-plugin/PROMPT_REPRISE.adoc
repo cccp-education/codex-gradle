@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 105
-:session: 105
-:date: 2026-08-24
+= PROMPT_REPRISE — Codex — Session 106
+:session: 106
+:date: 2026-08-25
 :status: PRET
 :max-lines: 50
 
@@ -11,42 +11,31 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew check           # baseline preserved (679 tests 0 FAIL)
 ----
 
-== Session 104 terminee — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
+== Session 105 terminée — Gouvernance : déplacement .adoc vers codex-plugin/.agents/
 
-. US-1 MEMPHIS : artefact N0 `ocr-contracts:0.0.1` publié Central (bundle
-  `0d81da46`) — 3 types purs package `contracts.ocr`, 14 unit VERT.
-  BOM 0.0.26 publié (bundle `43e7da4c`, constraint ocr-contracts + codex 0.0.26).
-. US-2 codex : typealiases `codex.ocr.*` → `contracts.ocr.*` (@file:JvmName),
-  Jackson helpers extraits (`OcrRequestJson`/`OcrResultJson`), dep
-  `libs.ocr.contracts`, bump codex-plugin **0.0.6** publié Central.
-  `check` VERT 679 tests 0 FAIL (baseline préservée).
-. US-3 codebase (Queens) : imports → `contracts.ocr.*`, retrait
-  `libs.codex.plugin` — **RAG-4 FINAL, l'inversion N1→N2 est morte**.
-  Adapter 4/4 + boundary 2/2 + cucumber @ocr-contracts 5/5 PASSED.
-. US-4 : validation end-to-end par suites existantes (@ocr-boundary codex +
-  @ocr-contracts codebase) — zéro nouveau scénario (Économie d'Encre).
+. Déplacement de 8 fichiers .adoc de la racine `codex-gradle/` vers
+  `codex-plugin/.agents/` (AGENT, BACKLOG, 6 CADRAGE_EPIC_*).
+. Vérification `check` VERT — 679 tests 0 FAIL, baseline préservée.
+. Audit CB-STORE-UNIFY : aucune consommation résiduelle de
+  `codebase.rag.VectorStore` dans codex-gradle. Le travail de migration
+  (CB-STORE-UNIFY-1/2/3) relève de Queens (codebase-gradle), pas Brooklyn.
 
-== Prochaine session — 105 : objectifs
+== Prochaine session — 106 : objectifs
 
-*Objectif principal* : travailler sur l'EPIC CB-STORE-UNIFY (consolidation du store vectoriel) :
-  - CB-STORE-UNIFY-1 : Migration des consommateurs résiduels vers `RagVectorStore` (API identique `searchBlocking`).
-    * Écrire les caracterisation tests pour vérifier la compatibilité d'API.
-    * Migrer les consommateurs résiduels (à identifier) vers `RagVectorStore`.
-    * Vérifier la non-régression.
-  - CB-STORE-UNIFY-2 : Suppression du store JDBC legacy `codebase.rag.VectorStore` et de son schéma `code-index`.
-    * Supprimer la classe `codebase.rag.VectorStore`.
-    * Supprimer le schéma `code-index` (DROP CASCADE).
-    * S'assurer que le `check` passe et qu'il n'y a pas de régression.
-  - CB-STORE-UNIFY-3 : Scénarios Cucumber BDD pour le store unifié.
-    * Écrire le fichier de fonctionnalité `codebase_store_unify.feature`.
-    * Implémenter les steps avec un store en mémoire (fake).
-    * Vérifier que les scénarios passent.
+*Objectif principal* : CB-STORE-UNIFY est un EPIC cross-borough dont le
+code cible est dans codebase-gradle (Queens), pas codex-gradle (Brooklyn).
+Pour codex-gradle, l'EPIC est terminé (zéro consommateur résiduel). Options :
+
+. *Si Queens est disponible* : poursuivre CB-STORE-UNIFY côté codebase-gradle
+  (migration consommateurs résiduels → suppression store JDBC legacy).
+. *Si Queens indisponible* : identifier un autre EPIC dans le backlog codex
+  ou faire de la maintenance (publication, code review, dette technique).
 
 *Methode* : baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux
   (unit → fonctionnel → Cucumber), English only.
 
 == References
 
-- `.agents/sessions/104-cdx-ocr-contracts-n0-extraction.adoc`
-- `CADRAGE_EPIC_CDX_OCR_CONTRACTS.adoc`
-- `BACKLOG.adoc` § EPIC CDX-OCR-CONTRACTS (✅ TERMINÉ)
+- `.agents/sessions/105-governance-move.adoc`
+- `.agents/CADRAGE_EPIC_CB_STORE_UNIFY.adoc`
+- `.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY

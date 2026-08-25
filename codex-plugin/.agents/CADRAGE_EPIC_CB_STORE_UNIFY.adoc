@@ -1,0 +1,66 @@
+= CADRAGE_EPIC_CB_STORE_UNIFY — Consolidation `codebase.rag.VectorStore` JDBC legacy
+:description: Cadrage de l'EPIC CB-STORE-UNIFY (consolidation des deux stores vectoriels côté codebase)
+
+== Source
+décision archi S-097 (consolidation JDBC legacy HORS SCOPE de CDX-RAG-SOCLE, reportée à un EPIC futur dédié).
+
+== Pattern
+gouvernance pure puis baby-step TDD — à cadrer.
+
+== Contexte
+Après la migration `RagVectorStore` (RAG-1→4) vers `codebase.store`,
+deux stores coexisteront côté codebase :
+
+. `codebase.store.RagVectorStore` (R2DBC, migré verbatim depuis
+   `codex.store.CodexVectorStore` — socle canonique, tables pgvector
+   `codex_documents`/`codex_chunks` inchangées).
+. `codebase.rag.VectorStore` (JDBC legacy, schéma `code-index`,
+   `initSchema` DROP CASCADE destructif — ancêtre P0 précédant la
+   montée de codebase N1).
+
+Le store JDBC legacy est un risque technique : DROP CASCADE destructif,
+schéma divergent, double surface de maintenance. L'EPIC CB-STORE-UNIFY
+consolide les deux en supprimant le store JDBC legacy après migration
+des éventuels consommateurs résiduels vers `RagVectorStore`.
+
+== Décisions clés
+. Le store `codebase.rag.VectorStore` sera supprimé après migration de ses consommateurs vers `codebase.store.RagVectorStore`.
+. La migration consistera à remplacer les appels à `codebase.rag.VectorStore` par `codebase.store.RagVectorStore` (API identique `searchBlocking`).
+. Les tests de caractérisation seront effectués pour s'assurer de la compatibilité.
+. Un gate de non-régression sera appliqué après la suppression.
+. Les scénarios Cucumber BDD seront rédigés pour valider le fonctionnement du store unifié.
+
+== US breakdown
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CB-STORE-UNIFY-0
+| Cadrage EPIC (gouvernance pure) — audit consommateurs résiduels de
+|   `codebase.rag.VectorStore`, mapping schéma `code-index` vs
+|   `codex_documents`/`codex_chunks`, plan de migration/cleanup.
+| ✅ TERMINÉ (ce document)
+| 1
+
+| CB-STORE-UNIFY-1
+| Migration des consommateurs résiduels vers `RagVectorStore` (API
+|   identique `searchBlocking`). Characterization tests. Gate non-
+|   régression.
+| 🔲 À PLANIFIER
+| 2
+
+| CB-STORE-UNIFY-2
+| Suppression `codebase.rag.VectorStore` + schéma `code-index` (DROP
+|   CASCADE destructif retiré). `check` VERT codebase. Zéro régression.
+| 🔲 À PLANIFIER
+| 2
+
+| CB-STORE-UNIFY-3
+| Cucumber BDD — scénarios retrieval sur store unifié (fake in-memory).
+|   Pure BDD.
+| 🔲 À PLANIFIER
+| 1
+|===
+
+*Total* : ~6 pts (4 US)
