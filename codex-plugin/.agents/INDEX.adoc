@@ -139,7 +139,7 @@ _Session en cours_ : —
 | EPIC CDX-6 (P1) | Intégration OSS/CSS + routing licence (DSL `licenceRouting`) — cadrage S-077 | ✅ TERMINÉ (CDX-6-0 ✅ S-077, CDX-6-1 ✅ S-089, CDX-6-2 ✅ S-089, CDX-6-3 ✅ S-089) | P1
 | EPIC CDX-7 (P1) | Tests unitaires + intégration (FontStyleDetector/TypographicAnalyzer/SemanticChunker/E2E PDF) — cadrage S-077 | ✅ TERMINÉ (CDX-7-0 ✅ S-077, CDX-7-1 ✅ S-078, CDX-7-2 ✅ S-090, CDX-7-3 ✅ S-091, CDX-7-4 ✅ S-092) | P1
 | EPIC CDX-UNIFY | Unification constat #7 (chunkMd → SemanticChunker.chunk()) — cadrage S-093 | ✅ TERMINÉ (CDX-UNIFY-0 ✅ S-093, CDX-UNIFY-1 ✅ S-093, CDX-UNIFY-2 ✅ S-093) | P1
-| EPIC CB-STORE-UNIFY | Consolidation `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE — EPIC futur | 🟡 DÉBLOQUÉ (gate levée S-104, cadrage S-105 — code cible côté Queens/codebase-gradle, zéro consommateur résiduel côté Brooklyn/codex-gradle) | P2
+| EPIC CB-STORE-UNIFY | Consolidation `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE | ✅ CADUQUE (S-206 — audit révèle deux stores légitimes servent des domaines sémantiquement distincts : corpus documentaire codex vs code source workspace. Cadrage initial trop simpliste. Hardening ciblé `initSchema()` non-destructeur + `clean()` test-only appliqué côté Queens S-206) | P2
 | EPIC CDX-OCR-CONTRACTS | Extraction port OCR `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` en artefact N0 `ocr-contracts` MEMPHIS (9e) — RAG-4 final — cadrage S-103 | ✅ TERMINÉ (US-0 ✅ S-103, US-1 ✅ S-104 MEMPHIS ocr-contracts:0.0.1 Central bundle 0d81da46 + BOM 0.0.26, US-2 ✅ S-104 typealiases + OcrRequestJson/OcrResultJson + bump 0.0.6 Central, US-3 ✅ S-104 codebase retrait libs.codex.plugin, US-4 ✅ S-104 validation suites existantes) | P1
 |===
 

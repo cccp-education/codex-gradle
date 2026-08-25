@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 106
-:session: 106
+= PROMPT_REPRISE — Codex — Session 107
+:session: 107
 :date: 2026-08-25
 :status: PRET
 :max-lines: 50
@@ -11,25 +11,30 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew check           # baseline preserved (679 tests 0 FAIL)
 ----
 
-== Session 105 terminée — Gouvernance : déplacement .adoc vers codex-plugin/.agents/
+== Session 106 terminée — CB-STORE-UNIFY ✅ CADUQUE
 
-. Déplacement de 8 fichiers .adoc de la racine `codex-gradle/` vers
-  `codex-plugin/.agents/` (AGENT, BACKLOG, 6 CADRAGE_EPIC_*).
-. Vérification `check` VERT — 679 tests 0 FAIL, baseline préservée.
-. Audit CB-STORE-UNIFY : aucune consommation résiduelle de
-  `codebase.rag.VectorStore` dans codex-gradle. Le travail de migration
-  (CB-STORE-UNIFY-1/2/3) relève de Queens (codebase-gradle), pas Brooklyn.
+. CB-STORE-UNIFY était cadré comme "suppression du store legacy après
+  migration vers `RagVectorStore`".
+. Audit pré-coding côté Queens (codebase-gradle S-206) révèle cadrage trop
+  simpliste : APIs très différentes, schémas distincts, usages
+  sémantiquement distincts (corpus documentaire codex vs code source
+  workspace).
+. Discussion pilote confirme architecture N2→N1 (codex ingère, codebase
+  stocke + RAG, flèche unique, zéro cycle) — les deux stores légitimes
+  servent des domaines distincts.
+. ÉPIC clos comme CADUQUE. Hardening ciblé `VectorStore.initSchema()`
+  non-destructeur + `clean()` test-only appliqué côté Queens.
+. Côté Brooklyn/codex-gradle : zéro consommateur résiduel (déjà vérifié
+  S-105). ÉPIC terminé pour Brooklyn.
 
-== Prochaine session — 106 : objectifs
+== Prochaine session — 107 : objectifs
 
-*Objectif principal* : CB-STORE-UNIFY est un EPIC cross-borough dont le
-code cible est dans codebase-gradle (Queens), pas codex-gradle (Brooklyn).
-Pour codex-gradle, l'EPIC est terminé (zéro consommateur résiduel). Options :
+Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés. Maintenance uniquement.
 
-. *Si Queens est disponible* : poursuivre CB-STORE-UNIFY côté codebase-gradle
-  (migration consommateurs résiduels → suppression store JDBC legacy).
-. *Si Queens indisponible* : identifier un autre EPIC dans le backlog codex
-  ou faire de la maintenance (publication, code review, dette technique).
+*Options* :
+. *Maintenance* : publication, code review, dette technique ciblée.
+. *Cadrer un nouvel EPIC* si besoin identifié.
+. *Cross-borough* : assister un autre borough (Queens, Manhattan, etc.).
 
 *Methode* : baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux
   (unit → fonctionnel → Cucumber), English only.
@@ -37,5 +42,5 @@ Pour codex-gradle, l'EPIC est terminé (zéro consommateur résiduel). Options :
 == References
 
 - `.agents/sessions/105-governance-move.adoc`
-- `.agents/CADRAGE_EPIC_CB_STORE_UNIFY.adoc`
-- `.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY
+- `.agents/CADRAGE_EPIC_CB_STORE_UNIFY.adoc` (✅ CADUQUE S-206)
+- `.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY (✅ CADUQUE S-206)

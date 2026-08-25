@@ -631,30 +631,71 @@ L'unification est un refactor sécuritaire.
 *Total* : ~5 pts (3 US)
 
 '''
-== 🟤 EPIC CB-STORE-UNIFY — Consolidation `codebase.rag.VectorStore` JDBC legacy (EPIC futur)
+== ✅ EPIC CB-STORE-UNIFY — Consolidation `codebase.rag.VectorStore` JDBC legacy — ✅ CADUQUE (S-206)
 
-_Statut_ : 🟡 DÉBLOQUÉ (gate levée S-104 — EPIC CDX-RAG-SOCLE TERMINÉ 6/6 US,
-RAG-4 final). Prochaine session candidate : cadrage CB-STORE-UNIFY-0.
+_Statut_ : ✅ CADUQUE (S-206 — audit pré-coding révèle deux stores
+légitimes servent des domaines sémantiquement distincts : corpus
+documentaire codex vs code source workspace. Cadrage initial trop
+simpliste. Hardening ciblé `initSchema()` non-destructeur + `clean()`
+test-only appliqué côté Queens/codebase-gradle).
 _Source_ : décision archi S-097 (consolidation JDBC legacy HORS SCOPE
 de CDX-RAG-SOCLE, reportée à un EPIC futur dédié).
-_Pattern_ : gouvernance pure puis baby-step TDD — à cadrer.
+_Pattern_ : gouvernance pure S-057/S-063 + baby-step TDD strict.
 
 === Contexte
 
 Après la migration `RagVectorStore` (RAG-1→4) vers `codebase.store`,
-deux stores coexisteront côté codebase :
+deux stores coexistent côté codebase :
 
 . `codebase.store.RagVectorStore` (R2DBC, migré verbatim depuis
    `codex.store.CodexVectorStore` — socle canonique, tables pgvector
    `codex_documents`/`codex_chunks` inchangées).
-. `codebase.rag.VectorStore` (JDBC legacy, schéma `code-index`,
+. `codebase.rag.VectorStore` (JDBC legacy, schéma `documents`/`chunks`,
    `initSchema` DROP CASCADE destructif — ancêtre P0 précédant la
    montée de codebase N1).
 
-Le store JDBC legacy est un risque technique : DROP CASCADE destructif,
-schéma divergent, double surface de maintenance. L'EPIC CB-STORE-UNIFY
-consolide les deux en supprimant le store JDBC legacy après migration
-des éventuels consommateurs résiduels vers `RagVectorStore`.
+Le store JDBC legacy était perçu comme un risque technique : DROP CASCADE
+destructif, schéma divergent, double surface de maintenance. L'EPIC
+CB-STORE-UNIFY devait consolider les deux en supprimant le store JDBC
+legacy après migration des éventuels consommateurs résiduels vers
+`RagVectorStore`.
+
+=== Constats (audit S-206 pré-coding)
+
+. Cadrage CB-STORE-UNIFY existant trop simpliste : prévoyait "remplacer les
+  appels par `searchBlocking` (API identique)" — faux. Les APIs sont très
+  différentes.
+. `RagVectorStore` (R2DBC socle) : `searchBlocking(query, topK)` seulement
+  — recherche sur corpus documentaire codex (tables
+  `codex_documents`/`codex_chunks`, métadonnées `section_path`,
+  `heading_level`, `source_document`).
+. `VectorStore` legacy (JDBC, `codebase.rag`) : `initSchema`,
+  `ensureSchema`, `insertDocument`, `updateEmbedding`, `fetchAllChunks`,
+  `querySimilar`, `countDocuments`, `countChunks`, `findByPackage` —
+  ingestion + query du code source du workspace (tables `documents`/
+  `chunks`, métadonnées `package_name`, `class_name`, `repo_name`, filtre
+  `fileExtension`).
+. Consommateurs profonds côté Queens : `OcrIngestTask`,
+  `MultiChannelContextGraph` (utilise les deux stores), `KoogAugmentedContextGraph`,
+  `KoogPlanningOrchestrator`, `VectorQueryService`, `EmbeddingPipeline`,
+  `PgVectorConfig` + 7 fichiers tests/scénarios Cucumber.
+. Usage sémantiquement distinct : le legacy indexe le code source du
+  workspace ; le socle indexe le corpus documentaire. Les fusionner
+  ferait perdre l'information sémantique.
+
+=== Décision pilote (S-206)
+
+Discussion pilote confirme l'architecture N2→N1 : codex (N2) ingère les
+data et les passe à codebase (N1) qui fait le RAG. Codebase fournit le
+contexte à codex. Flèche unique N2→N1, zéro dépendance circulaire. Les
+deux stores légitimes servent des domaines distincts (documents vs code
+source). La "consolidation" était un faux positif.
+
+**Décision** : Clore CB-STORE-UNIFY comme CADUQUE. Le seul vrai risque
+résiduel — le `DROP TABLE ... CASCADE` destructif dans
+`VectorStore.initSchema()` — a été isolé en hardening mineur côté Queens
+(S-206 : `initSchema()` alias `ensureSchema()` non-destructeur, `clean()`
+test-only destructeur).
 
 [cols="1,3,2,1", options="header"]
 |===
@@ -669,25 +710,29 @@ des éventuels consommateurs résiduels vers `RagVectorStore`.
 
 | CB-STORE-UNIFY-1
 | Migration des consommateurs résiduels vers `RagVectorStore` (API
-  identique `searchBlocking`). Characterization tests. Gate non-
-  régression.
-| 🔲 À PLANIFIER
+|   identique `searchBlocking`). Characterization tests. Gate non-
+|   régression.
+| ✅ CADUQUE (S-206 — APIs très différentes, usages sémantiquement
+|  distincts, migration non-triviale aurait cassé l'indexation du code
+|  source)
 | 2
 
 | CB-STORE-UNIFY-2
 | Suppression `codebase.rag.VectorStore` + schéma `code-index` (DROP
-  CASCADE destructif retiré). `check` VERT codebase. Zéro régression.
-| 🔲 À PLANIFIER
+|   CASCADE destructif retiré). `check` VERT codebase. Zéro régression.
+| ✅ CADUQUE (S-206 — store legacy légitime, domaine code source distinct.
+|  Hardening ciblé : `initSchema()` non-destructeur + `clean()` test-only)
 | 2
 
 | CB-STORE-UNIFY-3
 | Cucumber BDD — scénarios retrieval sur store unifié (fake in-memory).
-  Pure BDD.
-| 🔲 À PLANIFIER
+|   Pure BDD.
+| ✅ CADUQUE (S-206 — pas de store unifié, deux stores légitimes distincts)
 | 1
 |===
 
-*Total* : ~6 pts (4 US — gate LEVÉE S-104 : CDX-RAG-SOCLE TERMINÉ).
+*Total* : ~6 pts (4/4 US ✅ — EPIC CADUQUE. Hardening ciblé `initSchema()`
+non-destructeur appliqué côté Queens S-206).
 
 '''
 == ✅ EPIC CDX-OCR-CONTRACTS — Extraction du port OCR en artefact N0 `ocr-contracts` — Cadrage S-103, TERMINÉ S-104
@@ -820,5 +865,8 @@ codebase N1 — jamais directement via codex.
 . **CDX-RAG-SOCLE** (S-097→S-104) : store vectoriel migre de
   `codex.store` vers `codebase.store`. Inversion N1→N2 morte
   (RAG-4 final S-104 via artefact N0 `ocr-contracts`). ✅ TERMINÉ 6/6 US.
-. **CB-STORE-UNIFY** (DÉBLOQUÉ S-104) : consolidation
-  `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE.
+. **CB-STORE-UNIFY** (✅ CADUQUE S-206) : consolidation
+  `codebase.rag.VectorStore` JDBC legacy — clos comme CADUQUE (deux
+  stores légitimes servent des domaines sémantiquement distincts :
+  corpus documentaire codex vs code source workspace). Hardening ciblé
+  `initSchema()` non-destructeur appliqué côté Queens S-206.
