@@ -870,3 +870,42 @@ codebase N1 — jamais directement via codex.
   stores légitimes servent des domaines sémantiquement distincts :
   corpus documentaire codex vs code source workspace). Hardening ciblé
   `initSchema()` non-destructeur appliqué côté Queens S-206.
+
+'''
+== 🔴 EPIC CROSS-DOC-BOOK — BDD cross-borough Codex→Document Book Pipeline
+
+_Source_ : cadrage S-210 (`CADRAGE_EPIC_CROSS_DOC_BOOK.adoc`).
+_Pattern_ : gouvernance pure S-057/S-063 + baby-step BDD strict.
+_Portée_ : cross-borough Brooklyn (codex KDoc) + New Orleans (document Cucumber).
+
+Le pont N2↔N2 entre codex et document est le filesystem
+(`%03d-%s.adoc`). Le contrat fonctionne mais n'est jamais validé en
+BDD end-to-end. Cet EPIC ajoute des tests Cucumber qui garantissent
+la contractualité du flow `collectOcr → assembleBook`.
+
+[cols="1,5,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CROSS-DOC-BOOK-0
+| Cadrage EPIC (gouvernance pure, zéro code). 6 constats, 8 décisions.
+| ✅ TERMINÉ (S-210)
+| 1
+
+| CROSS-DOC-BOOK-1
+| Cucumber BDD `cross_borough_book.feature` — scénarios `@cross-borough @book-pipeline`
+  (pages assemblées, tri PageOrder, dégradé silencieux, formats non-adoc ignorés).
+  Runner dédié `CrossBoroughCucumberRunner` + steps `CrossBoroughSteps`.
+  Baby-step BDD strict RED → GREEN → REFACTOR.
+| 🟡 À FAIRE
+| 3
+
+| CROSS-DOC-BOOK-2
+| Codex — KDoc clarification `CollectOcrTask.outputDir` (format `%03d-%s.adoc`
+  documenté comme contrat formel N2↔N2, `@see document.BookAssembler`).
+| 🟡 À FAIRE
+| 1
+
+|===
+
+*Total* : ~5 pts (3 US)

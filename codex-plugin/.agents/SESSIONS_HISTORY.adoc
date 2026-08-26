@@ -2927,3 +2927,35 @@ RAG-4 final gated par cette extraction.
 
 US-1 MEMPHIS — artefact `ocr-contracts` module standalone + 3 types
 purs + ~10 unit + publication Central.
+
+'''
+== Session 210 (2026-08-26) — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure)
+
+=== A. Sujet
+EPIC CROSS-DOC-BOOK — BDD cross-borough book pipeline validation entre codex-gradle (Brooklyn) et document-gradle (New Orleans). Validation du contrat filesystem `%03d-%s.adoc` entre CollectOcrTask et BookAssembler.
+
+=== B. Réalisations
+. Cadrage EPIC (gouvernance pure, pattern S-057/S-063, zéro code côté codex)
+. Création du document `CADRAGE_EPIC_CROSS_DOC_BOOK.adoc` côté document-gradle (3 US ~5 pts)
+. Mise à jour BACKLOG/INDEX codex-gradle et document-gradle pour référencer l'EPIC cross-borough
+. Implémentation US-1 (BDD) côté document-gradle :
+  * Feature file `cross_borough_book.feature` (4 scénarios @cross-borough @book-pipeline)
+  * Runner `CrossBoroughCucumberRunner`
+  * Steps `CrossBoroughSteps`
+  * Enregistrement tâche `crossBoroughCucumberTest` dans build.gradle.kts
+. US-2 (KDoc clarification) côté codex-gradle : amélioration du KDoc sur `CollectOcrTask.outputDir` pour documenter le contrat de nommage `%03d-%s.adoc`
+- Tous les scénarios Cucumber passent sur document-gradle
+- `./gradlew check` VERT sur les deux projets (codex et document)
+. Aucun code de production modifié — pure gouvernance + tests d'acceptation BDD
+
+=== C. État EPIC
+- CROSS-DOC-BOOK 🟡 (document-gradle : US-1 ✅, US-2 ✅) : 
+  * US-1 : Cucumber BDD cross-borough book pipeline ✅
+  * US-2 : KDoc clarification codex CollectOcrTask.outputDir ✅
+  * US-3 : À FAIRE (eventuelle clarification supplémentaire côté document-gradle si besoin)
+
+=== D. Prochaine session
+Clôture de la session selon la procédure standard de 6 étapes (rapport de session, contexte reprise, dashboard, historique, tests, archivage, synchronisation backlog).
+
+'''
+purs + ~10 unit + publication Central.

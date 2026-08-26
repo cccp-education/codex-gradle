@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 107
-:session: 107
-:date: 2026-08-25
+= PROMPT_REPRISE — Codex — Session 210
+:session: 210
+:date: 2026-08-26
 :status: PRET
 :max-lines: 50
 
@@ -11,36 +11,28 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew check           # baseline preserved (679 tests 0 FAIL)
 ----
 
-== Session 106 terminée — CB-STORE-UNIFY ✅ CADUQUE
+== Session 209 terminée — Déplacement 8 fichiers .adoc gouvernance de la racine `codex-gradle/` vers `codex-plugin/.agents/` (AGENT, BACKLOG, 6 CADRAGE_EPIC_*) — correction structure borough (les fichiers agentiques doivent vivre dans le plugin, pas à la racine). Vérification `check` VERT 3m16s — 679 tests 0 FAIL, baseline préservée. Audit CB-STORE-UNIFY : aucune consommation résiduelle de `codebase.rag.VectorStore` dans codex-gradle — le travail de migration (US-1/2/3) relève de Queens (codebase-gradle), pas Brooklyn. Zéro code prod modifié, zéro bump BOM, zéro secret.
 
-. CB-STORE-UNIFY était cadré comme "suppression du store legacy après
-  migration vers `RagVectorStore`".
-. Audit pré-coding côté Queens (codebase-gradle S-206) révèle cadrage trop
-  simpliste : APIs très différentes, schémas distincts, usages
-  sémantiquement distincts (corpus documentaire codex vs code source
-  workspace).
-. Discussion pilote confirme architecture N2→N1 (codex ingère, codebase
-  stocke + RAG, flèche unique, zéro cycle) — les deux stores légitimes
-  servent des domaines distincts.
-. ÉPIC clos comme CADUQUE. Hardening ciblé `VectorStore.initSchema()`
-  non-destructeur + `clean()` test-only appliqué côté Queens.
-. Côté Brooklyn/codex-gradle : zéro consommateur résiduel (déjà vérifié
-  S-105). ÉPIC terminé pour Brooklyn.
-
-== Prochaine session — 107 : objectifs
+== Session 210 terminée — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure, zéro code modifié)
+:session: 210
+:date: 2026-08-26
+:status: PRET
+:max-lines: 50
 
 Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés. Maintenance uniquement.
+
+== Prochaine session — 211 : objectifs
 
 *Options* :
 . *Maintenance* : publication, code review, dette technique ciblée.
 . *Cadrer un nouvel EPIC* si besoin identifié.
-. *Cross-borough* : assister un autre borough (Queens, Manhattan, etc.).
+. *Cross-borough* : assister un autre borough (Queens, Manhattan, etc.) — en cours avec document-gradle sur EPIC CROSS-DOC-BOOK.
 
 *Methode* : baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux
-  (unit → fonctionnel → Cucumber), English only.
+   (unit → fonctionnel → Cucumber), English only.
 
 == References
-
-- `.agents/sessions/105-governance-move.adoc`
+- `.agents/sessions/209-governance-move.adoc`
 - `.agents/CADRAGE_EPIC_CB_STORE_UNIFY.adoc` (✅ CADUQUE S-206)
 - `.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY (✅ CADUQUE S-206)
+- `.agents/CADRAGE_EPIC_CROSS_DOC_BOOK.adoc` (nouveau cadrage côté document-gradle)

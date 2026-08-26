@@ -61,6 +61,18 @@ abstract class CollectOcrTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDir: DirectoryProperty
 
+    /**
+     * Primary output directory for OCR results.
+     * 
+     * Contains one `.adoc` file per processed image, named using the contract:
+     * `%03d-%s.adoc` where:
+     * - `%03d` is the zero-padded 3-digit page number (starting from 001)
+     * - `%s` is the original image filename without extension
+     * 
+     * This naming convention is consumed by document-gradle's [BookAssembler]
+     * to preserve the original page order when assembling the final book.
+     * The files contain only the structured OCR text (no AsciiDoc headers).
+     */
     @get:OutputDirectory
     @get:Optional
     abstract val outputDir: DirectoryProperty
