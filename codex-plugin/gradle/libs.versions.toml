@@ -1,8 +1,8 @@
 [versions]
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
 codex-plugin = "0.0.6"
-codebase = "0.0.2"
-codebase-plugin = "0.0.8"
+codebase = "0.0.11"
+codebase-plugin = "0.0.11"
 ocr-contracts = "0.0.1"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
