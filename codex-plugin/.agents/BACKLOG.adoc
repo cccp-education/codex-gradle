@@ -897,15 +897,40 @@ la contractualité du flow `collectOcr → assembleBook`.
   (pages assemblées, tri PageOrder, dégradé silencieux, formats non-adoc ignorés).
   Runner dédié `CrossBoroughCucumberRunner` + steps `CrossBoroughSteps`.
   Baby-step BDD strict RED → GREEN → REFACTOR.
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-210)
 | 3
 
 | CROSS-DOC-BOOK-2
 | Codex — KDoc clarification `CollectOcrTask.outputDir` (format `%03d-%s.adoc`
   documenté comme contrat formel N2↔N2, `@see document.BookAssembler`).
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-210)
 | 1
 
 |===
 
 *Total* : ~5 pts (3 US)
+'''
+== 🟡 EPIC MEM-CAT-ROLLOUT — Adoption version catalog workspace (S-028, cross-borough MEMPHIS)
+
+_Origine : demande pilote S-028 (workspace-bom) — généralisation du pattern
+version catalog prouvé par le pilote bakery (S-208). Référentiel :
+`workspace-bom/BACKLOG.adoc`._
+
+=== US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
+
+*Priorite* : P2
+*EPIC* : MEM-CAT-ROLLOUT
+*Estimation* : 3 pts
+*Statut* : 🟡 À FAIRE (ordre 2)
+
+.Valeur
+Version du plugin depuis la source unique de vérité (`ws.versions.*`)
+— élimine les bumps éparpillés cross-borough.
+
+.Critères d'acceptation
+- [ ] `codex-plugin/settings.gradle.kts` : `create("ws") { from("education.cccp:workspace-catalog:0.0.30") }` (pin unique D4)
+- [ ] `build.gradle.kts` : `version = ws.versions.codex.plugin.get()` (version dérivée D3)
+- [ ] platform `workspace-bom` pin 0.0.26 → 0.0.30
+- [ ] Gate : `./gradlew check` VERT baseline exacte (679 tests 0 FAIL — baseline S-104)
+- [ ] `publishToMavenLocal` VERT si release
+- [ ] Baby-step TDD : test hygiène version dérivée d'abord (pattern bakery S-026)
