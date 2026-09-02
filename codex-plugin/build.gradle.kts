@@ -23,11 +23,12 @@ buildscript {
 }
 
 group = "education.cccp"
-version = libs.versions.codex.plugin.get()
+// MEM-CAT-ROLLOUT-2 (D3) — self version derived from the published workspace catalog.
+version = ws.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.26"))
+    implementation(platform("education.cccp:workspace-bom:0.0.30"))
 
     implementation(libs.kotlinx.serialization.json)
 

@@ -921,16 +921,17 @@ version catalog prouvé par le pilote bakery (S-208). Référentiel :
 *Priorite* : P2
 *EPIC* : MEM-CAT-ROLLOUT
 *Estimation* : 3 pts
-*Statut* : 🟡 À FAIRE (ordre 2)
+*Statut* : ✅ TERMINÉ (S-029 — garde 3/3, check 754 tests 0 FAIL, mavenLocal VERT POM 0.0.6/platform 0.0.30)
 
 .Valeur
 Version du plugin depuis la source unique de vérité (`ws.versions.*`)
 — élimine les bumps éparpillés cross-borough.
 
 .Critères d'acceptation
-- [ ] `codex-plugin/settings.gradle.kts` : `create("ws") { from("education.cccp:workspace-catalog:0.0.30") }` (pin unique D4)
-- [ ] `build.gradle.kts` : `version = ws.versions.codex.plugin.get()` (version dérivée D3)
-- [ ] platform `workspace-bom` pin 0.0.26 → 0.0.30
-- [ ] Gate : `./gradlew check` VERT baseline exacte (679 tests 0 FAIL — baseline S-104)
-- [ ] `publishToMavenLocal` VERT si release
-- [ ] Baby-step TDD : test hygiène version dérivée d'abord (pattern bakery S-026)
+- [x] `codex-plugin/settings.gradle.kts` : `create("ws") { from("education.cccp:workspace-catalog:0.0.30") }` (pin unique D4)
+- [x] `build.gradle.kts` : `version = ws.versions.codex.plugin.get()` (version dérivée D3 — remplace la dérivation toml local `libs.versions.codex.plugin`)
+- [x] platform `workspace-bom` pin 0.0.26 → 0.0.30
+- [x] Garde `CodexPluginPublicationTest` 3/3 (RED → GREEN — id inline `education.cccp.codex` déclaré dans build.gradle.kts, pas le toml)
+- [x] Gate : `./gradlew check` VERT — 754 tests 0 FAIL (baseline S-104 679 + 75 tests postérieurs, 0 régression)
+- [x] `publishToMavenLocal` VERT — POM `0.0.6` + platform `0.0.30` vérifiés
+- [x] Baby-step TDD : test hygiène version dérivée d'abord (pattern bakery S-026)

@@ -1,0 +1,48 @@
+= Session 211 — US-ROLLOUT-2 : adoption version catalog ws 0.0.30 (EPIC MEM-CAT-ROLLOUT 2/6)
+
+_Date_ : 2026-09-02
+_Type_ : cross-borough MEMPHIS (mission pilote S-028)
+_Mission_ : codex-gradle = ordre 2 du référentiel MEM-CAT-ROLLOUT (BACKLOG
+workspace-bom). 1 pin settings + version dérivée + platform 0.0.30.
+
+== Baby-step TDD strict (RED → GREEN)
+
+*RED* — Garde `CodexPluginPublicationTest` créée (pattern
+`DocumentPluginPublicationTest` S-244, lui-même pattern
+`BakeryPluginPublicationTest` S-026), 3 tests :
+1. `plugin version matches root consumer catalog version` — FAILED
+   (dérivation toml local `libs.versions.codex.plugin`, pas ws)
+2. `workspace bom platform pin matches ws catalog bom version` — FAILED
+   (pin 0.0.26 ≠ 0.0.30)
+3. `plugin group and id are stable for publication` — FAILED d'abord
+   (parsing : l'id `education.cccp.codex` est déclaré inline dans le block
+   `gradlePlugin` du build.gradle.kts, pas dans le toml — parsing corrigé,
+   test reste RED pour la bonne cause avant GREEN)
+
+*GREEN* — 3 baby-steps :
+. settings : `create("ws") { from("education.cccp:workspace-catalog:0.0.30") }` (D4)
+. build : `version = ws.versions.codex.plugin.get()` (D3) + platform 0.0.30
+. Résultat : 3/3 PASSED
+
+*Particularité codex* : la version était déjà dérivée d'un catalogue
+(`libs.versions.codex.plugin` — toml LOCAL). Le passage au catalog publié ws
+change la source (cross-borough) mais pas la valeur (0.0.6 = Central = ws).
+Pas de split-brain local détecté ici (contrairement à document ROLLOUT-1).
+
+== Gates (baseline préservée)
+
+- `check` : VERT — 754 tests 0 failure (toutes suites XML comptées ; baseline
+  S-104 = 679 + 75 tests ajoutés par les EPICs postérieurs S-106..S-210, 0 régression)
+- `publishToMavenLocal` : VERT — POM `codex-plugin-0.0.6.pom` vérifié :
+  version `0.0.6` (dérivée ws) + platform `workspace-bom:0.0.30`
+- `compileKotlin` : VERT (JDK 25)
+
+== Économie d'encre
+
+Pas de publication Central — version publiée (0.0.6) inchangée. Le POM diff
+est limité à la platform import (0.0.26 → 0.0.30).
+
+== Prochaine étape
+
+ROLLOUT-3 plantuml-gradle (ordre 3, même pattern — US inscrite BACKLOG
+plantuml).

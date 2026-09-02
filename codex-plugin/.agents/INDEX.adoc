@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (Regle 4bis)
 _Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-08-26 (session 210 — Cadrage EPIC CROSS-DOC-BOOK, gouvernance pure).
-_Session terminee_ : 210 ✅ — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure).
-_Session precedente_ : 104 ✅ — EPIC CDX-OCR-CONTRACTS TERMINÉ (RAG-4 FINAL).
-_Prochaine session_ : 107 — maintenance (propagation repo1 + codebase 0.0.9) OU cadrage CB-STORE-UNIFY. Voir PROMPT_REPRISE.
+_Derniere mise a jour_ : 2026-09-02 (session 211 — **US-ROLLOUT-2 TERMINÉ (EPIC MEM-CAT-ROLLOUT 2/6, cross-borough MEMPHIS S-028)** — adoption version catalog ws 0.0.30 : pin settings `create("ws") from(...0.0.30)` (D4) + `version = ws.versions.codex.plugin.get()` (D3, remplace dérivation toml local) + platform BOM 0.0.26→0.0.30. Garde `CodexPluginPublicationTest` 3/3 (RED → GREEN, baby-step TDD strict pattern bakery S-026). Gate : `check` VERT 754 tests 0 FAIL (baseline S-104 679 + 75 tests postérieurs, 0 régression) + `publishToMavenLocal` VERT — POM 0.0.6 + platform 0.0.30 vérifiés.)
+_Session terminee_ : 211 ✅ — US-ROLLOUT-2 adoption version catalog (gate VERT).
+_Session precedente_ : 210 ✅ — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure).
+_Prochaine session_ : 212 — ROLLOUT-3 plantuml-gradle (ordre 3, référentiel workspace-bom/BACKLOG.adoc) OU maintenance. Voir PROMPT_REPRISE.
 _Session en cours_ : —
 
 '''
