@@ -2929,6 +2929,20 @@ US-1 MEMPHIS — artefact `ocr-contracts` module standalone + 3 types
 purs + ~10 unit + publication Central.
 
 '''
+== Session 212 (2026-09-07) — Synchronisation gouvernance post-S-211 (gouvernance pure) ✅ TERMINÉ
+
+* **EPICs** : Aucun (sync gouvernance — BACKLOG headers 🔴→✅, PROMPT_REPRISE S-210→S-212).
+* **Livrables** :
+** BACKLOG : 4 en-têtes 🔴 → ✅ sur EPICs terminés dans le corps
+   (CDX-CR3 S-073, CDX-OCR-BOUNDARY S-096→101 4/4, CDX-RAG-SOCLE
+   S-097→104 6/6, CROSS-DOC-BOOK S-210 3/3) — pattern exact règle Étape 7.
+** PROMPT_REPRISE réécrit S-210 → S-212 (header unique propre, résumé
+   S-211 ROLLOUT-2, mission S-212 recadrée ROLLOUT-6 à la demande).
+** Rapport : `.agents/sessions/212-sync-gouvernance-post-211.adoc`.
+* Zéro code production, zéro bump BOM, zéro secret. Baseline 754 tests 0 FAIL
+  préservée.
+
+'''
 == Session 210 (2026-08-26) — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure)
 
 === A. Sujet

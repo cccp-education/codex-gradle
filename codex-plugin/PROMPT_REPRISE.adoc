@@ -1,38 +1,59 @@
-= PROMPT_REPRISE — Codex — Session 210
-:session: 210
-:date: 2026-08-26
+= PROMPT_REPRISE — Codex — Session 212
+:session: 212
+:date: 2026-09-07
 :status: PRET
-:max-lines: 50
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline preserved (679 tests 0 FAIL)
+./gradlew check           # baseline preserved (754 tests 0 FAIL)
 ----
 
-== Session 209 terminée — Déplacement 8 fichiers .adoc gouvernance de la racine `codex-gradle/` vers `codex-plugin/.agents/` (AGENT, BACKLOG, 6 CADRAGE_EPIC_*) — correction structure borough (les fichiers agentiques doivent vivre dans le plugin, pas à la racine). Vérification `check` VERT 3m16s — 679 tests 0 FAIL, baseline préservée. Audit CB-STORE-UNIFY : aucune consommation résiduelle de `codebase.rag.VectorStore` dans codex-gradle — le travail de migration (US-1/2/3) relève de Queens (codebase-gradle), pas Brooklyn. Zéro code prod modifié, zéro bump BOM, zéro secret.
+== Session 211 terminée — US-ROLLOUT-2 adoption version catalog (cross-borough MEMPHIS S-028)
 
-== Session 210 terminée — Cadrage EPIC CROSS-DOC-BOOK (gouvernance pure, zéro code modifié)
-:session: 210
-:date: 2026-08-26
-:status: PRET
-:max-lines: 50
+Pin `ws` 0.0.30 dans settings (D4) + `version = ws.versions.codex.plugin.get()`
+(D3, remplace dérivation toml local) + platform BOM 0.0.26 → 0.0.30. Garde
+`CodexPluginPublicationTest` 3/3 (RED → GREEN, pattern bakery S-026). Gate :
+`check` VERT 754 tests 0 FAIL + `publishToMavenLocal` VERT (POM 0.0.6 +
+platform 0.0.30). Rapport : `.agents/sessions/211-us-rollout-2-version-catalog.adoc`.
 
-Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés. Maintenance uniquement.
+== Prochaine session — 212 : objectifs
 
-== Prochaine session — 211 : objectifs
+[IMPORTANT]
+Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés (OCR-BOUNDARY 4/4,
+RAG-SOCLE 6/6, OCR-CONTRACTS 5/5, CROSS-DOC-BOOK 3/3, CB-STORE-UNIFY
+CADUQUE). Seul MEM-CAT-ROLLOUT reste ouvert (2/6 US côté codex).
 
-*Options* :
-. *Maintenance* : publication, code review, dette technique ciblée.
-. *Cadrer un nouvel EPIC* si besoin identifié.
-. *Cross-borough* : assister un autre borough (Queens, Manhattan, etc.) — en cours avec document-gradle sur EPIC CROSS-DOC-BOOK.
+=== Option A — Cross-borough MEM-CAT-ROLLOUT
 
-*Methode* : baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux
-   (unit → fonctionnel → Cucumber), English only.
+* ROLLOUT-2 ✅ (S-211). Suivant : ROLLOUT-6 (dashboard, readme, graphify,
+  bureau) — À PLANIFIER à la demande, référentiel `workspace-bom/BACKLOG.adoc`.
+* ROLLOUT-3 plantuml / ROLLOUT-4 hyperframes / ROLLOUT-5 runner déjà livrés
+  par MEMPHIS S-032 (hors périmètre codex).
+
+=== Option B — Maintenance
+
+* Publication, code review, dette technique ciblée.
+
+=== Option C — Nouvel EPIC
+
+* Cadrer si besoin identifié.
+
+== Méthode
+
+Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
+→ Cucumber), English only.
+
+== Règles
+
+- COMMITS/PUSH — INTERDICTION FORMELLE sans permission pilote.
+- PAS DE publishToMavenLocal automatique sans permission.
+- SECRETS via configuration/ — jamais en dur dans build.gradle.kts.
 
 == References
-- `.agents/sessions/209-governance-move.adoc`
-- `.agents/CADRAGE_EPIC_CB_STORE_UNIFY.adoc` (✅ CADUQUE S-206)
-- `.agents/BACKLOG.adoc` § EPIC CB-STORE-UNIFY (✅ CADUQUE S-206)
-- `.agents/CADRAGE_EPIC_CROSS_DOC_BOOK.adoc` (nouveau cadrage côté document-gradle)
+
+- `.agents/INDEX.adoc` (à jour S-211)
+- `.agents/BACKLOG.adoc` (en-têtes EPICs ✅ resynchronisés S-212 gouvernance)
+- `.agents/sessions/211-us-rollout-2-version-catalog.adoc`
+- `.agents/CADRAGE_EPIC_CROSS_DOC_BOOK.adoc` (✅ TERMINÉ S-210)

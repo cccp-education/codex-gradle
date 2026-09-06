@@ -24,7 +24,7 @@ Plugin N2 de pipeline documentaire (Asciidoctor → PDF). VAGUE 4 (plugins metie
 . BDD Cucumber `ocr-pipeline.feature` — 5 scénarios (LLM success, fallback, all-fail, pages, empty)
 . 167 tests (+32 : 22 unit + 5 functional + 5 cucumber)
 
-== 🔴 EPIC CDX-CR3 — Revue CR-GLOBALE-003 : Création de Contenu Solide ✅ TERMINÉ (session 073)
+== ✅ EPIC CDX-CR3 — Revue CR-GLOBALE-003 : Création de Contenu Solide ✅ TERMINÉ (session 073)
 
 _Source_ : `GLOBAL_CODE_REVIEW.adoc` (workspace root) — session CR-GLOBALE-003 (2026-08-04).
 _Focus_ : codex alimente document DOC-11 (bookPipeline) ; les bugs critiques bloquent la chaîne amont.
@@ -149,7 +149,7 @@ périmètre autorisé S-096 ; la BOM 0.0.24 reste fonctionnelle — les
 consommateurs résolvent codex 0.0.4 jusqu'au bump).
 
 '''
-== 🔴 EPIC CDX-OCR-BOUNDARY — OCR software = codex / OCR assisté IA = codebase — Cadrage S-096
+== ✅ EPIC CDX-OCR-BOUNDARY — OCR software = codex / OCR assisté IA = codebase ✅ TERMINÉ (S-096→S-101, 4/4 US)
 
 _Source_ : décision pilote session 096 (« le OCR software c'est codex qui
 l'actionne mais le OCR assisté par IA c'est codebase qui l'actionne »).
@@ -221,7 +221,7 @@ _Portée_ : cross-borough Brooklyn (codex) + Queens (codebase).
 *Total* : ~9 pts (EPIC TERMINÉ 4/4 US)
 
 '''
-== 🔴 EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1) — Cadrage S-097
+== ✅ EPIC CDX-RAG-SOCLE — Le RAG appartient au socle (codebase N1) ✅ TERMINÉ (S-097→S-104, 6/6 US)
 
 _Source_ : décision pilote session 097 (« le RAG est un élément du contexte
 augmenté, donc le RAG se fait dans codebase »).
@@ -872,7 +872,7 @@ codebase N1 — jamais directement via codex.
   `initSchema()` non-destructeur appliqué côté Queens S-206.
 
 '''
-== 🔴 EPIC CROSS-DOC-BOOK — BDD cross-borough Codex→Document Book Pipeline
+== ✅ EPIC CROSS-DOC-BOOK — BDD cross-borough Codex→Document Pipeline ✅ TERMINÉ (S-210, 3/3 US)
 
 _Source_ : cadrage S-210 (`CADRAGE_EPIC_CROSS_DOC_BOOK.adoc`).
 _Pattern_ : gouvernance pure S-057/S-063 + baby-step BDD strict.

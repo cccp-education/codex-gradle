@@ -855,3 +855,10 @@ engine (Économie d'Encre).
 
 *Prochaine* : EPIC CDX-RAG-SOCLE RAG-1 (domaine `codebase.store` +
 `RagVectorStore` migré verbatim, cross-borough Queens).
+
+== Session 212 — 2026-09-07 — Synchronisation gouvernance post-S-211
+
+Gouvernance pure (zéro code) :
+* BACKLOG : 4 en-têtes 🔴 → ✅ (CDX-CR3, CDX-OCR-BOUNDARY, CDX-RAG-SOCLE,
+  CROSS-DOC-BOOK — tous terminés dans le corps).
+* PROMPT_REPRISE réécrit S-210 → S-212 — mission recadrée ROLLOUT-6.

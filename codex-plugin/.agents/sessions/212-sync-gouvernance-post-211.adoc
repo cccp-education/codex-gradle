@@ -1,0 +1,66 @@
+= Session 212 — Synchronisation gouvernance post-S-211 (zéro code)
+:date: 2026-09-07
+:source: Session 212 (gouvernance pure)
+:type: governance
+:borough: Brooklyn — codex-gradle (N2, READ acquisition documentaire)
+:status: TERMINÉE
+
+== Contexte hérité
+
+Session 211 (2026-09-02) — US-ROLLOUT-2 TERMINÉ (EPIC MEM-CAT-ROLLOUT 2/6,
+cross-borough MEMPHIS S-028) : adoption version catalog ws 0.0.30, garde
+`CodexPluginPublicationTest` 3/3, `check` VERT 754 tests 0 FAIL.
+
+== Mission Session 212
+
+Synchroniser la gouvernance documentaire avec l'état réel (demande pilote,
+suite à code review écosystème foundry/public). Constats :
+
+1. PROMPT_REPRISE figé à S-210 (header `:session: 210`, daté 2026-08-26,
+   duplication de blocs header) — INDEX renvoie vers lui pour la mission
+   S-212 mais il ne la mentionne pas.
+2. En-têtes BACKLOG avec marqueurs 🔴 sur 4 EPICs terminés dans le corps
+   (pattern exact visé par la règle Étape 7) : CDX-CR3, CDX-OCR-BOUNDARY,
+   CDX-RAG-SOCLE, CROSS-DOC-BOOK.
+
+== Déroulement
+
+1. Lecture PROMPT_REPRISE/INDEX/BACKLOG + vérification statuts réels des
+   EPICs dans les sections détaillées (tous ✅ TERMINÉ).
+2. BACKLOG : 4 en-têtes 🔴 → ✅ avec session de référence :
+   * `✅ EPIC CDX-CR3 — ✅ TERMINÉ (session 073)`
+   * `✅ EPIC CDX-OCR-BOUNDARY — ✅ TERMINÉ (S-096→S-101, 4/4 US)`
+   * `✅ EPIC CDX-RAG-SOCLE — ✅ TERMINÉ (S-097→S-104, 6/6 US)`
+   * `✅ EPIC CROSS-DOC-BOOK — ✅ TERMINÉ (S-210, 3/3 US)`
+3. PROMPT_REPRISE réécrit S-210 → S-212 : header unique propre, résumé
+   S-211, mission S-212 recadrée sur l'état MEM-CAT-ROLLOUT réel
+   (ROLLOUT-2 ✅ S-211 ; ROLLOUT-3/4/5 livrés par MEMPHIS S-032 hors
+   périmètre codex ; reste ROLLOUT-6 à la demande).
+
+== Résultats
+
+- ✅ BACKLOG : zéro header 🔴 résiduel (vérifié grep `== 🔴` = 0).
+- ✅ PROMPT_REPRISE cohérent avec INDEX (mission 212 = ROLLOUT-6/maintenance).
+- ✅ Zéro code production modifié — gouvernance pure.
+- ✅ Baseline S-211 inchangée (754 tests 0 FAIL).
+
+== Prochaine session — 213
+
+Borough DORMANT — tous EPICs P0/P1 terminés. Seul MEM-CAT-ROLLOUT ouvert
+(2/6 US côté codex, ROLLOUT-6 à planifier à la demande, référentiel
+`workspace-bom/BACKLOG.adoc`).
+
+Options :
+. Cross-borough : ROLLOUT-6 (dashboard, readme, graphify, bureau).
+. Maintenance : publication, code review, dette technique ciblée.
+. Cadrer un nouvel EPIC si besoin identifié.
+
+== Méthodologie
+
+Gouvernance pure — zéro code, zéro test modifié.
+
+== Références
+
+- `.agents/INDEX.adoc` (à jour S-211)
+- `.agents/sessions/211-us-rollout-2-version-catalog.adoc`
+- `.agents/BACKLOG.adoc` (en-têtes resynchronisés)
