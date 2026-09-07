@@ -3,6 +3,16 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 215 (globale) — Cadrages CDX-FPA-CORPUS + OCR-QUALITY
+
+*Date* : 2026-09-07
+*Type* : cadrage (gouvernance pure, zéro code — pattern S-057)
+*Livrables* :
+- EPIC CDX-FPA-CORPUS cadré (`.agents/CADRAGE_EPIC_CDX_FPA_CORPUS.adoc`) — acquisition documentaire corpus FPA → chunks exploitables (GBL-003.3 critical path MVP0, arbitrage pilote). 4 US ~5 pts.
+- EPIC OCR-QUALITY cadré (`.agents/CADRAGE_EPIC_OCR_QUALITY.adoc`) — demande pilote : détection auto images problématiques + transcriptions douteuses. Constat : confidence Tesseract hardcodée 0.7 (placeholder), 5 images fantômes + 11 tableaux perdus découverts manuellement S-082. Transverse : US-1/2 codex, US-3 document, US-4 codebase (9 US ~16 pts au total).
+*Impact* : débloque GBL-003.3/003.4 + itération humaine FPA-BOOK-6-5 (rapport exhaustif)
+
+'''
 == Session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
 
 *Date* : 2026-08-24

@@ -4,7 +4,25 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-07 (session 215 — cadrage EPIC CDX-FPA-CORPUS (GBL-003.3 critical path MVP0) : acquisition documentaire corpus FPA → chunks exploitables. 4 US ~5 pts. Zéro code.)_
+_Dernière mise à jour : 2026-09-07 (session 215 — cadrage EPIC CDX-FPA-CORPUS (GBL-003.3 critical path MVP0) : acquisition documentaire corpus FPA → chunks exploitables. 4 US ~5 pts. Zéro code. + Cadrage EPIC OCR-QUALITY (demande pilote : détection automatique images problématiques + transcriptions douteuses) — US-1/2 codex.)_
+
+'''
+== EPIC OCR-QUALITY — Détection automatique images problématiques + transcriptions douteuses 🟡 CADRÉ (P0, transverse)
+
+_Origine : demande pilote 2026-09-07. Cadrage transverse : `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (identique dans codex/document/codebase)._
+
+|===
+| US | Description | Pts | Statut
+| OCR-QUALITY-1 | Tesseract vraie confidence : `meanConfidence()` réel dans `TesseractOcrEngine` (TDD) + tests OcrPipeline fallback | 3 | 🟡 À FAIRE (codex)
+| OCR-QUALITY-2 | Détection images problématiques à l'acquisition : image fantôme, page quasi vide, marqueur [ILLISIBLE] remonté du LLM-vision | 2 | 🟡 À FAIRE (codex)
+| OCR-QUALITY-3 | Extension BookOcrIssue/FailureDetector : IMAGE_MISSING + TABLE_SUSPECT + STRUCT_SUSPECT + backward compat | 3 | 🟡 À FAIRE (document)
+| OCR-QUALITY-4 | Codebase : métadonnées de doute à l'ingestion RAG (confidence + doubtful) + exposition contexte augmenté + BDD | 3 | 🟡 À FAIRE (codebase)
+|===
+
+*Constat déclencheur (S-082 corpus FPA réel)* : `confidence` hardcodé
+0.7 placeholder dans TesseractOcrEngine (API `meanConfidence()` non
+exploitée), 5 images fantômes (3 bloquent epubcheck), 11 tableaux
+perdus, 10-15 schémas linéarisés — tout découvert manuellement.
 
 '''
 == EPIC CDX-FPA-CORPUS — Acquisition documentaire du corpus FPA (GBL-003.3) 🟡 CADRÉ (P0)

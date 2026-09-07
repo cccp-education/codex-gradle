@@ -1,0 +1,88 @@
+= Cadrage EPIC OCR-QUALITY — Détection automatique des images problématiques et transcriptions douteuses (GBL-003 extension)
+:date: 2026-09-07
+:epic: OCR-QUALITY (transverse codex + document + codebase)
+:origine: Demande pilote 2026-09-07 — « il faut que document/codex/codebase aient la fonctionnalité qui indique les images qui posent problème et là où transcription OCR et mise sous document est douteuse »
+:methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
+
+== Contexte
+
+Le pilote demande que la chaîne détecte automatiquement les défauts de
+qualité OCR au lieu de compter sur l'itération humaine exhaustive. Le
+livre FPA (S-082) en a prouvé le besoin avec des chiffres réels :
+5 images fantômes nommées par l'OCR (3 bloquent epubcheck RSC-007),
+11 tableaux à cellules finales perdues, 10-15 schémas linéarisés, 16
+pages ILLISIBLE — tout cela découvert *manuellement*, page par page.
+
+== Constats (état réel du code)
+
+1. *codex* — le champ `confidence` du contrat N0 `OcrResult`
+   (`ocr-contracts`, S-104) est un **placeholder hardcodé** dans
+   `TesseractOcrEngine` : `0.7` si texte non vide, `0.0` sinon. Aucune
+   vraie mesure. L'API Tesseract (`TessBaseAPI.meanConfidence()`) expose
+   la confiance réelle — non exploitée.
+2. *codex* — aucun signal de doute sur l'acquisition : une image
+   illisible produit un texte vide ou court, indistingué d'une page
+   correcte courte. Le LLM-vision (codebase side) ne remonte pas non
+   plus de niveau de confiance (hardcode similaire probable — à
+   auditer).
+3. *document* — `BookOcrFailureDetector` flagge uniquement `[ILLISIBLE]`
+   (marqueur texte) et pages < 40 chars (`TOO_SHORT`). Il ne détecte
+   PAS : les images référencées non matérialisées (3 RSC-007), les
+   tableaux linéarisés/pertes de cellules, les listes à items sautés,
+   les structures douteuses (`invalid part`, `out of sequence`).
+4. *codebase* — l'ingestion RAG (`codebase.store`) ne transporte aucun
+   métadonnée de doute : un chunk dérivé d'une page `[ILLISIBLE]` ou à
+   faible confidence est ingéré au même titre qu'une page propre — le
+   RAG peut citer du texte douteux dans le contexte augmenté de la
+   génération SPG/SPD sans que personne ne le sache.
+
+== Décisions (boundary respectée — chaque borough son tranchant)
+
+- D1 : *codex produit la confiance* — `OcrResult.confidence` devient
+  une vraie mesure (Tesseract mean confidence ; VisionProvider côté
+  codebase idem). L'OCR est codex (règle S-096), la confiance naît là
+  où l'OCR se produit.
+- D2 : *document détecte le doute structurel* — extension
+  `BookOcrFailureDetector` + `BookOcrIssue` : nouvelles raisons
+  (IMAGE_MISSING, TABLE_SUSPECT, LIST_GAPS, LOW_CONFIDENCE si un
+  manifest confidence par page est fourni). `BookOcrIssueReport` reste
+  le format pivot (JSON), backward compatible.
+- D3 : *codebase propage le doute dans le RAG* — métadonnées d'ingestion
+  (`confidence`, `doubtful` flag) transportées dans les chunks ingérés ;
+  le contexte augmenté peut alors peser/exclure les passages douteux.
+  Zéro re-vectorisation : les métadonnées sont attachées à l'ingestion,
+  pas aux embeddings.
+- D4 : frontière licence inchangée — la machinerie de détection est
+  Apache 2.0 (générique), le rapport appliqué au corpus FPA vit dans
+  `office/` (œuvre dérivée).
+- D5 : backward compat totale — `confidence` reste Double [0,1], les
+  anciennes raisons `BookOcrIssue` restent valides, zéro bump BOM tant
+  que le contrat N0 `OcrResult` n'est pas étendu (il ne l'est pas — le
+  champ existe déjà, seule sa VALEUR devient réelle).
+- D6 : économie d'encre — pas de nouvelle tâche Gradle : Tesseract
+  remplit mieux son OcrResult, le detector document gagne des raisons,
+  l'ingestion codebase gagne des colonnes metadata. Baby-step TDD/BDD
+  strict partout (RED → GREEN → REFACTOR).
+
+== User Stories (~11 pts)
+
+|===
+| US | Description | Pts | Borough
+| OCR-QUALITY-1 | Tesseract vraie confidence : `meanConfidence()` réel dans `TesseractOcrEngine` (TDD — fake process ou fixture image) + tests sur `OcrPipeline` fallback | 3 | codex
+| OCR-QUALITY-2 | Détection images problématiques à l'acquisition : image fantôme référencée mais non résolue, page quasi vide, marqueur `[ILLISIBLE]` remonté depuis le LLM-vision | 2 | codex
+| OCR-QUALITY-3 | Extension `BookOcrIssue`/`BookOcrFailureDetector` : IMAGE_MISSING (références `image::` sans fichier), TABLE_SUSPECT (tableaux linéarisés/douteux), STRUCT_SUSPECT (invalid part / out of sequence / items sautés) + backward compat | 3 | document
+| OCR-QUALITY-4 | Codebase : métadonnées de doute attachées à l'ingestion (confidence + doubtful flag) + exposition au contexte augmenté + BDD | 3 | codebase
+|===
+
+== Ordre
+
+US-1 (confidence réelle) → US-2 (images à l'acquisition) → US-3
+(document détecte) → US-4 (codebase propage). Chaque US indépendante
+gâte son borough ; l'ensemble débloque l'itération humaine FPA-BOOK-6-5
+(rapport exhaustif) puis le RAG propre (GBL-003.4).
+
+== Débloque
+
+- FPA-BOOK-6-5 : rapport exhaustif (pas seulement ILLISIBLE/TOO_SHORT).
+- GBL-003.4 : ingestion RAG avec métadonnées de doute — contexte
+  augmenté fiable pour la génération SPG/SPD.
