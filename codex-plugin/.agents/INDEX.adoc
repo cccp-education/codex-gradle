@@ -6,10 +6,10 @@ _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (Regle 4bis)
 _Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 
-_Derniere mise a jour_ : 2026-09-07 (session 214 — **US-ROLLOUT-6 graphify-gradle TERMINÉ + propagation bump cross-borough (EPIC MEM-CAT-ROLLOUT ordre 6, pilotée depuis Brooklyn)** — garde `GraphifyPluginPublicationTest` 3/3 (RED → GREEN, mirror readme S-213) + pin ws 0.0.33 (D4) + version dérivée ws (D3). Demande pilote : bump graphify 0.0.2 → 0.0.3 propagé MEMPHIS-first (toml graphify 0.0.3 + BOM 0.0.33 + catalog 0.0.33 mavenLocal, gates agent-contracts 267/0) → codex réaligné (platform pin 0.0.30 → 0.0.33, guards 3/3 PASSED, check 682 tests 0 FAIL) → bakery migré (imports `com.cheroliv.graphify.model` → `graphify.model` canonique — workaround relocation obsolète retiré, lens 144/0, FT 117/0). Gates : graphify check 63/0 + collectAndVerify DAG acyclic OK, codex 682/0 + 72 cucumber dédiés 0 FAIL, bakery lens 144/0 + FLAKY préexistants uniquement.)
-_Session terminee_ : 214 ✅ — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough (gate VERT).
-_Session precedente_ : 213 ✅ — US-ROLLOUT-6 readme-gradle adoption version catalog (cross-borough Chiraq, gate VERT).
-_Prochaine session_ : 215 — ROLLOUT-6 dashboard-gradle (GATE bump MEMPHIS : zéro entrée catalog, à la demande du pilote) OU maintenance OU publication Central BOM 0.0.33 + graphify 0.0.3. Voir PROMPT_REPRISE.
+_Derniere mise a jour_ : 2026-09-07 (session 215 — **cadrage EPIC CDX-FPA-CORPUS (GBL-003.3, critical path MVP0)** — acquisition documentaire du corpus FPA → chunks exploitables pour le RAG aval codebase. Arbitrage pilote 2026-09-07 : priorité aux boroughs qui rapprochent de la génération de formation. 4 US ~5 pts, zéro code modifié — dogfooding pipeline existant, outputs dans office/ (frontière licence). Doc `.agents/CADRAGE_EPIC_CDX_FPA_CORPUS.adoc`.)
+_Session terminee_ : 215 ✅ — Cadrage EPIC CDX-FPA-CORPUS (gouvernance pure pattern S-057).
+_Session precedente_ : 214 ✅ — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough (gate VERT).
+_Prochaine session_ : 216 — CDX-FPA-CORPUS-0/1 : run acquisition corpus FPA (critical path GBL-003) OU ROLLOUT-6/maintenance à la demande. Voir PROMPT_REPRISE.
 _Session en cours_ : —
 
 '''
@@ -145,6 +145,7 @@ _Session en cours_ : —
 | EPIC CB-STORE-UNIFY | Consolidation `codebase.rag.VectorStore` JDBC legacy après migration RAG-SOCLE | ✅ CADUQUE (S-206 — audit révèle deux stores légitimes servent des domaines sémantiquement distincts : corpus documentaire codex vs code source workspace. Cadrage initial trop simpliste. Hardening ciblé `initSchema()` non-destructeur + `clean()` test-only appliqué côté Queens S-206) | P2
 | EPIC CDX-OCR-CONTRACTS | Extraction port OCR `codex.ocr.{OcrEngine,OcrRequest,OcrResult}` en artefact N0 `ocr-contracts` MEMPHIS (9e) — RAG-4 final — cadrage S-103 | ✅ TERMINÉ (US-0 ✅ S-103, US-1 ✅ S-104 MEMPHIS ocr-contracts:0.0.1 Central bundle 0d81da46 + BOM 0.0.26, US-2 ✅ S-104 typealiases + OcrRequestJson/OcrResultJson + bump 0.0.6 Central, US-3 ✅ S-104 codebase retrait libs.codex.plugin, US-4 ✅ S-104 validation suites existantes) | P1
 | EPIC CROSS-DOC-BOOK | BDD cross-borough Codex→Document Book Pipeline — contrat filesystem `%03d-%s.adoc` validé en Cucumber — cadrage S-210 | 🟡 À FAIRE (CROSS-DOC-BOOK-0 ✅ S-210, CROSS-DOC-BOOK-1 🟡, CROSS-DOC-BOOK-2 🟡) | P1
+| EPIC CDX-FPA-CORPUS | Acquisition documentaire du corpus FPA → chunks exploitables (GBL-003.3 critical path MVP0, arbitrage pilote 2026-09-07) — cadrage S-215 | 🟡 CADRÉ (4 US ~5 pts — dogfooding pipeline existant, outputs dans office/, frontière licence) | P0
 |===
 
 '''

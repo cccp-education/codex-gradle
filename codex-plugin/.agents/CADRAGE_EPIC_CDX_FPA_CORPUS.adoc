@@ -1,0 +1,59 @@
+= Cadrage EPIC CDX-FPA-CORPUS — Acquisition documentaire du corpus FPA (GBL-003.3)
+:date: 2026-09-07
+:epic: CDX-FPA-CORPUS
+:origine: BACKLOG.adoc racine § GBL-003 + AGENTS.adoc § MVP0 Critical Path
+:methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
+
+== Contexte
+
+Arbitrage pilote (2026-09-07) : priorité critical path MVP0. Le corpus
+FPA (`office/metiers/FPA`, livre.adoc 7787 lignes + pages OCR individuelles)
+doit devenir du contexte augmenté exploitable. Codex est le maillon READ
+de la chaîne (GBL-003.3) : acquisition/chunking du corpus en chunks
+sémantiques exploitables pour l'ingestion RAG aval (codebase N1).
+
+== Constats
+
+1. La machinerie codex est complète et dogfoodée : extractBookStructure,
+   asciiDocToJsonLdd, convertToMarkdown, chunkDocument (SemanticChunker),
+   exportKnowledgeBase, codexIngest/codexRetrieve (historique CDX-1→11 +
+   P1 corpus enrichment S-077..S-093). 682 tests 0 FAIL (S-214).
+2. Le corpus FPA est déjà en AsciiDoc (pages OCR `%03d-<pageId>.adoc`
+   produites par collectOcr S-075 + livre.adoc assemblé S-082) — le
+   pipeline codex s'applique DIRECTEMENT, zéro nouvelle tâche de parsing.
+3. Frontière licence (S-070) : les chunks dérivés du corpus sont une
+   œuvre dérivée — ils vivent dans `office/metiers/FPA` (outputDir
+   pointé hors des boroughs publics). Le plugin reste Apache 2.0.
+4. Boundary actée (S-097/S-201) : le RAG est actionné par codebase N1 —
+   codex produit corpus + chunks, il n'ingère PAS pgvector lui-même
+   (CDX-RAG-SOCLE a retiré l'inversion N1→N2).
+5. EPIC CROSS-DOC-BOOK (🟡 S-210) est parallèle : le contrat filesystem
+   `%03d-%s.adoc` vers document est déjà le format des pages FPA.
+
+== Décisions
+
+- D1 : EPIC codex-only — dogfooding par configuration (dsl `codexPipeline`
+  pointant vers office/metiers/FPA), pas de feature nouvelle si le
+  pipeline existant couvre AsciiDoc → chunks.
+- D2 : outputs (chunks markdown/jsonl + knowledge base) écrits dans
+  `office/metiers/FPA/...` (œuvre dérivée) — jamais committés dans
+  codex-gradle ni un borough public.
+- D3 : le chunking sémantique (SemanticChunker) s'applique tel quel ;
+  le graphe GF-FPA (GBL-003.2) peut enrichir la densité sémantique via
+  le domaine `codex.enrichment` existant (EnrichJsonLddTask) — optionnel.
+- D4 : zéro bump BOM, zéro publication — dogfooding only.
+- D5 : baby-step TDD/BDD si évolution nécessaire (priorité à l'existant).
+
+== User Stories (~5 pts)
+
+|===
+| US | Description | Pts
+| CDX-FPA-CORPUS-0 | Cadrage détaillé du run : inventaire des pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1
+| CDX-FPA-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques exploitables (dans office/) | 2
+| CDX-FPA-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — domaine codex.enrichment existant) | 1
+| CDX-FPA-CORPUS-3 | Validation qualité chunks (échantillonnage + BDD si évolution) | 1
+|===
+
+== Débloque
+
+GBL-003.4 (codebase ingestion RAG pgvector) consomme les chunks codex.

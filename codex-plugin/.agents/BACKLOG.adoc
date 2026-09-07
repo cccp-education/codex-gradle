@@ -4,11 +4,32 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-07 (session 214 — US-ROLLOUT-6 graphify-gradle TERMINÉ + propagation bump graphify 0.0.3 cross-borough : MEMPHIS BOM 0.0.33 + catalog 0.0.33 mavenLocal, codex platform pin 0.0.33 réaligné guards 3/3, bakery migré imports graphify.model canonique)_
+_Dernière mise à jour : 2026-09-07 (session 215 — cadrage EPIC CDX-FPA-CORPUS (GBL-003.3 critical path MVP0) : acquisition documentaire corpus FPA → chunks exploitables. 4 US ~5 pts. Zéro code.)_
 
-_Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
+'''
+== EPIC CDX-FPA-CORPUS — Acquisition documentaire du corpus FPA (GBL-003.3) 🟡 CADRÉ (P0)
+
+_Origine : BACKLOG.adoc racine § GBL-003 (critical path MVP0, arbitrage pilote 2026-09-07)._
+_Cadrage : `.agents/CADRAGE_EPIC_CDX_FPA_CORPUS.adoc`._
+
+|===
+| US | Description | Pts | Statut
+| CDX-FPA-CORPUS-0 | Cadrage run : inventaire pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1 | 🟡 À FAIRE
+| CDX-FPA-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques (outputs dans office/) | 2 | 🟡 À FAIRE
+| CDX-FPA-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — codex.enrichment existant) | 1 | 🟡 À FAIRE
+| CDX-FPA-CORPUS-3 | Validation qualité chunks (échantillonnage) | 1 | 🟡 À FAIRE
+|===
+
+*Frontière licence* : les chunks FPA sont une œuvre dérivée — outputs
+dans `office/metiers/FPA`, jamais dans ce repo public (Apache 2.0).
+*Boundary* : codex = READ (corpus + chunks), l'ingestion RAG est
+codebase N1 (S-097/S-201).
+
+'''
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
+
+_Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
 '''
 == EPIC PUB — Publication Maven Central
