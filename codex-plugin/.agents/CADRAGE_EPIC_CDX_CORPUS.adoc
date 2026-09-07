@@ -1,6 +1,6 @@
-= Cadrage EPIC CDX-FPA-CORPUS — Acquisition documentaire du corpus FPA (GBL-003.3)
+= Cadrage EPIC CDX-CORPUS — Acquisition documentaire du corpus FPA (ex-métier privé — renommé RENAME) (GBL-003.3)
 :date: 2026-09-07
-:epic: CDX-FPA-CORPUS
+:epic: CDX-CORPUS
 :origine: BACKLOG.adoc racine § GBL-003 + AGENTS.adoc § MVP0 Critical Path
 :methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
 
@@ -18,7 +18,7 @@ sémantiques exploitables pour l'ingestion RAG aval (codebase N1).
    asciiDocToJsonLdd, convertToMarkdown, chunkDocument (SemanticChunker),
    exportKnowledgeBase, codexIngest/codexRetrieve (historique CDX-1→11 +
    P1 corpus enrichment S-077..S-093). 682 tests 0 FAIL (S-214).
-2. Le corpus FPA est déjà en AsciiDoc (pages OCR `%03d-<pageId>.adoc`
+2. Le corpus FPA (ex-métier privé — renommé RENAME) est déjà en AsciiDoc (pages OCR `%03d-<pageId>.adoc`
    produites par collectOcr S-075 + livre.adoc assemblé S-082) — le
    pipeline codex s'applique DIRECTEMENT, zéro nouvelle tâche de parsing.
 3. Frontière licence (S-070) : les chunks dérivés du corpus sont une
@@ -48,10 +48,10 @@ sémantiques exploitables pour l'ingestion RAG aval (codebase N1).
 
 |===
 | US | Description | Pts
-| CDX-FPA-CORPUS-0 | Cadrage détaillé du run : inventaire des pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1
-| CDX-FPA-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques exploitables (dans office/) | 2
-| CDX-FPA-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — domaine codex.enrichment existant) | 1
-| CDX-FPA-CORPUS-3 | Validation qualité chunks (échantillonnage + BDD si évolution) | 1
+| CDX-CORPUS-0 | Cadrage détaillé du run : inventaire des pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1
+| CDX-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques exploitables (dans office/) | 2
+| CDX-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — domaine codex.enrichment existant) | 1
+| CDX-CORPUS-3 | Validation qualité chunks (échantillonnage + BDD si évolution) | 1
 |===
 
 == Débloque
