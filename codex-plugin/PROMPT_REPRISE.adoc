@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 214
-:session: 214
+= PROMPT_REPRISE — Codex — Session 215
+:session: 215
 :date: 2026-09-07
 :status: PRET
 
@@ -7,36 +7,35 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline preserved (754 tests 0 FAIL)
+./gradlew check           # baseline preserved (682 tests 0 FAIL)
 ----
 
-== Session 213 terminée — US-ROLLOUT-6 readme-gradle (cross-borough Chiraq pilotée depuis Brooklyn)
+== Session 214 terminée — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough
 
-Tri candidats ROLLOUT-6 : codex déjà ROLLOUT-2 ✅ (S-211) ; readme retenu
-(entrée catalog Central 0.0.31 présente + split-brain latent) ; dashboard
-reporté (zéro entrée catalog, bump MEMPHIS requis). Exécution côté readme
-(Chiraq) : garde `ReadmePluginPublicationTest` 3/3 (RED → GREEN, mirror
-`CodexPluginPublicationTest` S-211) + pin ws 0.0.31 (D4) + version dérivée
-ws (D3) + id inline. Gate : `check` VERT 83 tests 0 FAIL (baseline 80 → +3)
-+ `publishToMavenLocal` VERT (POM 0.0.1 version dérivée ws).
-Rapport : `.agents/sessions/213-us-rollout-6-readme.adoc`.
+Adoption version catalog graphify (garde `GraphifyPluginPublicationTest`
+3/3 RED → GREEN, pin ws 0.0.33 D4 + version dérivée D3), puis bump
+graphify 0.0.2 → 0.0.3 propagé MEMPHIS-first à la demande du pilote :
+MEMPHIS (BOM 0.0.33 + catalog 0.0.33 mavenLocal, agent-contracts 267/0)
+→ codex réaligné (platform pin 0.0.30 → 0.0.33, guards 3/3 PASSED,
+check 682 tests 0 FAIL) → bakery migré (imports `graphify.model`
+canonique — workaround relocation 0.0.2 retiré, lens 144/0, FT 117/0).
+Publication mavenLocal graphify 0.0.3 + BOM 0.0.33 + catalog 0.0.33.
+Rapport : `.agents/sessions/214-us-rollout-6-graphify.adoc`.
 
-== Prochaine session — 214 : objectifs
+== Prochaine session — 215 : objectifs
 
 [IMPORTANT]
 Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés (OCR-BOUNDARY 4/4,
 RAG-SOCLE 6/6, OCR-CONTRACTS 5/5, CROSS-DOC-BOOK 3/3, CB-STORE-UNIFY
-CADUQUE). Seul MEM-CAT-ROLLOUT reste ouvert (ordre 6 partiel : readme ✅,
-dashboard/graphify ⏳ À PLANIFIER).
+CADUQUE). MEM-CAT-ROLLOUT ordre 6 : readme ✅ S-213, graphify ✅ S-214.
+Reste dashboard (gate bump MEMPHIS requis).
 
-=== Option A — Cross-borough MEM-CAT-ROLLOUT (suite)
+=== Option A — Cross-borough MEM-CAT-ROLLOUT (fin ordre 6)
 
-* ROLLOUT-6 suite : graphify-gradle (entrée catalog présente, baseline à
-  auditer) — référentiel `workspace-bom/BACKLOG.adoc`.
-* ROLLOUT-6 dashboard-gradle : GATE MEMPHIS — bump catalog requis (zéro
-  entrée `dashboard` dans workspace-bom toml) à la demande du pilote.
-* ROLLOUT-3 plantuml / ROLLOUT-4 hyperframes / ROLLOUT-5 runner déjà livrés
-  par MEMPHIS S-032 (hors périmètre codex).
+* ROLLOUT-6 dashboard-gradle : GATE MEMPHIS — entrée `dashboard` absente
+  du workspace-bom toml (bump catalog requis) à la demande du pilote.
+* Publication Central : BOM 0.0.33 + graphify-plugin 0.0.3 (mavenLocal
+  fait, Central hors périmètre S-214 — à la demande du pilote).
 
 === Option B — Maintenance
 
@@ -59,7 +58,7 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-213)
-- `.agents/BACKLOG.adoc` (en-têtes EPICs ✅ resynchronisés S-212 gouvernance)
-- `.agents/sessions/213-us-rollout-6-readme.adoc`
-- `.agents/CADRAGE_EPIC_CROSS_DOC_BOOK.adoc` (✅ TERMINÉ S-210)
+- `.agents/INDEX.adoc` (à jour S-214)
+- `.agents/BACKLOG.adoc` (en-têtes EPICs ✅ resynchronisés S-212)
+- `.agents/sessions/214-us-rollout-6-graphify.adoc`
+- Référentiel MEM-CAT-ROLLOUT : `workspace-bom/BACKLOG.adoc`

@@ -1,0 +1,117 @@
+= Session 214 — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough (2026-09-07)
+
+== Sujet
+
+US-ROLLOUT-6 (EPIC MEM-CAT-ROLLOUT ordre 6, référentiel `workspace-bom/BACKLOG.adoc`)
+— adoption version catalog graphify-gradle, puis propagation du bump
+graphify 0.0.2 → 0.0.3 demandée par le pilote : MEMPHIS (toml + BOM
+0.0.33 + publication catalog) → codex (réalignement platform pin) →
+bakery (consommateur + migration imports `graphify.model`).
+
+== 1. Adoption version catalog graphify (baby-step TDD strict)
+
+=== RED
+
+Garde `GraphifyPluginPublicationTest` (mirror `ReadmePluginPublicationTest`
+S-213) : 2/3 FAILED (version hardcodée `0.0.2` dans build.gradle.kts,
+zéro pin ws settings), 1/3 PASSED (id inline `education.cccp.graphify`
+déjà stable).
+
+=== GREEN
+
+- Pin settings `create("ws") { from("education.cccp:workspace-catalog:0.0.33") }` (D4)
+- `version = ws.versions.graphify.plugin.get()` (D3)
+- Fix parseur hygiène : le toml local graphify déclare `graphify = "x"`
+  (pas `graphify-plugin`) — même bug naming readme S-213, condition
+  `startsWith("graphify-plugin =") || startsWith("graphify =")`
+
+=== REFACTOR
+
+Aucun — fichier de test pur, zéro production modifiée à ce stade.
+
+== 2. Bump graphify 0.0.2 → 0.0.3 (demande pilote)
+
+Ordre DAG découvert en session : la version dérivée `ws.versions.graphify.plugin.get()`
+lit le catalog PUBLIÉ `workspace-catalog` — le bump doit suivre le pattern
+S-244 : MEMPHIS d'abord, puis les boroughs en aval.
+
+- graphify toml local (root + plugin) : `graphify = "0.0.3"`
+- MEMPHIS `workspace-bom/gradle/libs.versions.toml` :
+  `graphify-plugin = "0.0.3"` + `workspace-bom = "0.0.33"`
+- Gates MEMPHIS : `:agent-contracts:check` VERT 267 tests 0 FAIL
+  (inclut `PlatformCatalogAlignmentTest` + `WorkspaceCatalogStructureTest`)
+- Publication mavenLocal : graphify-plugin 0.0.3 (metadata vérifiée) +
+  workspace-bom 0.0.33 + workspace-catalog 0.0.33 (toml vérifié :
+  graphify 0.0.3 + bom 0.0.33)
+- graphify pin ws 0.0.33 + garde réalignée ; `check` VERT 63 tests
+  0 FAIL (baseline 60 → +3) ; root consumer `collectAndVerify` VERT
+  (DAG acyclic OK, 5m06s)
+- `publishToMavenLocal` graphify 0.0.3 VERT (POM version dérivée ws vérifiée)
+
+== 3. Codex — réalignement platform (garde S-211 rouge préexistant)
+
+Constat : la garde `CodexPluginPublicationTest > workspace bom platform pin`
+était **rouge à l'ouverture** — codex pin `platform workspace-bom:0.0.30`
+vs MEMPHIS toml 0.0.32 (drift préexistant, la garde fait son travail).
+
+Fix : pin platform 0.0.30 → 0.0.33 + pin ws catalog 0.0.30 → 0.0.33.
+
+Gate : `check` VERT 4m13s — 682 tests 0 FAIL (754 unit/cucumber combinés
+S-213 baseline préservée ; 682 test task + 72 cucumber dédiés 0 FAIL) +
+`CodexPluginPublicationTest` 3/3 PASSED.
+
+== 4. Bakery — consommateur graphify (migration imports)
+
+Constats :
+
+- `bakery-plugin/gradle/libs.versions.toml` : `graphify = "0.0.2"` → `0.0.3`
+- graphify 0.0.3 publie le package canonique `graphify.model` — le
+  workaround relocation `com.cheroliv.graphify.model` (commenté
+  "Revert once graphify-plugin 0.0.3 is fixed") devient obsolète.
+- Migration imports (5 fichiers : SubgraphExtractor + 3 tests lens +
+  LensSteps) : `com.cheroliv.graphify.model.*` → `graphify.model.*`
+- Baseline bakery découverte rouge avant le bump : le HEAD importe
+  `com.cheroliv.graphify.model` qui ne résout plus avec graphify 0.0.2
+  via ws catalog 0.0.32 — le bump consommateur était le fix lui-même.
+
+Gates bakery :
+
+- `compileKotlin` VERT
+- `:test` 1668 unit — 3 FAIL = FLAKY-1/2/3 préexistants documentés
+  (EPIC ouvert TODO.adoc S-196/197/198 identiques)
+- `:functionalTest --rerun-tasks` VERT — 117 tests 0 FAIL
+- `bakery.lens` 144 tests 0 FAIL (domaine consommant graphify.model)
+- `:cucumberTest` — 4 FAIL = FLAKY i18n préexistants uniquement ;
+  scénarios Subgraph/Lens PASSED
+- `BakeryPluginPublicationTest` 2/2 PASSED
+- `publishToMavenLocal` VERT (0.0.9 déjà présente)
+
+== Découvertes
+
+- 2 FAIL Cucumber DNS `purge flag` flaky : disparus au 2e run —
+  scénario S-201 périmé vs sémantique BKY-DNS-6 (S-202) mais pas
+  reproductible systématiquement. Test unitaire canonique `DnsDiffTest`
+  PASSED. À surveiller côté Chiraq (EPIC FLAKY).
+- graphify root consumer (`collectAndVerify`) exigeait graphify 0.0.3
+  pas encore publié au moment du bump toml local — ordre MEMPHIS-first
+  confirmé (pattern S-244).
+
+== Gouvernance
+
+- Rapport : `.agents/sessions/214-us-rollout-6-graphify.adoc` (ce fichier)
+- INDEX session 215 + roadmap
+- PROMPT_REPRISE réécrit S-214 → S-215
+- SESSIONS_HISTORY entrée S-214
+- BACKLOG codex MEM-CAT-ROLLOUT progression
+- workspace-bom BACKLOG référentiel ordre 6 (graphify ✅)
+- graphify gouvernance locale (INDEX/SESSIONS_HISTORY/BACKLOG)
+- Commits + push 4 repos (graphify-gradle, workspace-bom, codex-gradle,
+  bakery-gradle) — permission pilote accordée en session.
+
+== Bilan
+
+- graphify : ROLLOUT-6 ✅ (pin ws 0.0.33 + version dérivée) + bump 0.0.3
+- MEMPHIS : BOM 0.0.33 + catalog 0.0.33 (mavenLocal, Central hors périmètre)
+- codex : platform pin réaligné (guards 3/3), baseline 682 tests 0 FAIL
+- bakery : consommateur migré `graphify.model` canonique
+- Zéro secret, zéro régression (FLAKY préexistants uniquement)

@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-08-24 (session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US + US-0, artefact N0 ocr-contracts:0.0.1 Central + BOM 0.0.26 + codex 0.0.6 publiés, codebase retrait libs.codex.plugin — RAG-4 FINAL, inversion N1→N2 morte)_
+_Dernière mise à jour : 2026-09-07 (session 214 — US-ROLLOUT-6 graphify-gradle TERMINÉ + propagation bump graphify 0.0.3 cross-borough : MEMPHIS BOM 0.0.33 + catalog 0.0.33 mavenLocal, codex platform pin 0.0.33 réaligné guards 3/3, bakery migré imports graphify.model canonique)_
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
@@ -918,8 +918,12 @@ version catalog prouvé par le pilote bakery (S-208). Référentiel :
 
 *Progression codex* : ROLLOUT-2 ✅ (S-211, pin ws 0.0.30). S-213 : pilotage
 ROLLOUT-6 readme-gradle ✅ côté Chiraq (garde 3/3, check 83/0, mavenLocal
-VERT — entrée catalog Central 0.0.31 présente). Reste ordre 6 : graphify
-(baseline à auditer), dashboard (gate bump MEMPHIS requis).
+VERT — entrée catalog Central 0.0.31 présente). S-214 : ROLLOUT-6
+graphify-gradle ✅ (garde 3/3, pin ws 0.0.33, version dérivée) + bump
+graphify 0.0.3 propagé MEMPHIS-first (BOM 0.0.33 + catalog 0.0.33
+mavenLocal) → codex réaligné (platform pin 0.0.33, guards 3/3) → bakery
+migré (imports graphify.model canonique). Reste ordre 6 : dashboard
+(gate bump MEMPHIS requis — zéro entrée catalog).
 
 === US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
 

@@ -28,7 +28,7 @@ version = ws.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.30"))
+    implementation(platform("education.cccp:workspace-bom:0.0.33"))
 
     implementation(libs.kotlinx.serialization.json)
 

@@ -2929,6 +2929,44 @@ US-1 MEMPHIS — artefact `ocr-contracts` module standalone + 3 types
 purs + ~10 unit + publication Central.
 
 '''
+== Session 214 (2026-09-07) — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough ✅ TERMINÉ
+
+* **EPIC** : MEM-CAT-ROLLOUT ordre 6 (référentiel `workspace-bom/BACKLOG.adoc`).
+* **Adoption version catalog graphify** — baby-step TDD strict :
+** RED : garde `GraphifyPluginPublicationTest` 3 gardes, 2/3 FAILED
+   (version hardcodée, zéro pin ws), 1/3 PASSED (id inline stable).
+** GREEN : pin settings `workspace-catalog:0.0.33` (D4) +
+   `version = ws.versions.graphify.plugin.get()` (D3) + fix parseur
+   hygiène (toml local graphify déclare `graphify`, pas `graphify-plugin`
+   — même bug naming readme S-213).
+* **Demande pilote — bump graphify 0.0.2 → 0.0.3** propagé MEMPHIS-first
+  (pattern S-244 : version dérivée lit le catalog publié) :
+** graphify toml root + plugin : `graphify = "0.0.3"`.
+** MEMPHIS toml : `graphify-plugin = 0.0.3` + `workspace-bom = 0.0.33`.
+   Gates `:agent-contracts:check` VERT 267 tests 0 FAIL
+   (PlatformCatalogAlignment + WorkspaceCatalogStructure).
+** Publication mavenLocal : graphify-plugin 0.0.3 + workspace-bom 0.0.33
+   + workspace-catalog 0.0.33 (toml vérifié).
+** graphify : pin ws 0.0.33, `check` VERT 63 tests 0 FAIL (baseline
+   60 → +3), root consumer `collectAndVerify` VERT (DAG acyclic OK).
+* **Codex réaligné** : garde platform pin rouge à l'ouverture (drift
+  préexistant 0.0.30 vs MEMPHIS 0.0.32) → pin platform 0.0.33 + pin ws
+  0.0.33. Gate : `check` VERT 682 tests 0 FAIL + guards 3/3 PASSED +
+  72 cucumber dédiés 0 FAIL.
+* **Bakery migré (consommateur)** : `graphify = 0.0.3` toml + migration
+  imports `com.cheroliv.graphify.model` → `graphify.model` (5 fichiers,
+  workaround relocation 0.0.2 obsolète retiré). Gates : compileKotlin
+  VERT, `:test` 1668 unit (3 FAIL = FLAKY-1/2/3 préexistants documentés),
+  `:functionalTest` 117/0, `bakery.lens` 144/0, cucumber Lens PASSED,
+  publication guard 2/2. Découverte : baseline bakery rouge avant le
+  bump (HEAD importe package reloqué cassé par ws catalog 0.0.32) — le
+  bump était le fix.
+* **Découvertes** : 2 FAIL Cucumber DNS purge flag flaky (disparus au
+  2e run, scénario S-201 périmé vs BKY-DNS-6, `DnsDiffTest` canonique
+  PASSED) — à surveiller côté Chiraq EPIC FLAKY.
+* Commits + push 4 repos — permission pilote accordée en session.
+* Rapport : `.agents/sessions/214-us-rollout-6-graphify.adoc`.
+
 == Session 213 (2026-09-07) — US-ROLLOUT-6 readme-gradle (cross-borough Chiraq pilotée depuis Brooklyn) ✅ TERMINÉ
 
 * **EPIC** : MEM-CAT-ROLLOUT ordre 6 (référentiel `workspace-bom/BACKLOG.adoc`).
