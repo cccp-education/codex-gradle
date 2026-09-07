@@ -916,6 +916,11 @@ _Origine : demande pilote S-028 (workspace-bom) — généralisation du pattern
 version catalog prouvé par le pilote bakery (S-208). Référentiel :
 `workspace-bom/BACKLOG.adoc`._
 
+*Progression codex* : ROLLOUT-2 ✅ (S-211, pin ws 0.0.30). S-213 : pilotage
+ROLLOUT-6 readme-gradle ✅ côté Chiraq (garde 3/3, check 83/0, mavenLocal
+VERT — entrée catalog Central 0.0.31 présente). Reste ordre 6 : graphify
+(baseline à auditer), dashboard (gate bump MEMPHIS requis).
+
 === US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
 
 *Priorite* : P2

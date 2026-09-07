@@ -2929,6 +2929,33 @@ US-1 MEMPHIS — artefact `ocr-contracts` module standalone + 3 types
 purs + ~10 unit + publication Central.
 
 '''
+== Session 213 (2026-09-07) — US-ROLLOUT-6 readme-gradle (cross-borough Chiraq pilotée depuis Brooklyn) ✅ TERMINÉ
+
+* **EPIC** : MEM-CAT-ROLLOUT ordre 6 (référentiel `workspace-bom/BACKLOG.adoc`).
+* **Tri candidats** : codex déjà ROLLOUT-2 ✅ (S-211, hors périmètre) ;
+  readme-gradle retenu (entrée catalog Central 0.0.31 présente
+  `readme = {id = "education.cccp.readme"...}` vérifiée repo1 S-032 +
+  split-brain latent version dérivée toml local) ; dashboard-gradle reporté
+  (zéro entrée catalog — bump MEMPHIS requis) ; graphify restant (baseline à
+  auditer, session suivante).
+* **Exécution côté readme (Chiraq)** — baby-step TDD strict RED → GREEN :
+** RED : garde `ReadmePluginPublicationTest` 3/3 FAILED (mirror
+   `CodexPluginPublicationTest` S-211, adapté sans platform BOM — test 2 =
+   pin settings ws D4).
+** GREEN : pin settings `create("ws") { from("education.cccp:workspace-catalog:0.0.31") }`
+   (D4) + `version = ws.versions.readme.plugin.get()` (D3) + id inline
+   `education.cccp.readme` (stable publication identity).
+** Gate : `check` VERT 2m14s — 22 unit (+3) + 5 FT + 56 cucumber = 83 tests,
+   0 failure (baseline 80 → +3). `publishToMavenLocal` VERT — POM 0.0.1
+   version dérivée ws vérifié.
+* **Sync gouvernance** : rapport readme `.agents/sessions/012-us-rollout-6-version-catalog.adoc`
+  (côté Chiraq), INDEX/SESSIONS_HISTORY/PROMPT_REPRISE Chiraq, référentiel
+  workspace-bom BACKLOG (ordre 6 partiel : readme ✅).
+* Zéro code prod codex modifié — baseline codex 754 tests 0 FAIL préservée
+  (gate ouverture VERT). Zéro bump BOM, zéro secret.
+* Rapport : `.agents/sessions/213-us-rollout-6-readme.adoc`.
+
+'''
 == Session 212 (2026-09-07) — Synchronisation gouvernance post-S-211 (gouvernance pure) ✅ TERMINÉ
 
 * **EPICs** : Aucun (sync gouvernance — BACKLOG headers 🔴→✅, PROMPT_REPRISE S-210→S-212).

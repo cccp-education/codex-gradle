@@ -1,0 +1,57 @@
+= Session 213 — US-ROLLOUT-6 readme-gradle (cross-borough Chiraq, pilotée depuis Brooklyn)
+:session: 213
+:date: 2026-09-07
+:borough: Brooklyn (codex) → Chiraq (readme)
+:type: cross-borough build+test
+
+== Objectif
+
+EPIC MEM-CAT-ROLLOUT ordre 6 (référentiel `workspace-bom/BACKLOG.adoc`) —
+adoption version catalog pour les boroughs restants. Brooklyn pilote la
+session (PROMPT_REPRISE S-212 : « ROLLOUT-6 dashboard, readme, graphify,
+bureau »).
+
+== Tri des candidats
+
+. *codex* — déjà ROLLOUT-2 ✅ (S-211, pin ws 0.0.30) — hors périmètre.
+. *readme-gradle* — entrée catalog Central 0.0.31 présente
+   (`readme = {id = "education.cccp.readme", version.ref = "readme-plugin"}`,
+   vérifiée repo1 S-032) + split-brain latent (version dérivée toml local).
+   → **CANDIDAT RETENU**.
+. *dashboard-gradle* — zéro entrée catalog (`dashboard` absent du toml
+   workspace-bom ET du catalog Central 0.0.31) → bump MEMPHIS requis au
+   préalable. Reporté.
+. *graphify-gradle* — entrée présente mais baseline à auditer (session
+   suivante).
+
+== Exécution côté readme (Chiraq)
+
+Baby-step TDD strict RED → GREEN → REFACTOR :
+
+. RED — `ReadmePluginPublicationTest` 3/3 FAILED (mirror
+   `CodexPluginPublicationTest` S-211, adapté sans platform BOM :
+   test 2 = pin settings ws D4).
+. GREEN — pin settings `create("ws") { from("education.cccp:workspace-catalog:0.0.31") }`
+   (D4) + `version = ws.versions.readme.plugin.get()` (D3) + id inline
+   `education.cccp.readme`. 3/3 PASSED.
+. Gate `check` — BUILD SUCCESSFUL 2m14s : 22 unit (+3) + 5 FT + 56 cucumber
+   = 83 tests, 0 failure (baseline 80 → +3).
+. Gate `publishToMavenLocal` — VERT, POM 0.0.1 version dérivée ws vérifié.
+
+== Gates Brooklyn (ouverture)
+
+. Baseline codex `check` — VERT, 754 tests 0 FAIL préservés (aucun
+   fichier codex modifié cette session).
+
+== Impact cross-borough
+
+. EPIC MEM-CAT-ROLLOUT : ordre 6 partiel (readme ✅, dashboard/graphify
+   restent ⏳ À PLANIFIER).
+. Référentiel workspace-bom BACKLOG mis à jour.
+. Gouvernance Chiraq sync (INDEX/SESSIONS_HISTORY/PROMPT_REPRISE/rapport).
+
+== Non-objectifs
+
+. Zéro code production codex modifié.
+. Pas de publication Central readme (version 0.0.1 inchangée).
+. Pas de bump BOM MEMPHIS (readme 0.0.1 déjà aligné).
