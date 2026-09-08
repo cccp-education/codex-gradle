@@ -1,7 +1,7 @@
 [versions]
 # ── Versions du plugin Codex ──────────────────────────────────────────────────
 codex-plugin = "0.0.6"
-codebase = "0.0.12"
+codebase = "0.0.13"
 codebase-plugin = "0.0.12"
 ocr-contracts = "0.0.1"
 
