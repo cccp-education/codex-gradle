@@ -1,0 +1,83 @@
+= S-216 — CDX-CORPUS run acquisition corpus FPA (GBL-003.3) + fix drift BOM cross-borough
+:date: 2026-09-08
+:borough: Brooklyn — codex-gradle (foundry/public/codex-gradle/codex-plugin)
+:mission: PROMPT_REPRISE S-215 (périmé) → mission réelle = BACKLOG S-215 (CDX-CORPUS US-0/1/3)
+
+== Résumé
+
+Session d'exécution dogfooding (critical path MVP0 GBL-003.3). Le corpus
+FPA (`office/metiers/FPA/Devenir_.../livre.adoc`, 7787 lignes) a été
+acquis en chunks sémantiques exploitables par le RAG aval codebase :
+
+- *CDX-CORPUS-0* ✅ — cadrage run (inventaire corpus + pipeline à
+  appliquer), doc `.agents/CADRAGE_CDX_CORPUS_RUN.adoc`.
+- *CDX-CORPUS-1* ✅ — run acquisition : pipeline codex complet
+  (`transformToMarkdown` → `transformChunk` → `deployKnowledgeBase`) via
+  build consommateur transitoire en /tmp (pattern FPA-BOOK-4, Règle 2 :
+  buildDir /tmp, publish move + wipe). 387 chunks sémantiques + KB 3
+  formats produits dans `office/.../codex-out/` (œuvre dérivée
+  PROPRIETARY, frontière licence respectée).
+- *CDX-CORPUS-3* ✅ — validation qualité : invariants globaux verts
+  (387/387 ids `chk-[0-9a-f]{16}`, 0 content vide, license
+  PROPRIETARY, coverage h1×39/h2×188/h3×134/h4×22/h5×4) + échantillonnage
+  10 chunks (contenu réel substantiel vérifié). Rapport
+  `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`.
+- *Fix drift BOM cross-borough* ✅ — le garde `CodexPluginPublicationTest`
+  (attrapait un échec préexistant S-215+) : MEMPHIS a bumpé
+  workspace-bom 0.0.34 (S-215) puis 0.0.36 (S-213) après que codex a
+  pinné 0.0.33 (S-214). Réalignement : pin platform 0.0.33 → 0.0.36 +
+  pin settings workspace-catalog 0.0.33 → 0.0.36.
+
+== Constats
+
+. PROMPT_REPRISE S-215 était périmé (option A/B/C) — la mission réelle
+  était dans le BACKLOG (EPIC CDX-CORPUS cadré S-215). Ouverture
+  corrigée par lecture BACKLOG.
+. Le plugin `education.cccp.codex` ne se charge pas via `plugins {}`
+  dans un build consommateur Gradle 9.7 sans conventions — les
+  decorated classes codex référencent `codebase/store/RetrieveResult`
+  et le plugin marker N2 n'embarque pas le classpath runtime. Fix
+  consommateur : buildscript classpath (mirror pattern S-073).
+. Le livre FPA contient les TOC du scan original (dot leaders) — 99
+  chunks TOC pollués (25%). Cause racine amont OCR/scan (FPA-BOOK-6-5),
+  pas le chunking codex.
+. 19 mentions `[ILLISIBLE]` dans les chunks (16 pages ILLISIBLE
+  documentées `book-ocr-issues.json`) — candidats douteux pour
+  GBL-003.4 (OCR-QUALITY-4 codebase : métadonnées doubt + confidence).
+. Drift BOM cross-borough récurrent : MEMPHIS bump sans réaligner les
+  consommateurs. Le garde `CodexPluginPublicationTest` l'attrape
+  *seulement* à la session suivante du borough consommateur.
+
+== Décisions
+
+- D1 : outputs chunks/KB dans `office/metiers/FPA/.../codex-out/`
+  (œuvre dérivée, tag PROPRIETARY) — jamais dans le repo public codex.
+- D2 : build consommateur transitoire en /tmp (Règle 2) — l'init-script
+  est documenté dans le rapport, pas committé dans codex (pattern
+  fpaPublish : les outils vivent dans le borough consommateur, ici
+  office/, zone non-versionnée du repo public).
+- D3 : zéro code prod codex modifié — dogfooding par configuration +
+  fix drift pin BOM (2 lignes build/settings).
+- D4 : CDX-CORPUS-2 (enrichissement GF-FPA) reporté — le graphe
+  `graph-content.json` GF-FPA n'est pas encore produit par graphify
+  (GBL-003.2 livré S-024 côté graphify mais pour le corpus FPA scan ;
+  vérifier la fraîcheur avant consumption).
+- D5 : OCR-QUALITY-1/2 (confidence Tesseract réelle + détection images
+  problématiques) = prochaine session codex — le rapport US-3 pointe les
+  chunks douteux qui motiveront les métadonnées de doute GBL-003.4.
+
+== Gates
+
+- `./gradlew check` VERT 682 tests 0 FAIL (baseline S-214 préservée,
+  266 skipped CR-10) + 1 garde publication réalignée.
+- Zéro secret (grep TOKEN/SECRET/API_KEY/gho_/ghp_ = zéro).
+- Zéro régression : aucun fichier prod codex modifié (2 lignes pin BOM).
+- Règle 2 : workspace /tmp wiped après run (vérifié exists=false).
+
+== Prochaine session — 217
+
+- *Option A (critical path)* : OCR-QUALITY-1/2 codex — vraie confidence
+  Tesseract (`meanConfidence()`) + détection images problématiques à
+  l'acquisition (cadrage S-215 déjà prêt). Débloque GBL-003.4 fiable.
+- *Option B* : CDX-CORPUS-2 enrichissement graphe (si GF-FPA frais).
+- *Option C* : maintenance/ROLLOUT-6 dashboard à la demande pilote.

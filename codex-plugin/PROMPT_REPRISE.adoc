@@ -1,49 +1,53 @@
-= PROMPT_REPRISE — Codex — Session 215
-:session: 215
-:date: 2026-09-07
+= PROMPT_REPRISE — Codex — Session 217
+:session: 217
+:date: 2026-09-08
 :status: PRET
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline preserved (682 tests 0 FAIL)
+./gradlew check           # baseline 682 tests 0 FAIL (pin BOM 0.0.36 réaligné S-216)
 ----
 
-== Session 214 terminée — US-ROLLOUT-6 graphify-gradle + propagation bump cross-borough
+== Session 216 terminée — CDX-CORPUS run acquisition corpus FPA (GBL-003.3)
 
-Adoption version catalog graphify (garde `GraphifyPluginPublicationTest`
-3/3 RED → GREEN, pin ws 0.0.33 D4 + version dérivée D3), puis bump
-graphify 0.0.2 → 0.0.3 propagé MEMPHIS-first à la demande du pilote :
-MEMPHIS (BOM 0.0.33 + catalog 0.0.33 mavenLocal, agent-contracts 267/0)
-→ codex réaligné (platform pin 0.0.30 → 0.0.33, guards 3/3 PASSED,
-check 682 tests 0 FAIL) → bakery migré (imports `graphify.model`
-canonique — workaround relocation 0.0.2 retiré, lens 144/0, FT 117/0).
-Publication mavenLocal graphify 0.0.3 + BOM 0.0.33 + catalog 0.0.33.
-Rapport : `.agents/sessions/214-us-rollout-6-graphify.adoc`.
+*CDX-CORPUS-0/1/3 ✅ TERMINÉS* — corpus FPA (livre.adoc 7787 lignes) acquis
+en 387 chunks sémantiques + knowledge base 3 formats, dans
+`office/metiers/FPA/Devenir_.../codex-out/` (œuvre dérivée PROPRIETARY).
+Pipeline codex dogfoodé *sans modification du build script codex* :
+`transformToMarkdown` → `transformChunk` → `deployKnowledgeBase` +
+`corpusPublish` (move office/ + wipe /tmp, pattern FPA-BOOK-4 Règle 2).
+Cadrage : `.agents/CADRAGE_CDX_CORPUS_RUN.adoc`. Rapport run + validation
+qualité : `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`.
 
-== Prochaine session — 215 : objectifs
++ fix drift BOM cross-borough : pin platform 0.0.33 → 0.0.36 + pin
+settings workspace-catalog 0.0.36 (garde `CodexPluginPublicationTest`
+avait attrapé le bump MEMPHIS post-S-214). Gates : check VERT 682/0.
 
-[IMPORTANT]
-Borough Brooklyn DORMANT — tous EPICs P0/P1 terminés (OCR-BOUNDARY 4/4,
-RAG-SOCLE 6/6, OCR-CONTRACTS 5/5, CROSS-DOC-BOOK 3/3, CB-STORE-UNIFY
-CADUQUE). MEM-CAT-ROLLOUT ordre 6 : readme ✅ S-213, graphify ✅ S-214.
-Reste dashboard (gate bump MEMPHIS requis).
+Rapport : `.agents/sessions/216-cdx-corpus-run.adoc`.
 
-=== Option A — Cross-borough MEM-CAT-ROLLOUT (fin ordre 6)
+== Prochaine session — 217 : objectifs
 
-* ROLLOUT-6 dashboard-gradle : GATE MEMPHIS — entrée `dashboard` absente
-  du workspace-bom toml (bump catalog requis) à la demande du pilote.
-* Publication Central : BOM 0.0.33 + graphify-plugin 0.0.3 (mavenLocal
-  fait, Central hors périmètre S-214 — à la demande du pilote).
+=== Option A — OCR-QUALITY-1/2 (critical path, P0) 🟡 RECOMMANDÉE
 
-=== Option B — Maintenance
+* OCR-QUALITY-1 : Tesseract vraie confidence — `meanConfidence()` réel
+  dans `TesseractOcrEngine` (TDD, cadrage S-215 `CADRAGE_EPIC_OCR_QUALITY.adoc`).
+* OCR-QUALITY-2 : détection images problématiques à l'acquisition
+  (image fantôme, page quasi vide, marqueur [ILLISIBLE]).
+* Débloque : OCR-QUALITY-3 (document) + OCR-QUALITY-4 (codebase doubt
+  metadata GBL-003.4) — le rapport S-216 (`codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`)
+  documente 19 chunks `[ILLISIBLE]` candidats douteux.
 
-* Publication, code review, dette technique ciblée.
+=== Option B — CDX-CORPUS-2 (enrichissement graphe, optionnel)
 
-=== Option C — Nouvel EPIC
+* Enrichissement chunks via graphe GF-FPA (domaine `codex.enrichment`
+  existant) — vérifier la fraîcheur de `office/metiers/FPA/graph-content.json`
+  (GBL-003.2) avant consumption.
 
-* Cadrer si besoin identifié.
+=== Option C — Maintenance / ROLLOUT-6 dashboard
+
+* À la demande pilote (gate bump MEMPHIS requis).
 
 == Méthode
 
@@ -58,7 +62,8 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-214)
-- `.agents/BACKLOG.adoc` (en-têtes EPICs ✅ resynchronisés S-212)
-- `.agents/sessions/214-us-rollout-6-graphify.adoc`
-- Référentiel MEM-CAT-ROLLOUT : `workspace-bom/BACKLOG.adoc`
+- `.agents/INDEX.adoc` (à jour S-216)
+- `.agents/BACKLOG.adoc` (EPICs CDX-CORPUS ✅ US-0/1/3, OCR-QUALITY 🟡)
+- `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (cadrage prêt)
+- `.agents/CADRAGE_CDX_CORPUS_RUN.adoc` (run S-216)
+- `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc` (validation qualité + chunks douteux)

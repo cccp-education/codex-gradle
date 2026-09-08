@@ -1,0 +1,64 @@
+= Cadrage CDX-CORPUS-0 — Run acquisition corpus FPA (GBL-003.3)
+:date: 2026-09-08
+:session: 216
+:epic: CDX-CORPUS
+:origine: CADRAGE_EPIC_CDX_CORPUS.adoc (S-215) + BACKLOG racine GBL-003
+:methode: Cadrage détaillé du run (US-0) — zéro code, inventaire + pipeline
+
+== Inventaire corpus (état réel vérifié S-216)
+
+. Source : `office/metiers/FPA/Devenir_Formateur_Professionnel_d_Adultes_FPA_II/`
+.. `livre.adoc` — 7787 lignes, livre assemblé S-078 (AssembleBookTask, œuvre dérivée)
+.. `scans/` — 203 pages AsciiDoc `NNN.adoc` (OCR Gemini S-077) + 25 PDFs source
+.. `scans/` total 627 MB
+.. `livre-navigable/book-ocr-issues.json` — 27 issues (16 ILLISIBLE + TABLE_SUSPECT + IMAGE_MISSING)
+.. `livre-navigable/` : book.{adoc,epub,html,pdf} + rapports (document-gradle S-252)
+. Constat qualité : pages contiennent beaucoup de TOC avec dot leaders
+  (`....... 51`) — pollution typographique du scan original, devient du
+  bruit dans les chunks. Les headings de TOC (lignes finissant par une
+  suite de points) polluent la hiérarchie SemanticChunker.
+. Constat pipeline : `ChunkDocumentTask` consomme du *Markdown* →
+  `ConvertToMarkdownTask` requis en amont. `ExtractBookStructureTask`
+  SKIPPÉ (input déjà AsciiDoc structuré).
+
+== Pipeline appliqué (décisions D1/D2/D3 cadrage S-215)
+
+[cols="2,4,4"]
+|===
+| Étape | Tâche codex | Output (office/, œuvre dérivée)
+| 1. Extract structure | SKIPPÉ — pages déjà AsciiDoc | n/a
+| 2. Convert Markdown | `transformToMarkdown` sur livre.adoc | `book.md`
+| 3. Chunk sémantique | `transformChunk` (SemanticChunker) sur book.md | `fpa-chunks/chunks.json`
+| 4. Export KB | `deployKnowledgeBase` sur chunks.json | `codex-out/<sourceDoc>/knowledge-base.{json,md,adoc}`
+|===
+
+== Décisions run (US-0)
+
+- RD1 : input = `livre.adoc` (7787 lignes) — source canonique unique
+  assemblée. Les 203 pages scans/ restent la source OCR brute (pas
+  re-chunkées individuellement — Économie d'Encre).
+- RD2 : pipeline Gradle = `transformToMarkdown` → `transformChunk` →
+  `deployKnowledgeBase`. Pattern dogfooding mirror FPA-BOOK-4 : build
+  script init dans `office/` consommant codex-plugin (mavenLocal 0.0.6
+  ou Central), zéro modification du build script codex.
+- RD3 : outputs dans `office/metiers/FPA/Devenir_.../codex-out/` (œuvre
+  dérivée, jamais dans le repo public codex). Zéro bump BOM, zéro
+  publication.
+- RD4 : licence chunks = PROPRIETARY (œuvre dérivée du livre FPA —
+  LicenseRouter UNKNOWN→office/ ; tag explicite `PROPRIETARY`).
+- RD5 : validation US-3 = échantillonnage 10 chunks + invariants globaux
+  (ids SHA-256 `chk-…`, sectionPath non vide, content non blank,
+  coverage : nombre de chunks ~ nb headings, tailles raisonnables).
+- RD6 : les 27 issues OCR (book-ocr-issues.json) = métadonnées de doute
+  déjà connues → croisées avec l'échantillonnage US-3 (chunks dérivés
+  de pages ILLISIBLE = candidats douteux). OCR-QUALITY-1/2 codex
+  traiteront la cause racine en session dédiée.
+
+== User Stories après US-0
+
+|===
+| US | Livrable | Statut
+| CDX-CORPUS-1 | chunks.json + knowledge base dans codex-out/ | 🟡 À FAIRE (cette session S-216)
+| CDX-CORPUS-3 | Rapport échantillonnage 10 chunks + invariants | 🟡 À FAIRE (cette session S-216)
+| CDX-CORPUS-2 | Enrichissement graphe GF-FPA (optionnel) | ⏳ Reporté (graphe GF-FPA pas encore produit par graphify)
+|===

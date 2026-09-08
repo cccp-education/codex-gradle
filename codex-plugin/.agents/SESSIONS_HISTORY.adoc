@@ -13,6 +13,48 @@ Historique des sessions de developpement du plugin codex-gradle.
 *Impact* : débloque GBL-003.3/003.4 + itération humaine FPA-BOOK-6-5 (rapport exhaustif)
 
 '''
+== Session 216 — CDX-CORPUS run acquisition corpus FPA (GBL-003.3) + fix drift BOM ✅ TERMINÉ
+
+*Date* : 2026-09-08
+*Type* : dogfooding run (critical path MVP0) + fix cross-borough
+*EPIC* : CDX-CORPUS (US-0/1/3)
+*Mission réelle* : BACKLOG S-215 (PROMPT_REPRISE injecté périmé — option A/B/C)
+
+*A. Objectif* :
+Exécuter le run acquisition du corpus FPA cadré S-215 : livre.adoc
+(7787 lignes, œuvre dérivée) → chunks sémantiques exploitables pour le
+RAG aval codebase (GBL-003.3).
+
+*B. Actions* :
+- US-0 cadrage run : inventaire (livre.adoc 7787 lignes + 203 pages
+  scans + 27 issues OCR documentées) + pipeline à appliquer
+  (extractBookStructure SKIPPÉ — input déjà AsciiDoc ; transformToMarkdown
+  → transformChunk → deployKnowledgeBase). Doc `CADRAGE_CDX_CORPUS_RUN.adoc`.
+- US-1 run : build consommateur transitoire /tmp (pattern FPA-BOOK-4
+  Règle 2 — buildDir /tmp, corpusPublish move office/ + wipe). Plugin
+  `education.cccp.codex` 0.0.6 consommé via *buildscript classpath* (le
+  plugin marker N2 ne porte pas le classpath runtime codebase/store —
+  decorated classes échouent sinon). Outputs : 387 chunks + KB 3 formats
+  dans `office/.../codex-out/` (PROPRIETARY).
+- US-3 validation : invariants verts (387/387 ids SHA-256, 0 content
+  vide, license PROPRIETARY, coverage h1×39/h2×188/h3×134/h4×22/h5×4)
+  + échantillonnage 10 chunks substantiels. Constats : 99 chunks TOC
+  pollués (dot leaders, cause racine amont OCR), 19 [ILLISIBLE] =
+  candidats doubt GBL-003.4. Rapport `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`.
+- Fix drift BOM cross-borough : garde `CodexPluginPublicationTest`
+  rouge (bump MEMPHIS 0.0.34 S-215 puis 0.0.36 S-213 sans réaligner
+  codex pin 0.0.33 S-214) → réalignement pin platform + settings
+  workspace-catalog 0.0.36.
+
+*C. Résultats* :
+`check` VERT 682 tests 0 FAIL (baseline préservée, 266 skip CR-10).
+Zéro code prod codex modifié (2 lignes pin BOM). Zéro secret. Règle 2
+wipe vérifié (exists=false). CDX-CORPUS 3/4 US ✅ (US-2 enrichissement
+graphe reporté — graphe GF-FPA pas encore produit).
+Rapport : `.agents/sessions/216-cdx-corpus-run.adoc`.
+
+'''
+
 == Session 104 — EPIC CDX-OCR-CONTRACTS TERMINÉ 4/4 US (RAG-4 FINAL)
 
 *Date* : 2026-08-24

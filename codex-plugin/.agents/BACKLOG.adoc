@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-07 (session 215 — cadrage EPIC CDX-CORPUS (GBL-003.3 critical path MVP0) : acquisition documentaire corpus FPA (ex-métier privé — renommé RENAME) → chunks exploitables. 4 US ~5 pts. Zéro code. + Cadrage EPIC OCR-QUALITY (demande pilote : détection automatique images problématiques + transcriptions douteuses) — US-1/2 codex.)_
+_Dernière mise à jour : 2026-09-08 (session 216 — **CDX-CORPUS US-0/1/3 ✅ TERMINÉS** : run acquisition corpus FPA — 387 chunks sémantiques + KB 3 formats dans office/.../codex-out/ (œuvre dérivée PROPRIETARY, Règle 2 /tmp+wipe). US-2 enrichissement graphe reporté (graphe GF-FPA pas encore produit). Fix drift BOM cross-borough : pin platform + workspace-catalog 0.0.36 (garde publication réalignée, check VERT 682/0). + EPIC OCR-QUALITY (demande pilote : détection automatique images problématiques + transcriptions douteuses) — US-1/2 codex.)_
 
 '''
 == EPIC OCR-QUALITY — Détection automatique images problématiques + transcriptions douteuses 🟡 CADRÉ (P0, transverse)
@@ -25,17 +25,17 @@ exploitée), 5 images fantômes (3 bloquent epubcheck), 11 tableaux
 perdus, 10-15 schémas linéarisés — tout découvert manuellement.
 
 '''
-== EPIC CDX-CORPUS — Acquisition documentaire du corpus FPA (ex-métier privé — renommé RENAME) (GBL-003.3) 🟡 CADRÉ (P0)
+== ✅ EPIC CDX-CORPUS — Acquisition documentaire du corpus FPA (ex-métier privé — renommé RENAME) (GBL-003.3) ✅ TERMINÉ à 3/4 US (S-216)
 
 _Origine : BACKLOG.adoc racine § GBL-003 (critical path MVP0, arbitrage pilote 2026-09-07)._
-_Cadrage : `.agents/CADRAGE_EPIC_CDX_CORPUS.adoc`._
+_Cadrage : `.agents/CADRAGE_EPIC_CDX_CORPUS.adoc`. Cadrage run : `.agents/CADRAGE_CDX_CORPUS_RUN.adoc`._
 
 |===
 | US | Description | Pts | Statut
-| CDX-CORPUS-0 | Cadrage run : inventaire pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1 | 🟡 À FAIRE
-| CDX-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques (outputs dans office/) | 2 | 🟡 À FAIRE
-| CDX-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — codex.enrichment existant) | 1 | 🟡 À FAIRE
-| CDX-CORPUS-3 | Validation qualité chunks (échantillonnage) | 1 | 🟡 À FAIRE
+| CDX-CORPUS-0 | Cadrage run : inventaire pages AsciiDoc FPA + pipeline à appliquer (chunkDocument + exportKnowledgeBase) | 1 | ✅ TERMINÉ (S-216)
+| CDX-CORPUS-1 | Run acquisition : pages OCR + livre.adoc → chunks sémantiques (outputs dans office/) | 2 | ✅ TERMINÉ (S-216 — 387 chunks + KB 3 formats)
+| CDX-CORPUS-2 | Enrichissement via graphe GF-FPA (optionnel — codex.enrichment existant) | 1 | ⏳ REPORTÉ (graphe GF-FPA pas encore produit)
+| CDX-CORPUS-3 | Validation qualité chunks (échantillonnage) | 1 | ✅ TERMINÉ (S-216 — rapport codex-out/RAPPORT_CDX_CORPUS_RUN.adoc)
 |===
 
 *Frontière licence* : les chunks FPA sont une œuvre dérivée — outputs

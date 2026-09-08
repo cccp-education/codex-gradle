@@ -1,0 +1,16 @@
+= COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
+
+== S-216 (2026-09-08) — CDX-CORPUS run acquisition corpus FPA (GBL-003.3) + fix drift BOM ✅
+
+- CDX-CORPUS-0 ✅ — cadrage run (doc `CADRAGE_CDX_CORPUS_RUN.adoc`).
+- CDX-CORPUS-1 ✅ — run : livre.adoc 7787 lignes → 387 chunks sémantiques + KB 3 formats
+  dans `office/.../codex-out/` (PROPRIETARY, Règle 2 : buildDir /tmp + wipe).
+  Pipeline consommé *sans modification du build script codex* (buildscript
+  classpath 0.0.6 mavenLocal).
+- CDX-CORPUS-3 ✅ — validation : invariants verts (ids SHA-256 387/387, 0 content vide,
+  coverage headings) + échantillonnage 10 chunks (rapport `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`).
+- Fix drift BOM — pin platform + settings workspace-catalog 0.0.33 → 0.0.36
+  (bump MEMPHIS post-S-214 non réaligné — garde publication attrapée).
+- Gates : check VERT 682 tests 0 FAIL, zéro code prod (2 lignes pin), zéro secret.
+- CDX-CORPUS-2 ⏳ reporté (graphe GF-FPA pas encore produit).
+- Next : OCR-QUALITY-1/2 codex (critical path P0, cadrage S-215 prêt).

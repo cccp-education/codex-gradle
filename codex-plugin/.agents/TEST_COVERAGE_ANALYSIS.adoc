@@ -1,6 +1,21 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-08-24
-:session: 104
+:date: 2026-09-08
+:session: 216
+
+== Session 216 — CDX-CORPUS run (682 tests 0 FAIL — zéro test modifié, dogfooding)
+
+Zéro fichier test modifié ou créé cette session — le run acquisition est un
+dogfooding par configuration (build consommateur /tmp) + fix pin BOM
+(2 lignes build/settings). La garde publication `CodexPluginPublicationTest`
+était rouge sur un échec *préexistant* (drift MEMPHIS post-S-214) — réalignée
+au pin 0.0.36, 3/3 PASSED.
+
+[cols="2,3,2"]
+|===
+| Suite | Tests | Résultat
+| `./gradlew check` (test + cucumber + guards) | 682 unit/cucumber | ✅ 0 FAIL (266 skip CR-10)
+| `CodexPluginPublicationTest` | 3 gardes | ✅ PASSED (réaligné 0.0.36)
+|===
 
 == Session 104 — EPIC CDX-OCR-CONTRACTS (679/679 PASS — baseline préservée, typealiases transparents)
 
