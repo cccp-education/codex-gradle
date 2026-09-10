@@ -3,6 +3,28 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 217 — CDX-CORPUS-2 enrichment récursif corpus FPA (GBL-003.3 DÉBLOQUÉ)
+
+*Date* : 2026-09-10
+*Type* : dev (baby-step TDD strict RED → GREEN → REFACTOR)
+*Objectif* : enrichir les 387 chunks FPA via le graphe GF-FPA — clôturer
+l'EPIC CDX-CORPUS 4/4 US (critical path MVP0).
+*Travail* :
+- `SectionTitleNormalizer` objet pur (19 UT) — normalise titres LDD/chunks
+  (HTML entities, footnote macro, HTML tags, apostrophes, dot leaders,
+  footnote markers). Jointure passe de 30/111 à 110/111 normalisés.
+- Intégration dans `JsonLddEnricher.matchesSection` + `GraphifyFileResolver.resolve`.
+- `JsonLddEnricher.enrich` rendu récursif — `children: List<EnrichedLddNode>`
+  + `enrichNode` récursif (3 UT : child chunks, child graphify, depth-safe).
+- Fix drift BOM MEMPHIS : catalog 0.0.36→0.0.38 + BOM 0.0.37→0.0.38
+  (garde publication attrapée par bump S-218 HTOWN).
+*Résultats* : check VERT 704 tests 0 FAIL (682 → +22). publishToMavenLocal
+VERT 0.0.6. Enrichment réel 115/115 sections titrées (184 chunks + 521
+graphify nodes, jointure 100%). EPIC CDX-CORPUS TERMINÉ 4/4 US.
+*Rapport* : `.agents/sessions/217-cdx-corpus-enrichment.adoc`.
+
+'''
+
 == Session 215 (globale) — Cadrages CDX-CORPUS + OCR-QUALITY
 
 *Date* : 2026-09-07

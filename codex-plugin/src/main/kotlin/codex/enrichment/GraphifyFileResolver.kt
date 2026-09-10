@@ -24,11 +24,13 @@ class GraphifyFileResolver(private val graphJsonFile: File) : GraphifyResolver {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     override fun resolve(sectionTitle: String): List<String> {
+        val normalizedTitle = SectionTitleNormalizer.normalize(sectionTitle)
+        if (normalizedTitle.isEmpty()) return emptyList()
         if (!graphJsonFile.exists()) return emptyList()
         val model = runCatching { json.decodeFromString(GraphFileModel.serializer(), graphJsonFile.readText()) }
             .getOrNull() ?: return emptyList()
         return model.nodes
-            .filter { it.label.equals(sectionTitle, ignoreCase = true) }
+            .filter { SectionTitleNormalizer.normalize(it.label) == normalizedTitle }
             .map { it.id }
     }
 }

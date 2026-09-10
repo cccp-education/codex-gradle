@@ -1,5 +1,24 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-217 (2026-09-10) — CDX-CORPUS-2 enrichment JSON-L via graphify GBL-003.3 ✅
+
+- CDX-CORPUS-2 ✅ — EPIC CDX-CORPUS TERMINÉ 4/4 US, GBL-003.3 DÉBLOQUÉ.
+- `SectionTitleNormalizer` (nouveau, objet pur, 19 UT) — normalise titres
+  LDD/chunks (entities HTML, footnote macros, HTML tags, apostrophes typo,
+  dot leaders 2+, footnote markers `[n]`) → join de titres 30/111 → 110/111.
+- `JsonLddEnricher` rendu récursif (champ `children` + `enrichNode`) —
+  join par titre appliqué à chaque nœud (régression corrigée : run réel
+  passait de 4 sections enrichies → 115/115).
+- Run réel : 115/115 sections titrées enrichies (184 chunks + 521 graphify
+  nodes), 468 nœuds totaux, 353 paragraphs exclus (titre vide).
+  Enriched-ldd.json → `office/.../codex-out/` (PROPRIETARY, Règle 2).
+- Fix drift BOM : pin workspace-catalog/workspace-bom 0.0.36/0.0.37 → 0.0.38
+  (pénalité MEMPHIS S-218 — garde publication attrapée).
+- Gates : check VERT 704 tests 0 FAIL (+22 : 19 normalizer + 3 récursifs),
+  Kover VERT, validatePlugins VERT, publishToMavenLocal 0.0.6 frais.
+- Next : OCR-QUALITY-1/2 codex (critical path P0, cadrage S-215 prêt,
+  18-19 chunks `[ILLISIBLE]` candidats doubt GBL-003.4).
+
 == S-216 (2026-09-08) — CDX-CORPUS run acquisition corpus FPA (GBL-003.3) + fix drift BOM ✅
 
 - CDX-CORPUS-0 ✅ — cadrage run (doc `CADRAGE_CDX_CORPUS_RUN.adoc`).

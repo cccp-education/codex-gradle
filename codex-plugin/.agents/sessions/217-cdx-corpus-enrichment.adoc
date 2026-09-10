@@ -1,0 +1,105 @@
+= Rapport Session 217 — CDX-CORPUS-2 enrichment récursif corpus FPA (GBL-003.3)
+:session: 217
+:date: 2026-09-10
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+
+== Objectif
+
+Compléter CDX-CORPUS-2 — enrichissement des 387 chunks FPA via le graphe
+GF-FPA (graph-content.json, S-024) en réutilisant le domaine `codex.enrichment`
+existant. Clôturer l'EPIC CDX-CORPUS à 4/4 US (critical path MVP0 GBL-003.3).
+
+== Travail réalisé
+
+=== Baby-step 1 — SectionTitleNormalizer (19 UT)
+
+*Diagnostic* : la 1re exécution d'enrichissement ne joignait que
+30/111 sections titrées (27% de jointure). Cause racine : `matchesSection`
+faisait du match case-insensitive exact, mais les titres LDD (AST
+AsciidoctorJ) et chunks (SemanticChunker) encodaient différemment :
+
+* entités HTML (`d&#8217;` vs `'`)
+* footnotes (`footnote:[102]` vs `<sup>[<a>1</a>]</sup>`)
+* apostrophes typographiques vs ASCII
+* dot leaders de TOC (`.....` vs rien)
+* marqueurs de footnote `[102]`
+
+*Implémentation* : `SectionTitleNormalizer` objet pur —
+`normalize(raw)` = unescape HTML → strip footnote macro → strip HTML
+tags → strip zero-width spaces → strip footnote markers → strip trailing
+dot leaders (2+ chars) → whitespace collapse. Post-lowercase apostrophe
+normalization. Ordre corrigé (footnote marker AVANT dot leaders — bug
+découvert en RED : `[1]` suivait le dernier `.`).
+
+RED (20 erreurs `Unresolved reference`) → GREEN 19/19.
+
+=== Baby-step 2 — Intégration normalisation (42/42 UT enrichment)
+
+* `JsonLddEnricher.matchesSection` : comparaison via
+  `SectionTitleNormalizer.normalize` au lieu de `equals(ignoreCase=true)`.
+* `GraphifyFileResolver.resolve` : idem pour les labels graph.
+
+Non-régression : GraphifyFileResolverTest 6/6 + JsonLddEnricherTest 10/10
++ GraphifySectionBuilderTest 7/7 + SectionTitleNormalizerTest 19/19 = 42/42.
+
+=== Baby-step 3 — JsonLddEnricher récursif (45/45 UT enrichment)
+
+*Constat* : `enrich()` était plat — seuls les 4 nœuds racines étaient
+enrichis, jamais leurs 111 descendants. Le run réel ne produisait que
+4 sections / 10 chunks / 29 graphify nodes.
+
+*Implémentation* : champ `children: List<EnrichedLddNode> = emptyList()`
+ajouté à `EnrichedLddNode` (default backward compat, @Serializable) +
+méthode privée `enrichNode()` récursive. 3 UT ajoutés : child chunks,
+child graphify nodes, depth-safe.
+
+RED (14 erreurs `Unresolved reference 'children'`) → GREEN 45/45.
+
+=== Baby-step 4 — Fix drift BOM MEMPHIS cross-borough
+
+*Constat* : `check` complet ROUGE sur `CodexPluginPublicationTest`
+(`workspace-bom platform pin must use the ws catalog BOM version (0.0.38)`).
+Garde attrapée par le bump HTOWN S-218 (catalog/BOM MEMPHIS 0.0.38 publiés
+Central, commit `aa61ba4`).
+
+*Fix* : settings.gradle.kts `workspace-catalog:0.0.36 → 0.0.38` +
+build.gradle.kts `workspace-bom:0.0.37 → 0.0.38` + commentaire pragraphe
+aligné. 3 versions distinctes concentrées sur 0.0.38.
+
+=== Run réel
+
+`corpusEnrichPublish` via init-script `${CODEX_HOME}/gradlew -I ... -p /tmp/opencode/fpa-corpus-build`.
+
+* Résultat : **115/115 sections titrées enrichies** (100%), 468 nœuds
+  totaux (353 paragraphs sans titre correctement exclus).
+* 184 RAG chunks attachés + 521 graphify nodes résolus.
+* enriched-ldd.json publié dans `office/.../codex-out/` (œuvre dérivée
+  PROPRIETARY, jamais commitée dans ce repo public).
+
+== Gates
+
+* `./gradlew check` : **BUILD SUCCESSFUL** — 704 tests 0 FAIL (baseline
+  682 → +22 : 19 SectionTitleNormalizer + 3 JsonLddEnricher récursifs).
+* Kover VERT, validatePlugins VERT.
+* `publishToMavenLocal` VERT (codex-plugin 0.0.6, mavenLocal 17:36).
+
+== Zéro
+
+Zéro bump BOM (le bump 0.0.38 était déjà un fait MEMPHIS done), zéro
+secret, zéro régression, backward compat total (champs enfants default).
+
+== Livrables
+
+* `src/main/kotlin/codex/enrichment/SectionTitleNormalizer.kt` (nouveau)
+* `src/test/kotlin/codex/enrichment/SectionTitleNormalizerTest.kt` (nouveau, 19 UT)
+* `JsonLddEnricher.kt` (enrichNode récursif + normalize integration)
+* `GraphifyFileResolver.kt` (normalize integration)
+* `JsonLddEnricherTest.kt` (3 UT récursifs ajoutés)
+* `settings.gradle.kts` + `build.gradle.kts` (drift 0.0.38)
+
+== Clôture
+
+* EPIC CDX-CORPUS TERMINÉ 4/4 US — GBL-003.3 DÉBLOQUÉ.
+* Backlog sync : INDEX.adoc, BACKLOG.adoc, PROMPT_REPRISE.adoc.
+* Commit/push si permission pilote accordée.

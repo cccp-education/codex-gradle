@@ -1,33 +1,43 @@
-= PROMPT_REPRISE — Codex — Session 217
-:session: 217
-:date: 2026-09-08
+= PROMPT_REPRISE — Codex — Session 218
+:session: 218
+:date: 2026-09-10
 :status: PRET
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 682 tests 0 FAIL (pin BOM 0.0.36 réaligné S-216)
+./gradlew check           # baseline 704 tests 0 FAIL (drift BOM 0.0.38 fixé S-217)
 ----
 
-== Session 216 terminée — CDX-CORPUS run acquisition corpus FPA (GBL-003.3)
+== Session 217 terminée — CDX-CORPUS-2 enrichment récursif (GBL-003.3 DÉBLOQUÉ)
 
-*CDX-CORPUS-0/1/3 ✅ TERMINÉS* — corpus FPA (livre.adoc 7787 lignes) acquis
-en 387 chunks sémantiques + knowledge base 3 formats, dans
-`office/metiers/FPA/Devenir_.../codex-out/` (œuvre dérivée PROPRIETARY).
-Pipeline codex dogfoodé *sans modification du build script codex* :
-`transformToMarkdown` → `transformChunk` → `deployKnowledgeBase` +
-`corpusPublish` (move office/ + wipe /tmp, pattern FPA-BOOK-4 Règle 2).
-Cadrage : `.agents/CADRAGE_CDX_CORPUS_RUN.adoc`. Rapport run + validation
-qualité : `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`.
+*CDX-CORPUS US-2 ✅ TERMINÉ* — enrichment réel corpus FPA via graphify
+(GBL-003.3 critical path MVP0 DÉBLOQUÉ). Baby-step TDD strict :
 
-+ fix drift BOM cross-borough : pin platform 0.0.33 → 0.0.36 + pin
-settings workspace-catalog 0.0.36 (garde `CodexPluginPublicationTest`
-avait attrapé le bump MEMPHIS post-S-214). Gates : check VERT 682/0.
+(1) `SectionTitleNormalizer` objet pur (19 UT) — normalise les titres
+LDD/chunks (unescape HTML entities, footnote macro stripping, HTML tag
+stripping, typographic apostrophe/ellipsis/dot leaders, footnote markers,
+whitespace). Jointure passe de 30/111 à 110/111 titres normalisés.
 
-Rapport : `.agents/sessions/216-cdx-corpus-run.adoc`.
+(2) Intégration dans `JsonLddEnricher.matchesSection` + `GraphifyFileResolver.resolve`.
 
-== Prochaine session — 217 : objectifs
+(3) `JsonLddEnricher.enrich` rendu récursif — champ `children: List<EnrichedLddNode>`
+ajouté à `EnrichedLddNode` (default emptyList, backward compat) + `enrichNode`
+récursif privé. 3 UT récursifs ajoutés.
+
+(4) Fix drift MEMPHIS cross-borough : catalog 0.0.36→0.0.38 + BOM 0.0.37→0.0.38.
+
+Gate : check VERT 704 tests 0 FAIL (baseline 682 → +22).
+publishToMavenLocal VERT 0.0.6. Enrichment réel : 115/115 sections
+titrées enrichies (184 chunks + 521 graphify nodes), 468 nœuds total
+(353 paragraphs sans titre correctement exclus). Jointure 100%.
+
+*EPIC CDX-CORPUS 4/4 US TERMINÉ* — GBL-003.3 DÉBLOQUÉ.
+
+Rapport : `.agents/sessions/217-cdx-corpus-enrichment.adoc`.
+
+== Prochaine session — 218 : objectifs
 
 === Option A — OCR-QUALITY-1/2 (critical path, P0) 🟡 RECOMMANDÉE
 
@@ -36,18 +46,17 @@ Rapport : `.agents/sessions/216-cdx-corpus-run.adoc`.
 * OCR-QUALITY-2 : détection images problématiques à l'acquisition
   (image fantôme, page quasi vide, marqueur [ILLISIBLE]).
 * Débloque : OCR-QUALITY-3 (document) + OCR-QUALITY-4 (codebase doubt
-  metadata GBL-003.4) — le rapport S-216 (`codex-out/RAPPORT_CDX_CORPUS_RUN.adoc`)
-  documente 19 chunks `[ILLISIBLE]` candidats douteux.
+  metadata GBL-003.4).
 
-=== Option B — CDX-CORPUS-2 (enrichissement graphe, optionnel)
-
-* Enrichissement chunks via graphe GF-FPA (domaine `codex.enrichment`
-  existant) — vérifier la fraîcheur de `office/metiers/FPA/graph-content.json`
-  (GBL-003.2) avant consumption.
-
-=== Option C — Maintenance / ROLLOUT-6 dashboard
+=== Option B — Maintenance / ROLLOUT-6 dashboard
 
 * À la demande pilote (gate bump MEMPHIS requis).
+
+=== Option C — Cross-borough GBL-003.4 (doubt metadata)
+
+* Les 19 chunks `[ILLISIBLE]` candidats douteux (rapport S-216) sont
+  prêts pour être exposés via `DoubtMetadata`/`DoubtfulChunk` (S-213
+  codebase) — coordination Queens requise.
 
 == Méthode
 
@@ -62,8 +71,7 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-216)
-- `.agents/BACKLOG.adoc` (EPICs CDX-CORPUS ✅ US-0/1/3, OCR-QUALITY 🟡)
+- `.agents/INDEX.adoc` (à jour S-217)
+- `.agents/BACKLOG.adoc` (EPIC CDX-CORPUS ✅ 4/4 US, OCR-QUALITY 🟡)
 - `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (cadrage prêt)
-- `.agents/CADRAGE_CDX_CORPUS_RUN.adoc` (run S-216)
 - `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc` (validation qualité + chunks douteux)

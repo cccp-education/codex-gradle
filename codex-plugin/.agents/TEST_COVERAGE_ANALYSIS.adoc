@@ -1,6 +1,43 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-09-08
-:session: 216
+:date: 2026-09-10
+:session: 217
+
+== Session 217 — CDX-CORPUS-2 enrichment récursif (+22 tests, 704/704 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/kotlin/codex/enrichment/SectionTitleNormalizerTest.kt` (nouveau) | 19 unit | ✅ PASS — unescape HTML entities, footnote macro `footnote:[n]` strip, HTML tag strip, zero-width strip, footnote marker `[n]` strip, trailing dot leaders (2+), whitespace collapse, lowercase, apostrophe typographic→ASCII, casing muting. Jointure 30/111 → 110/111 titres normalisés
+| `test/kotlin/codex/enrichment/JsonLddEnricherTest.kt` | +3 unit récursifs | ✅ PASS — child sections reçoivent leurs rag chunks (join par enfant), child graphify nodes résolus récursivement, depth-safe sur arbres profonds (4 niveaux)
+| `test/kotlin/codex/enrichment/JsonLddEnricherTest.kt` (existant) | 10 unit | ✅ PASS — non-régression jointure (matchesSection normalisée au lieu de equals ignoreCase)
+| `test/kotlin/codex/enrichment/GraphifyFileResolverTest.kt` (existant) | 6 unit | ✅ PASS — non-régression resolve normalisée
+| `test/kotlin/codex/enrichment/GraphifySectionBuilderTest.kt` (existant) | 7 unit | ✅ PASS — non-régression inchangée
+|===
+
+*Coverage impact* : baseline 682 (S-216) → 704 tests 0 FAIL (+22 net : 19
+SectionTitleNormalizer + 3 JsonLddEnricher récursifs). `check` VERT
+(+ fix drift BOM 0.0.38). Kover VERT, validatePlugins VERT.
+
+*Nouveau testé* :
+- `SectionTitleNormalizer.normalize(raw)` — objet pur du domaine
+  `codex.enrichment`. 19 unit couvrent chaque règle isolément + cas
+  combinés et réels (« 2-3.2 Développer son état d'esprit, le Mind
+  Set.footnote:[102] » == « mind set.<sup>[1]</sup> »).
+- `JsonLddEnricher.enrich` récursif — champ `children:
+  List<EnrichedLddNode>` (default emptyList, backward compat). Le
+  join par titre s'applique désormais à chaque nœud, pas seulement
+  aux nœuds racine (régression corrigée : run réel passait de 4
+  sections enrichies à 115/115).
+
+*Run réel* : `corpusEnrichPublish` (init-script /tmp, pattern FPA-BOOK-4
+Règle 2) — 115/115 sections titrées enrichies (184 chunks + 521 graphify
+nodes), 468 nœuds totaux (353 paragraphs sans titre correctement exclus).
+Enriched-ldd.json publié dans `office/.../codex-out/` (PROPRIETARY).
+
+*Backward compat total* : `children` a un default — les consommateurs
+existants (`EnrichJsonLddTask`, `GraphifySectionBuilder`, sérialisation
+JSON) restent compatibles. Zéro bump BOM (fix drift 0.0.38 = réalignement),
+zéro secret, zéro régression.
 
 == Session 216 — CDX-CORPUS run (682 tests 0 FAIL — zéro test modifié, dogfooding)
 

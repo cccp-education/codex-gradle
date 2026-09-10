@@ -39,7 +39,8 @@ data class EnrichedLddNode(
     val ragChunks: List<DocumentChunk>,
     val graphifyNodes: List<String>,
     val semanticDensity: Double,
-    val entities: List<String>
+    val entities: List<String>,
+    val children: List<EnrichedLddNode> = emptyList()
 )
 
 /**
@@ -72,28 +73,42 @@ object JsonLddEnricher {
     ): List<EnrichedLddNode> {
         if (lddNodes.isEmpty()) return emptyList()
         val total = ragChunks.size
-        return lddNodes.map { node ->
-            val joined = if (node.title.isBlank()) emptyList()
-            else ragChunks.filter { matchesSection(it.sectionPath, node.title) }
-            val graphifyNodes = if (node.title.isBlank()) emptyList()
-            else graphifyResolver.resolve(node.title)
-            val density = if (total == 0) 0.0 else joined.size.toDouble() / total.toDouble()
-            val entities = extractEntities(node)
-            EnrichedLddNode(
-                ldd = node,
-                ragChunks = joined,
-                graphifyNodes = graphifyNodes,
-                semanticDensity = density,
-                entities = entities
-            )
-        }
+        return lddNodes.map { node -> enrichNode(node, ragChunks, graphifyResolver, total) }
+    }
+
+    private fun enrichNode(
+        node: LddNode,
+        ragChunks: List<DocumentChunk>,
+        graphifyResolver: GraphifyResolver,
+        totalChunks: Int
+    ): EnrichedLddNode {
+        val joined = if (node.title.isBlank()) emptyList()
+        else ragChunks.filter { matchesSection(it.sectionPath, node.title) }
+        val graphifyNodes = if (node.title.isBlank()) emptyList()
+        else graphifyResolver.resolve(node.title)
+        val density = if (totalChunks == 0) 0.0 else joined.size.toDouble() / totalChunks.toDouble()
+        val entities = extractEntities(node)
+        val enrichedChildren = if (node.children.isEmpty()) emptyList()
+        else node.children.map { child -> enrichNode(child, ragChunks, graphifyResolver, totalChunks) }
+        return EnrichedLddNode(
+            ldd = node,
+            ragChunks = joined,
+            graphifyNodes = graphifyNodes,
+            semanticDensity = density,
+            entities = entities,
+            children = enrichedChildren
+        )
     }
 
     private fun matchesSection(sectionPath: String, title: String): Boolean {
         val trimmed = sectionPath.trim()
         if (trimmed.isEmpty()) return false
         val last = trimmed.substringAfterLast('>').trim()
-        return last.equals(title, ignoreCase = true)
+        if (last.isEmpty()) return false
+        val normalizedTitle = SectionTitleNormalizer.normalize(title)
+        if (normalizedTitle.isEmpty()) return false
+        val normalizedLast = SectionTitleNormalizer.normalize(last)
+        return normalizedLast == normalizedTitle
     }
 
     private fun extractEntities(node: LddNode): List<String> {
