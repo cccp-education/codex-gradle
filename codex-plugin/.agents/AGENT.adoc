@@ -8,9 +8,9 @@ _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (conformement a la 
 _Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Codex est un producteur de corpus, pas un hub de contexte. Les briques de creation de contenu (document, plantuml, slider, bakery, hyperframes, training, capsule) consomment le RAG via codebase, jamais directement via codex. Document (New Orleans) = WRITE + PUBLISH. Les deux sont paralleles N2, pas empiles.
 
 '''
-== Regle 1 — COMMITS/GIT : INTERDICTION FORMELLE sans permission explicite
+==  Regle 1 — COMMITS/GIT : AUTORISÉ (décision 2026-09-17)
 
-*AUCUN commit, push, merge, amend, ou force push sans que l'utilisateur ait explicitement demande :*
+* Commit/push/merge autorisés (décision pilote 2026-09-17 — suppression de l'interdiction formelle). Ne JAMAIS commiter de secret.
 "commit", "commit and push", "c'est bon tu peux commit", ou formulation equivalente.
 Le script de build PEUT etre modifie en session active — le code PEUT tourner —
 mais RIEN ne doit etre persisté dans Git sans instruction humaine claire.

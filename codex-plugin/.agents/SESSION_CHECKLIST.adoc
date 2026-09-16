@@ -9,7 +9,7 @@
 
 == Pendant la session
 
-. [ ] Respecter la Regle 1 — AUCUN commit sans permission explicite
+. [ ] Respecter la Regle — Git autorisé (décision 2026-09-17), zéro secret commité
 . [ ] Respecter la Regle 2 — PAS de publishToMavenLocal automatique
 . [ ] Respecter la Regle 3 — ZERO secret dans build.gradle.kts
 . [ ] Classer le contenu genere : VISION / OPINION / STRATEGIE
