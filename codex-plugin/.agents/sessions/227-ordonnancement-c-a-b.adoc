@@ -1,0 +1,172 @@
+= Rapport Session 227 — Ordonnancement pilote C → A → B
+:session: 227
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn) — coordination Queens (codebase) + MEMPHIS (workspace-bom)
+:status: TERMINÉ
+:type: gouvernance pure (zéro code, zéro publication)
+
+== Objectif
+
+Mission tranchée par le pilote : *« C puis A et enfin quand c'est fini B.
+Chacun de ces est au moins 3 à 4 sessions différentes. Synchronise le
+backlog avec ceci et clôture la session, on reprendra au début de la
+suivante, puis tu commit et push. »*
+
+Session d'ordonnancement : séquencer trois blocs de travail en sessions
+distinctes, acter la séquence et les dépendances, synchroniser le backlog,
+clôturer, commit/push.
+
+== Décision actée
+
+----
+Option C (maintenance, 4 sessions)  →  Option A (EPIC CB-PAGE-PROVENANCE, 4 sessions)
+                                     →  Option B (publication, 3 sessions)
+----
+
+Total : **11 sessions** (S-228 → S-238). Aucun chevauchement — une session
+exécute une seule option. La session 228 ouvre C-1.
+
+Document d'ordonnancement créé : `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`.
+
+== Pourquoi C avant A (découverte de session)
+
+L'audit d'ouverture a mis au jour deux faits qui **inversent** l'ordre
+naïf (A d'abord, comme le suggérait le PROMPT_REPRISE S-227) :
+
+. *La baseline n'est pas verte à HEAD.* Une session MEMPHIS **parallèle**
+   (S-227, commit `c756b33`) a publié **BOM/catalog 0.0.50** +
+   `codebase-plugin 0.0.16` **après** la clôture codex S-226 (qui épinglait
+   0.0.49). La garde `CodexPluginPublicationTest.workspace bom platform
+   pin matches ws catalog bom version` est **RED à HEAD** — prouvé en
+   session : `./gradlew test --tests 'codex.CodexPluginPublicationTest'`
+   → `75 tests completed, 1 failed` (`AssertionError at
+   CodexPluginPublicationTest.kt:54`). repo1 0.0.50 BOM + catalog = HTTP 200.
+   Travailler sur A avec une garde d'hygiène rouge fausserait toutes les
+   gates → ce drift est **C-1**, la première action de la prochaine session.
+
+. *C-2 (split-brain `DocumentChunk`) est un prérequis structurel de A-1.*
+   L'EPIC A ajoute `pages: List<Int>` au type N1
+   `codebase.store.DocumentChunk`. Or `codex.tasks.DocumentChunk`
+   (`ChunkDocumentTask.kt:34`) est un doublon verbatim de
+   `codebase/store/DocumentChunk.kt:23` — ajouter `pages` sans unifier
+   reviendrait à maintenir le champ **deux fois**. Unifier d'abord (C-2)
+   rend A-1 simple et supprime un drift documenté depuis S-223.
+
+Conclusion : `C → A → B` n'est pas qu'une préférence du pilote — c'est
+l'ordre que la **dépendance technique** impose.
+
+== Option C — Maintenance (4 sessions, S-228 → S-231)
+
+|===
+| Session | Sous-tâche | Contenu | Borough
+
+| S-228 | C-1 | Drift MEMPHIS : bump pins 0.0.49 → 0.0.50, garde RED → GREEN,
+  baseline 1393 tests 0 FAIL, audit pins N1 (`codebase` toml 0.0.12 vs
+  catalog 0.0.16 — contrainte BOM, non bloquant) | Brooklyn
+| S-229 | C-2 | Split-brain `DocumentChunk` : suppression du type
+  `codex.tasks.DocumentChunk`, bascule des 7 fichiers prod vers
+  `codebase.store.DocumentChunk`, characterization JSON byte-compatible,
+  non-régression `@provenance`/enrichment/ingest | Brooklyn + Queens
+| S-230 | C-3 | Dead code N1 (`insertChunk()` 5 binds + `IngestIndexing`,
+  zéro appelant prod) + 8 désynchronisations de gouvernance (`SESSION_PROCEDURE`
+  chemins pré-S-105, `INDEX` règle « INTERDICTION FORMELLE » contredisant la
+  décision 2026-09-17, `AGENT.adoc` § Fichiers, `README.md` badges 0.0.1) | Queens + Brooklyn
+| S-231 | C-4 | Pollution TOC du chunking (99 chunks / 387 au run FPA
+  S-216) — détection/exclusion ou marquage `doubtful` (zéro re-vectorisation
+  privilégiée), BDD `@toc-noise`, clôture C + go/no-go A | Brooklyn
+|===
+
+== Option A — EPIC CB-PAGE-PROVENANCE (4 sessions, S-232 → S-235)
+
+EPIC cadré S-225 (5 US ~9 pts, US-0 ✅). Une US par session, ordre DAG strict.
+
+|===
+| Session | US | Contenu | Borough
+
+| S-232 | US-1 | N1 transport : `DocumentChunk.pages`, `provenanceSchema()`
+  (`pages TEXT` idempotent), `initSchema()` `pages TEXT`, bind 8, `RagVectorStore`,
+  `RetrieveResult.pages` + SELECT parse. Unit + FT testcontainers | Queens
+| S-233 | US-2 | N2 transport : `CodexIngestTask.pageProvenanceFile`
+  (`@InputFiles` tolérante) + jointure exacte SHA-256 ↔ `DocumentChunk.id` +
+  attache `pages` + dégradé silencieux. Unit fake `RagVectorStore` | Brooklyn
+| S-234 | US-3 | N1 exposition : canal Docs `CompositeContextBuilder` +
+  `CodebaseCompositeContextTask` entrées `pages` (additif) | Queens
+| S-235 | US-4 | BDD `@page-retrieval` cross-borough : sidecar joint,
+  page au retrieval, dégradé, multi-pages, backward compat | les deux
+|===
+
+== Option B — Publication (3 sessions, S-236 → S-238)
+
+Ordre DAG **codebase-first** (N1 → N2).
+
+|===
+| Session | Étape | Contenu
+
+| S-236 | B-1 | `codebase-plugin` + BOM/catalog MEMPHIS, Central, propagation
+  (contenu US-1/US-3)
+| S-237 | B-2 | `codex-plugin` 0.0.11 → 0.0.12, Central (contenu US-2/US-4),
+  garde `CodexPluginPublicationTest`
+| S-238 | B-3 | Propagation repo1 + alignement consommateurs + dogfooding
+  backfill sur base jetable (`RetrieveResult.pages` de bout en bout vs
+  70,8 % heuristique) + clôture
+|===
+
+== Ouverture de session — état constaté S-227
+
+. `git status` propre, branche `main` à jour (HEAD `bd90c03`, S-226).
+. Sources **fraîches** : `git status --porcelain -- src/` vide et aucune
+   source plus récente que `build/test-results/test` → règle EAGER
+   appliquée : **compile seulement**, pas de suite relancée à l'ouverture.
+3. `./gradlew compileKotlin compileTestKotlin` → **BUILD SUCCESSFUL**
+   (5 tasks up-to-date, 9s).
+. Baseline documentée : 1393 tests (1263 + 130 cucumber) 0 FAIL (S-226).
+. Garde d'hygiène ciblée exécutée **une fois** pour vérifier le drift
+   détecté par l'audit → **1 failed** (C-1 confirmé).
+
+== Fichiers modifiés (gouvernance)
+
+. `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` — **créé** (plan de séquence
+   C → A → B, 11 sessions, dépendances, hors scope, méthode).
+. `.agents/INDEX.adoc` — session en cours 227, tableau session 227,
+   roadmap (`CB-PAGE-PROVENANCE` 🟡 → ordonnancement cadré, nouvelle entrée
+   maintenance C séquencée), prochaine session 228.
+3. `.agents/BACKLOG.adoc` — section d'ordonnancement C/A/B en tête, statuts
+   détaillés `CB-PAGE-PROVENANCE` annotés (sessions assignées S-232→S-235,
+   prérequis C-2), entrée EPIC Maintenance C (4 sous-tâches).
+4. `.agents/PROMPT_REPRISE.adoc` — réécrit pour S-228 (mission C-1).
+5. `.agents/SESSIONS_HISTORY.adoc` — entrée session 227.
+6. `.agents/archives/COMPLETED_TASKS_ARCHIVE_2026-09.adoc` — entrée S-227.
+7. `.agents/TEST_COVERAGE_ANALYSIS.adoc` — non modifié (aucun test modifié).
+
+== Cross-borough — synchronisation
+
+- *Queens (codebase)* : l'EPIC `CB-PAGE-PROVENANCE` est déjà dans son
+  `BACKLOG.adoc` (S-225) et `INDEX.adoc` (entrée table). La séquence est
+  actée côté Brooklyn (pilote) ; Queens exécutera S-232/S-234. Aucune
+  modification de fichier Queens en S-227 (session non propriétaire).
+- *MEMPHIS (workspace-bom)* : `0.0.50` + `codebase-plugin 0.0.16` publiés
+  S-227 parallèle (`c756b33`) — c'est le déclencheur de C-1. Aucune
+  modification MEMPHIS en S-227.
+- *Racine workspace* : `AGENTS.adoc` (entrée Brooklyn) + `BACKLOG.adoc`
+  global (GBL-003.4) synchronisés + snapshot `vision-archive`.
+
+== Gates
+
+Session de gouvernance pure — **zéro code modifié**, zéro test modifié.
+- `compileKotlin` + `compileTestKotlin` VERT (environnement validé).
+- Garde `CodexPluginPublicationTest` RED **constatée** (drift C-1) — non
+  corrigée en S-227 (mission = ordonnancer, C-1 est la mission de S-228).
+- Zéro secret, zéro publication, zéro bump.
+
+== Prochaine session (228) — mission C-1
+
+Corriger le drift MEMPHIS (pins 0.0.49 → 0.0.50), rendre la garde
+`CodexPluginPublicationTest` 3/3 VERTE, valider `check` VERT 1393 tests
+0 FAIL, auditer les pins N1 secondaires. Voir `PROMPT_REPRISE.adoc`.
+
+== Références
+
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`
+- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`
+- `.agents/sessions/226-maintenance-publication-0011.adoc`
+- `workspace-bom` commit `c756b33` (BOM/catalog 0.0.50 + codebase 0.0.16)

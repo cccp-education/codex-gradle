@@ -1,80 +1,90 @@
-= PROMPT_REPRISE — Codex — Session 227
-:session: 227
+= PROMPT_REPRISE — Codex — Session 228
+:session: 228
 :date: 2026-09-17
 :status: PRET
-:mission: mission à trancher par le pilote (EPIC CB-PAGE-PROVENANCE CADRÉ S-225, release 0.0.11 livrée S-226)
+:mission: C-1 — drift MEMPHIS (pins 0.0.49 → 0.0.50) + baseline verte (ouverture du bloc C : C → A → B)
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
-./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 1393 tests (1263 + 130 cucumber), 0 FAIL
+./gradlew compileKotlin compileTestKotlin   # environnement (sources fraîches → compile seulement)
+./gradlew test --tests 'codex.CodexPluginPublicationTest'   # RED attendu (drift C-1)
 ----
 
-== Session 226 terminée — maintenance + publication codex-plugin 0.0.11
+== Contexte — ordonnancement pilote acté S-227
 
-Options B + C (demande pilote). Option A (implémentation CB-PAGE-PROVENANCE)
-explicitement écartée.
+Le pilote a tranché : *C (maintenance) puis A (EPIC CB-PAGE-PROVENANCE)
+puis B (publication)*. Chacun = 3 à 4 sessions distinctes. Total 11 sessions
+(S-228 → S-238). Plan complet : `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`.
 
-*C — Maintenance* : drift corrigé. Le pin codex était 0.0.47 alors que
-MEMPHIS était à 0.0.48 (`CodexPluginPublicationTest` RED à HEAD). Bump
-codex pins `settings.gradle.kts` + `build.gradle.kts` 0.0.47 → 0.0.49,
-toml local `0.0.10` → `0.0.11`. Garde 3/3 VERTE.
+- *C* — 4 sessions : C-1 drift/baseline (S-228) · C-2 split-brain
+  `DocumentChunk` (S-229) · C-3 dead code + gouvernance (S-230) · C-4
+  pollution TOC + clôture (S-231).
+- *A* — 4 sessions : US-1 N1 transport (S-232) · US-2 N2 transport (S-233) ·
+  US-3 N1 exposition (S-234) · US-4 BDD (S-235).
+- *B* — 3 sessions : B-1 codebase-first (S-236) · B-2 codex 0.0.12 (S-237) ·
+  B-3 propagation + dogfooding (S-238).
 
-*B — Publication* : ordre DAG MEMPHIS-first.
-. MEMPHIS BOM/catalog **0.0.49** — bundle `3d85cc54-d6d8-4284-be03-f950f5e9f207`
-  (constraint `codex-plugin 0.0.11`).
-. codex-plugin **0.0.11** — bundle `ad4b1717-2214-45e1-a391-728b78df46ea`.
-. Propagation repo1 : BOM 200 · catalog 200 · codex 200.
+Pourquoi C avant A : (1) la baseline n'est PAS verte à HEAD (drift C-1) ;
+(2) C-2 est un prérequis structurel de A-1 (le champ `pages` ne doit pas
+être maintenu dans deux types `DocumentChunk`).
 
-Contenu 0.0.11 depuis 0.0.10 : EPIC CDX-PAGE-PROVENANCE (S-223/S-224).
+== Mission S-228 — C-1 (baby-step TDD strict)
 
-== Non-régression
-`check` VERT 6m28s — 1393 tests (1263 + 130 cucumber) 0 FAIL, Kover VERT,
-validatePlugins VERT. Zéro secret.
+*Constat prouvé S-227* : une session MEMPHIS **parallèle** (S-227, commit
+`c756b33`) a publié **BOM/catalog 0.0.50** + `codebase-plugin 0.0.16` après
+la clôture codex S-226 (pin 0.0.49). La garde RED est le test.
 
-*Note* : 3 échecs transitoires `CodexIngestRetrieveIT`
-(`NoClassDefFoundError: DocumentChunk$$serializer`) dus à une **course
-cross-borough** — le jar `codebase-plugin-0.0.15` mavenLocal réécrit par une
-session Queens parallèle. Non imputable au diff (IT 4/4 PASS après
-stabilisation). Piège à retenir : mavenLocal partagé entre boroughs.
+. *RED* — `./gradlew test --tests 'codex.CodexPluginPublicationTest'` →
+   `1 failed` (`AssertionError at CodexPluginPublicationTest.kt:54`) :
+   le pin platform `workspace-bom:0.0.49` ≠ catalog ws 0.0.50.
+. *GREEN* — bump pins `0.0.49` → `0.0.50` :
+   - `settings.gradle.kts` : `from("education.cccp:workspace-catalog:0.0.49")`
+     → `0.0.50` ;
+   - `build.gradle.kts` : `platform("education.cccp:workspace-bom:0.0.49")`
+     → `0.0.50`.
+   Le toml local `codex-plugin = "0.0.11"` **ne bouge pas** (pas de release).
+3. *Garde 3/3 VERTE* (`--rerun-tasks`).
+. *Audit secondaire* : toml local `codebase = "0.0.12"` vs catalog `0.0.16`
+   — résolu par la contrainte BOM, aucune garde ne l'exige. Vérifier ce
+   n'est pas un drift latent (S-226 l'a classé « pas de drift réel »).
+. *Gate* : `./gradlew check` VERT, baseline **1393 tests**
+   (1263 unit + 130 cucumber) 0 FAIL, Kover VERT, validatePlugins VERT.
 
-== Prochaine mission — candidats (pilote tranche)
+== Pièges connus
 
-. *Option A — implémenter CB-PAGE-PROVENANCE US-1* (N1 transport, Queens
-   codebase) : `DocumentChunk.pages` + `StoreStatements.provenanceSchema()`
-   (`pages TEXT`) + bind 8 + `RetrieveResult.pages` + SELECT. Baby-step
-   DDD/TDD/BDD strict, unit + FT testcontainers.
-. *Option B — EPIC PUB suivante* : rien de neuf cette session (0.0.11 est
-   la dernière release) — prochaine release sur nouveau contenu.
-. *Option C — maintenance* : le borough est sain ; tous EPICs cadrés
-   terminés. Dette documentée : split-brain `DocumentChunk` codex/N1,
-   `insertChunk()`/`IngestIndexing` legacy morts, pollution TOC corpus FPA.
+- *mavenLocal partagé entre boroughs* : une session parallèle peut réécrire
+  un jar pendant `check` (course S-226 `CodexIngestRetrieveIT`,
+  `NoClassDefFoundError: DocumentChunk$$serializer`). Vérifier par stash
+  avant d'accuser le diff.
+- *Le chemin de projet* : le projet racine **est** `codex-plugin` — utiliser
+  `./gradlew check` (PAS `:codex-plugin:check`, qui échoue). Voir C-3
+  (SESSION_PROCEDURE à corriger S-230).
+- *Garde de publication* : `CodexPluginPublicationTest` lit le toml du repo
+  voisin `../workspace-bom/gradle/libs.versions.toml` (source de vérité).
 
-== Ordre CB-PAGE-PROVENANCE (si Option A)
-US-1 (N1 transport) → US-2 (N2 codex `CodexIngestTask`) → US-3 (N1
-exposition canal Docs) → US-4 (BDD cross-borough). Le N1 pose, le N2
-branche, le N1 expose, le BDD prouve.
+== Bloc C — suite (rappel, ne pas anticiper)
 
-== Cross-borough
-US-1/US-3 = Queens (codebase). US-2 = Brooklyn (codex). US-4 = les deux.
-Ordre DAG si publication : codebase-first puis codex (N2 dépend de N1).
-
-== Hors scope (documenté)
-Suppression sidecar S-224 · array PostgreSQL · backfill UPDATE-only ·
-contrat N0 · extension `DoubtMetadata` · pollution TOC/OCR corpus FPA · ancre
-in-page / re-chunking par page (S-223 A1/A2).
+- *S-229 / C-2* : unifier `DocumentChunk` (supprimer `codex.tasks.DocumentChunk`,
+  basculer 7 fichiers prod vers `codebase.store.DocumentChunk`) — **bloque A-1**.
+- *S-230 / C-3* : dead code N1 (`insertChunk()` 5 binds + `IngestIndexing`) +
+  8 désynchronisations gouvernance (`SESSION_PROCEDURE.adoc` chemins pré-S-105
+  + commande `:codex-plugin` erronée, `INDEX.adoc:18` règle « INTERDICTION
+  FORMELLE » contredisant la décision 2026-09-17, `AGENT.adoc` § Fichiers,
+  `README.md` badges 0.0.1).
+- *S-231 / C-4* : pollution TOC chunking (99/387 au run FPA S-216), BDD
+  `@toc-noise`, clôture C + go/no-go A.
 
 == Méthode / Règles
 Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
 fonctionnel TestKit/ProjectBuilder/testcontainers → Cucumber), English only.
 COMMITS/PUSH autorisés (décision pilote 2026-09-17). PAS de publication sans
-permission. SECRETS via configuration/. Ne JAMAIS lancer `./gradlew test`
-global en fin de session sans permission.
+permission. SECRETS via configuration/. Ne JAMAIS lancer la suite globale
+sans nécessité (règle EAGER cycle build/test piloté par le delta source).
 
 == References
-- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (cadrage S-225)
-- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (EPIC amont, D7 S-223)
-- `.agents/sessions/226-maintenance-publication-0011.adoc` (rapport S-226)
-- codebase : `codebase/store/{DocumentChunk,StoreStatements,RagVectorStore,RetrieveResult}.kt`
-- codex : `codex/tasks/CodexIngestTask.kt`, `codex/provenance/PageProvenanceResolver.kt`
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan de séquence C → A → B)
+- `.agents/sessions/227-ordonnancement-c-a-b.adoc` (rapport S-227)
+- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (EPIC A, S-225)
+- `.agents/sessions/226-maintenance-publication-0011.adoc` (point de départ C)
+- `workspace-bom` commit `c756b33` (déclencheur du drift C-1)

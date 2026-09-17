@@ -3564,3 +3564,56 @@ stabilisation (IT 4/4 PASS) → **non imputable au diff**. Piège à retenir :
 mavenLocal est partagé entre boroughs.
 
 *Rapport* : `.agents/sessions/226-maintenance-publication-0011.adoc`.
+
+== Session 227 — 2026-09-17 — Ordonnancement pilote C → A → B (gouvernance pure)
+
+*Décision pilote* : *« C puis A et enfin quand c'est fini B. Chacun de ces
+est au moins 3 à 4 sessions différentes. »* Session d'ordonnancement : acter
+la séquence, les dépendances et le budget en sessions ; synchroniser le
+backlog ; clôturer ; commit/push.
+
+*Plan de séquence acté* (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) — **11
+sessions S-228 → S-238** :
+
+- *C — Maintenance* (S-228 → S-231, 4 sessions) : C-1 drift MEMPHIS + baseline
+  (S-228) · C-2 split-brain `DocumentChunk` prérequis A-1 (S-229) · C-3 dead
+  code N1 + 8 désync gouvernance (S-230) · C-4 pollution TOC chunking + clôture
+  (S-231).
+- *A — EPIC CB-PAGE-PROVENANCE* (S-232 → S-235, 4 sessions, une US/session) :
+  US-1 N1 transport · US-2 N2 transport · US-3 N1 exposition · US-4 BDD.
+- *B — Publication* (S-236 → S-238, 3 sessions) : B-1 codebase-first N1 ·
+  B-2 codex-plugin 0.0.12 · B-3 propagation repo1 + dogfooding backfill.
+
+*Découvertes de session* (qui justifient l'ordre C → A → B) :
+
+1. *La baseline n'est PAS verte à HEAD.* Une session MEMPHIS **parallèle**
+   (S-227, `c756b33`) a publié BOM/catalog **0.0.50** + `codebase-plugin
+   0.0.16` **après** la clôture codex S-226 (pin 0.0.49). La garde
+   `CodexPluginPublicationTest` est **RED à HEAD** — prouvé en session :
+   `./gradlew test --tests 'codex.CodexPluginPublicationTest'` →
+   `75 tests completed, 1 failed` (`AssertionError at
+   CodexPluginPublicationTest.kt:54`). repo1 0.0.50 = HTTP 200. C'est C-1.
+2. *C-2 est un prérequis structurel de A-1.* L'EPIC A ajoute
+   `pages: List<Int>` au type N1 `codebase.store.DocumentChunk`, alors que
+   `codex.tasks.DocumentChunk` (`ChunkDocumentTask.kt:34`) est un doublon
+   verbatim (`codebase/store/DocumentChunk.kt:23`). Unifier d'abord (C-2)
+   évite de maintenir `pages` deux fois.
+
+*Ouverture (règle EAGER)* : `git status` propre (HEAD `bd90c03`, main à jour),
+sources **fraîches** (`git status --porcelain -- src/` vide, aucune source
+plus récente que `build/test-results/test`) → **compiler seulement** ;
+`./gradlew compileKotlin compileTestKotlin` → BUILD SUCCESSFUL (5 tasks
+up-to-date, 9s). Pas de suite relancée à l'ouverture.
+
+*Gouvernance mise à jour* : `CADRAGE_ROADMAP_S227_C_A_B.adoc` (créé) ·
+`INDEX.adoc` (session 227, table, roadmap, séquence) · `BACKLOG.adoc`
+(séquence C→A→B + EPIC SÉQUENCE-C 4 sous-tâches + statuts US A annotés des
+sessions S-232→S-235) · `PROMPT_REPRISE.adoc` (S-228 = C-1) ·
+`SESSIONS_HISTORY.adoc` + archive. Racine : `AGENTS.adoc` (entrée Brooklyn) +
+`BACKLOG.adoc` global (GBL-003.4) + snapshot `vision-archive`.
+
+*Gates* : gouvernance pure — **zéro code modifié**, zéro test modifié,
+zéro publication, zéro secret. Rappel baseline documentée : 1393 tests
+(1263 unit + 130 cucumber) 0 FAIL (S-226).
+
+*Rapport* : `.agents/sessions/227-ordonnancement-c-a-b.adoc`.

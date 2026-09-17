@@ -1,0 +1,352 @@
+= Ordonnancement pilote C → A → B — codex-gradle (Session 227)
+:date: 2026-09-17
+:session: 227
+:type: gouvernance pure — ordonnancement de sessions (zéro code)
+:decision_pilote: « C puis A et enfin quand c'est fini B. Chacun de ces est au moins 3 à 4 sessions différentes. »
+:statut: ACTÉ — plan de séquence, à exécuter session par session
+:portee: Brooklyn (codex) + Queens (codebase) + MEMPHIS (workspace-bom N0)
+
+== Décision pilote
+
+Le pilote a tranché l'ordonnancement des trois options en attente du
+PROMPT_REPRISE S-227 :
+
+----
+Option C (maintenance)  →  Option A (EPIC CB-PAGE-PROVENANCE)  →  Option B (publication)
+----
+
+Contraintes actées :
+
+. *Séquence stricte* : C **puis** A **puis** B. B ne commence qu'après
+  clôture complète de A (le contenu à publier en B est produit par A).
+. *Budget en sessions* : chaque option est « au moins 3 à 4 sessions
+  différentes ». Un EPIC de 5 US (A) ne se bâcle pas dans une session ;
+  une maintenance (C) est un bloc, pas un one-shot.
+. *Aucun chevauchement* : une session exécute une seule option. La
+  session 228 ouvre C-1. Le backlog acte les numéros de session.
+
+== Pourquoi cet ordre (et pas A d'abord)
+
+[cols="1,2,3", options="header"]
+|===
+| Ordre | Raison | Preuve
+
+| *C avant A*
+| C-2 (split-brain `DocumentChunk`) est un **prérequis de A-1**. L'EPIC A
+  ajoute `pages: List<Int>` au type N1 `codebase.store.DocumentChunk`
+  (D3 S-225). Si le doublon `codex.tasks.DocumentChunk` subsiste, le champ
+  serait à maintenir **deux fois** — exactement le drift que C-2 élimine.
+| `ChunkDocumentTask.kt:34` et `codebase/store/DocumentChunk.kt:23` —
+  deux data classes identiques (migration verbatim RAG-1). `CodexIngestTask`
+  décode déjà dans le type N1 (`ignoreUnknownKeys = true`).
+
+| *A avant B*
+| B publie le contenu produit par A. Publier avant d'implémenter
+  reviendrait à republier `0.0.11` (déjà Central) — zéro valeur.
+| S-226 : « rien de neuf cette session (0.0.11 est la dernière release) —
+  prochaine release sur nouveau contenu ».
+
+| *C avant tout*
+| La baseline n'est pas verte à l'ouverture de S-228 : une session
+  *parallèle* MEMPHIS (S-227 `c756b33`) a publié **BOM/catalog 0.0.50**
+  + `codebase-plugin 0.0.16` après la clôture codex S-226 (pin 0.0.49).
+  Travailler sur A avec une garde d'hygiène rouge fausse toutes les gates.
+| Garde `CodexPluginPublicationTest` **RED à HEAD** (prouvé S-227,
+  `1 failed`). repo1 0.0.50 BOM + catalog = HTTP 200.
+|===
+
+== Option C — Maintenance (4 sessions : S-228 → S-231)
+
+*Objectif* : remettre le borough à un état sain, durable et honnête —
+baseline verte, dettes structurelles soldées, gouvernance désynchronisée
+corrigée. Aucune fonctionnalité nouvelle.
+
+=== C-1 (S-228) — Drift MEMPHIS + baseline verte
+
+*Constat* : le pin codex (`settings.gradle.kts` `workspace-catalog:0.0.49`
++ `build.gradle.kts` `workspace-bom:0.0.49`) est en retard d'une release
+MEMPHIS (`0.0.50`, session parallèle S-227 `c756b33`, publiée Central).
+La garde `CodexPluginPublicationTest.workspace bom platform pin matches ws
+catalog bom version` échoue à HEAD (`1 failed`, prouvé S-227).
+
+*Travail* :
+
+. Baby-step TDD strict : la garde RED est le test (aucun test à écrire —
+   elle lit le catalog ws publié et le toml local).
+. Bump pins `0.0.49` → `0.0.50` (`settings.gradle.kts` + `build.gradle.kts`).
+   Le toml local `codex-plugin = "0.0.11"` **ne bouge pas** (pas de release).
+3. Garde 3/3 VERTE (`--rerun-tasks`).
+. Audit secondaire : le toml local `codebase = "0.0.12"` vs catalog `0.0.16`
+   — résolu par la contrainte BOM, aucune garde ne l'exige ; vérifier que
+   ce n'est pas un drift latent (S-226 l'a classé « pas de drift réel »).
+. Gate : `check` VERT, baseline 1393 tests (1263 unit + 130 cucumber) 0 FAIL.
+
+*Livrable* : pins alignés, baseline verte, note d'audit sur les pins N1.
+
+=== C-2 (S-229) — Split-brain `DocumentChunk` (prérequis de A-1)
+
+*Constat* : deux data classes `DocumentChunk` identiques coexistent —
+`codex.tasks.DocumentChunk` (`ChunkDocumentTask.kt:34`, producteur) et
+`codebase.store.DocumentChunk` (`DocumentChunk.kt:23`, type N1, migration
+verbatim RAG-1). `CodexIngestTask` décode déjà dans le type N1 ; les autres
+tasks codex (`SemanticChunker`, `ChunkDocumentTask`, `ExportKnowledgeBaseTask`,
+`CollectPageProvenanceTask`, `EnrichJsonLddTask`, `JsonLddEnricher`,
+`PageProvenanceResolver`) utilisent le type producteur.
+
+*Travail* (baby-step DDD/TDD/BDD) :
+
+. Décision de cadrage : le type de store vit en N1 (`codebase.store`),
+   le producteur codex **consomme** le type N1 — pattern RAG-3 (codex
+   dépend déjà de `libs.codebase.plugin`). Alternative écartée sauf raison :
+   garder le doublon (double maintenance du futur `pages`).
+. Suppression du type `codex.tasks.DocumentChunk` + bascule des 7 fichiers
+   prod (imports) vers `codebase.store.DocumentChunk`.
+. Characterization tests avant bascule (contrat JSON `chunks.json`
+   byte-compatible — `@Serializable` identique).
+. Non-régression : `@provenance` (8 scénarios), corpus enrichment,
+   `CodexIngestDoubtTest`, `CodexIngestRetrieveIT`.
+. Gate : `check` VERT, zéro régression, backward compat JSON totale.
+
+*Valeur* : **débloque A-1** (un seul type porte `pages`), supprime un drift
+structurel documenté depuis S-223.
+
+*Risque* : `codex.tasks.DocumentChunk` est référencé par 8 fichiers de test
+— migration mécanique, gate par suite complète.
+
+=== C-3 (S-230) — Code legacy mort + désynchronisation gouvernance
+
+*Constat A — code mort (côté N1, Queens)* : `StoreStatements.insertChunk()`
+(5 binds) et `IngestIndexing.assignLocalIndices` n'ont **aucun appelant de
+production** (seuls les tests les référencent) — constat S-225 constat #4.
+`initSchema()` les provisionne encore.
+
+*Constat B — gouvernance désynchronisée (côté codex)* :
+
+[cols="2,3", options="header"]
+|===
+| Fichier | Désynchronisation
+
+| `.agents/SESSION_PROCEDURE.adoc:64`
+| `./gradlew :codex-plugin:compileKotlin` — chemin de projet inexistant
+  (le projet racine **est** `codex-plugin` ; la commande échoue)
+
+| `.agents/SESSION_PROCEDURE.adoc:5,61`
+| `foundry/codex-gradle/.agents/sessions/…` — chemin pré-S-105 (les .adoc
+  vivent dans `codex-plugin/.agents/`)
+
+| `.agents/SESSION_PROCEDURE.adoc:69`
+| « les types partagés vivent dans `codex/src/main/kotlin/` » — faux depuis
+  l'aplatissement (types dans `codex-plugin/src/main/kotlin/codex/`)
+
+| `.agents/SESSION_PROCEDURE.adoc:70`
+| « Version unique dans `gradle.properties` — `codex.version=1.0.0` » —
+  faux (version dérivée `ws.versions.codex.plugin`, toml local 0.0.11)
+
+| `.agents/SESSION_CHECKLIST.adoc:8`
+| Même chemin de build erroné
+
+| `.agents/INDEX.adoc:18`
+| « 1. COMMITS/GIT — INTERDICTION FORMELLE sans permission » — contredit la
+  décision pilote 2026-09-17 (commit/push **autorisés**), déjà actée dans
+  `AGENT.adoc:11`
+
+| `AGENT.adoc` § Fichiers du Projet
+| Chemins `codex/src/main/kotlin/`, `codex-plugin/src/` (pré-aplatissement),
+  `buildSrc/` (supprimé)
+
+| `README.md:11,52,143`
+| Badges `0.0.1`, `workspace-bom:0.0.1`, `codebase-contracts:0.0.1` — drift
+  depuis ≥ 10 releases
+|===
+
+*Travail* : audit cross-borough du dead code (Queens propriétaire N1 :
+décision suppression vs conservation documentée) + correction des 8
+désynchronisations de gouvernance. Vérification par `grep` post-fix.
+Gate : `check` VERT (zéro code prod touché côté codex, ou suite complète
+si suppression N1).
+
+=== C-4 (S-231) — Pollution TOC du chunking + clôture C
+
+*Constat* : le run corpus FPA (S-216) a produit **99 chunks TOC pollués**
+(dot leaders `.......` et entrées de table des matières) sur 387. Le bruit
+pollue le retrieval (chunks « table des matières » remontent en similarité).
+
+*Travail* (baby-step TDD) :
+
+. `SemanticChunker` / heuristique : détecter et exclure (ou marquer) les
+   sections de type TOC — ratio de dot leaders, densité de lignes sans
+   phrase, longueur de titre vs contenu.
+. Décision d'exposition : exclure au chunking (re-chunk = re-vectorisation
+   → coût ONNX local, Loi de l'Économie d'Encre à peser) **ou** marquer
+   `doubtful` (déjà transporté N1, zéro re-vectorisation).
+. Characterization sur le corpus FPA réel (387 chunks, plancher de
+   pollution mesuré).
+. BDD `@toc-noise` (runner dédié ou extension d'un runner existant).
+. *Clôture C* : audit de sortie — dettes restantes, go/no-go A.
+
+*Alternative si le pilote préfère* : reporter C-4 (cause racine amont
+`office/`, ownership Tombouctou) et utiliser S-231 comme session de clôture
+C + cadrage d'ouverture A.
+
+== Option A — EPIC CB-PAGE-PROVENANCE (4 sessions : S-232 → S-235)
+
+*Rappel* : EPIC **CADRÉ S-225** (5 US ~9 pts, doc
+`CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`). US-0 (cadrage) ✅ S-225. Il reste
+US-1 → US-4, une par session.
+
+[cols="1,1,2,1,3", options="header"]
+|===
+| Session | US | Titre | Borough | Contenu
+
+| S-232
+| US-1
+| N1 transport
+| Queens
+| `DocumentChunk.pages: List<Int> = emptyList()` + `StoreStatements.provenanceSchema()`
+  (`ALTER TABLE … ADD COLUMN IF NOT EXISTS pages TEXT`) + `initSchema()`
+  `pages TEXT` + `insertChunkWithDoubt` bind 8 (7→8) + `RagVectorStore`
+  bind `joinToString(",")` + `RetrieveResult.pages` + SELECT parse.
+  Unit (StoreStatements/DocumentChunk/RetrieveResult) + FT testcontainers
+  `PostgresFixture` (round-trip ingestion → retrieval).
+
+| S-233
+| US-2
+| N2 transport (codex)
+| Brooklyn
+| `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern
+  S-221) + jointure **exacte** `ChunkPageProvenance.chunkId` (SHA-256)
+  ↔ `DocumentChunk.id` + attache `pages` avant `ingestWithDoubt` + dégradé
+  silencieux si sidecar absent. Wiring `CodexPlugin`. Unit avec fake
+  `RagVectorStore` enregistreur (pattern S-219 `CodexIngestDoubtTest`).
+
+| S-234
+| US-3
+| N1 exposition
+| Queens
+| `CompositeContextBuilder.loadDocsContext` (canal Docs) +
+  `CodebaseCompositeContextTask` entrées `pages` (additif, omis si vide).
+  Backward compat : aucune page → sortie identique. Unit + FT.
+
+| S-235
+| US-4
+| BDD Cucumber cross-borough
+| les deux
+| Scénarios `@page-retrieval` : sidecar joint à l'ingestion (exact
+  SHA-256), page exposée au retrieval, absence de sidecar → dégradé
+  silencieux, multi-pages préservé, backward compat JSON. Runner dédié
+  (pattern S-082) + fakes in-memory (pattern S-088/S-214).
+|===
+
+*Ordre DAG respecté* : le N1 pose (US-1), le N2 branche (US-2), le N1
+expose (US-3), le BDD prouve (US-4).
+
+*Prérequis bloquants* : C-2 terminé (type N1 unique) — sinon `pages` est
+ajouté deux fois. US-1 doit merger côté Queens **avant** US-2 codex.
+
+*Déblocage final* : localisation exacte au retrieval (100 % pour les
+chunks dont le sidecar porte la page, vs 70,8 % heuristique S-224) ;
+clôture de la chaîne GBL-003.4.
+
+== Option B — Publication (3 sessions : S-236 → S-238)
+
+*Objectif* : rendre disponible Central le contenu produit par A (page au
+retrieval) selon l'ordre DAG **codebase-first** (N1 → N2).
+
+[cols="1,1,3", options="header"]
+|===
+| Session | Étape | Contenu
+
+| S-236
+| B-1 — N1 first
+| Bump `codebase-plugin` (0.0.16 → suivante) + BOM/catalog MEMPHIS
+  (0.0.50 → suivante), gardes (`PlatformCatalogAlignmentTest`,
+  `WorkspaceCatalogStructure`), `publishToMavenLocal`, anti-collision
+  repo1 (404), `publishAggregationToCentralPortal`. Propagation repo1 200.
+  Contenu : US-1 + US-3 (type `pages`, colonne, exposition).
+
+| S-237
+| B-2 — N2 codex
+| Bump `codex-plugin` 0.0.11 → 0.0.12 (toml local + constraint MEMPHIS),
+  pins alignés sur le nouveau catalog, garde `CodexPluginPublicationTest`
+  3/3, `build -x test`, anti-collision 404, `publishAggregationToCentralPortal`.
+  Contenu : US-2 + US-4 (transport sidecar, BDD).
+
+| S-238
+| B-3 — Propagation + preuve
+| Vérification repo1 (BOM · catalog · codebase · codex HTTP 200) +
+  alignement des consommateurs (les 7 boroughs qui importent codebase /
+  codex compilent VERT) + **dogfooding backfill** sur base jetable
+  (pattern Règle 2) : re-ingestion corpus FPA → `RetrieveResult.pages`
+  peuplé de bout en bout, vs 70,8 % heuristique. Rapport + clôture B.
+|===
+
+*Optionnel/conditionnel* : la release 0.0.12 n'a lieu que si A est terminé
+et vert. Aucune publication sans accord pilote (Règle 2).
+
+== Tableau de séquence (source de vérité)
+
+[cols="1,1,1,2,1", options="header"]
+|===
+| Option | Sessions | Nb | Objet | Statut
+
+| C — Maintenance
+| S-228 · S-229 · S-230 · S-231
+| 4
+| C-1 drift MEMPHIS + baseline · C-2 split-brain `DocumentChunk` ·
+  C-3 dead code + gouvernance · C-4 pollution TOC + clôture
+| 🟡 À DÉMARRER (S-228)
+
+| A — CB-PAGE-PROVENANCE
+| S-232 · S-233 · S-234 · S-235
+| 4
+| US-1 N1 transport · US-2 N2 transport · US-3 N1 exposition · US-4 BDD
+| 🔲 PLANIFIÉ (après C)
+
+| B — Publication
+| S-236 · S-237 · S-238
+| 3
+| B-1 codebase-first · B-2 codex 0.0.12 · B-3 propagation + dogfooding
+| 🔲 PLANIFIÉ (après A)
+|===
+
+*Total* : 11 sessions (S-228 → S-238).
+
+== Méthode (invariante de toutes les sessions)
+
+. *Baby-step DDD/TDD/BDD strict* — RED → GREEN → REFACTOR, 3 niveaux
+  (unit → fonctionnel TestKit/ProjectBuilder/testcontainers → Cucumber).
+. *English only* sur le code, les features Gherkin, les commentaires et
+  les messages de commit.
+. *Loi de l'Économie d'Encre* — jamais de re-vectorisation inutile ; delta
+  seulement ; base jetable pour les runs de backfill (Règle 2).
+. *Cross-borough* : C-2/C-3 (N1 Queens), A-1/A-3 (Queens), A-2 (Brooklyn),
+  B-1 (MEMPHIS + Queens), B-2 (Brooklyn) — respecter l'ordre DAG.
+. *Gates* : `check` VERT (Kover + validatePlugins) avant toute clôture ;
+  commit/push en fin de session (décision pilote 2026-09-17) ; publication
+  **uniquement** sur accord pilote.
+. *Piège transverse* : mavenLocal est **partagé** entre boroughs — une
+  session parallèle peut réécrire un jar en cours de `check` (course S-226
+  `CodexIngestRetrieveIT`) ; vérifier par stash avant d'accuser le diff.
+
+== Hors scope (documenté)
+
+- Suppression du sidecar S-224 (coexistence actée D7 S-225).
+- Array PostgreSQL `INTEGER[]` (A2 S-225) · backfill UPDATE-only (A3) ·
+  contrat N0 `page-provenance-contracts` (A4) · extension `DoubtMetadata` (A5).
+- Ancre de page in-band 3 boroughs (A1 S-223) · re-chunking par page (A2 S-223).
+- Consolidation `codebase.rag.VectorStore` JDBC legacy — ✅ CADUQUE S-206
+  (deux stores légitimes, domaines distincts).
+- Correction de la pollution TOC à la source (`office/metiers/FPA`, OCR
+  amont, ownership Tombouctou) — C-4 traite le symptôme au chunking
+  seulement.
+
+== Références
+
+- `.agents/PROMPT_REPRISE.adoc` (S-227 — options A/B/C)
+- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (cadrage A, S-225)
+- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (EPIC amont D7, S-223)
+- `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` (patron transport N2→N1)
+- `.agents/sessions/226-maintenance-publication-0011.adoc` (dette C au départ)
+- `codebase.store.{DocumentChunk,StoreStatements,RagVectorStore,RetrieveResult}`
+- `codex/tasks/{ChunkDocumentTask,CodexIngestTask}.kt`
+- `workspace-bom/gradle/libs.versions.toml` (source de vérité versions)
