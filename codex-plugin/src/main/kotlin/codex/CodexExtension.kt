@@ -34,6 +34,12 @@ abstract class CodexExtension {
     abstract val ocrLanguage: Property<String>
 
     /**
+     * OCR-QUALITY-2 — real-confidence threshold below which an acquired page is
+     * flagged `LOW_CONFIDENCE` in the quality report (default: 0.5).
+     */
+    abstract val ocrLowConfidenceThreshold: Property<Double>
+
+    /**
      * When `true`, `transformCorpusToPdf` routes its output to `OSS/` or
      * `office/` based on the license detected in the source PDF. When
      * `false` (default), the output goes to the configured `outputFile`

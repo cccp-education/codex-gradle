@@ -70,6 +70,7 @@ class CodexPlugin : Plugin<Project> {
         extension.pgvectorUser.convention("codex")
         extension.pgvectorPassword.convention("codex")
         extension.ocrLanguage.convention("fr")
+        extension.ocrLowConfidenceThreshold.convention(0.5)
         extension.licenceRouting.convention(false)
 
         project.tasks.register(
@@ -223,6 +224,8 @@ class CodexPlugin : Plugin<Project> {
             it.language.convention(extension.ocrLanguage)
             // US-CDX-13-3 : outputDir primary output (one .adoc file per page, N2↔N2 bridge)
             it.outputDir.convention(project.layout.buildDirectory.dir("codex/ocr-pages"))
+            // OCR-QUALITY-2 : real-confidence doubt threshold (LOW_CONFIDENCE issue).
+            it.lowConfidenceThreshold.convention(extension.ocrLowConfidenceThreshold)
         }
 
         project.tasks.register(

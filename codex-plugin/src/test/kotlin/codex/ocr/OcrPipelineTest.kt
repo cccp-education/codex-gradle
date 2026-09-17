@@ -55,6 +55,22 @@ class OcrPipelineTest {
     }
 
     @Test
+    fun `OcrPipeline keeps text from a degraded engine even at zero confidence`() {
+        // OCR-QUALITY-1: confidence is a doubt signal, not a fallback gate. A
+        // degraded Tesseract (no TSV) returns real text with confidence 0.0 —
+        // the pipeline must NOT discard the text, or an old tesseract build
+        // would silently lose every page (Loi de l'Économie d'Encre is about
+        // not redoing work, not about throwing away collected data).
+        val degraded = stubEngineReturning("degraded text", confidence = 0.0, model = "tesseract")
+        val pipeline = OcrPipeline(listOf(degraded))
+
+        val result = pipeline.process(OcrRequest(ByteArray(8), "image/png", "fr"))
+
+        assertEquals("degraded text", result.structuredText)
+        assertEquals(0.0, result.confidence, "the doubt signal is preserved, not masked")
+    }
+
+    @Test
     fun `OcrPipeline with single engine returns that engine result`() {
         val only = stubEngineReturning("only text", model = "solo")
         val pipeline = OcrPipeline(listOf(only))

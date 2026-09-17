@@ -1,62 +1,58 @@
-= PROMPT_REPRISE — Codex — Session 218
-:session: 218
-:date: 2026-09-10
+= PROMPT_REPRISE — Codex — Session 219
+:session: 219
+:date: 2026-09-17
 :status: PRET
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 704 tests 0 FAIL (drift BOM 0.0.38 fixé S-217)
+./gradlew check           # baseline 872 tests 0 FAIL (S-218)
 ----
 
-== Session 217 terminée — CDX-CORPUS-2 enrichment récursif (GBL-003.3 DÉBLOQUÉ)
+== Session 218 terminée — OCR-QUALITY US-1/2 (codex) TERMINÉES
 
-*CDX-CORPUS US-2 ✅ TERMINÉ* — enrichment réel corpus FPA via graphify
-(GBL-003.3 critical path MVP0 DÉBLOQUÉ). Baby-step TDD strict :
+*OCR-QUALITY-1 ✅* — vraie confidence Tesseract : `TesseractTsvParser`
+objet pur (moyenne TSV word-level normalisée [0,1], mots blancs/confiance
+négative ignorés) + `TesseractOcrEngine` invoqué avec config `tsv` +
+`metadata["confidenceSource"]` = `"tsv"` ou `"degraded"`. `OcrPipeline`
+ne gate plus sur la confiance (signal de doute aval, pas critère de
+fallback — sinon le texte dégradé serait jeté).
 
-(1) `SectionTitleNormalizer` objet pur (19 UT) — normalise les titres
-LDD/chunks (unescape HTML entities, footnote macro stripping, HTML tag
-stripping, typographic apostrophe/ellipsis/dot leaders, footnote markers,
-whitespace). Jointure passe de 30/111 à 110/111 titres normalisés.
+*OCR-QUALITY-2 ✅* — `OcrQualityAnalyzer` objet pur (ILLISIBLE, TOO_SHORT,
+LOW_CONFIDENCE, IMAGE_MISSING, macro `image::?` bloc+inline) +
+`CollectOcrTask.qualityReportFile` optionnel (rapport JSON) +
+`CodexExtension.ocrLowConfidenceThreshold` (défaut 0.5).
 
-(2) Intégration dans `JsonLddEnricher.matchesSection` + `GraphifyFileResolver.resolve`.
+*EPIC OCR-QUALITY complété* : US-1/2 codex (S-218) + US-3 document
+(S-251 ✅) + US-4 codebase (S-213 ✅).
 
-(3) `JsonLddEnricher.enrich` rendu récursif — champ `children: List<EnrichedLddNode>`
-ajouté à `EnrichedLddNode` (default emptyList, backward compat) + `enrichNode`
-récursif privé. 3 UT récursifs ajoutés.
+Gate : check VERT 872 tests 0 FAIL (baseline 704 → +168). 9 suites
+cucumber dédiées VERTES. + Fix drift BOM 0.0.39→0.0.43 cross-borough
+MEMPHIS (piège #13).
 
-(4) Fix drift MEMPHIS cross-borough : catalog 0.0.36→0.0.38 + BOM 0.0.37→0.0.38.
+Rapport : `.agents/sessions/218-ocr-quality-confidence-detection.adoc`.
 
-Gate : check VERT 704 tests 0 FAIL (baseline 682 → +22).
-publishToMavenLocal VERT 0.0.6. Enrichment réel : 115/115 sections
-titrées enrichies (184 chunks + 521 graphify nodes), 468 nœuds total
-(353 paragraphs sans titre correctement exclus). Jointure 100%.
+== Prochaine session — 219 : objectifs
 
-*EPIC CDX-CORPUS 4/4 US TERMINÉ* — GBL-003.3 DÉBLOQUÉ.
+=== Option A — GBL-003.4 RAG doubt metadata (critical path, P0) 🟡 RECOMMANDÉE
 
-Rapport : `.agents/sessions/217-cdx-corpus-enrichment.adoc`.
+* Les rapports de doute sont désormais produits des deux côtés (codex
+  acquisition `OcrQualityReport`, document assembly `BookOcrIssueReport`).
+* Coordination codebase (US-4 ✅ S-213 `DoubtMetadata`/`ingestWithDoubt`
+  déjà en place) : brancher le rapport d'acquisition codex sur l'ingestion
+  RAG pour que le contexte augmenté pèse/exclut les pages douteuses.
+* Option B : dogfooding run corpus FPA réel avec le nouveau rapport
+  qualité (mesure du gain vs découverte manuelle).
 
-== Prochaine session — 218 : objectifs
+=== Option B — Publication codex-plugin (si accord pilote)
 
-=== Option A — OCR-QUALITY-1/2 (critical path, P0) 🟡 RECOMMANDÉE
+* HEAD (S-218) non publié. Version locale 0.0.7, Central 0.0.7 (S-217).
+* Bump 0.0.8 requis + MEMPHIS catalog/BOM.
 
-* OCR-QUALITY-1 : Tesseract vraie confidence — `meanConfidence()` réel
-  dans `TesseractOcrEngine` (TDD, cadrage S-215 `CADRAGE_EPIC_OCR_QUALITY.adoc`).
-* OCR-QUALITY-2 : détection images problématiques à l'acquisition
-  (image fantôme, page quasi vide, marqueur [ILLISIBLE]).
-* Débloque : OCR-QUALITY-3 (document) + OCR-QUALITY-4 (codebase doubt
-  metadata GBL-003.4).
+=== Option C — Maintenance / cross-borough
 
-=== Option B — Maintenance / ROLLOUT-6 dashboard
-
-* À la demande pilote (gate bump MEMPHIS requis).
-
-=== Option C — Cross-borough GBL-003.4 (doubt metadata)
-
-* Les 19 chunks `[ILLISIBLE]` candidats douteux (rapport S-216) sont
-  prêts pour être exposés via `DoubtMetadata`/`DoubtfulChunk` (S-213
-  codebase) — coordination Queens requise.
+* À la demande pilote uniquement.
 
 == Méthode
 
@@ -65,13 +61,13 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == Règles
 
-- COMMITS/PUSH — INTERDICTION FORMELLE sans permission pilote.
+- COMMITS/PUSH — autorisés (décision pilote 2026-09-17).
 - PAS DE publishToMavenLocal automatique sans permission.
 - SECRETS via configuration/ — jamais en dur dans build.gradle.kts.
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-217)
-- `.agents/BACKLOG.adoc` (EPIC CDX-CORPUS ✅ 4/4 US, OCR-QUALITY 🟡)
-- `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (cadrage prêt)
-- `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc` (validation qualité + chunks douteux)
+- `.agents/INDEX.adoc` (à jour S-218)
+- `.agents/BACKLOG.adoc` (EPIC OCR-QUALITY ✅ 4/4 US)
+- `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (EPIC complet)
+- `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc` (chunks douteux GBL-003.4)

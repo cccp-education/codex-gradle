@@ -1,0 +1,154 @@
+= Rapport Session 218 — OCR-QUALITY US-1/2 (codex) — vraie confidence Tesseract + détection images problématiques à l'acquisition
+:session: 218
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+
+== Objectif
+
+Exécuter les deux US codex de l'EPIC transverse OCR-QUALITY
+(`.agents/CADRAGE_EPIC_OCR_QUALITY.adoc`, S-215) — critical path MVP0
+GBL-003 :
+
+* *OCR-QUALITY-1* — `OcrResult.confidence` n'est plus un placeholder
+  hardcodé `0.7` ; Tesseract remonte sa vraie mesure.
+* *OCR-QUALITY-2* — détection des images problématiques à l'acquisition
+  (marqueur `[ILLISIBLE]`, page quasi vide, faible confiance réelle,
+  image fantôme référencée non matérialisée).
+
+Méthode : baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux
+(unit → fonctionnel → Cucumber), English only.
+
+== Baseline — fix drift BOM cross-borough
+
+`check` d'ouverture ROUGE sur `CodexPluginPublicationTest`
+(`workspace-bom platform pin must use the ws catalog BOM version (0.0.43)`).
+La garde a attrapé le bump MEMPHIS S-217 (catalog/BOM 0.0.43 publiés
+Central — parité 22 langues talaria). *Piège #13 réappliqué*.
+
+Fix : `settings.gradle.kts` `workspace-catalog:0.0.39 → 0.0.43` +
+`build.gradle.kts` `workspace-bom:0.0.39 → 0.0.43`. Les 3 sources
+alignées sur 0.0.43 (Central vérifié repo1 200/200). Garde publication
+3/3 GREEN.
+
+== OCR-QUALITY-1 — vraie confidence Tesseract
+
+=== BS-1 — `TesseractTsvParser` objet pur (7 UT)
+
+Tesseract est invoqué avec le config `tsv` en plus du `txt` ; `output.tsv`
+expose une colonne `conf` par mot (0..100, `-1` pour les lignes
+conteneurs). Le parser produit la moyenne des mots, normalisée dans [0,1].
+
+Règles d'honnêteté du signal (Loi de l'Économie d'Encre — le doute ne doit
+pas être masqué) :
+
+* seules les lignes `level == 5` (mots) sont comptées ;
+* confiance négative (conteneur/non fiable) ignorée ;
+* *texte blanc ignoré* — une image bruitée émet des « mots » espaces à
+  haute confiance ; les compter masquerait précisément le doute à
+  détecter ;
+* lignes malformées ignorées silencieusement (best-effort, jamais ne jette) ;
+* TSV vide/sans mot → confiance 0.0.
+
+RED (7 `Unresolved reference 'TesseractTsvParser'`) → GREEN 7/7.
+
+=== BS-2 — `TesseractOcrEngine` vraie confidence
+
+`ProcessBuilder(tesseract, input, outBase, "-l", lang, "txt", "tsv")`.
+`confidenceSource` ajouté aux metadata : `"tsv"` (mesure réelle) ou
+`"degraded"` (TSV absent — vieux build Tesseract ; le texte est préservé,
+zéro score simulé). Tests :
+
+* unit + fonctionnel (image PNG rendue via AWT `BufferedImage`/`ImageIO`,
+  sans outil externe) : image propre → `confidence > 0.5`,
+  `confidenceSource == "tsv"` ;
+* image sans mot → confiance 0.0 (signal de doute) ;
+* stub tesseract sans TSV → texte préservé + `confidenceSource ==
+  "degraded"`.
+
+*Découverte en RED (régression potentielle réelle)* : l'ancien gate de
+`OcrPipeline` (`confidence > 0.0`) aurait jeté le texte d'un moteur
+dégradé (texte réel, confiance 0). `OcrPipeline.process` ne gate plus que
+sur le texte non vide — la confiance devient un *signal de doute aval*,
+jamais un critère de fallback. Test de verrouillage ajouté
+(`OcrPipeline keeps text from a degraded engine even at zero confidence`).
+
+RED (2 FAIL) → GREEN → REFACTOR.
+
+=== BS-3 — Cucumber BDD `@ocr-quality` (4 scénarios)
+
+`codex_ocr_quality.feature` : moyenne TSV → 0.95, mots blancs → 0.0/0 mot,
+stub dégradé préserve le texte + flag doute, pipeline ne jette pas le
+texte dégradé. `OcrQualitySteps` (préfixes uniques anti-collision S-088) +
+`CodexOcrQualityCucumberRunner` (8e runner codex, pattern S-082) +
+`cucumberTestOcrQuality` câblée `build.gradle.kts`. 4/4 PASSED.
+
+== OCR-QUALITY-2 — détection images problématiques à l'acquisition
+
+=== BS-1 — `OcrQualityAnalyzer` objet pur (11 UT)
+
+`OcrQualityReason` (ILLISIBLE / TOO_SHORT / LOW_CONFIDENCE / IMAGE_MISSING)
++ `OcrQualityIssue(pageId, imageFile, reason, detail)` + `OcrQualityReport`
+(`@Serializable`, `issueCountByReason()`).
+
+Ordre des règles (mirror document-side, OCR-QUALITY-3) : raisons
+whole-page *exclusive-first* (ILLISIBLE, TOO_SHORT) puis raisons
+structurées cumulatives (LOW_CONFIDENCE, IMAGE_MISSING). Une page peut
+porter plusieurs issues. Regex `image::?` couvre la macro bloc ET inline
+(le corpus réel utilise la forme inline — piège découvert document S-252).
+
+RED (11 unresolved) → GREEN 11/11.
+
+=== BS-2 — câblage `CollectOcrTask` (4 FT)
+
+Propriété `qualityReportFile` (`@OutputFile @Optional`, off par défaut →
+zéro changement) + `lowConfidenceThreshold` (`@Input @Optional`, convention
+extension 0.5). Rapport JSON écrit quand configuré. `CodexExtension` +
+`ocrLowConfidenceThreshold` + wiring `CodexPlugin`.
+
+RED (4 unresolved) → GREEN 4/4.
+
+=== BS-3 — Cucumber BDD (7 scénarios ajoutés)
+
+Feature `@ocr-quality` étendue : marqueur illisible, page quasi vide,
+faible confiance réelle + detail, page propre sans issue, image fantôme
+bloc, macro inline, page multi-issues. 11/11 scénarios au total.
+
+== Gates
+
+* `./gradlew check` : **BUILD SUCCESSFUL** — 872 tests 0 FAIL
+  (baseline 704 → +168 dont 23 nouveaux tests explicites + variations
+  découverte cucumber). Kover VERT, validatePlugins VERT.
+* 9 suites cucumber dédiées VERTES (dont `cucumberTestOcrQuality` 11/11).
+* `test` 872 cas, 0 failure.
+
+== Zéro
+
+Zéro bump BOM (0.0.43 déjà un fait MEMPHIS), zéro secret, zéro régression,
+backward compat totale (`qualityReportFile`/`lowConfidenceThreshold`
+optionnels, `confidenceSource` additif aux metadata).
+
+== Livrables
+
+* `src/main/kotlin/codex/ocr/TesseractTsvParser.kt` (nouveau)
+* `src/main/kotlin/codex/ocr/OcrQualityAnalyzer.kt` (nouveau)
+* `src/main/kotlin/codex/ocr/TesseractOcrEngine.kt` (vraie confidence + metadata)
+* `src/main/kotlin/codex/ocr/OcrPipeline.kt` (confiance = signal, plus un gate)
+* `src/main/kotlin/codex/tasks/CollectOcrTask.kt` (rapport qualité optionnel)
+* `src/main/kotlin/codex/CodexExtension.kt` + `CodexPlugin.kt` (threshold)
+* Tests : `TesseractTsvParserTest` (7), `OcrQualityAnalyzerTest` (11),
+  `OcrPipelineTest` (+1), `TesseractOcrEngineTest` (+3),
+  `CollectOcrQualityReportTest` (4)
+* BDD : `codex_ocr_quality.feature` (11 scénarios), `OcrQualitySteps`,
+  `CodexOcrQualityCucumberRunner`
+* `build.gradle.kts` (`cucumberTestOcrQuality`) + `settings.gradle.kts`
+  (drift 0.0.43)
+
+== Clôture
+
+* EPIC OCR-QUALITY : US-1 ✅ + US-2 ✅ (codex). Reste US-3 (document,
+  déjà ✅ S-251) et US-4 (codebase, déjà ✅ S-213) → EPIC transverse
+  complété.
+* Backlog sync : INDEX.adoc, BACKLOG.adoc, PROMPT_REPRISE.adoc,
+  SESSIONS_HISTORY.adoc, archive 2026-09.
+* Commit/push accordé pilote en fin de session.

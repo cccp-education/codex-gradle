@@ -1,5 +1,35 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-218 (2026-09-17) — OCR-QUALITY US-1/2 (codex) vraie confidence + détection acquisition ✅
+
+- OCR-QUALITY-1 ✅ — `TesseractTsvParser` (nouveau, objet pur, 7 UT) :
+  moyenne TSV word-level normalisée [0,1] ; mots blancs, confiance négative
+  et lignes malformées ignorés (le doute ne doit pas être masqué).
+  `TesseractOcrEngine` invoqué avec config `tsv` + `metadata["confidenceSource"]`
+  (`"tsv"` mesure réelle / `"degraded"` vieux build sans TSV) — plus de
+  placeholder 0.7. 3 tests (image AWT réelle `confidence > 0.5`, textless
+  0.0, stub sans TSV dégradé).
+- Fix régression potentielle : `OcrPipeline` ne gate plus sur
+  `confidence > 0.0` — la confiance est un signal de doute aval, jamais un
+  critère de fallback (sinon le texte dégradé serait jeté). 1 UT verrouillage.
+- OCR-QUALITY-2 ✅ — `OcrQualityAnalyzer` (nouveau, objet pur, 11 UT) :
+  ILLISIBLE / TOO_SHORT / LOW_CONFIDENCE / IMAGE_MISSING, macro `image::?`
+  bloc+inline, ordre exclusive-first puis cumulatif. `OcrQualityReport`
+  `@Serializable`. `CollectOcrTask.qualityReportFile` optionnel (rapport
+  JSON, 4 FT) + `lowConfidenceThreshold` + `CodexExtension.ocrLowConfidenceThreshold`
+  (défaut 0.5).
+- BDD : `codex_ocr_quality.feature` 11 scénarios `@ocr-quality`,
+  `OcrQualitySteps`, `CodexOcrQualityCucumberRunner` (8e runner codex,
+  pattern S-082), tâche `cucumberTestOcrQuality`.
+- Fix drift BOM MEMPHIS : pin workspace-catalog/workspace-bom 0.0.39 → 0.0.43
+  (garde `CodexPluginPublicationTest` attrapée, piège #13).
+- EPIC OCR-QUALITY transverse complété : US-1/2 codex S-218 + US-3 document
+  S-251 + US-4 codebase S-213.
+- Gates : check VERT 872 tests 0 FAIL (baseline 704 → +168), 9 suites
+  cucumber dédiées VERTES, Kover VERT, validatePlugins VERT.
+- Next : GBL-003.4 RAG doubt metadata (brancher le rapport d'acquisition
+  sur l'ingestion codebase) OU publication 0.0.8.
+
 == S-217 (2026-09-10) — CDX-CORPUS-2 enrichment JSON-L via graphify GBL-003.3 ✅
 
 - CDX-CORPUS-2 ✅ — EPIC CDX-CORPUS TERMINÉ 4/4 US, GBL-003.3 DÉBLOQUÉ.

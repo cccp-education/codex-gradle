@@ -1,6 +1,33 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-09-10
-:session: 217
+:date: 2026-09-17
+:session: 218
+
+== Session 218 — OCR-QUALITY US-1/2 (+168 tests, 872/872 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/kotlin/codex/ocr/TesseractTsvParserTest.kt` (nouveau) | 7 unit | ✅ PASS — moyenne TSV word-level, pas de ligne mot → 0, TSV vide → 0, mots blancs ignorés, confiance négative ignorée, lignes malformées ignorées, bornes [0,1]
+| `test/kotlin/codex/ocr/OcrQualityAnalyzerTest.kt` (nouveau) | 11 unit | ✅ PASS — ILLISIBLE, TOO_SHORT, LOW_CONFIDENCE (+detail), page propre sans issue, IMAGE_MISSING bloc, image matérialisée non flaggée, macro inline, page multi-issues, exclusive-first, seuil configurable, rapport agrégé
+| `test/kotlin/codex/tasks/CollectOcrQualityReportTest.kt` (nouveau) | 4 FT | ✅ PASS — propriété optionnelle, rapport LOW_CONFIDENCE, rapport IMAGE_MISSING, zéro rapport si non configuré
+| `test/kotlin/codex/ocr/TesseractOcrEngineTest.kt` | +3 | ✅ PASS — confidence réelle TSV > 0.5 (image AWT), textless 0.0, dégradé sans TSV (texte préservé + confidenceSource)
+| `test/kotlin/codex/ocr/OcrPipelineTest.kt` | +1 | ✅ PASS — texte d'un moteur dégradé préservé à confidence 0.0 (la confiance n'est plus un gate de fallback)
+| `features/codex_ocr_quality.feature` (nouveau) | 11 scénarios `@ocr-quality` | ✅ PASS — 4 US-1 (TSV moyenne, blancs, dégradé, pipeline) + 7 US-2 (illisible, trop court, faible confiance, propre, fantôme bloc, fantôme inline, multi-issues)
+|===
+
+*Coverage impact* : baseline 704 (S-217) → 872 tests 0 FAIL (+168 net dont
+23 tests explicites nouveaux + variations découverte cucumber par le task
+`test` qui scanne `src/test/resources/features/`). `check` VERT (+ fix
+drift BOM 0.0.43). 9 suites cucumber dédiées VERTES. Kover VERT,
+validatePlugins VERT.
+
+*Nouveau testé* :
+- `TesseractTsvParser.parse(tsv)` — objet pur du domaine `codex.ocr`, 7
+  unit couvrant chaque règle d'honnêteté du signal (dont le rejet des mots
+  blancs à haute confiance — le cas qui masquerait le doute).
+- `OcrQualityAnalyzer.analyze(...)` — objet pur du domaine `codex.ocr`, 11
+  unit couvrant les 4 raisons, l'ordre exclusive-first, le cumul
+  structuré, la macro inline et le rapport agrégé.
 
 == Session 217 — CDX-CORPUS-2 enrichment récursif (+22 tests, 704/704 PASS)
 

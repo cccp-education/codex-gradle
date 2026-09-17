@@ -3,6 +3,41 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+== Session 218 — OCR-QUALITY US-1/2 (codex) — vraie confidence + détection acquisition (EPIC transverse complété)
+
+*Date* : 2026-09-17
+*Type* : dev + fix drift (baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux)
+*Objectif* : exécuter les 2 US codex de l'EPIC transverse OCR-QUALITY
+(cadrage S-215) — remplacer le placeholder `confidence = 0.7` par la vraie
+mesure Tesseract, et détecter les images problématiques à l'acquisition.
+*Travail* :
+- *US-1* `TesseractTsvParser` objet pur (7 UT) — moyenne TSV word-level
+  normalisée [0,1], mots blancs/confiance négative/malformés ignorés.
+  `TesseractOcrEngine` invoqué avec config `tsv` + `metadata["confidenceSource"]`
+  (`"tsv"` / `"degraded"`), 3 tests (image AWT réelle > 0.5, textless 0.0,
+  stub sans TSV dégradé).
+- *Fix régression potentielle* : `OcrPipeline` ne gate plus sur
+  `confidence > 0.0` (sinon le texte d'un moteur dégradé serait jeté) — la
+  confiance devient un signal de doute aval. Verrouillé par 1 UT.
+- *US-2* `OcrQualityAnalyzer` objet pur (11 UT — ILLISIBLE, TOO_SHORT,
+  LOW_CONFIDENCE, IMAGE_MISSING, macro `image::?` bloc+inline) +
+  `CollectOcrTask.qualityReportFile` optionnel (rapport JSON, 4 FT) +
+  `CodexExtension.ocrLowConfidenceThreshold` (défaut 0.5).
+- BDD `codex_ocr_quality.feature` 11 scénarios `@ocr-quality` +
+  `OcrQualitySteps` + `CodexOcrQualityCucumberRunner` (8e runner codex,
+  pattern S-082) + tâche `cucumberTestOcrQuality`.
+- Fix drift BOM MEMPHIS cross-borough : catalog/BOM 0.0.39→0.0.43
+  (garde `CodexPluginPublicationTest`, piège #13).
+*Gate* : check VERT 872 tests 0 FAIL (baseline 704 → +168), 9 suites
+cucumber dédiées VERTES, Kover VERT, validatePlugins VERT.
+*Zéro* : zéro bump BOM, zéro secret, zéro régression, backward compat totale.
+*Livrables* : `TesseractTsvParser.kt`, `OcrQualityAnalyzer.kt` (nouveaux),
+`TesseractOcrEngine.kt`, `OcrPipeline.kt`, `CollectOcrTask.kt`,
+`CodexExtension.kt`, `CodexPlugin.kt`, 5 fichiers test, 1 feature + 2
+fichiers BDD, `build.gradle.kts`, `settings.gradle.kts`.
+*Rapport* : `.agents/sessions/218-ocr-quality-confidence-detection.adoc`.
+
+'''
 == Session 217 — CDX-CORPUS-2 enrichment récursif corpus FPA (GBL-003.3 DÉBLOQUÉ)
 
 *Date* : 2026-09-10

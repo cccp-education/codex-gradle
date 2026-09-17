@@ -3,10 +3,14 @@ package codex.tasks
 import codex.ocr.DiskCacheStorage
 import codex.ocr.OcrEngine
 import codex.ocr.OcrPipeline
+import codex.ocr.OcrQualityAnalyzer
+import codex.ocr.OcrQualityIssue
+import codex.ocr.OcrQualityReport
 import codex.ocr.OcrRequest
 import codex.ocr.OcrResult
 import codex.ocr.OcrResultCache
 import codex.ocr.TesseractOcrEngine
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -101,6 +105,19 @@ abstract class CollectOcrTask : DefaultTask() {
     @get:Internal
     abstract val aiEngine: Property<OcrEngine>
 
+    // OCR-QUALITY-2 : optional acquisition-quality report. When set, the task
+    // analyses each page (illisible marker, too-short body, real confidence
+    // below threshold, ghost image reference) and writes a JSON [OcrQualityReport]
+    // so the human iteration and the downstream RAG ingestion (OCR-QUALITY-4)
+    // can target the doubtful pages. Unset by default → zero behaviour change.
+    @get:OutputFile
+    @get:Optional
+    abstract val qualityReportFile: RegularFileProperty
+
+    @get:Input
+    @get:Optional
+    abstract val lowConfidenceThreshold: Property<Double>
+
     @TaskAction
     fun collectOcr() {
         val input = inputDir.asFile.get()
@@ -133,6 +150,10 @@ abstract class CollectOcrTask : DefaultTask() {
 
         val pagesOut = outputDir.orNull?.asFile
         pagesOut?.mkdirs()
+
+        // OCR-QUALITY-2 : optional acquisition-quality collection.
+        val qualityIssues = mutableListOf<OcrQualityIssue>()
+        val qualityThreshold = lowConfidenceThreshold.orNull ?: OcrQualityAnalyzer.DEFAULT_LOW_CONFIDENCE
 
         // Legacy outputFile (concatenated) — preserved for backward compatibility
         val legacyOut = outputFile.orNull?.asFile
@@ -167,6 +188,16 @@ abstract class CollectOcrTask : DefaultTask() {
 
             val structured = result.structuredText.ifBlank { "[page vide ou OCR échec]" }
 
+            // OCR-QUALITY-2 : analyse the real signals (confidence + text) for doubt.
+            qualityIssues += OcrQualityAnalyzer.analyze(
+                pageId = pageId,
+                imageFile = imageFile.name,
+                text = result.structuredText,
+                confidence = result.confidence,
+                pageDir = input,
+                lowConfidenceThreshold = qualityThreshold,
+            )
+
             // Primary output: one .adoc file per page in outputDir
             // Named NNN-<pageId>.adoc (zero-padded 3-digit prefix for PageOrder contract)
             if (pagesOut != null) {
@@ -184,6 +215,19 @@ abstract class CollectOcrTask : DefaultTask() {
         }
 
         legacyOut?.writeText(sb.toString())
+
+        // OCR-QUALITY-2 : write the JSON quality report when requested.
+        qualityReportFile.orNull?.asFile?.let { reportFile ->
+            val report = OcrQualityReport(imagesScanned = images.size, issues = qualityIssues)
+            val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
+            reportFile.parentFile?.mkdirs()
+            reportFile.writeText(json.encodeToString(OcrQualityReport.serializer(), report))
+            logger.lifecycle(
+                "[codex] quality report : ${qualityIssues.size} issue(s) over ${images.size} page(s)" +
+                    " → ${reportFile.name}"
+            )
+        }
+
         val targets = buildString {
             if (pagesOut != null) append(" → dir ${pagesOut.name}")
             if (legacyOut != null) append(" → file ${legacyOut.name}")

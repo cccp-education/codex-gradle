@@ -28,7 +28,7 @@ version = ws.versions.codex.plugin.get()
 
 dependencies {
     // Import BOM
-    implementation(platform("education.cccp:workspace-bom:0.0.39"))
+    implementation(platform("education.cccp:workspace-bom:0.0.43"))
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -338,6 +338,31 @@ val cucumberTestOcr by tasks.registering(Test::class) {
     systemProperty("cucumber.junit-platform.naming-strategy", "long")
     systemProperty("cucumber.features", "src/test/resources/features/ocr-pipeline.feature")
     systemProperty("cucumber.filter.tags", "@ocr-boundary and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}
+
+// ── OCR-QUALITY-1 — Dedicated Cucumber runner for OCR true confidence (pattern S-082) ──
+// Scoped to CodexOcrQualityCucumberRunner so only codex_ocr_quality.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestOcrQuality by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_ocr_quality.feature Cucumber suite (OCR-QUALITY-1 true confidence)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexOcrQualityCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_ocr_quality.feature")
+    systemProperty("cucumber.filter.tags", "@ocr-quality and not @wip and not @integration")
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }

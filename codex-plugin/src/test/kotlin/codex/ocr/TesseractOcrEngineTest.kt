@@ -63,6 +63,63 @@ class TesseractOcrEngineTest {
         assertEquals("image/jpeg", result.sourceFormat)
     }
 
+    // ── OCR-QUALITY-1 — true confidence (not the historical 0.7 placeholder) ──
+
+    @Test
+    fun `TesseractOcrEngine reports real confidence from TSV word scores`(@TempDir dir: Path) {
+        val imageFile = File(dir.toFile(), "quality.png")
+        writeTextPng(imageFile, "OCR QUALITY")
+
+        val engine = TesseractOcrEngine(tesseractPath = "tesseract")
+        val result = engine.process(OcrRequest(imageFile.readBytes(), "image/png", "eng"))
+
+        assertTrue(result.structuredText.isNotEmpty(), "recognised text must not be empty")
+        assertTrue(result.confidence in 0.0..1.0, "confidence must be in [0,1]")
+        assertTrue(result.confidence > 0.5,
+            "a clean rendered image must yield a real confidence > 0.5 (was hardcoded 0.7), got ${result.confidence}")
+        assertEquals("tsv", result.metadata["confidenceSource"],
+            "confidence must come from the parsed TSV, not a placeholder")
+    }
+
+    @Test
+    fun `TesseractOcrEngine marks a textless image with zero confidence`(@TempDir dir: Path) {
+        val imageFile = File(dir.toFile(), "blank.png")
+        createMinimalPng(imageFile)
+
+        val engine = TesseractOcrEngine(tesseractPath = "tesseract")
+        val result = engine.process(OcrRequest(imageFile.readBytes(), "image/png", "eng"))
+
+        assertEquals(0.0, result.confidence,
+            "an image with no recognised word must carry zero confidence (doubt signal)")
+    }
+
+    @Test
+    fun `TesseractOcrEngine degrades to text-only confidence when tesseract emits no TSV`(@TempDir dir: Path) {
+        // A stub tesseract that writes the plain .txt but no .tsv — simulates an
+        // old tesseract build without the TSV config. The engine must stay
+        // functional (text preserved) and honestly mark the confidence source.
+        val stub = File(dir.toFile(), "stub-tesseract.sh")
+        stub.writeText(
+            """
+            #!/bin/sh
+            # $1=input $2=outputBase
+            echo "stub text" > "${'$'}2.txt"
+            """.trimIndent()
+        )
+        stub.setExecutable(true)
+
+        val imageFile = File(dir.toFile(), "img.png")
+        createMinimalPng(imageFile)
+
+        val engine = TesseractOcrEngine(tesseractPath = stub.absolutePath)
+        val result = engine.process(OcrRequest(imageFile.readBytes(), "image/png", "eng"))
+
+        assertEquals("stub text", result.structuredText.trim(), "text must be preserved in degraded mode")
+        assertEquals("degraded", result.metadata["confidenceSource"],
+            "missing TSV must be flagged as degraded, not silently trusted")
+        assertTrue(result.confidence in 0.0..1.0)
+    }
+
     private fun createMinimalPng(file: File) {
         val pngHex = "89504E470D0A1A0A0000000D4948445200000001000000010802000000907" +
             "71DE0000000C4944415408D763F8FFFF3F000005005E018246A4B10000000049" +
@@ -73,5 +130,26 @@ class TesseractOcrEngineTest {
             bytes[i] = (cleaned.substring(i * 2, i * 2 + 2).toInt(16) and 0xFF).toByte()
         }
         file.writeBytes(bytes)
+    }
+
+    /**
+     * Renders a real PNG with the given text using the JDK's headless AWT
+     * (`BufferedImage` + `ImageIO`) — no external image tooling required. The
+     * resulting image is legible enough for Tesseract to return a meaningful
+     * word-level confidence.
+     */
+    private fun writeTextPng(file: File, text: String) {
+        val image = java.awt.image.BufferedImage(500, 120, java.awt.image.BufferedImage.TYPE_INT_RGB)
+        val g = image.createGraphics()
+        try {
+            g.color = java.awt.Color.WHITE
+            g.fillRect(0, 0, image.width, image.height)
+            g.color = java.awt.Color.BLACK
+            g.font = java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.PLAIN, 60)
+            g.drawString(text, 20, 80)
+        } finally {
+            g.dispose()
+        }
+        javax.imageio.ImageIO.write(image, "png", file)
     }
 }

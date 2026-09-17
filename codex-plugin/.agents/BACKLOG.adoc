@@ -4,25 +4,30 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-10 (session 217 — **CDX-CORPUS 4/4 US TERMINÉ (GBL-003.3 critical path MVP0 DÉBLOQUÉ)** : US-2 enrichment récursif complet via graphify (115/115 sections titrées, 184 chunks + 521 graphify nodes, jointure 100%). SectionTitleNormalizer (19 UT) + JsonLddEnricher récursif (3 UT). Fix drift BOM 0.0.38 cross-borough MEMPHIS S-218. check VERT 704/0. publishToMavenLocal VERT 0.0.6.)_
+_Dernière mise à jour : 2026-09-17 (session 218 — **OCR-QUALITY US-1/2 (codex) ✅ TERMINÉES** — EPIC transverse complété 4/4 US : US-1 vraie confidence Tesseract (`TesseractTsvParser` + config tsv + `confidenceSource`) + US-2 détection images problématiques à l'acquisition (`OcrQualityAnalyzer` + `CollectOcrTask.qualityReportFile` JSON). `OcrPipeline` : la confiance devient un signal de doute aval. check VERT 872/0. Fix drift BOM 0.0.43 cross-borough MEMPHIS.)_
 
 '''
-== EPIC OCR-QUALITY — Détection automatique images problématiques + transcriptions douteuses 🟡 CADRÉ (P0, transverse)
+== EPIC OCR-QUALITY — Détection automatique images problématiques + transcriptions douteuses ✅ TERMINÉ 4/4 US
 
 _Origine : demande pilote 2026-09-07. Cadrage transverse : `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (identique dans codex/document/codebase)._
 
 |===
 | US | Description | Pts | Statut
-| OCR-QUALITY-1 | Tesseract vraie confidence : `meanConfidence()` réel dans `TesseractOcrEngine` (TDD) + tests OcrPipeline fallback | 3 | 🟡 À FAIRE (codex)
-| OCR-QUALITY-2 | Détection images problématiques à l'acquisition : image fantôme, page quasi vide, marqueur [ILLISIBLE] remonté du LLM-vision | 2 | 🟡 À FAIRE (codex)
-| OCR-QUALITY-3 | Extension BookOcrIssue/FailureDetector : IMAGE_MISSING + TABLE_SUSPECT + STRUCT_SUSPECT + backward compat | 3 | 🟡 À FAIRE (document)
-| OCR-QUALITY-4 | Codebase : métadonnées de doute à l'ingestion RAG (confidence + doubtful) + exposition contexte augmenté + BDD | 3 | 🟡 À FAIRE (codebase)
+| OCR-QUALITY-1 | Tesseract vraie confidence : `meanConfidence()` réel dans `TesseractOcrEngine` (TDD) + tests OcrPipeline fallback | 3 | ✅ TERMINÉ (S-218 — `TesseractTsvParser` 7 UT + config `tsv` + `confidenceSource` tsv/degraded + 3 tests + fix gate `OcrPipeline`)
+| OCR-QUALITY-2 | Détection images problématiques à l'acquisition : image fantôme, page quasi vide, marqueur [ILLISIBLE] remonté du LLM-vision | 2 | ✅ TERMINÉ (S-218 — `OcrQualityAnalyzer` 11 UT + `CollectOcrTask.qualityReportFile` JSON 4 FT + `ocrLowConfidenceThreshold` + 7 scénarios BDD)
+| OCR-QUALITY-3 | Extension BookOcrIssue/FailureDetector : IMAGE_MISSING + TABLE_SUSPECT + STRUCT_SUSPECT + backward compat | 3 | ✅ TERMINÉ (S-251 document — hors codex)
+| OCR-QUALITY-4 | Codebase : métadonnées de doute à l'ingestion RAG (confidence + doubtful) + exposition contexte augmenté + BDD | 3 | ✅ TERMINÉ (S-213 codebase — hors codex)
 |===
 
 *Constat déclencheur (S-082 corpus FPA (ex-métier privé — renommé RENAME) réel)* : `confidence` hardcodé
 0.7 placeholder dans TesseractOcrEngine (API `meanConfidence()` non
 exploitée), 5 images fantômes (3 bloquent epubcheck), 11 tableaux
 perdus, 10-15 schémas linéarisés — tout découvert manuellement.
+*Résolu S-218* : la confiance est désormais une mesure réelle (TSV
+word-level), le rapport d'acquisition JSON (`OcrQualityReport`) expose
+ILLISIBLE/TOO_SHORT/LOW_CONFIDENCE/IMAGE_MISSING. La chaîne complète
+(acquisition codex + assemblage document + ingestion codebase doubt-aware)
+est prête pour GBL-003.4.
 
 '''
 == ✅ EPIC CDX-CORPUS — Acquisition documentaire du corpus FPA (ex-métier privé — renommé RENAME) (GBL-003.3) ✅ TERMINÉ 4/4 US (S-217)
@@ -961,8 +966,9 @@ VERT — entrée catalog Central 0.0.31 présente). S-214 : ROLLOUT-6
 graphify-gradle ✅ (garde 3/3, pin ws 0.0.33, version dérivée) + bump
 graphify 0.0.3 propagé MEMPHIS-first (BOM 0.0.33 + catalog 0.0.33
 mavenLocal) → codex réaligné (platform pin 0.0.33, guards 3/3) → bakery
-migré (imports graphify.model canonique). Reste ordre 6 : dashboard
-(gate bump MEMPHIS requis — zéro entrée catalog).
+migré (imports graphify.model canonique). S-218 : pin codex réaligné
+0.0.39 → 0.0.43 (garde publication attrapée, drift MEMPHIS S-217). Reste
+ordre 6 : dashboard (gate bump MEMPHIS requis — zéro entrée catalog).
 
 === US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
 
