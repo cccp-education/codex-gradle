@@ -1,6 +1,38 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-09-17
-:session: 221
+:session: 224
+
+== Session 224 — CDX-PAGE-PROVENANCE (+75 tests, 1263 + 130 cucumber PASS)
+
+*Delta* : 1164 → 1263 `test` (+99 nets, dont 75 nouveaux) + 114 → 130 cucumber
+dédiés (+16, 8 scénarios × 2 découvertes). `check` VERT 11m17s,
+**1393 tests 0 FAIL**, Kover VERT, validatePlugins VERT.
+
+[cols="2,2,2", options="header"]
+|===
+| Fichier | Tests | Statut
+| `test/kotlin/codex/provenance/TocPageIndexTest.kt` (nouveau) | 14 UT | ✅ PASS (parse TOC table, multi-pages, refs imbriquées, header/ref invalide/titre vide/page non numérique skip, index canonique, union de doublons, titre vide)
+| `test/kotlin/codex/provenance/PageProvenanceResolverTest.kt` (nouveau) | 20 UT | ✅ PASS (jointure dernier segment, multi-pages, marche d'ancêtre, deepest-first gagne, dégradés, doute attaché par page, page non liée, pageId non numérique ignoré, déterminisme, `joinRate`)
+| `test/kotlin/codex/provenance/ProvenanceTitleNormalizerTest.kt` (nouveau) | 11 UT | ✅ PASS (canon S-217 composé, réf. numérique hyphenée/dotée/collée, `3C` préservé, ponctuation en queue, blank/dot-only, idempotence)
+| `test/kotlin/codex/provenance/FpaPageProvenanceJoinRateTest.kt` (nouveau) | 1 IT | ✅ PASS (`@Tag("integration")` — jointure réelle **70,8 %**, plancher 0,5, skip propre hors corpus)
+| `test/kotlin/codex/tasks/CollectPageProvenanceTaskTest.kt` (nouveau) | 8 FT | ✅ PASS (sidecar écrit, multi-pages, doute optionnel attaché, rapport absent dégradé, TOC absent dégradé, chunks vides, wiring groupe `collect`, `qualityReportFile` optionnel)
+| `test/kotlin/codex/tasks/CodexCompositeContextPageTest.kt` (nouveau) | 7 UT | ✅ PASS (champ `pages` par `sectionPath`, multi-pages, omis si non résolu, absent sans sidecar, sidecar invalide dégradé, doute/confidence préservés, wiring tolérant)
+| `test/kotlin/codex/bdd/PageProvenanceSteps.kt` + `CodexPageProvenanceCucumberRunner.kt` (nouveaux) | runner | ✅ 10e runner dédié (pattern S-082)
+| `test/resources/features/codex_page_provenance.feature` (nouveau) | 8 scénarios | ✅ PASS (localisation page, multi-pages, dot-leaders normalisés, ancêtre, dégradé silencieux, doute attaché, doute non lié, N3 additif)
+|===
+
+*Nouveau testé* :
+- `TocPageIndex` — parse TOC + index canonique titre → pages.
+- `ProvenanceTitleNormalizer` — canon S-217 + 2 raffinements OCR.
+- `PageProvenanceResolver` — jointure dérivée, marche d'ancêtre deepest-first,
+  attache du doute, dégradé silencieux, `joinRate`.
+- `CollectPageProvenanceTask` — sidecar `page-provenance.json`.
+- `CodexCompositeContextTask.buildPageIndex()` + champ N3 additif `pages`.
+- Taux de jointure réel du corpus FPA (test d'intégration, 70,8 %).
+
+*Découverte de test* : le grain de jointure du cadrage D2 (dernier segment)
+ne mesure que 24,8 % sur le corpus réel — le test d'intégration a tranché la
+conception (marche d'ancêtre → 70,8 %).
 
 == Session 221 — CDX-CONTEXT-HARDENING (+40 unit, +6 cucumber, 1050 unit + 114 cucumber PASS)
 
