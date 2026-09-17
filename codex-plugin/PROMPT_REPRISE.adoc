@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 221
-:session: 221
+= PROMPT_REPRISE — Codex — Session 222
+:session: 222
 :date: 2026-09-17
 :status: PRET
 
@@ -7,76 +7,62 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 1010 unit + 108 cucumber, 0 FAIL (S-220)
+./gradlew check           # baseline 1050 unit + 114 cucumber, 0 FAIL (S-221)
 ----
 
-== Session 220 terminée — maintenance + publication 0.0.9 + dogfooding
+== Session 221 terminée — EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US
 
-*C — Maintenance* : drift MEMPHIS réaligné (pin 0.0.43→0.0.44, garde
-`CodexPluginPublicationTest` était RED à HEAD). Marqueur périmé CADRAGE
-DOUBT-BRIDGE corrigé.
+*US-1* — fallback `enrichedJsonFile` standalone. Le wiring plugin posait
+l'`@InputFile @Optional` inconditionnellement → `generateCompositeContext`
+seule échouait en validation Gradle (`Input file does not exist`), fallback
+`""` inatteignable. Correctif : input **tolérant** `@InputFiles`
+(`ConfigurableFileCollection`) — artefact ciblé par défaut, absence →
+`""` (Économie d'Encre, jamais forcer `enrichJsonLdd`). Preuve par TestKit
+réel (`CodexCompositeContextGradleValidationTest`, sentinel `doFirst`).
 
-*A — Publication* : deux releases Central. 0.0.8 (bundle `b573cf61`,
-MEMPHIS 0.0.45 `d199bf00`) puis 0.0.9 corrective (bundle `7849b4b1`,
-MEMPHIS 0.0.46 `d1c09b5e`). Propagation repo1 vérifiée HTTP 200.
+*US-2* — test d'exécution `execute()` (comble le trou P0 S-220). Seam
+`@Internal storeOverride` + 4 tests pilotés par fake in-memory
+`RecordingRagStore` (JSON N3 + vibecoding + metadata, standalone, dégradé,
+canal Graphify). Audit des 16 `@TaskAction` : toutes couvertes.
 
-*B — Dogfooding* : run `collectIngest` doubt-aware → **387 chunks /
-18 doubtful / avg 0.9535** (identique S-214). Le run a découvert un
-**bug P0 préexistant** : `generateCompositeContext` levait
-`Serializer for class 'Any' is not found` (`Map<String, Any>` non
-sérialisable kotlinx). Corrigé TDD strict (3 UT `CodexCompositeContextJsonTest`
-+ 2 scénarios BDD) via seams `buildCompositeJson`/`buildVibecodingJson`
-(pattern `JsonObject` de `ExportKnowledgeBaseTask`). Re-run vert : 12
-entries, 1 doubtful exposé, canal Docs peuplé.
+*BDD* — 3 scénarios `hardened` ajoutés à `codex_doubt_bridge.feature`
+(runner dédié réutilisé). 10/10 PASSED.
 
-Rapport : `.agents/sessions/220-maintenance-pub-009-dogfooding.adoc`.
+Rapport : `.agents/sessions/221-cdx-context-hardening.adoc`.
 
-== Prochaine session — 221 : objectifs
+== Prochaine session — 222 : objectifs
 
-=== Option A — Second constat B : fallback `enrichedJsonFile` standalone
-
-* Le wiring plugin pose inconditionnellement `enrichedJsonFile`
-  (`CodexPlugin.kt:219`, `build/codex/enriched-ldd.json`) alors que la
-  propriété est `@Optional` et que `buildGraphifySection()` gère
-  l'absence (fallback `""`).
-* Conséquence : `generateCompositeContext` seule échoue en validation
-  Gradle (`Input file does not exist`) sans `enrichJsonLdd` préalable —
-  le fallback documenté est inatteignable.
-* Correctif candidat : soit retirer le wiring par défaut (laisser la
-  propriété non configurée → fallback `""`), soit `dependsOn("enrichJsonLdd")`.
-  Décider (économie d'encre vs canal Graphify par défaut).
-* TDD strict : test d'exécution `execute()` avec fake store (comble le
-  trou qui a laissé passer le P0).
-
-=== Option B — Test d'exécution `execute()` (comble le trou P0)
-
-* Aucun test n'exécute `CodexCompositeContextTask.execute()` de bout en
-  bout. Un test avec `RagVectorStore` fake (sous-classe open) + fichier
-  temporaire couvrirait la vraie chaîne (résultats → JSON → écriture →
-  metadata).
-* Généraliser aux autres tâches à `execute()` non couvert (audit).
-
-=== Option C — Dogfooding enrichi (canal Graphify réel)
+=== Option A — Dogfooding enrichi (canal Graphify réel)
 
 * Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
   avec le canal Graphify peuplé, mesurer le `composite-context.json`
-  complet (EAGER/RAG/GRAPHIFY/DOCS).
+  complet (EAGER/RAG/GRAPHIFY/DOCS). Le fallback tolérant S-221 est
+  désormais prouvé ; reste à mesurer le run nominal en réel.
+* Consommateur transitoire `/tmp` (pattern Règle 2), base pgvector jetable.
 
-=== Option D — Maintenance / cross-borough
+=== Option B — Page-provenance (D6 cadrage S-219)
 
-* À la demande pilote uniquement.
+* Join chunk→page du `OcrQualityReport` — nécessite une provenance de page
+  dans les chunks. EPIC futur distinct, hors scope DOUBT-BRIDGE.
+
+=== Option C — Publication / maintenance / cross-borough
+
+* À la demande pilote uniquement. Une release 0.0.10 porterait le fix
+  CDX-CONTEXT-HARDENING (US-1) — l'utilisateur décide.
+
+=== Option D — Pollution TOC corpus FPA (99 chunks dot-leaders)
+
+* Cause racine amont OCR/scan, pas le chunking codex (documenté S-216).
 
 == Hors scope (documenté)
 
-* *Page-provenance* (D6 cadrage S-219) : join chunk→page du
-  `OcrQualityReport` — EPIC futur distinct.
-* *Pollution TOC* du corpus FPA (99 chunks dot-leaders) : cause racine
-  amont OCR/scan, pas le chunking codex.
+* Page-provenance (D6 cadrage S-219) : EPIC futur distinct.
+* Pollution TOC du corpus FPA : cause racine amont OCR/scan.
 
 == Méthode
 
-Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
-→ Cucumber), English only.
+Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
+fonctionnel TestKit → Cucumber), English only.
 
 == Règles
 
@@ -86,6 +72,6 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-220)
+- `.agents/INDEX.adoc` (à jour S-221)
 - `.agents/BACKLOG.adoc`
-- `.agents/sessions/220-maintenance-pub-009-dogfooding.adoc`
+- `.agents/sessions/221-cdx-context-hardening.adoc`

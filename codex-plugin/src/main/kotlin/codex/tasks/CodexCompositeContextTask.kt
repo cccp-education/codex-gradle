@@ -17,10 +17,12 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -69,12 +71,24 @@ abstract class CodexCompositeContextTask : DefaultTask() {
     abstract val excludeDoubtfulDocs: Property<Boolean>
 
     // CDX-4-3 : canal Graphify peuplé depuis le JSON enrichi produit par
-    // `enrichJsonLdd` (List<EnrichedLddNode> sérialisée). Propriété
-    // optionnelle — backward compat : absente → graphifySection = "".
-    @get:InputFile
-    @get:Optional
+    // `enrichJsonLdd` (List<EnrichedLddNode> sérialisée).
+    // CDX-CONTEXT-HARDENING-1 : collection de fichiers tolérante (et non
+    // `@InputFile`) — le wiring plugin cible l'artefact par défaut, mais son
+    // absence n'échoue plus la validation Gradle. `generateCompositeContext`
+    // s'exécute standalone (fallback `""`, Économie d'Encre — jamais forcer
+    // `enrichJsonLdd`) tout en peuplant le canal Graphify quand l'artefact
+    // existe.
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val enrichedJsonFile: RegularFileProperty
+    abstract val enrichedJsonFile: ConfigurableFileCollection
+
+    /**
+     * Test seam — overrides the RAG store so the full [execute] chain can be
+     * driven without pgvector/Docker. Unset in production (the task builds a
+     * real [RagVectorStore] from the pg properties).
+     */
+    @get:Internal
+    abstract val storeOverride: Property<RagVectorStore>
 
     /**
      * Builds the Graphify channel section text from the enriched LDD
@@ -83,7 +97,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
      * `graphifySection = ""` default).
      */
     internal fun buildGraphifySection(): String {
-        val file = enrichedJsonFile.asFile.orNull ?: return ""
+        val file = enrichedJsonFile.singleOrNull() ?: return ""
         if (!file.exists()) return ""
         return try {
             val json = Json { ignoreUnknownKeys = true }
@@ -192,7 +206,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val q = query.orNull ?: "architecture du workspace"
         val k = topK.orNull?.toIntOrNull() ?: 10
 
-        val store = RagVectorStore(
+        val store = storeOverride.orNull ?: RagVectorStore(
             host = pgHost.get(),
             port = pgPort.get().toInt(),
             database = pgDatabase.get(),

@@ -3238,3 +3238,71 @@ un bump cross-borough.
 === F. Prochaine session (221)
 Second constat B (fallback `enrichedJsonFile`) OU test d'exécution
 `execute()` OU dogfooding canal Graphify. Voir PROMPT_REPRISE.
+
+'''
+== Session 221 — 2026-09-17 — EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US (second constat B S-220)
+
+*Date* : 2026-09-17
+*Type* : dev + hardening (baby-step DDD/TDD/BDD strict RED → GREEN →
+REFACTOR, 3 niveaux unit → fonctionnel TestKit → Cucumber)
+*Objectif* : traiter le second constat B du dogfooding S-220 — le wiring
+plugin posait `enrichedJsonFile` inconditionnellement (`@InputFile
+@Optional`), rendant le fallback `""` inatteignable et faisant échouer
+`generateCompositeContext` seule en validation Gradle.
+
+=== A. US-1 — Fallback `enrichedJsonFile` standalone
+- Constat : `CodexPlugin.kt:219` faisait
+  `it.enrichedJsonFile.set(build/codex/enriched-ldd.json)` sur un
+  `@InputFile @Optional`. Gradle valide les `@InputFile` *avant* l'action →
+  sans `enrichJsonLdd` préalable, `Input file does not exist`, alors que
+  `buildGraphifySection()` gère explicitement l'absence.
+- Décision (Économie d'Encre) : conserver le wiring par défaut (canal
+  Graphify peuplé si l'artefact existe) mais rendre l'input **tolérant**
+  (`@InputFiles` / `ConfigurableFileCollection`) — absence → `""` sans
+  forcer `enrichJsonLdd`.
+- RED : 8 UT `CodexCompositeContextHardeningTest` (14× Unresolved).
+- GREEN : `CodexCompositeContextTask.enrichedJsonFile` =
+  `ConfigurableFileCollection` ; `buildGraphifySection()` lit
+  `singleOrNull() ?: return ""` ; `CodexPlugin` → `setFrom(...)`.
+- REFACTOR : migration `CodexCompositeContextGraphifyTest` +
+  `CodexCompositeContextTaskTest` (`setFrom` / `isEmpty`).
+- Preuve Gradle réelle : `CodexCompositeContextGradleValidationTest`
+  (TestKit, 2 tests) — un vrai build standalone atteint le sentinel
+  `doFirst` (validation passée) et ne planifie pas `enrichJsonLdd`
+  (`ProjectBuilder` ne joue pas la validation d'input).
+
+=== B. US-2 — Test d'exécution `execute()` (comble le trou P0 S-220)
+- Constat : aucun test n'exécutait `execute()` de bout en bout — le trou
+  exact qui a laissé passer le P0 `Serializer for class 'Any' is not found`.
+- Seam `@Internal storeOverride: Property<RagVectorStore>` ;
+  `execute()` consomme `storeOverride.orNull ?: RagVectorStore(pg...)`.
+- 4 tests d'exécution pilotés par fake in-memory `RecordingRagStore` :
+  JSON N3 + vibecoding + metadata, standalone sans enriched JSON, dégradé
+  silencieux JSON invalide, canal Graphify peuplé.
+- Audit des 16 `@TaskAction` : toutes couvertes par une suite d'exécution
+  (unit ou IT). Aucun autre trou.
+
+=== C. BDD Cucumber (3e niveau)
+3 scénarios `hardened` ajoutés à `codex_doubt_bridge.feature` (runner
+dédié réutilisé — Économie d'Encre, pas de 10e runner) : standalone sans
+enriched JSON, exécution end-to-end exposant le doute, canal Graphify
+peuplé. Steps préfixés anti-collision S-088. 10/10 PASSED.
+
+=== D. Gates
+- `./gradlew check` BUILD SUCCESSFUL 6m02s — **1050 unit (+40 vs baseline
+  1010) + 114 cucumber dédiés (+6), 0 FAIL**. Kover VERT, validatePlugins
+  VERT. 3 nouveaux fichiers test, 4 fichiers prod modifiés.
+- Zéro secret, zéro bump BOM, zéro régression, backward compat totale
+  (canal Graphify par défaut préservé).
+
+=== E. Leçons
+Un `@InputFile @Optional` se comporte comme un `@InputFile` : un input
+destiné à dégrader doit être une collection (`@InputFiles`). Le niveau
+TestKit manquait — `ProjectBuilder` n'exécute pas la validation d'inputs
+Gradle, trou commun aux P0 S-220 et S-221. Le seam `storeOverride` est né
+du P0 : rendre `execute()` testable au niveau unit est la condition pour
+ne plus laisser passer un incident de contrat N3.
+
+=== F. Prochaine session (222)
+Dogfooding enrichi canal Graphify réel OU page-provenance (D6) OU
+publication 0.0.10. Voir PROMPT_REPRISE.

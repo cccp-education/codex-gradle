@@ -56,7 +56,7 @@ class CodexCompositeContextGraphifyTest {
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
         val enrichedFile = File(tempDir, "enriched-empty.json")
         enrichedFile.writeText(json.encodeToString(ListSerializer(EnrichedLddNode.serializer()), emptyList()))
-        task.enrichedJsonFile.set(enrichedFile)
+        task.enrichedJsonFile.setFrom(enrichedFile)
 
         val section = task.buildGraphifySection()
         assertEquals("", section)
@@ -72,7 +72,7 @@ class CodexCompositeContextGraphifyTest {
             enrichedNode("Intro") // sans nœuds graphify → omis
         )
         enrichedFile.writeText(json.encodeToString(ListSerializer(EnrichedLddNode.serializer()), enriched))
-        task.enrichedJsonFile.set(enrichedFile)
+        task.enrichedJsonFile.setFrom(enrichedFile)
 
         val section = task.buildGraphifySection()
         assertTrue(section.contains("Architecture"), "section with graphify nodes should be included")
@@ -87,7 +87,7 @@ class CodexCompositeContextGraphifyTest {
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
         val enrichedFile = File(tempDir, "enriched-bad.json")
         enrichedFile.writeText("{ not valid json")
-        task.enrichedJsonFile.set(enrichedFile)
+        task.enrichedJsonFile.setFrom(enrichedFile)
 
         // Dégradé silencieux : JSON invalide → canal muet (pas de crash).
         val section = task.buildGraphifySection()
@@ -101,7 +101,7 @@ class CodexCompositeContextGraphifyTest {
         val enrichedFile = File(tempDir, "enriched.json")
         val enriched = listOf(enrichedNode("Architecture", "node-arch-1"))
         enrichedFile.writeText(json.encodeToString(ListSerializer(EnrichedLddNode.serializer()), enriched))
-        task.enrichedJsonFile.set(enrichedFile)
+        task.enrichedJsonFile.setFrom(enrichedFile)
 
         val r1 = task.buildGraphifySection()
         val r2 = task.buildGraphifySection()
@@ -109,11 +109,13 @@ class CodexCompositeContextGraphifyTest {
     }
 
     @Test
-    fun `task exposes optional enrichedJsonFile property`() {
+    fun `task exposes tolerant enrichedJsonFile collection`() {
         val project = ProjectBuilder.builder().build()
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
 
         assertNotNull(task.enrichedJsonFile)
-        assertTrue(!task.enrichedJsonFile.isPresent, "enrichedJsonFile should be optional (no default)")
+        // CDX-CONTEXT-HARDENING-1 : collection tolérante, vide par défaut —
+        // aucun crash de configuration sans enrichJsonLdd préalable.
+        assertTrue(task.enrichedJsonFile.isEmpty, "enrichedJsonFile should be an empty tolerant collection by default")
     }
 }

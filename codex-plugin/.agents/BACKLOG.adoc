@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 220 — **Maintenance + publication 0.0.9 + dogfooding**. C : drift MEMPHIS réaligné (0.0.43→0.0.44, garde publication RED à HEAD). A : 2 releases Central — 0.0.8 (bundle `b573cf61`, MEMPHIS 0.0.45 `d199bf00`) puis **0.0.9 corrective** (bundle `7849b4b1`, MEMPHIS 0.0.46 `d1c09b5e`). B : dogfooding `collectIngest` → 387 chunks/18 doubtful/avg 0.9535 (identique S-214) **+ découverte bug P0 préexistant** `generateCompositeContext` (`Serializer for class 'Any' is not found`) corrigé TDD strict (3 UT + 2 BDD). check VERT 1010 unit + 108 cucumber 0 FAIL. Nouvelle US candidate : fallback `enrichedJsonFile` standalone.)_
+_Dernière mise à jour : 2026-09-17 (session 221 — **EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US**. US-1 fallback `enrichedJsonFile` standalone : input tolérant `@InputFiles` (`ConfigurableFileCollection`) au lieu d'`@InputFile` wired → `generateCompositeContext` s'exécute seule (fallback `""` atteignable, Économie d'Encre), preuve par TestKit réel. US-2 test d'exécution `execute()` via seam `@Internal storeOverride` + fake in-memory + audit des 16 `@TaskAction`. BDD 3 scénarios `hardened` (runner réutilisé), 10/10 PASSED. check VERT 1050 unit + 114 cucumber, 0 FAIL.)_
 
 '''
 == ✅ EPIC CDX-CORPUS-JSON (fix P0) — Contrat N3 `composite-context.json` sérialisable ✅ TERMINÉ 2/2 US (S-220)
@@ -27,23 +27,29 @@ depuis le rename S-058.
 |===
 
 '''
-== 🟡 EPIC CDX-CONTEXT-HARDENING — Fallback `enrichedJsonFile` standalone + test d'exécution `execute()`
+== ✅ EPIC CDX-CONTEXT-HARDENING — Fallback `enrichedJsonFile` standalone + test d'exécution `execute()` ✅ TERMINÉ 2/2 US (S-221)
 
 _Origine : second constat dogfooding B S-220._
 
-Le wiring plugin pose `enrichedJsonFile` **inconditionnellement**
+Le wiring plugin posait `enrichedJsonFile` **inconditionnellement**
 (`CodexPlugin.kt:219`, `build/codex/enriched-ldd.json`) alors que la
-propriété est `@Optional` et que `buildGraphifySection()` gère
+propriété était `@InputFile @Optional` et que `buildGraphifySection()` gère
 explicitement l'absence (fallback `""`). Conséquence : `generateCompositeContext`
-seule échoue en validation Gradle (`Input file does not exist`) sans
-`enrichJsonLdd` préalable — le fallback documenté est inatteignable dans
+seule échouait en validation Gradle (`Input file does not exist`) sans
+`enrichJsonLdd` préalable — le fallback documenté était inatteignable dans
 le cas standalone.
 
 |===
 | US | Description | Pts | Statut
-| CDX-CONTEXT-HARDENING-1 | Décider + appliquer : retirer le wiring par défaut (fallback `""` atteignable) OU `dependsOn("enrichJsonLdd")` (canal Graphify par défaut). TDD strict. | 2 | 🟡 À FAIRE
-| CDX-CONTEXT-HARDENING-2 | Test d'exécution `execute()` avec fake `RagVectorStore` + fichier temporaire (comble le trou qui a laissé passer le P0). Audit des autres `execute()` non couverts. | 2 | 🟡 À FAIRE
+| CDX-CONTEXT-HARDENING-1 | Décider + appliquer : input tolérant `@InputFiles` (`ConfigurableFileCollection`) — artefact ciblé par défaut, absence → fallback `""` (Économie d'Encre, jamais forcer `enrichJsonLdd`). TDD strict + preuve TestKit. | 2 | ✅ TERMINÉ (S-221 — 8 UT + 2 TestKit `CodexCompositeContextGradleValidationTest`, sentinel `doFirst` atteint, `enrichJsonLdd` non planifié)
+| CDX-CONTEXT-HARDENING-2 | Test d'exécution `execute()` avec fake `RagVectorStore` + fichier temporaire (comble le trou qui a laissé passer le P0). Audit des autres `execute()` non couverts. | 2 | ✅ TERMINÉ (S-221 — seam `@Internal storeOverride` + 4 UT `RecordingRagStore` + BDD 3 scénarios `hardened` ; audit 16 `@TaskAction` toutes couvertes)
 |===
+
+*Boundary* : zéro bump BOM, zéro secret, backward compat totale (canal
+Graphify par défaut préservé — seul le mode standalone dégrade proprement).
+*Leçon* : un `@InputFile @Optional` wired se comporte comme un `@InputFile` ;
+`ProjectBuilder` ne joue pas la validation d'input Gradle → niveau TestKit
+requis (premier usage codex).
 
 '''
 == ✅ EPIC CDX-DOUBT-BRIDGE — Pont doute acquisition → RAG + contexte augmenté (GBL-003.4 codex) ✅ TERMINÉ 3/3 US (S-219)

@@ -1,6 +1,36 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-09-17
-:session: 219
+:session: 221
+
+== Session 221 — CDX-CONTEXT-HARDENING (+40 unit, +6 cucumber, 1050 unit + 114 cucumber PASS)
+
+*Delta* : 1010 → 1050 unit (+40) + 108 → 114 cucumber dédiés (+6).
+`check` VERT 6m02s, 1050 unit + 114 cucumber 0 FAIL. Kover VERT,
+validatePlugins VERT.
+
+[cols="2,2,2", options="header"]
+|===
+| Fichier | Tests | Statut
+| `test/kotlin/codex/tasks/CodexCompositeContextHardeningTest.kt` (nouveau) | 8 UT | ✅ PASS (wiring par défaut, résolution tolérante d'un fichier absent, fallback `""`, exécution `execute()` → JSON N3 + vibecoding + metadata, standalone sans enriched JSON, dégradé silencieux, canal Graphify peuplé)
+| `test/kotlin/codex/tasks/CodexCompositeContextGradleValidationTest.kt` (nouveau) | 2 TestKit | ✅ PASS (build Gradle réel — validation d'input passée via sentinel `doFirst`, `enrichJsonLdd` non planifié)
+| `test/kotlin/codex/tasks/CodexCompositeContextGraphifyTest.kt` (migré) | 6 UT | ✅ PASS (`setFrom` / collection tolérante `isEmpty`)
+| `test/kotlin/codex/tasks/CodexCompositeContextTaskTest.kt` (migré) | 9 UT | ✅ PASS (propriété collection tolérante)
+| `test/resources/features/codex_doubt_bridge.feature` | 10 scénarios (was 7) | ✅ PASS (3 scénarios `hardened` : standalone, end-to-end doute, canal Graphify peuplé)
+|===
+
+*Couverture* : la validation d'input Gradle (`Input file does not exist`)
+*ne peut pas* être exercée par `ProjectBuilder` — d'où le niveau TestKit
+(`CodexCompositeContextGradleValidationTest`), nouveau pour codex. Le P0
+S-220 et le constat S-221 sont de la même famille : testés au niveau seam,
+invisibles à l'exécution réelle.
+
+*Nouveau testé* :
+- `CodexCompositeContextTask.enrichedJsonFile` collection tolérante
+  (`@InputFiles`) — artefact ciblé par défaut, absence → `""`.
+- `CodexCompositeContextTask.execute()` chaîne complète via seam
+  `@Internal storeOverride` + fake in-memory `RecordingRagStore`.
+- Validation Gradle réelle du standalone (TestKit, premier usage codex).
+- BDD exécution/standalone (3 scénarios `hardened`).
 
 == Session 219 — CDX-DOUBT-BRIDGE (+115 tests, 987/987 PASS)
 

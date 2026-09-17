@@ -106,12 +106,14 @@ class CodexCompositeContextTaskTest {
     }
 
     @Test
-    fun `task enrichedJsonFile is optional - unset does not crash configuration`() {
+    fun `task exposes tolerant enrichedJsonFile collection`() {
         val project = ProjectBuilder.builder().build()
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
 
-        // Backward compat : la propriété est @Optional, aucune convention
-        // n'est posée. Une task non configurée doit rester instançable.
-        assertTrue(!task.enrichedJsonFile.isPresent, "enrichedJsonFile should be optional (no default)")
+        // CDX-CONTEXT-HARDENING-1 : collection tolérante. Avant fix, la
+        // propriété était `@InputFile @Optional` mais le plugin la wire
+        // inconditionnellement → `Input file does not exist` en standalone.
+        assertNotNull(task.enrichedJsonFile)
+        assertTrue(task.enrichedJsonFile.isEmpty, "enrichedJsonFile should be an empty tolerant collection when unset")
     }
 }

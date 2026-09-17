@@ -214,9 +214,10 @@ class CodexPlugin : Plugin<Project> {
             it.excludeDoubtfulDocs.convention(extension.excludeDoubtfulDocs)
             // CDX-4-3 : câblage canal Graphify — enrichedJsonFile consomme
             // la sortie de `enrichJsonLdd` (List<EnrichedLddNode> JSON).
-            // Backward compat : la propriété reste @Optional, non configurée
-            // → graphifySection = "" (canal muet, comportement précédent).
-            it.enrichedJsonFile.set(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
+            // CDX-CONTEXT-HARDENING-1 : collection tolérante — l'artefact est
+            // ciblé par défaut, mais son absence dégrade à `graphifySection = ""`
+            // au lieu d'échouer la validation Gradle (standalone).
+            it.enrichedJsonFile.setFrom(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
         }
 
         project.tasks.register(

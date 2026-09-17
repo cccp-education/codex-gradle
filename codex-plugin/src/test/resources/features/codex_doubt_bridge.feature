@@ -46,3 +46,24 @@ Feature: Doubt bridge — acquisition OCR doubt reaches the RAG ingestion and th
     Given a clean retrieved chunk "clean section"
     When the vibecoding JSON is built
     Then the vibecoding JSON exposes the docs section
+
+  Scenario: The composite context executes standalone without a pre-existing enriched JSON
+    Given a hardened context task with no enriched JSON artifact
+    And a hardened retrieved chunk "clean section"
+    When the hardened composite context executes
+    Then the hardened composite context output exists
+    And the Graphify section falls back to empty
+
+  Scenario: The composite context executes end-to-end and exposes the doubt
+    Given a hardened context task with no enriched JSON artifact
+    And a hardened retrieved chunk "clean section"
+    And a hardened doubtful chunk "shaky OCR section"
+    When the hardened composite context executes
+    Then the hardened composite context output exists
+    And the hardened composite context JSON exposes a doubtful entry
+
+  Scenario: The Graphify channel is populated when the enriched JSON artifact exists
+    Given a hardened context task with an enriched JSON artifact containing node "node-arch-1"
+    And a hardened retrieved chunk "clean section"
+    When the hardened composite context executes
+    Then the hardened Graphify section contains "node-arch-1"

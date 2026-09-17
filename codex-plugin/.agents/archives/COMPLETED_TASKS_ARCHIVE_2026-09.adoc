@@ -124,3 +124,31 @@
   validatePlugins VERT. Zéro secret.
 - Constat non corrigé (documenté) : wiring `enrichedJsonFile`
   inconditionnel vs `@Optional` (US future).
+
+== S-221 (2026-09-17) — EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US ✅
+
+- CDX-CONTEXT-HARDENING-1 ✅ — fallback `enrichedJsonFile` standalone.
+  L'`@InputFile @Optional` était wired inconditionnellement
+  (`CodexPlugin.kt:219`) → `generateCompositeContext` seule échouait en
+  validation Gradle (`Input file does not exist`), le fallback `""`
+  documenté restait inatteignable. Correctif : input **tolérant**
+  `@InputFiles` (`ConfigurableFileCollection`) — artefact ciblé par défaut,
+  absence → `""` (Économie d'Encre, jamais forcer `enrichJsonLdd`).
+  RED 8 UT `CodexCompositeContextHardeningTest` (14× Unresolved) → GREEN
+  (tâche + plugin `setFrom`) → REFACTOR (migration des 2 suites
+  historiques). Preuve par **TestKit réel** `CodexCompositeContextGradleValidationTest`
+  (2 tests — sentinel `doFirst` atteint, `enrichJsonLdd` non planifié ;
+  `ProjectBuilder` ne joue pas la validation d'input Gradle).
+- CDX-CONTEXT-HARDENING-2 ✅ — test d'exécution `execute()` (comble le trou
+  P0 S-220). Seam `@Internal storeOverride: Property<RagVectorStore>` ;
+  4 tests pilotés par fake in-memory `RecordingRagStore` (JSON N3 +
+  vibecoding + metadata, standalone sans enriched JSON, dégradé silencieux
+  JSON invalide, canal Graphify peuplé). Audit des 16 `@TaskAction` :
+  toutes couvertes (unit ou IT).
+- BDD ✅ — 3 scénarios `hardened` ajoutés à `codex_doubt_bridge.feature`
+  (runner dédié réutilisé — Économie d'Encre, pas de 10e runner), steps
+  préfixés anti-collision S-088. 10/10 PASSED.
+- Gates : `check` VERT 6m02s — 1050 unit (+40 vs baseline 1010) + 114
+  cucumber dédiés (+6), 0 FAIL. Kover VERT, validatePlugins VERT. Zéro
+  bump BOM, zéro secret, zéro régression, backward compat totale (canal
+  Graphify par défaut préservé).
