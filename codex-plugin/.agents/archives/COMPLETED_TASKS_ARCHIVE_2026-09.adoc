@@ -283,3 +283,18 @@
 - *Gates* : gouvernance pure, zéro code/tests modifiés, zéro publication,
   zéro secret. Baseline documentée 1393 tests 0 FAIL.
 - *Rapport* : `.agents/sessions/227-ordonnancement-c-a-b.adoc`.
+
+== S-228 (2026-09-17) — C-1 Drift MEMPHIS + baseline verte ✅ (baby-step TDD)
+
+- *RED* — `CodexPluginPublicationTest` `1 failed` (`AssertionError:54`) : pin
+  platform `workspace-bom:0.0.49` ≠ catalog ws `0.0.50` (MEMPHIS parallèle
+  S-227 `c756b33`).
+- *GREEN* — bump pins `settings.gradle.kts` + `build.gradle.kts:31`
+  `0.0.49` → `0.0.50` ; toml local `codex-plugin = "0.0.11"` inchangé →
+  garde 3/3 VERTE.
+- *Audit pins N1* — `dependencyInsight` : BOM 0.0.50 résout `codebase-plugin`
+  0.0.16 (pin local 0.0.12 neutralisé par contrainte), pas de drift latent.
+- *Gate* — `check` VERT 3m42s : 1393 tests (1263 unit + 130 cucumber) 0 FAIL,
+  Kover VERT, validatePlugins VERT. Zéro secret, zéro publication,
+  zéro bump, zéro test modifié.
+- *Rapport* : `.agents/sessions/228-c1-drift-memphis.adoc`.

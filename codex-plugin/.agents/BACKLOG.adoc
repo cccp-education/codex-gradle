@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 227 — **ordonnancement pilote C → A → B**. Décision pilote : *« C puis A et enfin quand c'est fini B. Chacun de ces est au moins 3 à 4 sessions différentes. »* Plan de séquence acté : `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` — **11 sessions S-228 → S-238** (C maintenance 4 sessions → A EPIC CB-PAGE-PROVENANCE 4 sessions → B publication 3 sessions). **Découverte de session** : la baseline n'est PAS verte à HEAD — une session MEMPHIS parallèle S-227 (`c756b33`) a publié BOM/catalog **0.0.50** + `codebase-plugin 0.0.16` après la clôture S-226 (pin 0.0.49), garde `CodexPluginPublicationTest` **RED prouvée** (`1 failed`) ; et C-2 (split-brain `DocumentChunk`) est un prérequis structurel de A-1. Zéro code modifié.)_
+_Dernière mise à jour : 2026-09-17 (session 228 — **C-1 TERMINÉ : drift MEMPHIS 0.0.49 → 0.0.50 + baseline verte**. Baby-step TDD strict : garde `CodexPluginPublicationTest` RED prouvée → GREEN (bump pins `settings.gradle.kts` + `build.gradle.kts:31`, toml local inchangé) → `check` VERT 3m42s, **1393 tests (1263 unit + 130 cucumber) 0 FAIL**, Kover VERT, validatePlugins VERT. Audit pins N1 : BOM 0.0.50 contraint `codebase-plugin` à 0.0.16 (pin local 0.0.12 neutralisé) — pas de drift latent. Bloc C en cours : reste C-2/C-3/C-4.)_
 
 '''
 == 🟡 SÉQUENCE PILOTE C → A → B (ordonnancement S-227)
@@ -23,7 +23,7 @@ sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc
 | C-1 drift MEMPHIS 0.0.49→0.0.50 + baseline verte · C-2 split-brain
   `DocumentChunk` (prérequis A-1) · C-3 dead code N1 + 8 désync gouvernance ·
   C-4 pollution TOC chunking + clôture C
-| 🟡 À DÉMARRER (S-228)
+| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; reste C-2/C-3/C-4
 
 | A — CB-PAGE-PROVENANCE
 | S-232 · S-233 · S-234 · S-235
@@ -48,7 +48,7 @@ Central, rien à republier avant).
 '''
 == 🟡 EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette)
 
-_Statut_ : 🟡 À DÉMARRER (S-228 ouvre C-1).
+_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; reste C-2 (S-229), C-3 (S-230), C-4 (S-231).
 _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 
 [cols="1,3,1", options="header"]
@@ -64,7 +64,7 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
   0.0.49 → 0.0.50, garde 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
   Audit secondaire : toml local `codebase = "0.0.12"` vs catalog 0.0.16
   (contrainte BOM, aucune garde).
-| 🟡 À FAIRE
+| ✅ TERMINÉ (S-228)
 
 | C-2 (S-229)
 | **Split-brain `DocumentChunk`** — `codex.tasks.DocumentChunk`

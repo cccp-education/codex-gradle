@@ -1,55 +1,67 @@
-= PROMPT_REPRISE — Codex — Session 228
-:session: 228
+= PROMPT_REPRISE — Codex — Session 229
+:session: 229
 :date: 2026-09-17
 :status: PRET
-:mission: C-1 — drift MEMPHIS (pins 0.0.49 → 0.0.50) + baseline verte (ouverture du bloc C : C → A → B)
+:mission: C-2 — split-brain `DocumentChunk` (prérequis structurel de A-1)
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
-./gradlew compileKotlin compileTestKotlin   # environnement (sources fraîches → compile seulement)
-./gradlew test --tests 'codex.CodexPluginPublicationTest'   # RED attendu (drift C-1)
+git status --porcelain -- src/    # vide ? → règle EAGER
+./gradlew compileKotlin compileTestKotlin   # environnement
 ----
 
-== Contexte — ordonnancement pilote acté S-227
+== Contexte — bloc C (maintenance), séquence C → A → B
 
-Le pilote a tranché : *C (maintenance) puis A (EPIC CB-PAGE-PROVENANCE)
-puis B (publication)*. Chacun = 3 à 4 sessions distinctes. Total 11 sessions
-(S-228 → S-238). Plan complet : `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`.
+Le pilote a tranché S-227 : *C (maintenance) → A (EPIC CB-PAGE-PROVENANCE)
+→ B (publication)*, 11 sessions S-228 → S-238. Plan :
+`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`.
 
-- *C* — 4 sessions : C-1 drift/baseline (S-228) · C-2 split-brain
-  `DocumentChunk` (S-229) · C-3 dead code + gouvernance (S-230) · C-4
-  pollution TOC + clôture (S-231).
-- *A* — 4 sessions : US-1 N1 transport (S-232) · US-2 N2 transport (S-233) ·
-  US-3 N1 exposition (S-234) · US-4 BDD (S-235).
-- *B* — 3 sessions : B-1 codebase-first (S-236) · B-2 codex 0.0.12 (S-237) ·
-  B-3 propagation + dogfooding (S-238).
+- *C-1 (S-228)* ✅ TERMINÉ — drift MEMPHIS pins `0.0.49` → `0.0.50`, garde
+  `CodexPluginPublicationTest` 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
+  Audit pins N1 : BOM contraint `codebase-plugin` à 0.0.16, pas de drift.
+- *C-2 (S-229)* — **mission ci-dessous**.
+- *C-3 (S-230)* : dead code N1 (`StoreStatements.insertChunk()` 5 binds +
+  `IngestIndexing.assignLocalIndices`, zéro appelant prod) + 8 désync
+  gouvernance (`SESSION_PROCEDURE.adoc` chemins pré-S-105 + commande
+  `:codex-plugin` erronée, `SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:18` règle
+  « INTERDICTION FORMELLE » contredisant la décision 2026-09-17, `AGENT.adoc`
+  § Fichiers, `README.md` badges 0.0.1).
+- *C-4 (S-231)* : pollution TOC chunking (99/387 au run FPA S-216), BDD
+  `@toc-noise`, clôture C + go/no-go A.
 
-Pourquoi C avant A : (1) la baseline n'est PAS verte à HEAD (drift C-1) ;
-(2) C-2 est un prérequis structurel de A-1 (le champ `pages` ne doit pas
-être maintenu dans deux types `DocumentChunk`).
+== Mission S-229 — C-2 (baby-step DDD/TDD/BDD strict)
 
-== Mission S-228 — C-1 (baby-step TDD strict)
+*Constat* : deux data classes `DocumentChunk` identiques coexistent —
+`codex.tasks.DocumentChunk` (`codex/tasks/ChunkDocumentTask.kt:34`,
+producteur) et `codebase.store.DocumentChunk` (`codebase/store/DocumentChunk.kt:23`,
+type N1, migration verbatim RAG-1). `CodexIngestTask` décode **déjà** dans
+le type N1 (`ignoreUnknownKeys = true`). Les autres tasks codex
+(`SemanticChunker`, `ChunkDocumentTask`, `ExportKnowledgeBaseTask`,
+`CollectPageProvenanceTask`, `EnrichJsonLddTask`, `JsonLddEnricher`,
+`PageProvenanceResolver`) utilisent le type producteur.
 
-*Constat prouvé S-227* : une session MEMPHIS **parallèle** (S-227, commit
-`c756b33`) a publié **BOM/catalog 0.0.50** + `codebase-plugin 0.0.16` après
-la clôture codex S-226 (pin 0.0.49). La garde RED est le test.
+*Travail* :
 
-. *RED* — `./gradlew test --tests 'codex.CodexPluginPublicationTest'` →
-   `1 failed` (`AssertionError at CodexPluginPublicationTest.kt:54`) :
-   le pin platform `workspace-bom:0.0.49` ≠ catalog ws 0.0.50.
-. *GREEN* — bump pins `0.0.49` → `0.0.50` :
-   - `settings.gradle.kts` : `from("education.cccp:workspace-catalog:0.0.49")`
-     → `0.0.50` ;
-   - `build.gradle.kts` : `platform("education.cccp:workspace-bom:0.0.49")`
-     → `0.0.50`.
-   Le toml local `codex-plugin = "0.0.11"` **ne bouge pas** (pas de release).
-3. *Garde 3/3 VERTE* (`--rerun-tasks`).
-. *Audit secondaire* : toml local `codebase = "0.0.12"` vs catalog `0.0.16`
-   — résolu par la contrainte BOM, aucune garde ne l'exige. Vérifier ce
-   n'est pas un drift latent (S-226 l'a classé « pas de drift réel »).
-. *Gate* : `./gradlew check` VERT, baseline **1393 tests**
-   (1263 unit + 130 cucumber) 0 FAIL, Kover VERT, validatePlugins VERT.
+. Décision (déjà actée S-227) : le type de store vit en N1
+   (`codebase.store`), le producteur codex **consomme** le type N1 —
+   pattern RAG-3 (codex dépend déjà de `libs.codebase.plugin`).
+   Alternative écartée : garder le doublon (double maintenance du futur
+   `pages` de A-1).
+. Characterization tests **avant** bascule : contrat JSON `chunks.json`
+   byte-compatible (`@Serializable` identique) — RED → GREEN.
+3. Suppression du type `codex.tasks.DocumentChunk` + bascule des 7 fichiers
+   prod (imports) vers `codebase.store.DocumentChunk`.
+. Non-régression : `@provenance` (8 scénarios), corpus enrichment,
+   `CodexIngestDoubtTest`, `CodexIngestRetrieveIT`.
+. Gate : `check` VERT, baseline 1393 tests 0 FAIL, zéro régression,
+   backward compat JSON totale.
+
+*Valeur* : **débloque A-1** (un seul type porte `pages`), supprime un drift
+structurel documenté depuis S-223.
+
+*Risque* : `codex.tasks.DocumentChunk` est référencé par 8 fichiers de test
+— migration mécanique, gate par suite complète.
 
 == Pièges connus
 
@@ -57,23 +69,12 @@ la clôture codex S-226 (pin 0.0.49). La garde RED est le test.
   un jar pendant `check` (course S-226 `CodexIngestRetrieveIT`,
   `NoClassDefFoundError: DocumentChunk$$serializer`). Vérifier par stash
   avant d'accuser le diff.
-- *Le chemin de projet* : le projet racine **est** `codex-plugin` — utiliser
-  `./gradlew check` (PAS `:codex-plugin:check`, qui échoue). Voir C-3
-  (SESSION_PROCEDURE à corriger S-230).
+- *Le projet racine **est** `codex-plugin`* — utiliser `./gradlew check`
+  (PAS `:codex-plugin:check`, qui échoue). C-3 corrige ce chemin dans
+  `SESSION_PROCEDURE.adoc`.
 - *Garde de publication* : `CodexPluginPublicationTest` lit le toml du repo
   voisin `../workspace-bom/gradle/libs.versions.toml` (source de vérité).
-
-== Bloc C — suite (rappel, ne pas anticiper)
-
-- *S-229 / C-2* : unifier `DocumentChunk` (supprimer `codex.tasks.DocumentChunk`,
-  basculer 7 fichiers prod vers `codebase.store.DocumentChunk`) — **bloque A-1**.
-- *S-230 / C-3* : dead code N1 (`insertChunk()` 5 binds + `IngestIndexing`) +
-  8 désynchronisations gouvernance (`SESSION_PROCEDURE.adoc` chemins pré-S-105
-  + commande `:codex-plugin` erronée, `INDEX.adoc:18` règle « INTERDICTION
-  FORMELLE » contredisant la décision 2026-09-17, `AGENT.adoc` § Fichiers,
-  `README.md` badges 0.0.1).
-- *S-231 / C-4* : pollution TOC chunking (99/387 au run FPA S-216), BDD
-  `@toc-noise`, clôture C + go/no-go A.
+  Pins alignés 0.0.50 (C-1).
 
 == Méthode / Règles
 Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
@@ -83,8 +84,7 @@ permission. SECRETS via configuration/. Ne JAMAIS lancer la suite globale
 sans nécessité (règle EAGER cycle build/test piloté par le delta source).
 
 == References
-- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan de séquence C → A → B)
-- `.agents/sessions/227-ordonnancement-c-a-b.adoc` (rapport S-227)
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B)
+- `.agents/sessions/228-c1-drift-memphis.adoc` (rapport C-1)
 - `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (EPIC A, S-225)
-- `.agents/sessions/226-maintenance-publication-0011.adoc` (point de départ C)
-- `workspace-bom` commit `c756b33` (déclencheur du drift C-1)
+- `codebase.store.DocumentChunk` · `codex/tasks/ChunkDocumentTask.kt`

@@ -1,0 +1,202 @@
+= Rapport Session 228 — C-1 Drift MEMPHIS + baseline verte
+:session: 228
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn) — coordination MEMPHIS (workspace-bom N0)
+:status: TERMINÉ
+:type: maintenance (baby-step TDD strict — garde RED → GREEN)
+:bloc: C (maintenance) — ouverture de la séquence C → A → B
+
+== Objectif
+
+Mission du PROMPT_REPRISE S-228 : ouvrir le bloc C (maintenance) par
+**C-1** — corriger le drift MEMPHIS (pins `0.0.49` → `0.0.50`) détecté
+S-227, rendre la garde d'hygiène de publication VERTE et valider la
+baseline (`check` VERT 1393 tests 0 FAIL).
+
+== Contexte — pourquoi C-1 existe
+
+Une session MEMPHIS **parallèle** (S-227, commit `c756b33`) a publié
+BOM/catalog **0.0.50** + `codebase-plugin 0.0.16` **après** la clôture
+codex S-226 (qui épinglait `0.0.49`). La garde
+`CodexPluginPublicationTest.workspace bom platform pin matches ws catalog
+bom version` était donc **RED à HEAD** — prouvé S-227, reconfirmé en
+ouverture de S-228.
+
+== Baby-step TDD strict — RED → GREEN → REFACTOR
+
+=== 1. RED (constat reproduit)
+
+[source,shell]
+----
+./gradlew test --tests 'codex.CodexPluginPublicationTest'
+----
+
+Résultat :
+
+----
+CodexPluginPublicationTest > workspace bom platform pin matches ws catalog bom version() FAILED
+    java.lang.AssertionError at CodexPluginPublicationTest.kt:54
+75 tests completed, 1 failed
+----
+
+Le pin platform `workspace-bom:0.0.49` ≠ catalog ws `0.0.50`. La garde
+existante **est** le test — aucun test à écrire (elle lit le toml du repo
+voisin `../workspace-bom/gradle/libs.versions.toml`, source de vérité).
+
+=== 2. GREEN (bump des deux pins)
+
+Deux modifications chirurgicales :
+
+. `settings.gradle.kts` — commentaire + `from("education.cccp:workspace-catalog:0.0.49")`
+   → `0.0.50`.
+. `build.gradle.kts:31` — `platform("education.cccp:workspace-bom:0.0.49")`
+   → `0.0.50`.
+
+Le toml local `gradle/libs.versions.toml` `codex-plugin = "0.0.11"`
+**ne bouge pas** — aucune release dans cette session (bloc B seulement).
+
+[source,shell]
+----
+./gradlew test --tests 'codex.CodexPluginPublicationTest' --rerun-tasks
+----
+
+Résultat : **BUILD SUCCESSFUL** — garde **3/3 VERTE**.
+
+=== 3. REFACTOR (gate complète)
+
+[source,shell]
+----
+./gradlew check
+----
+
+Résultat : **BUILD SUCCESSFUL in 3m 42s** — 24 tâches. Kover VERT,
+validatePlugins VERT.
+
+== Audit secondaire — pins N1 (`codebase-plugin`)
+
+Constante du PROMPT_REPRISE : le toml local `codebase = "0.0.14"` /
+`codebase-plugin = "0.0.12"` diffère du catalog ws
+(`codebase-plugin = "0.0.16"`). La question : drift latent ?
+
+Vérification par `dependencyInsight` sur la `compileClasspath` :
+
+----
+education.cccp:codebase-plugin:0.0.16
+  Selection reasons:
+      - By constraint
+      - By conflict resolution: between versions 0.0.16 and 0.0.12
+\--- education.cccp:workspace-bom:0.0.50
+\--- compileClasspath
+
+education.cccp:codebase-plugin:0.0.12 -> 0.0.16
+\--- compileClasspath
+----
+
+**Conclusion** : la contrainte du BOM `0.0.50` (importé en platform)
+**résout** `codebase-plugin` à `0.0.16` — la version réellement sur le
+classpath. Le pin local `0.0.12` n'est qu'une *demande* neutralisée par la
+contrainte BOM. Aucune garde ne l'exige, aucune divergence de comportement :
+**pas de drift latent** — classification S-226 confirmée (« pas de drift
+réel »). Aucune modification apportée.
+
+== Baseline mesurée (gate de sortie)
+
+Décompte des rapports JUnit XML :
+
+[cols="2,1,1,1,1", options="header"]
+|===
+| Suite | Tests | Skipped | Failures | Errors
+
+| `test` (unit + découverte)
+| 1263
+| 656
+| 0
+| 0
+
+| `cucumberTestDoubtBridge`
+| 20 | 0 | 0 | 0
+
+| `cucumberTestEnrichment`
+| 8 | 0 | 0 | 0
+
+| `cucumberTestLicence`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestOcr`
+| 20 | 14 | 0 | 0
+
+| `cucumberTestOcrQuality`
+| 22 | 0 | 0 | 0
+
+| `cucumberTestOntology`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestPageProvenance`
+| 16 | 0 | 0 | 0
+
+| `cucumberTestPipelineRouting`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestPipelineUnify`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestSessionMemory`
+| 20 | 0 | 0 | 0
+|===
+
+*Baseline conservée* : **1393 tests (1263 unit + 130 cucumber) 0 FAIL**,
+identique à la baseline documentée S-226/S-227. Kover VERT,
+validatePlugins VERT.
+
+== Ouverture de session — état constaté
+
+. `git status` propre, branche `main` à jour (HEAD `fc7357b`, S-227).
+. Règle EAGER (delta source) : `git status --porcelain -- src/` vide et
+   aucune source plus récente que `build/test-results/test` → **compiler
+   seulement** : `./gradlew compileKotlin compileTestKotlin` → BUILD
+   SUCCESSFUL. Aucune suite globale lancée à l'ouverture.
+. Une exécution ciblée unique de la garde pour confirmer le RED (C-1).
+
+== Fichiers modifiés
+
+Code (2) :
+
+. `settings.gradle.kts` — commentaire + pin catalog `0.0.49` → `0.0.50`.
+. `build.gradle.kts` — pin platform `workspace-bom:0.0.49` → `0.0.50`.
+
+Gouvernance (7) :
+
+. `.agents/sessions/228-c1-drift-memphis.adoc` — **créé**.
+. `.agents/PROMPT_REPRISE.adoc` — réécrit pour S-229 (mission C-2).
+3. `.agents/INDEX.adoc` — session 228, table, roadmap, prochaine session.
+4. `.agents/SESSIONS_HISTORY.adoc` — entrée session 228.
+5. `.agents/BACKLOG.adoc` — C-1 ✅ TERMINÉ (S-228), EPIC SÉQUENCE-C mis à jour.
+6. `.agents/archives/COMPLETED_TASKS_ARCHIVE_2026-09.adoc` — entrée S-228.
+7. Racine workspace : `AGENTS.adoc` (entrée Brooklyn) + snapshot `vision-archive`.
+
+*Non modifié* : `.agents/TEST_COVERAGE_ANALYSIS.adoc` (aucun test ajouté/supprimé).
+
+== Gates
+
+- Garde `CodexPluginPublicationTest` — RED prouvée → **3/3 VERTE**.
+- `./gradlew check` — **BUILD SUCCESSFUL 3m42s**, 1393 tests 0 FAIL,
+  Kover VERT, validatePlugins VERT.
+- Zéro secret, zéro publication Central, zéro bump de version, zéro
+  fichier de test modifié, zéro régression.
+
+== Prochaine session (229) — mission C-2
+
+**Split-brain `DocumentChunk`** (prérequis structurel de A-1) : supprimer
+`codex.tasks.DocumentChunk` (`ChunkDocumentTask.kt:34`), basculer les 7
+fichiers prod vers `codebase.store.DocumentChunk` (type N1, codex dépend
+déjà de `libs.codebase.plugin` — pattern RAG-3), characterization test du
+contrat JSON `chunks.json` byte-compatible, non-régression
+`@provenance`/enrichment/ingest. Baby-step DDD/TDD/BDD strict.
+
+== Références
+
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C / C-1
+- `.agents/sessions/227-ordonnancement-c-a-b.adoc` (découverte du drift)
+- `.agents/sessions/226-maintenance-publication-0011.adoc`
+- `workspace-bom/gradle/libs.versions.toml` (source de vérité versions)
+- `workspace-bom` commit `c756b33` (déclencheur du drift C-1)
