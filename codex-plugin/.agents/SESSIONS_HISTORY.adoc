@@ -3306,3 +3306,35 @@ ne plus laisser passer un incident de contrat N3.
 === F. Prochaine session (222)
 Dogfooding enrichi canal Graphify réel OU page-provenance (D6) OU
 publication 0.0.10. Voir PROMPT_REPRISE.
+
+'''
+== Session 222 — 2026-09-17 — PUBLICATION codex-plugin 0.0.10 (décision pilote)
+
+*Date* : 2026-09-17
+*Type* : publish (ordre DAG MEMPHIS-first, baby-step TDD garde RED → bump GREEN)
+*Objectif* : publier la release 0.0.10 pour rendre disponible le fix
+CDX-CONTEXT-HARDENING (S-221) — fallback `enrichedJsonFile` tolérant qui
+permet à `generateCompositeContext` de s'exécuter seule.
+
+*Travail* :
+- *MEMPHIS* : `PlatformCatalogAlignmentTest` épinglé 0.0.47 (RED 1 failed) →
+  toml `workspace-bom = "0.0.47"` + `codex-plugin = "0.0.10"` (GREEN 48/0) →
+  `publishToMavenLocal` VERT (BOM + catalog signés, `.toml` liste codex
+  0.0.10 + ws 0.0.47) → anti-collision repo1 404 → Central bundle
+  `48b061ce-20c5-4fd0-92d3-8a7508b21c88` (AUTOMATIC).
+- *codex* : `CodexPluginPublicationTest` 2/3 RED (toml local 0.0.9 ≠ ws
+  0.0.10 ; pin platform 0.0.46 ≠ ws 0.0.47) → toml local `codex-plugin =
+  "0.0.10"` + `settings.gradle.kts` pin `workspace-catalog:0.0.47` +
+  `build.gradle.kts` pin `workspace-bom:0.0.47` (GREEN 3/3) → `properties`
+  version 0.0.10 dérivée (D3) → `build -x test` VERT 3m29s → anti-collision
+  404 → Central bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55` (AUTOMATIC).
+- *Non-régression* : `check` VERT 2m57s — 1164 tests (1050 unit + 114
+  cucumber), 0 FAIL, Kover VERT, validatePlugins VERT.
+- *Propagation* : BOM/catalog 0.0.47 repo1 HTTP 200 ; codex 0.0.10 en
+  polling (7-27 min, piège #14).
+
+*Contenu 0.0.10 (depuis 0.0.9)* : EPIC CDX-CONTEXT-HARDENING (US-1 input
+tolérant `@InputFiles` + preuve TestKit, US-2 test d'exécution `execute()`
+via seam `storeOverride` + audit 16 `@TaskAction`).
+*Zéro* : zéro secret, zéro régression, backward compat totale.
+*Rapport* : `.agents/sessions/222-publication-codex-0010.adoc`.

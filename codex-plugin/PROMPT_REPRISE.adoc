@@ -1,77 +1,59 @@
-= PROMPT_REPRISE — Codex — Session 222
-:session: 222
+= PROMPT_REPRISE — Codex — Session 223
+:session: 223
 :date: 2026-09-17
 :status: PRET
-:mission: PUBLICATION codex-plugin 0.0.10 (décision pilote)
+:mission: à la demande du pilote
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 1050 unit + 114 cucumber, 0 FAIL (S-221)
+./gradlew check           # baseline 1050 unit + 114 cucumber, 0 FAIL (S-221/S-222)
 ----
 
-== Session 221 terminée — EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US
+== Session 222 terminée — PUBLICATION codex-plugin 0.0.10 TERMINÉE
 
-*US-1* — fallback `enrichedJsonFile` standalone. Le wiring plugin posait
-l'`@InputFile @Optional` inconditionnellement → `generateCompositeContext`
-seule échouait en validation Gradle (`Input file does not exist`), fallback
-`""` inatteignable. Correctif : input **tolérant** `@InputFiles`
-(`ConfigurableFileCollection`) — artefact ciblé par défaut, absence →
-`""` (Économie d'Encre, jamais forcer `enrichJsonLdd`). Preuve par TestKit
-réel (`CodexCompositeContextGradleValidationTest`, sentinel `doFirst`).
+*Mission pilote (Option A)* : publier la 0.0.10 pour rendre le fix
+CDX-CONTEXT-HARDENING (S-221) disponible aux consommateurs.
 
-*US-2* — test d'exécution `execute()` (comble le trou P0 S-220). Seam
-`@Internal storeOverride` + 4 tests pilotés par fake in-memory
-`RecordingRagStore` (JSON N3 + vibecoding + metadata, standalone, dégradé,
-canal Graphify). Audit des 16 `@TaskAction` : toutes couvertes.
+*Ordre DAG MEMPHIS-first* exécuté en baby-step TDD (garde RED → bump GREEN) :
+. MEMPHIS : `PlatformCatalogAlignmentTest` épinglé 0.0.47 (RED) →
+   toml `workspace-bom = "0.0.47"` + `codex-plugin = "0.0.10"` (GREEN) →
+   mavenLocal VERT → Central bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88`.
+. codex : `CodexPluginPublicationTest` 2/3 RED → toml local 0.0.10 + pin
+   settings `workspace-catalog:0.0.47` + pin platform `workspace-bom:0.0.47`
+   (GREEN 3/3) → `properties` version 0.0.10 → `build -x test` VERT →
+   Central bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55`.
+. Non-régression : `check` VERT 1164 tests 0 FAIL (baseline préservée).
+. Propagation : BOM + catalog 0.0.47 repo1 HTTP 200 ; codex 0.0.10 en
+   polling (7-27 min).
 
-*BDD* — 3 scénarios `hardened` ajoutés à `codex_doubt_bridge.feature`
-(runner dédié réutilisé). 10/10 PASSED.
+Rapport : `.agents/sessions/222-publication-codex-0010.adoc`.
 
-Rapport : `.agents/sessions/221-cdx-context-hardening.adoc`.
+== Prochaine session — 223 : objectifs (à trancher par le pilote)
 
-== Prochaine session — 222 : objectifs
-
-=== Option A (RETENUE — décision pilote) — Publication codex-plugin 0.0.10
-
-*Objectif prioritaire acté par le pilote : publier la release 0.0.10.*
-Contenu depuis 0.0.9 : EPIC CDX-CONTEXT-HARDENING (S-221, fix input
-tolérant `enrichedJsonFile` standalone + test d'exécution `execute()`).
-La release rend le correctif US-1 disponible aux consommateurs.
-
-Ordre DAG strict (pattern S-220) :
-. *MEMPHIS d'abord* : bump `workspace-bom/gradle/libs.versions.toml`
-   `codex-plugin = "0.0.9"` → `"0.0.10"` + version BOM/catalog `0.0.46`
-   → `0.0.47` ; gardes `contracts.catalog.*` + `PlatformCatalogAlignmentTest` ;
-   `publishToMavenLocal` VERT → publication Central (bundle AUTOMATIC).
-. *codex ensuite* : bump `codex-plugin/gradle/libs.versions.toml`
-   `codex-plugin = "0.0.9"` → `"0.0.10"` + pin platform `workspace-bom:0.0.47`
-   + settings `workspace-catalog:0.0.47` ; garde `CodexPluginPublicationTest`
-   3/3 (D5 — toml local == toml MEMPHIS, platform pin == catalog BOM) ;
-   `build -x test` VERT → `publishAggregationToCentralPortal --no-daemon`.
-. *Propagation* : vérifier repo1 HTTP 200 (codex-plugin 0.0.10 + BOM/catalog
-   0.0.47) ; aligner consommateurs (le cas échéant).
-. Note PUB-3.14 au BACKLOG (état 🟡 À FAIRE → ✅ TERMINÉ avec bundles).
-
-*Aucun publish ne se fait sans permission explicite* — mais la décision
-pilote acte que la 222 EST la session de publication.
-
-=== Option B — Page-provenance (D6 cadrage S-219)
+=== Option A — Page-provenance (D6 cadrage S-219)
 
 * Join chunk→page du `OcrQualityReport` — nécessite une provenance de page
   dans les chunks. EPIC futur distinct, hors scope DOUBT-BRIDGE.
+* Valeur : traçabilité du doute OCR jusqu'à la page source d'origine.
 
-=== Option C — Dogfooding enrichi (canal Graphify réel)
+=== Option B — Dogfooding enrichi (canal Graphify réel)
 
 * Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
-  avec le canal Graphify peuplé, mesurer le `composite-context.json`
-  complet (EAGER/RAG/GRAPHIFY/DOCS).
-* Consommateur transitoire `/tmp` (pattern Règle 2), base pgvector jetable.
+  avec le canal Graphify peuplé, mesurer le `composite-context.json` complet
+  (EAGER/RAG/GRAPHIFY/DOCS). Consommateur transitoire `/tmp` (Règle 2),
+  pgvector jetable (docker).
 
-=== Option D — Pollution TOC corpus FPA (99 chunks dot-leaders)
+=== Option C — Pollution TOC corpus FPA (99 chunks dot-leaders)
 
 * Cause racine amont OCR/scan, pas le chunking codex (documenté S-216).
+* Nécessite probablement une action côté acquisition (codex) ou amont.
+
+=== Option D — Vérifier propagation repo1 0.0.10
+
+* Confirmer `https://repo1.maven.org/maven2/education/cccp/codex-plugin/0.0.10/`
+  HTTP 200 + aligner d'éventuels consommateurs si besoin.
 
 == Hors scope (documenté)
 
@@ -86,13 +68,12 @@ fonctionnel TestKit → Cucumber), English only.
 == Règles
 
 - COMMITS/PUSH — autorisés (décision pilote 2026-09-17).
-- PAS DE publishToMavenLocal automatique sans permission — mais la décision
-  pilote acte explicitement que la S-222 EST la session de publication 0.0.10.
+- PAS DE publishToMavenLocal / publication Central sans permission explicite.
 - SECRETS via configuration/ — jamais en dur dans build.gradle.kts.
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-221)
-- `.agents/BACKLOG.adoc` (PUB-3.14 🟡 À FAIRE)
-- `.agents/sessions/221-cdx-context-hardening.adoc`
-- `workspace-bom/` (bump 0.0.46 → 0.0.47, ordre DAG MEMPHIS-first)
+- `.agents/INDEX.adoc` (à jour S-222)
+- `.agents/BACKLOG.adoc` (PUB-3.14 ✅ TERMINÉ)
+- `.agents/sessions/222-publication-codex-0010.adoc`
+- `workspace-bom/` (0.0.47 publié, ordre DAG MEMPHIS-first)

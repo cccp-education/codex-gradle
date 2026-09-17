@@ -1,5 +1,23 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-222 (2026-09-17) — Publication codex-plugin 0.0.10 + MEMPHIS 0.0.47 ✅
+
+- PUB-3.14 ✅ — `codex-plugin:0.0.10` publié Central (bundle
+  `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55`, AUTOMATIC). Rend disponible le fix
+  CDX-CONTEXT-HARDENING (S-221) : input `enrichedJsonFile` tolérant
+  (`@InputFiles`) → `generateCompositeContext` standalone, fallback `""`.
+- MEMPHIS-first ✅ — `PlatformCatalogAlignmentTest` 0.0.47 (RED) → toml
+  `workspace-bom = "0.0.47"` + `codex-plugin = "0.0.10"` (GREEN) →
+  Central bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88`.
+- codex alignement ✅ — toml local 0.0.10 + pin `workspace-catalog:0.0.47`
+  (settings) + pin `workspace-bom:0.0.47` (platform), garde
+  `CodexPluginPublicationTest` 3/3 (2/3 RED avant bump), version dérivée
+  0.0.10.
+- Non-régression ✅ — `check` VERT 1164 tests (1050 unit + 114 cucumber),
+  0 FAIL, Kover VERT, validatePlugins VERT.
+- Propagation : BOM/catalog 0.0.47 repo1 200 ; codex 0.0.10 polling.
+- Zéro secret, zéro régression. Next : S-223 à la demande du pilote.
+
 == S-218 (2026-09-17) — OCR-QUALITY US-1/2 (codex) vraie confidence + détection acquisition ✅
 
 - OCR-QUALITY-1 ✅ — `TesseractTsvParser` (nouveau, objet pur, 7 UT) :

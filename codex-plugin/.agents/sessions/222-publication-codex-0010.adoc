@@ -1,0 +1,118 @@
+= Rapport Session 222 — Publication codex-plugin 0.0.10 (décision pilote)
+:session: 222
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+
+== Objectif
+
+Mission actée par le pilote (PROMPT_REPRISE S-222, Option A RETENUE) :
+*publier la release `codex-plugin:0.0.10`* pour rendre disponible aux
+consommateurs le correctif CDX-CONTEXT-HARDENING (S-221) — le fallback
+`enrichedJsonFile` tolérant (`@InputFiles`) qui permet à
+`generateCompositeContext` de s'exécuter seule, là où la 0.0.9 échouait en
+validation Gradle (`Input file does not exist`).
+
+Ordre DAG strict MEMPHIS-first (pattern S-220) : le BOM/catalog
+`workspace-bom`/`workspace-catalog` porte la version de chaque plugin et doit
+être publié *avant* le plugin lui-même.
+
+== Baseline — check VERT à l'ouverture
+
+`./gradlew check` d'ouverture : **1164 tests (1050 unit + 114 cucumber
+dédiés), 0 FAIL, 534 skipped** (découverte CR-10), BUILD SUCCESSFUL 6m04s.
+Baseline S-221 préservée.
+
+Note : un premier lancement `nohup` a été interrompu par le timeout du shell ;
+la baseline a été re-mesurée en foreground.
+
+== Étape 1 — MEMPHIS-first : BOM/catalog 0.0.46 → 0.0.47
+
+Baby-step TDD strict (la garde d'abord, puis le bump).
+
+. *RED* — `PlatformCatalogAlignmentTest` (`agent-contracts`) :
+   `workspace-bom` épinglé `0.0.46` → réécrit `0.0.47` ; run
+   `./gradlew :test --tests 'contracts.catalog.*'` → **1 failed**
+   (toml 0.0.46 ≠ garde 0.0.47). RED confirmé.
+. *GREEN* — `workspace-bom/gradle/libs.versions.toml` :
+   * `workspace-bom = "0.0.46"` → `"0.0.47"`
+   * `codex-plugin = "0.0.9"` → `"0.0.10"`
+   Run gardes → **BUILD SUCCESSFUL** (48 tests, 0 failed).
+. *mavenLocal* — `./gradlew publishToMavenLocal` BUILD SUCCESSFUL : 2
+   artefacts signés (BOM + catalog), `.toml` Central liste bien
+   `codex-plugin = "0.0.10"` + `workspace-bom = "0.0.47"`.
+. *Anti-collision nmcp (piège #6)* — repo1 interrogé avant publication :
+   BOM/catalog `0.0.47` = 404, `<latest>` = 0.0.46 → aucune collision.
+. *Central* — `./gradlew publishAggregationToCentralPortal --no-daemon`
+   → bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88` (AUTOMATIC,
+   « deployment is publishing »).
+
+== Étape 2 — codex : alignement + publication 0.0.10
+
+. *RED* — `CodexPluginPublicationTest` : 2/3 FAILED
+   (`plugin version matches root consumer catalog version` : toml local
+   0.0.9 ≠ ws 0.0.10 ; `workspace bom platform pin matches ws catalog bom
+   version` : pin 0.0.46 ≠ ws 0.0.47). Le test #3 (`group and id stable`)
+   PASSED.
+. *GREEN* :
+   * `codex-plugin/gradle/libs.versions.toml` : `codex-plugin = "0.0.9"`
+     → `"0.0.10"` (version dérivée D3 `ws.versions.codex.plugin.get()`).
+   * `settings.gradle.kts` : pin `workspace-catalog:0.0.46` → `0.0.47`.
+   * `build.gradle.kts` : `platform("education.cccp:workspace-bom:0.0.46")`
+     → `0.0.47`.
+   Run garde → **3/3 PASSED**.
+. *Version dérivée vérifiée* — `./gradlew properties` : `version: 0.0.10`,
+   `group: education.cccp`.
+. *Build* — `./gradlew build -x test` BUILD SUCCESSFUL 3m29s.
+. *Anti-collision* — repo1 `codex-plugin/0.0.10` = 404 avant publication.
+. *Central* — `./gradlew publishAggregationToCentralPortal --no-daemon`
+   → bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55` (AUTOMATIC).
+
+== Étape 3 — Non-régression post-bump
+
+`./gradlew check` après alignement 0.0.47 : BUILD SUCCESSFUL 2m57s,
+**1164 tests, 0 FAIL** (1050 unit + 114 cucumber dédiés), Kover VERT,
+validatePlugins VERT. Baseline préservée à l'identique.
+
+== Étape 4 — Propagation
+
+[cols="3,2,2"]
+|===
+| Artefact | Version | repo1
+
+| `workspace-bom` | 0.0.47 | HTTP 200 ✅
+| `workspace-catalog` | 0.0.47 | HTTP 200 ✅
+| `codex-plugin` | 0.0.10 | en cours (polling 7-27 min, piège #14)
+|===
+
+Bundles : MEMPHIS `48b061ce-20c5-4fd0-92d3-8a7508b21c88`, codex
+`3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55`.
+
+== Contenu de la release 0.0.10 (depuis 0.0.9)
+
+EPIC *CDX-CONTEXT-HARDENING* (S-221) :
+. US-1 — input tolérant `@InputFiles` (`ConfigurableFileCollection`) pour
+  `enrichedJsonFile` : `generateCompositeContext` s'exécute standalone
+  (fallback `""` atteignable), preuve par TestKit réel (sentinel `doFirst`,
+  `enrichJsonLdd` non planifié).
+. US-2 — test d'exécution `execute()` via seam `@Internal storeOverride` +
+  fake in-memory `RecordingRagStore` ; audit des 16 `@TaskAction`.
+
+== Leçons
+
+. *Le DAG publication est une chaîne de gardes, pas une procédure* : chaque
+   bump est d'abord rendu RED par sa garde (`PlatformCatalogAlignmentTest`,
+   `CodexPluginPublicationTest`), puis GREEN par le bump. Le baby-step TDD
+   s'applique aussi à la gouvernance de version.
+. *Pin multi-site* : un bump MEMPHIS touche 3 fichiers côté codex (toml
+   local, pin settings catalog, pin platform BOM) — la garde #2 les couvre
+   tous.
+. *Anti-collision systématique* : repo1 interrogé *avant* chaque
+   `publishAggregationToCentralPortal` (piège #6, nmcp mordu S-215).
+
+== Commits
+
+. `workspace-bom` : bump BOM/catalog 0.0.47 + `codex-plugin` 0.0.10
+   (garde `PlatformCatalogAlignmentTest`).
+. `codex-gradle` : alignement 0.0.10 (toml + settings + platform) +
+   publication.

@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 221 — **EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US**. US-1 fallback `enrichedJsonFile` standalone : input tolérant `@InputFiles` (`ConfigurableFileCollection`) au lieu d'`@InputFile` wired → `generateCompositeContext` s'exécute seule (fallback `""` atteignable, Économie d'Encre), preuve par TestKit réel. US-2 test d'exécution `execute()` via seam `@Internal storeOverride` + fake in-memory + audit des 16 `@TaskAction`. BDD 3 scénarios `hardened` (runner réutilisé), 10/10 PASSED. check VERT 1050 unit + 114 cucumber, 0 FAIL.)_
+_Dernière mise à jour : 2026-09-17 (session 222 — **PUBLICATION codex-plugin 0.0.10 TERMINÉE** (décision pilote). Ordre DAG MEMPHIS-first en baby-step TDD : `PlatformCatalogAlignmentTest` 0.0.47 (RED) → bump toml `workspace-bom = "0.0.47"` + `codex-plugin = "0.0.10"` (GREEN) → mavenLocal → Central bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88`. Puis codex : `CodexPluginPublicationTest` 2/3 RED → toml local 0.0.10 + pin settings/platform 0.0.47 (GREEN 3/3) → `build -x test` VERT → Central bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55`. Non-régression `check` VERT 1164 tests 0 FAIL. Propagation BOM/catalog 0.0.47 repo1 200, codex 0.0.10 polling.)_
 
 '''
 == ✅ EPIC CDX-CORPUS-JSON (fix P0) — Contrat N3 `composite-context.json` sérialisable ✅ TERMINÉ 2/2 US (S-220)
@@ -227,10 +227,10 @@ parcouru, pas `indexOf`.
 . MEMPHIS Central : bundle `d199bf00-9183-4716-abb6-3bc79fdb2fd2` (BOM/catalog 0.0.45) ✅
 . codex Central : bundle `b573cf61-3686-4814-b7a3-612e707246b5` ✅ propagation repo1 HTTP 200.
 
-=== PUB-3.14 — codex-plugin 0.0.10 🟡 À FAIRE (S-222 — décision pilote)
+=== PUB-3.14 — codex-plugin 0.0.10 ✅ TERMINÉ (S-222 — décision pilote)
 **Priorite** : P1
 **Estimation** : 1 pt
-**Dependances** : MEMPHIS BOM/catalog 0.0.47 (à publier d'abord — ordre DAG)
+**Dependances** : MEMPHIS BOM/catalog 0.0.47 ✅ Central (S-222)
 
 . *Motif* : rendre disponible le fix CDX-CONTEXT-HARDENING (S-221) —
   fallback `enrichedJsonFile` tolérant (`@InputFiles`) : `generateCompositeContext`
@@ -239,11 +239,14 @@ parcouru, pas `indexOf`.
 . *Ordre DAG* : MEMPHIS-first (bump `codex-plugin` 0.0.9 → 0.0.10 + version
   BOM/catalog 0.0.46 → 0.0.47, gardes, Central) → codex (bump toml local +
   pin platform/settings 0.0.47, garde `CodexPluginPublicationTest` 3/3,
-  `publishAggregationToCentralPortal`).
+  `publishAggregationToCentralPortal`). ✅ FAIT S-222
 . Contenu depuis 0.0.9 : EPIC CDX-CONTEXT-HARDENING (US-1 input tolérant +
   TestKit, US-2 test d'exécution `execute()` + audit 16 `@TaskAction`).
-  1050 unit + 114 cucumber 0 FAIL.
-. *À renseigner à la publication* : bundles MEMPHIS + codex, propagation repo1.
+  1164 tests (1050 unit + 114 cucumber), 0 FAIL.
+. MEMPHIS Central : bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88`
+  (BOM/catalog 0.0.47) ✅ propagation repo1 HTTP 200.
+. codex Central : bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55` ✅
+  (propagation repo1 en polling 7-27 min, piège #14).
 
 === PUB-3.13 — codex-plugin 0.0.9 (corrective) ✅ TERMINÉ (S-220)
 **Priorite** : P0 (corrective — P0 cassé en production)
@@ -1083,8 +1086,10 @@ graphify-gradle ✅ (garde 3/3, pin ws 0.0.33, version dérivée) + bump
 graphify 0.0.3 propagé MEMPHIS-first (BOM 0.0.33 + catalog 0.0.33
 mavenLocal) → codex réaligné (platform pin 0.0.33, guards 3/3) → bakery
 migré (imports graphify.model canonique). S-218 : pin codex réaligné
-0.0.39 → 0.0.43 (garde publication attrapée, drift MEMPHIS S-217). Reste
-ordre 6 : dashboard (gate bump MEMPHIS requis — zéro entrée catalog).
+0.0.39 → 0.0.43 (garde publication attrapée, drift MEMPHIS S-217). S-220 :
+pin 0.0.44 → 0.0.45/0.0.46 (releases 0.0.8 + 0.0.9 corrective). S-222 : pin
+0.0.46 → 0.0.47 (publication 0.0.10). Reste ordre 6 : dashboard (gate bump
+MEMPHIS requis — zéro entrée catalog).
 
 === US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
 
