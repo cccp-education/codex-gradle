@@ -3,6 +3,8 @@
 Historique des sessions de developpement du plugin codex-gradle.
 
 '''
+
+'''
 == Session 218 — OCR-QUALITY US-1/2 (codex) — vraie confidence + détection acquisition (EPIC transverse complété)
 
 *Date* : 2026-09-17
@@ -3511,3 +3513,54 @@ codebase-first puis codex.
 *Gate* : zéro code modifié, baseline préservée `check` VERT 1393 tests
 0 FAIL, zéro bump BOM, zéro secret. Cross-borough Brooklyn (N2) + Queens (N1).
 *Rapport* : `.agents/sessions/225-cadrage-cb-page-provenance.adoc`.
+
+'''
+== Session 226 — 2026-09-17 — Maintenance (Option C) + publication codex-plugin 0.0.11 (Option B)
+
+*Date* : 2026-09-17
+*Type* : maintenance + publish (demande pilote — Options B + C ; Option A
+CB-PAGE-PROVENANCE écartée)
+*Objectif* : publier Central `codex-plugin 0.0.11` (intègre la provenance de
+page S-224) + maintenance du borough.
+
+*C — Maintenance (drift corrigé)* :
+- Garde `CodexPluginPublicationTest` **RED à HEAD** : pin codex
+  `workspace-bom:0.0.47` vs catalog ws **0.0.48** (release bakery S-219).
+- Baby-step TDD strict : garde épinglée cible 0.0.49 → RED
+  (`expected: <0.0.49> but was: <0.0.48>`) → bump codex pins
+  `settings.gradle.kts`/`build.gradle.kts` 0.0.47→0.0.49 + toml local
+  0.0.10→0.0.11 → garde 3/3 VERTE.
+- Audit complémentaire : `codebase-plugin` local 0.0.12 vs catalog 0.0.15
+  (résolu par contrainte BOM, pas de drift réel) ; dette documentée hors
+  scope (split-brain `DocumentChunk`, legacy `insertChunk`/`IngestIndexing`,
+  pollution TOC corpus).
+
+*B — Publication (ordre DAG MEMPHIS-first)* :
+- MEMPHIS BOM/catalog **0.0.49** — bundle
+  `3d85cc54-d6d8-4284-be03-f950f5e9f207` (constraint codex 0.0.11). Garde
+  `PlatformCatalogAlignmentTest` épinglée 0.0.49, `publishToMavenLocal` VERT.
+- codex-plugin **0.0.11** — bundle
+  `ad4b1717-2214-45e1-a391-728b78df46ea` (AUTOMATIC). Version dérivée
+  `ws.versions.codex.plugin` = 0.0.11 (`./gradlew properties`). `build -x test`
+  VERT 3m27s.
+- Propagation repo1 : BOM 0.0.49 **200** · catalog 0.0.49 **200** ·
+  codex 0.0.11 **200**.
+
+*Contenu 0.0.11 depuis 0.0.10* : EPIC CDX-PAGE-PROVENANCE (S-223 cadrage +
+S-224 implémentation 5/5 US — provenance de page par jointure dérivée
+TOC × chunks × rapport, marche d'ancêtre deepest-first, 70,8 % sur le
+corpus FPA réel, domaine `codex.provenance`, tâche `collectPageProvenance`,
+champ N3 additif `pages`, BDD `@provenance` 8 scénarios).
+
+*Gates* : `check` VERT 6m28s — **1393 tests** (1263 unit + 130 cucumber),
+0 FAIL, Kover VERT, validatePlugins VERT. Zéro secret, zéro code métier
+modifié.
+
+*Note course mavenLocal* : 3 échecs transitoires `CodexIngestRetrieveIT`
+(`NoClassDefFoundError: DocumentChunk$$serializer`) — jar
+`codebase-plugin-0.0.15` mavenLocal réécrit par une session Queens
+parallèle (mtime 16:11). Vérifié par stash à HEAD (IT 4/4 PASS) puis après
+stabilisation (IT 4/4 PASS) → **non imputable au diff**. Piège à retenir :
+mavenLocal est partagé entre boroughs.
+
+*Rapport* : `.agents/sessions/226-maintenance-publication-0011.adoc`.

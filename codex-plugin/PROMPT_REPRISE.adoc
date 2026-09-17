@@ -1,8 +1,8 @@
-= PROMPT_REPRISE — Codex — Session 226
-:session: 226
+= PROMPT_REPRISE — Codex — Session 227
+:session: 227
 :date: 2026-09-17
 :status: PRET
-:mission: mission à trancher par le pilote (EPIC CB-PAGE-PROVENANCE CADRÉ S-225)
+:mission: mission à trancher par le pilote (EPIC CB-PAGE-PROVENANCE CADRÉ S-225, release 0.0.11 livrée S-226)
 
 == Quick Start
 ----
@@ -11,34 +11,45 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew check           # baseline 1393 tests (1263 + 130 cucumber), 0 FAIL
 ----
 
-== Session 225 terminée — cadrage EPIC CB-PAGE-PROVENANCE (cross-borough)
+== Session 226 terminée — maintenance + publication codex-plugin 0.0.11
 
-Gouvernance pure (zéro code). Persister la page **au retrieval N1** : la
-jointure dérivée S-224 est **approximative** (70,8 % par `sectionPath`) ;
-la persistance par jointure **exacte** `ChunkPageProvenance.chunkId`
-(SHA-256) ↔ `DocumentChunk.id` à l'ingestion porte la page **au retrieval
-sans sidecar**. Patron de transport = le doute (DOUBT-BRIDGE S-219).
+Options B + C (demande pilote). Option A (implémentation CB-PAGE-PROVENANCE)
+explicitement écartée.
 
-Doc : `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (11 constats, 11
-décisions, 5 options écartées, 5 US ~9 pts).
-Rapport : `.agents/sessions/225-cadrage-cb-page-provenance.adoc`.
+*C — Maintenance* : drift corrigé. Le pin codex était 0.0.47 alors que
+MEMPHIS était à 0.0.48 (`CodexPluginPublicationTest` RED à HEAD). Bump
+codex pins `settings.gradle.kts` + `build.gradle.kts` 0.0.47 → 0.0.49,
+toml local `0.0.10` → `0.0.11`. Garde 3/3 VERTE.
 
-== Découverte structurante
-Le SHA-256 (`DocumentChunk.id`) survit dans `chunks.json` et le sidecar
-keye sur ce même SHA-256 → la jointure **d'ingestion est exacte**, contre
-la jointure **de retrieval** (`sectionPath`) qui est heuristique. C'est ce
-qui rend la persistance supérieure au statu quo.
+*B — Publication* : ordre DAG MEMPHIS-first.
+. MEMPHIS BOM/catalog **0.0.49** — bundle `3d85cc54-d6d8-4284-be03-f950f5e9f207`
+  (constraint `codex-plugin 0.0.11`).
+. codex-plugin **0.0.11** — bundle `ad4b1717-2214-45e1-a391-728b78df46ea`.
+. Propagation repo1 : BOM 200 · catalog 200 · codex 200.
+
+Contenu 0.0.11 depuis 0.0.10 : EPIC CDX-PAGE-PROVENANCE (S-223/S-224).
+
+== Non-régression
+`check` VERT 6m28s — 1393 tests (1263 + 130 cucumber) 0 FAIL, Kover VERT,
+validatePlugins VERT. Zéro secret.
+
+*Note* : 3 échecs transitoires `CodexIngestRetrieveIT`
+(`NoClassDefFoundError: DocumentChunk$$serializer`) dus à une **course
+cross-borough** — le jar `codebase-plugin-0.0.15` mavenLocal réécrit par une
+session Queens parallèle. Non imputable au diff (IT 4/4 PASS après
+stabilisation). Piège à retenir : mavenLocal partagé entre boroughs.
 
 == Prochaine mission — candidats (pilote tranche)
 
-. *Option A — implémenter CB-PAGE-PROVENANCE US-1* (N1 transport,
-   Queens codebase) : `DocumentChunk.pages` + `StoreStatements.provenanceSchema()`
+. *Option A — implémenter CB-PAGE-PROVENANCE US-1* (N1 transport, Queens
+   codebase) : `DocumentChunk.pages` + `StoreStatements.provenanceSchema()`
    (`pages TEXT`) + bind 8 + `RetrieveResult.pages` + SELECT. Baby-step
    DDD/TDD/BDD strict, unit + FT testcontainers.
-. *Option B — EPIC PUB* : publication Central `codex-plugin 0.0.11`
-   (intègre la provenance S-224) — accord pilote + bump MEMPHIS requis.
-. *Option C — maintenance* (le borough est sain, tous EPICs cadrés
-   terminés).
+. *Option B — EPIC PUB suivante* : rien de neuf cette session (0.0.11 est
+   la dernière release) — prochaine release sur nouveau contenu.
+. *Option C — maintenance* : le borough est sain ; tous EPICs cadrés
+   terminés. Dette documentée : split-brain `DocumentChunk` codex/N1,
+   `insertChunk()`/`IngestIndexing` legacy morts, pollution TOC corpus FPA.
 
 == Ordre CB-PAGE-PROVENANCE (si Option A)
 US-1 (N1 transport) → US-2 (N2 codex `CodexIngestTask`) → US-3 (N1
@@ -64,6 +75,6 @@ global en fin de session sans permission.
 == References
 - `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (cadrage S-225)
 - `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (EPIC amont, D7 S-223)
-- `.agents/sessions/225-cadrage-cb-page-provenance.adoc` (rapport)
+- `.agents/sessions/226-maintenance-publication-0011.adoc` (rapport S-226)
 - codebase : `codebase/store/{DocumentChunk,StoreStatements,RagVectorStore,RetrieveResult}.kt`
 - codex : `codex/tasks/CodexIngestTask.kt`, `codex/provenance/PageProvenanceResolver.kt`

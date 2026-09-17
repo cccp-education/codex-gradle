@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 225 — **cadrage EPIC CB-PAGE-PROVENANCE** (cross-borough Brooklyn + Queens, gouvernance pure zéro code, pattern S-057/S-063). Persister la page au retrieval N1 : la jointure dérivée S-224 est **approximative** (70,8 % par `sectionPath`), la persistance par jointure **exacte** `ChunkPageProvenance.chunkId` (SHA-256) ↔ `DocumentChunk.id` à l'ingestion porte la page **au retrieval sans sidecar**. 11 constats (le SHA-256 survit dans `chunks.json` — découverte qui rend l'EPIC propre), 11 décisions, 5 options écartées, 5 US ~9 pts. Doc `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`. Zéro bump BOM (types de store N1, pas de contrat N0), zéro code modifié.)_
+_Dernière mise à jour : 2026-09-17 (session 226 — **maintenance (Option C) + publication (Option B) codex-plugin 0.0.11**. Drift corrigé (pin 0.0.47 → 0.0.49, garde `CodexPluginPublicationTest` RED → GREEN) + release DAG MEMPHIS-first : MEMPHIS BOM/catalog **0.0.49** (bundle `3d85cc54`) → codex-plugin **0.0.11** (bundle `ad4b1717`), propagation repo1 200/200/200. Contenu 0.0.11 : EPIC CDX-PAGE-PROVENANCE (S-223/S-224). `check` VERT 1393 tests 0 FAIL. Piège course mavenLocal documenté.)_
 
 '''
 == 🟡 EPIC CB-PAGE-PROVENANCE — Persistance de la page au retrieval (N1) — Cadrage S-225 (Brooklyn + Queens)
@@ -277,12 +277,18 @@ codebase N1 (S-097/S-201).
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
+*Publication la plus récente* : **codex-plugin 0.0.11** (S-226, bundle
+`ad4b1717`) + MEMPHIS BOM/catalog 0.0.49 (bundle `3d85cc54`).
+
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
 '''
-== EPIC PUB — Publication Maven Central
+== EPIC PUB — Publication Maven Central ✅ TERMINÉ (dernière release 0.0.11 S-226)
 
 Plugin N2 de pipeline documentaire (Asciidoctor → PDF). VAGUE 4 (plugins metier).
+Historique releases : 0.0.1 S-029 · 0.0.2 S-070 · 0.0.3 S-074 · 0.0.4 S-076 ·
+0.0.5 S-095 · 0.0.6 S-104 · 0.0.7 S-217 · 0.0.8 S-220 · 0.0.9 S-220 (corrective) ·
+0.0.10 S-222 · **0.0.11 S-226**.
 
 == EPIC OCR-3 — LLM OCR Pipeline (DOC-11 alignement) ✅ TERMINÉ (session 072)
 
@@ -380,6 +386,30 @@ parcouru, pas `indexOf`.
 . MEMPHIS Central : bundle `d199bf00-9183-4716-abb6-3bc79fdb2fd2` (BOM/catalog 0.0.45) ✅
 . codex Central : bundle `b573cf61-3686-4814-b7a3-612e707246b5` ✅ propagation repo1 HTTP 200.
 
+=== PUB-3.15 — codex-plugin 0.0.11 ✅ TERMINÉ (S-226 — décision pilote)
+**Priorite** : P1
+**Estimation** : 1 pt
+**Dependances** : MEMPHIS BOM/catalog 0.0.49 ✅ Central (S-226)
+
+. *Motif* : rendre disponible l'EPIC CDX-PAGE-PROVENANCE (S-223/S-224) —
+  traçabilité du doute OCR jusqu'à la page source (jointure dérivée
+  non stockée, 70,8 % sur le corpus FPA réel).
+. *Ordre DAG* : MEMPHIS-first (bump `workspace-bom` 0.0.48 → 0.0.49 +
+  `codex-plugin` 0.0.10 → 0.0.11, garde `PlatformCatalogAlignmentTest`
+  épinglée 0.0.49, Central) → codex (bump toml local + pin platform/settings
+  0.0.47 → 0.0.49, garde `CodexPluginPublicationTest` 3/3,
+  `publishAggregationToCentralPortal`). ✅ FAIT S-226
+. Contenu depuis 0.0.10 : EPIC CDX-PAGE-PROVENANCE (S-223 cadrage + S-224
+  implémentation 5/5 US — domaine `codex.provenance`, tâche
+  `collectPageProvenance`, champ N3 additif `pages`, BDD `@provenance`
+  8 scénarios). 1393 tests (1263 unit + 130 cucumber), 0 FAIL.
+. MEMPHIS Central : bundle `3d85cc54-d6d8-4284-be03-f950f5e9f207`
+  (BOM/catalog 0.0.49) ✅ propagation repo1 HTTP 200.
+. codex Central : bundle `ad4b1717-2214-45e1-a391-728b78df46ea` ✅
+  propagation repo1 HTTP 200 (BOM 200 · catalog 200 · codex 200).
+. *Maintenance associée* : drift pin codex 0.0.47 vs MEMPHIS 0.0.48
+  (garde RED à HEAD) corrigé au passage — bump 0.0.47 → 0.0.49.
+
 === PUB-3.14 — codex-plugin 0.0.10 ✅ TERMINÉ (S-222 — décision pilote)
 **Priorite** : P1
 **Estimation** : 1 pt
@@ -457,12 +487,12 @@ de la spécification rather qu'une exécution.
 
 | Artefact | URL |
 |---|---|
-| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.5 publié S-095, bundle `8e661086` — propagation repo1 *confirmée S-096*, repo1 2026-08-21 00:14) |
+| codex-plugin | https://central.sonatype.com/artifact/education.cccp/codex-plugin (0.0.11 publié S-226, bundle `ad4b1717` — propagation repo1 *confirmée S-226* HTTP 200) |
 
-*FAIT côté codex S-096* : propagation repo1 0.0.5 *confirmée*. BOM MEMPHIS
-0.0.25 : *reporté* au prochain bump amont (publication Central hors
-périmètre autorisé S-096 ; la BOM 0.0.24 reste fonctionnelle — les
-consommateurs résolvent codex 0.0.4 jusqu'au bump).
+*FAIT côté codex S-226* : propagation repo1 0.0.11 *confirmée* (HTTP 200).
+BOM MEMPHIS **0.0.49** publiée (bundle `3d85cc54`) — propagation repo1
+*confirmée* (HTTP 200). Toutes les releases antérieures tracées dans
+l'historique EPIC PUB ci-dessus (0.0.1 → 0.0.11).
 
 '''
 == ✅ EPIC CDX-OCR-BOUNDARY — OCR software = codex / OCR assisté IA = codebase ✅ TERMINÉ (S-096→S-101, 4/4 US)

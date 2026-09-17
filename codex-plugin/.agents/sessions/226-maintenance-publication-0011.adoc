@@ -1,0 +1,107 @@
+= Rapport Session 226 — Maintenance + publication codex-plugin 0.0.11
+:session: 226
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn) — cross-borough MEMPHIS (workspace-bom N0)
+:status: TERMINÉ
+:type: maintenance (Option C) + publication (Option B)
+
+== Objectif
+
+Mission tranchée par le pilote : *Option B* (publication Central
+`codex-plugin 0.0.11` — intègre la provenance de page S-224) + *Option C*
+(maintenance). Option A (implémentation CB-PAGE-PROVENANCE) explicitement
+écartée par le pilote.
+
+== Ouverture — baseline vérifiée
+
+. `git status` propre, branche `main` à jour (HEAD `4fa696c`).
+. Baseline `check` VERT — **1393 tests** (1263 unit + 130 cucumber), S-224.
+. Audit maintenance : le pin codex était **0.0.47** alors que MEMPHIS
+   était déjà à **0.0.48** (release bakery S-219) — dette de drift.
+
+== Option C — Maintenance (drift détecté et corrigé)
+
+Garde `CodexPluginPublicationTest.workspace bom platform pin matches ws
+catalog bom version` **RED à HEAD** : le `build.gradle.kts` épinglait
+`workspace-bom:0.0.47` alors que le catalog ws publié portait 0.0.48.
+
+. *Baby-step TDD strict* — RED prouvé sans toucher au code prod :
+   `./gradlew :test --tests 'codex.CodexPluginPublicationTest'` →
+   `FAILED workspace bom platform pin ... expected: <0.0.49> but was: <0.0.48>`
+   (garde épinglée sur la cible 0.0.49, toml MEMPHIS encore à 0.0.48).
+. *GREEN* — bump MEMPHIS `workspace-bom = "0.0.47"` → `"0.0.49"` +
+   `codex-plugin = "0.0.10"` → `"0.0.11"` ; bump codex `settings.gradle.kts`
+   pin `workspace-catalog:0.0.47` → `0.0.49` ; `build.gradle.kts` platform
+   pin `0.0.47` → `0.0.49` ; toml local codex `0.0.10` → `0.0.11`.
+. *Garde 3/3 VERTE* (`--rerun-tasks`).
+
+Constats d'audit complémentaires (pas de correction nécessaire) :
+- `codebase-plugin` local toml `0.0.12` vs catalog MEMPHIS `0.0.15` —
+  résolu par la contrainte BOM (aucune garde ne l'exige, pas de drift réel).
+- `insertChunk()` / `IngestIndexing` legacy morts, split-brain
+  `DocumentChunk` codex/N1, pollution TOC du corpus — documentés hors scope
+  (S-225).
+
+== Option B — Publication codex-plugin 0.0.11 (ordre DAG MEMPHIS-first)
+
+=== 1. MEMPHIS (workspace-bom N0) — bump + publication
+
+- Bump toml `workspace-bom = "0.0.48"` → `"0.0.49"`, `codex-plugin = "0.0.10"`
+  → `"0.0.11"`, garde `PlatformCatalogAlignmentTest` épinglée 0.0.49
+  (même commit — piège #10).
+- Gardes `contracts.catalog.*` VERTES (Platform + WorkspaceCatalogStructure).
+- `publishToMavenLocal` VERT (2 artefacts signés — BOM + catalog, toml
+  Central liste `codex-plugin = "0.0.11"`).
+- Anti-collision repo1 : BOM/catalog `0.0.49` = **404** (piège #6).
+- `publishAggregationToCentralPortal` → bundle
+  **`3d85cc54-d6d8-4284-be03-f950f5e9f207`** (AUTOMATIC).
+
+=== 2. codex (Brooklyn N2) — bump + publication
+
+- `version = ws.versions.codex.plugin.get()` → dérivée **0.0.11** (D3,
+  vérifiée par `./gradlew properties`).
+- Garde `CodexPluginPublicationTest` 3/3 VERTE.
+- `./gradlew build -x test` VERT 3m27s (compile + validatePlugins + sign).
+- Anti-collision repo1 : codex `0.0.11` = **404** (piège #6).
+- `publishAggregationToCentralPortal` → bundle
+  **`ad4b1717-2214-45e1-a391-728b78df46ea`** (AUTOMATIC).
+
+=== 3. Propagation repo1 (confirmée en session)
+
+- BOM `0.0.49` : **200** · catalog `0.0.49` : **200** ·
+  codex `0.0.11` : **200**.
+
+== Non-régression
+
+`./gradlew check` VERT 6m28s — **1393 tests** (1263 unit + 130 cucumber),
+**0 FAIL**, baseline S-224 préservée exactement. Kover VERT, validatePlugins
+VERT. Zéro secret.
+
+NOTE — pendant la première passe `check`, 3 échecs `CodexIngestRetrieveIT`
+(`NoClassDefFoundError: codebase/store/DocumentChunk$$serializer`) ont été
+observés puis *disparus* : cause = **jar `codebase-plugin-0.0.15` réécrit
+par une session Queens parallèle** (mtime 16:11, lecture pendant l'écriture).
+Vérification par stash à HEAD : IT 4/4 PASS ; après stabilisation du jar :
+IT 4/4 PASS. **Régression non imputable au diff** (course cross-borough sur
+mavenLocal, pas un défaut du plugin).
+
+== Contenu de la release 0.0.11
+
+Depuis 0.0.10 : EPIC **CDX-PAGE-PROVENANCE** (S-223 cadrage + S-224
+implémentation 5/5 US) — traçabilité du doute OCR jusqu'à la page source
+par jointure dérivée (TOC × chunks × rapport d'acquisition, marche
+d'ancêtre deepest-first, jointure 70,8 % sur le corpus FPA réel), domaine
+`codex.provenance` (6 fichiers prod), tâche `collectPageProvenance`, champ
+N3 additif `pages`, BDD `@provenance` 8 scénarios.
+
+== Cross-borough
+
+- MEMPHIS (workspace-bom) : 2 fichiers modifiés (toml + garde), 1 commit.
+- codex (codex-plugin) : 3 fichiers modifiés (toml + settings + build), 1 commit.
+- Ordre DAG respecté : N0 (BOM) publié avant N2 (codex).
+
+== Règles
+
+Baby-step TDD strict (RED prouvé → GREEN → REFACTOR), English only pour le
+code, gouvernance en français. Commits/push autorisés (décision pilote
+2026-09-17). Zéro secret. Zéro Python.

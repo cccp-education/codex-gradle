@@ -1,5 +1,24 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-226 (2026-09-17) — Maintenance (Option C) + publication 0.0.11 (Option B) ✅
+
+- *Option C — maintenance* : drift corrigé. Pin codex `0.0.47` vs MEMPHIS
+  `0.0.48` → garde `CodexPluginPublicationTest` RED à HEAD. Bump pins
+  `settings.gradle.kts`/`build.gradle.kts` 0.0.47→0.0.49 + toml local
+  0.0.10→0.0.11 → garde 3/3 VERTE. Baby-step TDD strict (RED prouvé →
+  GREEN).
+- *Option B — publication* : ordre DAG MEMPHIS-first.
+  MEMPHIS BOM/catalog **0.0.49** (bundle `3d85cc54-d6d8-4284-be03-f950f5e9f207`)
+  → codex-plugin **0.0.11** (bundle `ad4b1717-2214-45e1-a391-728b78df46ea`).
+  Propagation repo1 : BOM 200 · catalog 200 · codex 200.
+- Contenu 0.0.11 depuis 0.0.10 : EPIC CDX-PAGE-PROVENANCE (S-223/S-224).
+- Gate : `check` VERT 6m28s — 1393 tests (1263 + 130 cucumber) 0 FAIL,
+  Kover VERT, validatePlugins VERT. Zéro secret, zéro code métier modifié.
+- Piège documenté : course cross-borough sur mavenLocal (`codebase-plugin`
+  jar réécrit par une session Queens parallèle → 3 échecs transitoires
+  `CodexIngestRetrieveIT`, non imputables au diff).
+- Rapport : `.agents/sessions/226-maintenance-publication-0011.adoc`.
+
 == S-225 (2026-09-17) — Cadrage EPIC CB-PAGE-PROVENANCE (cross-borough) ✅
 
 - CB-PAGE-PROVENANCE-0 ✅ — cadrage (gouvernance pure, zéro code). Doc

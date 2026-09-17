@@ -900,3 +900,34 @@ sur le corpus FPA, consommateur transitoire /tmp + pgvector jetable) a
 produit 387 chunks / 18 doubtful / avg 0.9535 (identique S-214) et 12
 entries augmented (1 doubtful exposé). C'est le dogfooding qui a révélé
 le P0 — l'enseignement : `check` vert ne prouve pas que la tâche s'exécute.
+
+== Session 226 — Maintenance + publication 0.0.11 (zéro test modifié)
+
+*Delta* : **aucun** — session de maintenance/publish pure. Baseline S-224
+préservée exactement : `check` VERT 6m28s, **1393 tests** (1263 unit +
+130 cucumber dédiés), **0 FAIL**.
+
+[cols="2,2,2", options="header"]
+|===
+| Suite | Tests | Statut
+| `test` (unit + integration) | 1263 | ✅ PASS (0 FAIL)
+| `cucumberTestDoubtBridge` | 20 | ✅ PASS
+| `cucumberTestEnrichment` | 8 | ✅ PASS
+| `cucumberTestLicence` | 6 | ✅ PASS
+| `cucumberTestOcr` | 20 | ✅ PASS
+| `cucumberTestOcrQuality` | 22 | ✅ PASS
+| `cucumberTestOntology` | 6 | ✅ PASS
+| `cucumberTestPageProvenance` | 16 | ✅ PASS
+| `cucumberTestPipelineRouting` | 6 | ✅ PASS
+| `cucumberTestPipelineUnify` | 6 | ✅ PASS
+| `cucumberTestSessionMemory` | 20 | ✅ PASS
+|===
+
+*Couverture* : Kover VERT (seuil préservé). Seul le contenu publié change
+(0.0.11 embarque l'EPIC CDX-PAGE-PROVENANCE déjà testé S-224).
+
+*Note* : 3 échecs transitoires `CodexIngestRetrieveIT`
+(`NoClassDefFoundError: DocumentChunk$$serializer`) observés puis disparus —
+cause = **course cross-borough sur mavenLocal** (jar `codebase-plugin-0.0.15`
+réécrit par une session Queens parallèle), non imputable au diff (IT 4/4
+PASS vérifié par stash à HEAD puis après stabilisation).
