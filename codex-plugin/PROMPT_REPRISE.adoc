@@ -1,72 +1,59 @@
-= PROMPT_REPRISE — Codex — Session 224
-:session: 224
+= PROMPT_REPRISE — Codex — Session 225
+:session: 225
 :date: 2026-09-17
 :status: PRET
-:mission: implémenter CDX-PAGE-PROVENANCE-1 (domaine `codex.provenance`)
+:mission: mission à trancher par le pilote (EPIC CDX-PAGE-PROVENANCE TERMINÉ S-224)
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 1164 tests (1050 unit + 114 cucumber), 0 FAIL
+./gradlew check           # baseline 1393 tests (1263 + 130 cucumber), 0 FAIL
 ----
 
-== Session 223 terminée — Cadrage EPIC CDX-PAGE-PROVENANCE
+== Session 224 terminée — EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US
 
-Traçabilité du doute OCR jusqu'à la page source (décision D6 du cadrage
-CDX-DOUBT-BRIDGE S-219). Gouvernance pure, zéro code.
+Traçabilité du doute OCR jusqu'à la page source, par **jointure dérivée non
+stockée** (zéro DDL, zéro re-vectorisation). Domaine `codex.provenance` créé
+(6 fichiers prod) + tâche `collectPageProvenance` → `page-provenance.json`
++ champ N3 additif `pages` + Cucumber `@provenance` (10e runner).
 
-*Problème* : le chunk sait qu'il est douteux mais pas *de quelle page* il
-vient ; `OcrQualityReport` (S-218) sait quelle page est douteuse mais est
-*orphelin* (zéro consommateur). La jointure manque.
+*Découverte structurante* : le grain du cadrage D2 (dernier segment) joint
+seulement **24,8 %** du corpus FPA réel. La **marche d'ancêtre
+deepest-first** + `ProvenanceTitleNormalizer` (référence numérique en tête,
+ponctuation en queue) atteint **70,8 %** (274/387 chunks), pinné par test
+d'intégration. Déviation D6 documentée : jointure retrieval → page par
+`sectionPath` (le `chunkId` de `RetrieveResult` est le BIGSERIAL pgvector,
+pas l'id SHA-256).
 
-*Décision structurante* : provenance = **jointure dérivée non stockée**
-(TOC × chunks × rapport), join par titre normalisé (`SectionTitleNormalizer`,
-canon prouvé 115/115 S-217) — zéro DDL, zéro re-vectorisation (Économie
-d'Encre). Nouveau domaine `codex.provenance` (object pur + tâche thin
-wrapper), champ N3 additif `pages`, TOC input explicite. 3 options écartées
-(ancre in-band 3 boroughs, re-chunk par page contredit RD1 S-216, colonne
-pgvector reportée).
-
-Doc : `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (10 constats, 9
-décisions, 5 US ~10 pts). Rapport : `.agents/sessions/223-cadrage-cdx-page-provenance.adoc`.
+Rapport : `.agents/sessions/224-cdx-page-provenance.adoc`.
 
 == Enjeux gardés pour la reprise (à trancher par le pilote)
 
-. *Arbitrage de périmètre codex-only* — confirmer que la persistance pgvector
-   (colonne page `codex_chunks` + `RetrieveResult.page`, N1 Queens) reste
-   **hors scope** (D7) ; sinon EPIC cross-borough `CB-PAGE-PROVENANCE` à cadrer.
-. *Décision D1 — provenance dérivée vs stockée* — valider le pari
-   architectural (jointure dérivée, zéro DDL) avant US-1 : il conditionne tout
-   l'EPIC.
-. *Risque de jointure titre TOC ↔ chunk* — taux **non mesuré** sur le corpus
-   FPA réel. À mesurer en pré-US-2 (mitigation : canon `SectionTitleNormalizer`).
-   Dégradé silencieux (page `null`), jamais d'échec de build.
-. *Limite d'admission du rapport d'acquisition* — `OcrQualityReport.pageId`
-   (nom d'image) ≠ page TOC (numéro) sur les 201 scans hétérogènes. Rapport =
-   enrichissement **optionnel** (`@Optional`, clé = page TOC), non bloquant.
-. *Grain du `sectionPath`* — la jointure normalise le **dernier segment**.
-   Confirmer ce grain (vs path complet) : impact direct sur le taux de jointure.
-. *Validation du cadrage* — US-1 ne démarre qu'après validation pilote du
-   `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc`. Désaccord → traité au cadrage.
+. *`CB-PAGE-PROVENANCE` (N1 Queens)* — persister la page dans `codex_chunks`
+   + exposer `RetrieveResult.page` pour localiser le doute **au retrieval
+   sans sidecar**. Cross-borough, hors scope codex (D7). À cadrer seulement
+   si un consommateur N3/N4 exige la page sans le sidecar.
+. *Pollution TOC/OCR du corpus FPA* — 99 chunks dot-leaders, titres OCR
+   divergents (cause racine amont). Améliorerait le taux de jointure au-delà
+   de 70,8 % mais touche `office/` (œuvre dérivée privée).
+. *EPIC PUB* — publier une version codex intégrant la provenance (Central) ;
+   nécessite l'accord pilote + bump MEMPHIS catalogue.
+. *Seuil du plancher de jointure* — le test réel pinne `>= 0.5` ; mesuré
+   0,708. Ajuster si le corpus évolue.
 
-== Prochaine session — 224 : CDX-PAGE-PROVENANCE-1
+== Candidats de mission (aucun engagé)
 
-. `TocPageIndex` — parse TOC AsciiDoc table (`Référence | Titre | Page |
-  Fichier`, format `BookTocParser`) → sections typées. Pur.
-. `ChunkPageProvenance` / `PageDoubt` — data classes `@Serializable`.
-. `PageProvenanceResolver` — `resolve(chunks, tocSections, qualityReport)` :
-  dernier segment `sectionPath` normalisé → titre TOC → page(s) → doute
-  acquisition. Multi-pages (`pages: List<Int>`), dégradé silencieux.
-. ~15-20 unit. Baby-step TDD strict RED → GREEN → REFACTOR.
+. Option A — cadrage `CB-PAGE-PROVENANCE` (cross-borough Queens, gouvernance
+   pure pattern S-057).
+. Option B — EPIC PUB : publication Central (0.0.11) intégrant la provenance.
+. Option C — attente / maintenance (le borough est sain, tous EPICs cadrés
+   terminés).
 
-*Gate* : `check` VERT (baseline 1164 + tests), Kover + validatePlugins VERTS.
-Zéro bump BOM, zéro secret.
+== Ordre global EPIC (TERMINÉ)
 
-== Ordre global EPIC
-
-US-1 (résolveur pur) → US-2 (tâche `collectPageProvenance`) → US-3 (champ N3
-additif `pages`) → US-4 (Cucumber `@provenance`, 10e runner).
+US-0 cadrage (S-223) → US-1 résolveur pur (S-224) → US-2 tâche (S-224) →
+US-3 N3 (S-224) → US-4 Cucumber (S-224) → US-5 mesure réelle (S-224).
 
 == Hors scope (documenté)
 
@@ -82,6 +69,8 @@ permission. SECRETS via configuration/.
 
 == References
 
-- `.agents/INDEX.adoc` (S-223) · `.agents/BACKLOG.adoc` (EPIC 🟡 CADRÉ S-223)
-- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` · `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` (D6)
-- `src/main/kotlin/codex/enrichment/SectionTitleNormalizer.kt` (canon de titre)
+- `.agents/INDEX.adoc` (S-224) · `.agents/BACKLOG.adoc` (EPIC ✅ TERMINÉ S-224)
+- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (cadrage S-223)
+- `src/main/kotlin/codex/provenance/` (domaine)
+- `src/main/kotlin/codex/tasks/CollectPageProvenanceTask.kt` (tâche)
+- `.agents/sessions/224-cdx-page-provenance.adoc` (rapport)

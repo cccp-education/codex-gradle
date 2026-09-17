@@ -3385,3 +3385,70 @@ résolveur pur, US-2 tâche, US-3 contrat N3, US-4 Cucumber).
 vérifiée : propagation repo1 `codex-plugin 0.0.10` **confirmée** (HTTP 200).
 *Zéro* : zéro code, zéro bump BOM, zéro secret.
 *Rapport* : `.agents/sessions/223-cadrage-cdx-page-provenance.adoc`.
+
+== Session 224 — 2026-09-17 — EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US (implémentation)
+
+*Date* : 2026-09-17
+*Type* : impl + test (baby-step DDD/TDD/BDD strict, 3 niveaux)
+*Objectif* : implémenter l'EPIC cadré S-223 — traçabilité du doute OCR
+jusqu'à la page source par jointure dérivée non stockée.
+
+*Livrable — domaine `codex.provenance` (6 fichiers prod)* :
+- `TocSection` — entrée TOC (`ref`, `title`, `pages`), `@Serializable`,
+  invariants (pages positives).
+- `TocPageIndex` — parse le TOC AsciiDoc table
+  (`Référence | Titre | Page | Fichier`, format `BookTocParser`) + index
+  canonique titre → pages.
+- `ProvenanceTitleNormalizer` — canon de jointure : `SectionTitleNormalizer`
+  (S-217, prouvé 115/115) + 2 raffinements OCR mesurés (référence numérique
+  en tête y compris collée au titre ; ponctuation/leaders en queue).
+- `ChunkPageProvenance` + `PageDoubt` — provenance dérivée d'un chunk et
+  doute d'acquisition localisé.
+- `PageProvenanceResolver` — `object` pur : `resolve(chunks, tocSections,
+  qualityReport)` (marche d'ancêtre deepest-first) + `joinRate`.
+- `PageProvenanceReport` — sidecar auto-descriptif
+  (`chunkCount`/`resolvedCount`/`joinRate`).
+
+*Livrable — tâche + N3* :
+- `CollectPageProvenanceTask` (thin wrapper, groupe `collect`) →
+  `page-provenance.json`.
+- `CodexCompositeContextTask.pageProvenanceFile` (`@InputFiles` tolérante,
+  pattern S-221) + `buildPageIndex()` + champ JSON additif `pages`.
+
+*Découverte majeure (grain de jointure)* : le cadrage D2 proposait le
+**dernier segment** de `sectionPath`. Mesure sur le corpus FPA réel (387
+chunks, 116 sections TOC) :
+- dernier segment, canon de base : **24,8 %** (96/387) ;
+- dernier segment + raffinements OCR : 27,1 % ;
+- **marche d'ancêtre deepest-first + raffinements : 70,8 %** (274/387).
+Cause : les `sectionPath` FPA sont multi-niveaux et pollués, la feuille est
+souvent illisible mais un ancêtre correspond au TOC. Décision tranchée par
+la mesure (le cadrage avait marqué ce point « à confirmer »), pinnée par
+`FpaPageProvenanceJoinRateTest` (plancher 0,5).
+
+*Déviation D6 documentée* : le cadrage prévoyait la jointure retrieval →
+page par `chunkId` (SHA-256). Vérification : `RetrieveResult.chunkId` est le
+`BIGSERIAL` pgvector (`Long`), pas l'id sémantique — impossible à joindre.
+La seule identité partagée est `sourceDocument + sectionPath` ; US-3 joint
+donc sur `sectionPath`.
+
+*Baby-step DDD/TDD/BDD strict* :
+- US-1 résolveur pur — RED (unresolved references) → GREEN (46 tests) →
+  REFACTOR (`check` VERT).
+- US-2 tâche thin wrapper — RED (unresolved `pageProvenanceFile`) → GREEN
+  (8 FT `CollectPageProvenanceTaskTest`) → REFACTOR.
+- US-3 N3 additif — RED → GREEN (7 `CodexCompositeContextPageTest`) →
+  REFACTOR.
+- US-4 Cucumber `@provenance` — RED (`UndefinedStepException`) → GREEN
+  (8/8 PASSED, 30 steps) → REFACTOR (10e runner
+  `cucumberTestPageProvenance`).
+- US-5 mesure corpus réel — `FpaPageProvenanceJoinRateTest`.
+- Bug attrapé par TDD : `buildCompositeJson` expose `pages` en `JsonArray`
+  (assertions corrigées en `jsonArray`).
+
+*Gate* : `check` VERT 11m17s — **1393 tests 0 FAIL** (1263 `test` + 130
+cucumber dédiés), +75 vs baseline S-223 (1278). Kover VERT, validatePlugins
+VERT.
+*Zéro* : zéro bump BOM, zéro secret, zéro régression, backward compat
+totale (champ additif, `@InputFiles` tolérante, dégradé silencieux).
+*Rapport* : `.agents/sessions/224-cdx-page-provenance.adoc`.

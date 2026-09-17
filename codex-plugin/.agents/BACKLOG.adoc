@@ -4,25 +4,31 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 223 — **Cadrage EPIC CDX-PAGE-PROVENANCE** (gouvernance pure, zéro code, pattern S-057/S-063). Traçabilité du doute OCR jusqu'à la page source — décision D6 du cadrage CDX-DOUBT-BRIDGE (S-219) enfin traitée. Audit 10 constats : `SemanticChunker` découpe par section (pas par page), `DocumentChunk` sans champ page, `OcrQualityReport` orphelin (produit S-218, jamais consommé), `livre.adoc` FPA ne porte qu'une seule ancre `[[page-10]]` (201 autres pages sans frontière), TOC racine `Devenir_..._II.adoc` = source de vérité section→page, `SectionTitleNormalizer` canon de titre prouvé 115/115 (S-217), `codex_chunks` sans colonne page (persistance = cross-borough N1). 9 décisions (provenance = jointure dérivée non stockée, joint par titre normalisé, domaine `codex.provenance`, tâche `collectPageProvenance`, TOC input explicite, champ N3 additif `pages`, pas de pgvector, doute marker-based conservé, baby-step strict). 3 options écartées (ancre in-band 3 boroughs, re-chunk page par page contredit RD1 S-216, colonne pgvector reportée). 5 US ~10 pts (US-0 ✅ cadrage, US-1→4 🟡 À FAIRE). Doc `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc`. Baseline préservée : 1164 tests 0 FAIL.)_
+_Dernière mise à jour : 2026-09-17 (session 224 — **EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US** (implémentation). Domaine `codex.provenance` créé (6 fichiers prod) + tâche `collectPageProvenance` → `page-provenance.json` + champ N3 additif `pages` + BDD `@provenance` 8 scénarios (10e runner). **Découverte majeure** : le grain du cadrage D2 (dernier segment) joint seulement 24,8 % du corpus FPA réel ; la marche d'ancêtre deepest-first + `ProvenanceTitleNormalizer` atteint **70,8 %** (274/387), pinné par test d'intégration. Déviation D6 documentée : jointure par `sectionPath` (le `chunkId` de `RetrieveResult` est le BIGSERIAL pgvector). Baby-step DDD/TDD/BDD strict. Gate `check` VERT 11m17s — 1393 tests 0 FAIL (+75 vs S-223), Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, backward compat totale.)_
 
 '''
-== 🟡 EPIC CDX-PAGE-PROVENANCE — Traçabilité du doute OCR jusqu'à la page source (GBL-003.4)
+== ✅ EPIC CDX-PAGE-PROVENANCE — Traçabilité du doute OCR jusqu'à la page source (GBL-003.4) ✅ TERMINÉ 5/5 US (S-224)
 
 _Origine : PROMPT_REPRISE S-223 Option A + décision D6 du cadrage CDX-DOUBT-BRIDGE (S-219)._
 _Doc cadrage : `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (S-223)._
-_Pattern_ : gouvernance pure S-057/S-063 (cadrage) + baby-step DDD/TDD/BDD strict (implémentation)._
+_Pattern_ : gouvernance pure S-057/S-063 (cadrage S-223) + baby-step DDD/TDD/BDD strict (implémentation S-224)._
 _Portée_ : codex-only (Brooklyn). La persistance pgvector (N1 Queens) est hors scope (EPIC futur conditionnel)._
-_Statut_ : 🟡 CADRÉ S-223 — **à arbitrer par le pilote** (US-1→4 À FAIRE).
+_Statut_ : ✅ TERMINÉ 5/5 US (S-224).
 
 Le doute OCR est marker-based (`[ILLISIBLE]`) et le rapport d'acquisition
-`OcrQualityReport` (S-218) localise le doute page par page — mais c'est un
-artefact orphelin (zéro consommateur), et les chunks ne portent aucune
+`OcrQualityReport` (S-218) localise le doute page par page — mais c'était un
+artefact orphelin (zéro consommateur), et les chunks ne portaient aucune
 provenance de page (`SemanticChunker` produit des chunks par section).
-Le maillon « chunk douteux → page source » est rompu. Cet EPIC le rétablit
-par une **jointure dérivée** (zéro DDL, zéro re-vectorisation — Loi de
-l'Économie d'Encre) : TOC (section→page) × chunks (sectionPath) × rapport
-d'acquisition (page→doute), join par titre normalisé (`SectionTitleNormalizer`).
+L'EPIC rétablit le maillon « chunk douteux → page source » par une
+**jointure dérivée** (zéro DDL, zéro re-vectorisation — Loi de l'Économie
+d'Encre) : TOC (section→page) × chunks (sectionPath) × rapport d'acquisition
+(page→doute), marche d'ancêtre deepest-first + `ProvenanceTitleNormalizer`.
+
+*Découverte S-224* : mesure sur le corpus FPA réel — dernier segment
+(cadrage D2) = 24,8 %, marche d'ancêtre + raffinements = **70,8 %**
+(274/387). Le grain de jointure est tranché par la mesure. *Déviation D6* :
+jointure retrieval → page par `sectionPath` (le `chunkId` de `RetrieveResult`
+est le BIGSERIAL pgvector `Long`, pas l'id SHA-256).
 
 [cols="1,3,2,1", options="header"]
 |===
@@ -36,41 +42,43 @@ d'acquisition (page→doute), join par titre normalisé (`SectionTitleNormalizer
 
 | CDX-PAGE-PROVENANCE-1
 | Domaine `codex.provenance` + `PageProvenanceResolver` object pur +
-| `TocPageIndex` (parse TOC AsciiDoc) + `ChunkPageProvenance`/`PageDoubt`
-| `@Serializable`. Réutilise `SectionTitleNormalizer`. Dégradé silencieux.
-| ~15-20 unit.
-| 🟡 À FAIRE
+| `TocPageIndex` (parse TOC AsciiDoc) + `ProvenanceTitleNormalizer` +
+| `ChunkPageProvenance`/`PageDoubt` `@Serializable`. Marche d'ancêtre
+| deepest-first, dégradé silencieux. 46 unit.
+| ✅ TERMINÉ (S-224)
 | 3
 
 | CDX-PAGE-PROVENANCE-2
 | Tâche `collectPageProvenance` (groupe `collect`) thin wrapper + wiring
 | `CodexPlugin`. Inputs `chunksFile` + `tocFile` + `qualityReportFile`
-| (`@Optional`), output `page-provenance.json`. ~6 fonctionnel.
-| 🟡 À FAIRE
+| (`@Optional`), output `page-provenance.json`. 8 FT.
+| ✅ TERMINÉ (S-224)
 | 2
 
 | CDX-PAGE-PROVENANCE-3
 | `CodexCompositeContextTask` : `pageProvenanceFile` (`@InputFiles`
-| tolérante) + jointure par `chunkId` + champ JSON additif `pages` par
-| entrée. Backward compat totale. ~5 unit.
-| 🟡 À FAIRE
+| tolérante) + `buildPageIndex()` + champ JSON additif `pages` par entrée
+| (jointure par `sectionPath`). Backward compat totale. 7 tests.
+| ✅ TERMINÉ (S-224)
 | 2
 
 | CDX-PAGE-PROVENANCE-4
-| Cucumber BDD `codex_page_provenance.feature` `@provenance` + runner
-| dédié (pattern S-082, 10e runner) + `cucumberTestPageProvenance`.
-| 🟡 À FAIRE
+| Cucumber BDD `codex_page_provenance.feature` `@provenance` (8 scénarios)
+| + runner dédié (pattern S-082, 10e runner) + `cucumberTestPageProvenance`.
+| ✅ TERMINÉ (S-224)
 | 2
 
 |===
 
-*Total* : ~10 pts (5 US). *Ordre* : US-1 → US-2 → US-3 → US-4.
+*Total* : ~10 pts (5 US) ✅ TERMINÉ.
 *Boundary* : codex-only ; zéro bump BOM, zéro secret, backward compat totale
 (champ JSON additif, `@InputFiles` tolérante, dégradé silencieux).
 *Hors scope* : colonne page `codex_chunks` + `RetrieveResult.page` (N1
 Queens — D7, EPIC futur conditionnel `CB-PAGE-PROVENANCE`), ancre de page
 in-band (option A1 écartée), re-chunking par page (option A2, contredit RD1
 S-216), pollution TOC corpus FPA (cause racine amont).
+*Gate* : `check` VERT 11m17s — 1393 tests 0 FAIL (+75 vs S-223), Kover VERT,
+validatePlugins VERT.
 
 '''
 == ✅ EPIC CDX-CORPUS-JSON (fix P0) — Contrat N3 `composite-context.json` sérialisable ✅ TERMINÉ 2/2 US (S-220)

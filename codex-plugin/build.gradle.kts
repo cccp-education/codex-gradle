@@ -391,3 +391,26 @@ val cucumberTestDoubtBridge by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── CDX-PAGE-PROVENANCE-4 — Dedicated Cucumber runner for page provenance (pattern S-082) ──
+// Scoped to CodexPageProvenanceCucumberRunner so only codex_page_provenance.feature
+// runs, not the full src/test/resources/features/*.feature suite.
+val cucumberTestPageProvenance by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_page_provenance.feature Cucumber suite (CDX-PAGE-PROVENANCE-4)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexPageProvenanceCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_page_provenance.feature")
+    systemProperty("cucumber.filter.tags", "@provenance and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}

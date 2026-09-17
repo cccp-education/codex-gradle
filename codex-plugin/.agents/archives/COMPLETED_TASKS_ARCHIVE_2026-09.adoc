@@ -1,5 +1,38 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-224 (2026-09-17) — EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US ✅
+
+- CDX-PAGE-PROVENANCE-1 ✅ — domaine `codex.provenance` : `TocSection` +
+  `TocPageIndex` (parse TOC AsciiDoc table + index canonique titre → pages)
+  + `ProvenanceTitleNormalizer` (canon S-217 + 2 raffinements OCR : référence
+  numérique en tête, ponctuation/leaders en queue) + `ChunkPageProvenance`/
+  `PageDoubt` + `PageProvenanceResolver` (`object` pur, `resolve` +
+  `joinRate`, marche d'ancêtre deepest-first, dégradé silencieux) +
+  `PageProvenanceReport` (sidecar auto-descriptif). 46 unit.
+- CDX-PAGE-PROVENANCE-2 ✅ — tâche `collectPageProvenance` (thin wrapper,
+  groupe `collect`) → `page-provenance.json` + wiring `CodexPlugin`. 8 FT
+  `ProjectBuilder`.
+- CDX-PAGE-PROVENANCE-3 ✅ — `CodexCompositeContextTask.pageProvenanceFile`
+  (`@InputFiles` tolérante, pattern S-221) + `buildPageIndex()` + champ JSON
+  additif `pages` par entrée (omis quand non résolu). 7 tests.
+- CDX-PAGE-PROVENANCE-4 ✅ — BDD `codex_page_provenance.feature`
+  `@provenance` 8 scénarios (30 steps) + runner dédié
+  `CodexPageProvenanceCucumberRunner` (10e runner) +
+  `cucumberTestPageProvenance`.
+- CDX-PAGE-PROVENANCE-5 (mesure) ✅ — `FpaPageProvenanceJoinRateTest` :
+  jointure réelle **70,8 %** (274/387 chunks, 116 sections TOC), pinnée au
+  plancher 0,5.
+- **Découverte majeure** : le grain D2 « dernier segment » joignait
+  seulement 24,8 % du corpus FPA réel → marche d'ancêtre deepest-first +
+  raffinements OCR (70,8 %). Décision tranchée par la mesure (enjeu « grain
+  du sectionPath » du cadrage).
+- **Déviation D6 documentée** : jointure retrieval → page par `sectionPath`
+  (le `chunkId` de `RetrieveResult` est le `BIGSERIAL` pgvector `Long`, pas
+  l'id SHA-256).
+- Gates : `check` VERT 11m17s — **1393 tests 0 FAIL** (1263 + 130 cucumber,
+  +75 vs S-223). Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro
+  secret, backward compat totale.
+
 == S-223 (2026-09-17) — Cadrage EPIC CDX-PAGE-PROVENANCE ✅
 
 - CDX-PAGE-PROVENANCE-0 ✅ — cadrage (gouvernance pure, zéro code, pattern

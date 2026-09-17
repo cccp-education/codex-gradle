@@ -10,6 +10,7 @@ import codebase.store.RetrieveResult
 import codex.Metadata
 import codex.enrichment.EnrichedLddNode
 import codex.enrichment.GraphifySectionBuilder
+import codex.provenance.PageProvenanceReport
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -91,6 +92,45 @@ abstract class CodexCompositeContextTask : DefaultTask() {
     abstract val storeOverride: Property<RagVectorStore>
 
     /**
+     * CDX-PAGE-PROVENANCE-3 — page provenance sidecar
+     * (`page-provenance.json`, a [PageProvenanceReport]). Joined back to the
+     * retrieval results so each composite entry localises its source page.
+     *
+     * `@InputFiles` tolerant (pattern CDX-CONTEXT-HARDENING S-221): the artefact
+     * is targeted by default, its absence degrades to no `pages` field
+     * (backward compatible JSON, Économie d'Encre — never force
+     * `collectPageProvenance`).
+     *
+     * Join key is `sectionPath` (not `chunkId`): the retrieval result's
+     * `chunkId` is the pgvector BIGSERIAL id (`Long`) whereas the sidecar keys
+     * on the semantic SHA-256 chunk id; the only shared identity is
+     * `sourceDocument + sectionPath` (cadrage D6 deviation, S-224).
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val pageProvenanceFile: ConfigurableFileCollection
+
+    /**
+     * Loads the optional page provenance sidecar into a
+     * `sectionPath → pages` index. Absent, empty or invalid → empty map
+     * (degraded silent, backward compat with the pre-provenance JSON).
+     */
+    internal fun buildPageIndex(): Map<String, List<Int>> {
+        val file = pageProvenanceFile.singleOrNull() ?: return emptyMap()
+        if (!file.exists()) return emptyMap()
+        return try {
+            val json = Json { ignoreUnknownKeys = true }
+            val report = json.decodeFromString(PageProvenanceReport.serializer(), file.readText())
+            report.chunks
+                .filter { it.pages.isNotEmpty() }
+                .associate { it.sectionPath to it.pages }
+        } catch (e: Exception) {
+            logger.warn("[codex] pageProvenance : sidecar unreadable ({}), fallback to no pages", e.message)
+            emptyMap()
+        }
+    }
+
+    /**
      * Builds the Graphify channel section text from the enriched LDD
      * JSON file. Returns an empty string when the file is absent, empty,
      * or invalid (degraded silent — backward compat with the previous
@@ -154,7 +194,12 @@ abstract class CodexCompositeContextTask : DefaultTask() {
      * [JsonObject]/[JsonPrimitive]; this seam mirrors that pattern so the
      * contract is serializable and unit-testable without a database.
      */
-    internal fun buildCompositeJson(results: List<RetrieveResult>, query: String, topK: Int): String {
+    internal fun buildCompositeJson(
+        results: List<RetrieveResult>,
+        query: String,
+        topK: Int,
+        pageIndex: Map<String, List<Int>> = emptyMap(),
+    ): String {
         val entries = results.map { r ->
             buildJsonObject {
                 put("source", JsonPrimitive("codex"))
@@ -166,6 +211,11 @@ abstract class CodexCompositeContextTask : DefaultTask() {
                 put("similarity", JsonPrimitive(r.similarity))
                 put("confidence", JsonPrimitive(r.confidence))
                 put("doubtful", JsonPrimitive(r.doubtful))
+                // CDX-PAGE-PROVENANCE-3 : additive page localisation, omitted
+                // when the section does not resolve (backward compat).
+                pageIndex[r.sectionPath]?.let { pages ->
+                    put("pages", JsonArray(pages.map { JsonPrimitive(it) }))
+                }
             }
         }
         val composite = buildJsonObject {
@@ -246,7 +296,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         // ── Écriture JSON compatible (N3/N4 existant) ──
         val output = outputFile.asFile.get()
         output.parentFile.mkdirs()
-        output.writeText(buildCompositeJson(results, q, k))
+        output.writeText(buildCompositeJson(results, q, k, buildPageIndex()))
 
         // ── Écriture vibecoding typed context (EPIC 3) ──
         val typedFile = java.io.File(output.parentFile, "composite-context-vibecoding.json")

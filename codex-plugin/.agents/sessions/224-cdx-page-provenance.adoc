@@ -1,0 +1,155 @@
+= Session 224 — EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US
+
+:session: 224
+:date: 2026-09-17
+:type: impl
+:epic: CDX-PAGE-PROVENANCE
+:statut: ✅ TERMINÉ 5/5 US
+
+== Mission
+
+Implémenter l'EPIC **CDX-PAGE-PROVENANCE** (cadré S-223, décision D6 du
+cadrage CDX-DOUBT-BRIDGE S-219) : traçabilité du doute OCR jusqu'à la page
+source, par une **jointure dérivée non stockée** (zéro DDL, zéro
+re-vectorisation — Loi de l'Économie d'Encre).
+
+== Livrable
+
+Le pipeline codex est désormais traçable de la page source au contexte
+augmenté : un chunk douteux sait **de quelle page** il vient, et le rapport
+d'acquisition (S-218) cesse d'être orphelin.
+
+=== Domaine `codex.provenance` (nouveau, 6 fichiers prod)
+
+|===
+| Fichier | Rôle
+
+| `TocSection.kt` | Entrée TOC (ref, title, pages) `@Serializable`, invariants
+| `TocPageIndex.kt` | Parse TOC AsciiDoc table (`Référence \| Titre \| Page \| Fichier`) + index canonique titre → pages
+| `ProvenanceTitleNormalizer.kt` | Canon de jointure : `SectionTitleNormalizer` (S-217) + 2 raffinements OCR (référence numérique en tête, ponctuation/leaders en queue)
+| `ChunkPageProvenance.kt` | Provenance dérivée d'un chunk (chunkId, sectionPath, pages, doubts, doubtful)
+| `PageDoubt.kt` (dans ChunkPageProvenance.kt) | Doute d'acquisition localisé (page, reason, detail)
+| `PageProvenanceResolver.kt` | `object` pur : `resolve(chunks, tocSections, qualityReport)` + `joinRate` ; dégradé silencieux
+| `PageProvenanceReport.kt` | Sidecar auto-descriptif (`page-provenance.json`) avec `chunkCount`/`resolvedCount`/`joinRate`
+| `CollectPageProvenanceTask.kt` | Thin wrapper Gradle (groupe `collect`) → `page-provenance.json`
+|===
+
+=== N3 — `CodexCompositeContextTask`
+
+Propriété `pageProvenanceFile` (`@InputFiles` tolérante, pattern
+CDX-CONTEXT-HARDENING S-221) + `buildPageIndex()` + champ JSON additif
+`pages: [N, ...]` par entrée (omis quand la section ne résout pas →
+backward compat totale).
+
+== Découverte majeure — le grain de jointure du cadrage D2 était insuffisant
+
+Le cadrage (D2) proposait de joindre sur le **dernier segment** de
+`sectionPath`. La mesure sur le corpus FPA réel (387 chunks, 116 sections
+TOC) a prouvé que c'est insuffisant :
+
+|===
+| Stratégie | Taux de jointure
+
+| Dernier segment, canon de base (D2 du cadrage) | **24,8 %** (96/387)
+| Dernier segment + raffinements OCR | 27,1 % (105/387)
+| **Marche d'ancêtre (deepest-first) + raffinements OCR** | **70,8 %** (274/387)
+|===
+
+La cause : les `sectionPath` du corpus FPA sont **multi-niveaux et
+pollués** (`... > Historique du Titre Professionnel : ...13 > Organiser le
+contenu du scénario ....40`) ; la feuille est souvent illisible mais un
+ancêtre correspond au TOC. Le résolveur marche donc du segment le plus
+profond vers la racine et retient **la première correspondance**.
+
+Le cadrage avait explicitement marqué ce point « à confirmer » (risque
+« grain du sectionPath », `PROMPT_REPRISE` enjeu #5). Mesure faite, décision
+tranchée : **marche d'ancêtre**, prouvée par un test d'intégration qui pinne
+le plancher à 0,5 sur le corpus réel.
+
+=== `ProvenanceTitleNormalizer` — 2 raffinements mesurés
+
+. **Référence numérique en tête** : les scans portent leur numérotation
+  (`1-1.1 Identifier…`, `2.1.2 Identifier…`) que le TOC omet. Une référence
+  multi-parties (`\d+([-–.]\d+)+`) est retirée même collée au titre
+  (`1-2.1créer…`) ; un nombre seul n'est retiré que suivi d'espace
+  (préserve `les 3C`).
+. **Ponctuation en queue** : les titres OCR finissent par `:` ou des dot
+  leaders (`Les compétences.`) que le TOC omet.
+
+== Déviation du cadrage D6 (documentée)
+
+Le cadrage D6 prévoyait la jointure retrieval → page **par `chunkId`**
+(SHA-256). Vérification faite : `RetrieveResult.chunkId` est le `BIGSERIAL`
+pgvector (`Long`), pas l'id sémantique SHA-256 — les deux ne peuvent pas se
+joindre. La seule identité partagée est **`sourceDocument + sectionPath`**.
+US-3 joint donc sur `sectionPath` ; la déviation est documentée dans le KDoc
+de la tâche et le test BDD.
+
+== Baby-step DDD/TDD/BDD strict
+
+. *US-1* (résolveur pur) — RED (unresolved references) → GREEN (46 tests
+   unit : `TocPageIndexTest` 14, `PageProvenanceResolverTest` 20,
+   `ProvenanceTitleNormalizerTest` 11, `FpaPageProvenanceJoinRateTest` 1) →
+   REFACTOR (`check` VERT).
+. *US-2* (tâche thin wrapper) — RED (unresolved `pageProvenanceFile`) →
+   GREEN (`CollectPageProvenanceTaskTest` 8 functional ProjectBuilder) →
+   REFACTOR (`check` VERT).
+. *US-3* (contrat N3 additif) — RED (unresolved `pageProvenanceFile`) →
+   GREEN (`CodexCompositeContextPageTest` 7) → REFACTOR (`check` VERT).
+. *US-4* (Cucumber BDD) — RED (`UndefinedStepException` 8 scénarios) →
+   GREEN (8/8 PASSED, 30 steps) → REFACTOR (`check` VERT).
+. *US-5* (mesure corpus réel) — intégré à US-1
+   (`FpaPageProvenanceJoinRateTest`, `@Tag("integration")`, skip propre hors
+   corpus).
+
+== Gate
+
+----
+./gradlew check   # BUILD SUCCESSFUL 11m17s
+----
+
+|===
+| Niveau | Tests | Résultat
+
+| Unit + fonctionnel (task `test`) | 1263 | 0 FAIL
+| Cucumber dédiés (10 suites) | 130 | 0 FAIL
+| **Total** | **1393** | **0 FAIL**
+|===
+
+Dont **+75 nouveaux** vs baseline S-223 (1164 + 114 = 1278) :
+46 unit US-1 + 8 FT US-2 + 7 US-3 + 8 scénarios ×2 (14 BDD steps + 2
+hooks) US-4. Kover VERT, `validatePlugins` VERT.
+
+== Métriques
+
+* Fichiers prod créés : 6 (domaine `codex.provenance`) + 1 tâche.
+* Fichiers prod modifiés : 2 (`CodexPlugin.kt`, `CodexCompositeContextTask.kt`).
+* Fichiers test créés : 4 unit/fonctionnel + 1 intégration + 1 feature + 2 BDD.
+* Zéro bump BOM, zéro secret, zéro régression, backward compat totale.
+* Taux de jointure FPA réel mesuré : **70,8 %**.
+
+== Décisions
+
+. Provenance = jointure dérivée non stockée (D1 confirmée, zéro DDL).
+. **Grain de jointure = marche d'ancêtre deepest-first** (D2 affinée par
+   mesure : 24,8 % → 70,8 %).
+. `ProvenanceTitleNormalizer` compose le canon S-217 (pas de nouvelle
+   heuristique isolée).
+. Clé de jointure retrieval → page = `sectionPath` (pas `chunkId` ; D6
+   déviation documentée).
+. Dégradé silencieux partout (TOC absent → vide, rapport absent → pas de
+   doute, sidecar invalide → pas de pages) ; jamais d'échec de build.
+
+== Hors scope (inchangé)
+
+Pgvector N1 (`codex_chunks` colonne page + `RetrieveResult.page`, D7) ·
+ancre de page in-band (A1) · re-chunking par page (A2) · pollution TOC
+corpus FPA (cause racine amont).
+
+== Prochaine session — 225
+
+EPIC CDX-PAGE-PROVENANCE **TERMINÉ**. Candidates sur demande pilote :
+`CB-PAGE-PROVENANCE` (N1 Queens, persistance pgvector de la page au
+retrieval) · correction de la pollution TOC/OCR du corpus FPA · EPIC PUB
+(publication Central d'une version intégrant la provenance). Voir
+PROMPT_REPRISE.

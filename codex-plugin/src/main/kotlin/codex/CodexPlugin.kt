@@ -7,6 +7,7 @@ import codex.tasks.CodexPipelineTask
 import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.CollectOcrTask
+import codex.tasks.CollectPageProvenanceTask
 import codex.tasks.ConvertToMarkdownTask
 import codex.tasks.DeployKnowledgeBaseRoutedTask
 import codex.tasks.DeriveOntologyTask
@@ -23,7 +24,7 @@ import org.gradle.api.Project
 /**
  * Gradle plugin for unstructured document acquisition and transformation.
  *
- * Registers 14 tasks organized into 4 unified taxonomy groups:
+ * Registers 15 tasks organized into 4 unified taxonomy groups:
  *
  * **COLLECT group**:
  * - `collectText` — raw text extraction from PDF
@@ -33,6 +34,7 @@ import org.gradle.api.Project
  * - `collectIngest` — ONNX vectorization + pgvector storage
  * - `collectRetrieve` — cosine similarity semantic search
  * - `collectOcr` — LLM OCR pipeline on image directory → AsciiDoc (consumed by DOC-11)
+ * - `collectPageProvenance` — derived join TOC × chunks × acquisition report → page-provenance.json
  *
  * **GENERATE group**:
  * - `generateCompositeContext` — semantic search via RagVectorStore (codebase.store) → composite-context.json
@@ -218,6 +220,9 @@ class CodexPlugin : Plugin<Project> {
             // ciblé par défaut, mais son absence dégrade à `graphifySection = ""`
             // au lieu d'échouer la validation Gradle (standalone).
             it.enrichedJsonFile.setFrom(project.layout.buildDirectory.file("codex/enriched-ldd.json"))
+            // CDX-PAGE-PROVENANCE-3 : page provenance sidecar (additive `pages`
+            // field). Tolerant collection — absence degrades to no pages.
+            it.pageProvenanceFile.setFrom(project.layout.buildDirectory.file("codex/page-provenance.json"))
         }
 
         project.tasks.register(
@@ -231,6 +236,19 @@ class CodexPlugin : Plugin<Project> {
             it.outputDir.convention(project.layout.buildDirectory.dir("codex/ocr-pages"))
             // OCR-QUALITY-2 : real-confidence doubt threshold (LOW_CONFIDENCE issue).
             it.lowConfidenceThreshold.convention(extension.ocrLowConfidenceThreshold)
+        }
+
+        // CDX-PAGE-PROVENANCE-2 : page provenance sidecar (TOC × chunks ×
+        // acquisition report, derived join — zéro DDL, zéro re-vectorisation).
+        // The TOC is an explicit input (D5): codex is READ, it never knows the
+        // FPA business content. The acquisition report is optional (degraded).
+        project.tasks.register(
+            "collectPageProvenance",
+            CollectPageProvenanceTask::class.java
+        ) {
+            it.group = "collect"
+            it.description = "Jointure dérivée TOC × chunks × rapport d'acquisition → page-provenance.json (localise le doute OCR jusqu'à la page source)"
+            it.pageProvenanceFile.set(project.layout.buildDirectory.file("codex/page-provenance.json"))
         }
 
         project.tasks.register(
