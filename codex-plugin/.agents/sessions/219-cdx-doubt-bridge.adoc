@@ -1,0 +1,142 @@
+= Rapport Session 219 — CDX-DOUBT-BRIDGE (US-0 cadrage + US-1/2 impl + BDD)
+:session: 219
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+
+== Objectif
+
+GBL-003.4 — brancher le doute OCR sur l'ingestion RAG et le contexte
+augmenté *côté tâche codex*. La chaîne OCR-QUALITY est complète
+(US-1/2 codex S-218, US-3 document S-251, US-4 codebase S-213) et le
+socle N1 est doubt-aware, mais la surface tâche Gradle de codex
+(`collectIngest`, `generateCompositeContext`) était restée aveugle au
+doute. Méthode : cadrage US-0 puis baby-step DDD/TDD/BDD strict
+RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel → Cucumber),
+English only.
+
+== Baseline — check VERT
+
+`./gradlew check` d'ouverture : BUILD SUCCESSFUL 3m23s — 872 tests
+0 FAIL, 8 suites Cucumber dédiées vertes. Pin `workspace-bom:0.0.43` /
+`workspace-catalog:0.0.43` à jour (fix S-218), aucune dérive BOM.
+
+== Audit (constats)
+
+. `CodexIngestTask` orchestre ses propres INSERT R2DBC (`insertChunk`,
+   5 binds, sans `confidence`/`doubtful`) — un chunk `[ILLISIBLE]` ingéré
+   comme un chunk propre.
+. `CodexCompositeContextTask` requête avec `searchBlocking` (SELECT sans
+   les colonnes de doute) et joint le canal Docs à la main — le doute
+   n'atteint jamais `composite-context.json`.
+. Le socle N1 est prêt : `DoubtPolicy`, `ingestWithDoubt`,
+   `searchWithDoubtBlocking`, `DoubtExposure` (S-213).
+. Asymétrie boundary : `CompositeContextBuilder` (codebase.rag) est
+   doubt-aware ; l'équivalent tâche codex ne l'était pas.
+. Run réel S-214 : `CorpusIngestMain` (codebase) avait contourné la
+   tâche aveugle — le corpus FPA est doubt-aware, la tâche non.
+
+== US-0 — Cadrage EPIC CDX-DOUBT-BRIDGE ✅
+
+Doc `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` — 5 constats, 7 décisions
+(D1 délégation au socle N1, D2 ingestion doubt-aware, D3 exposition
+doubt-aware, D4 propriété additive `excludeDoubtfulDocs` défaut false,
+D5 seam testable, D6 page-provenance hors scope, D7 baby-step strict),
+2 US ~6 pts. Gouvernance pure, zéro code.
+
+== US-1 — Ingestion doubt-aware ✅
+
+=== BS-1 unit — `CodexIngestDoubtTest` (4 UT)
+
+Seam `internal suspend fun ingestInto(store, chunks)` extrait : délègue à
+`RagVectorStore.ingestWithDoubt(DoubtPolicy.mark(chunks))`. Vérifié via
+une sous-classe `RecordingRagStore : RagVectorStore()` (sans Docker).
+RED : 4× `Unresolved reference 'ingestInto'` → GREEN 4/4 : délégation au
+socle, chunk `[ILLISIBLE]` doubtful + confidence 0.0, chunk propre
+confidence 1.0, marqueur détecté dans le sectionPath.
+
+=== BS-2 refactor — `CodexIngestTask` thin wrapper
+
+La boucle R2DBC dupliquée (createFactory, initSchema, ingestChunks,
+computeEmbedding) est supprimée : codex devient un vrai thin wrapper
+(doctrine S-102), l'unique implémentation d'ingestion vit dans N1
+(Loi de l'Économie d'Encre). 135 → 111 lignes.
+
+=== BS-3 intégration — `CodexIngestRetrieveIT` (testcontainers)
+
+Le gate d'intégration réelle passe par le chemin délégué
+(`ingestWithDoubt`) : `end-to-end ingest and retrieve` PASSED, log
+`test-book (3 chunks, avg_confidence=1,00)` — la colonne additive est
+écrite par le socle via la tâche.
+
+== US-2 — Exposition doubt-aware ✅
+
+=== BS-1 unit — `CodexCompositeContextDoubtTest` (4 UT)
+
+Deux seams : `searchDoubtAware(store, q, k)` délègue à
+`store.searchWithDoubt` ; `buildDocsContent(results, excludeDoubtful)`
+compose le canal Docs via `DoubtExposure.expose` (annote par défaut,
+exclut en opt-in) en préservant la provenance `[source / sectionPath]`.
+RED : 4× unresolved → GREEN 4/4.
+
+=== BS-2 — `CodexCompositeContextTask` doubt-aware
+
+`searchBlocking` → `searchWithDoubtBlocking` (délégation) ; canal Docs via
+`DoubtExposure` ; entrées JSON +`confidence`/`doubtful` (additif, backward
+compat) ; propriété `excludeDoubtfulDocs`.
+
+*Note backward compat* : le canal Docs passe par la politique socle
+`DoubtExposure` qui cape le texte à 500 chars (comme les entrées JSON le
+faisaient déjà) — le canal est de toute façon tronqué par `ChannelBudget`
+(10 % ≈ 800 tokens). Alignement codex ↔ `CompositeContextBuilder` N1.
+
+=== BS-3 DSL — `CodexExtensionDoubtTest` (3 UT)
+
+`CodexExtension.excludeDoubtfulDocs` (défaut false) + wiring
+`CodexPlugin` vers `generateCompositeContext`. RED → GREEN 3/3.
+
+== BDD — `codex_doubt_bridge.feature` (5 scénarios)
+
+Feature `@doubt-bridge` : illisible ingéré doubtful + confidence zéro,
+chunk propre pleine confiance, canal Docs annote douteux par défaut,
+exclut en opt-in, retrieval doubt-aware. `DoubtBridgeSteps` (préfixes
+uniques anti-collision S-088, fakes in-memory) +
+`CodexDoubtBridgeCucumberRunner` (9e runner dédié codex, pattern S-082) +
+`cucumberTestDoubtBridge` câblée `build.gradle.kts`. 5/5 PASSED.
+
+== Gates
+
+* `./gradlew check` : **BUILD SUCCESSFUL** 3m24s — 987 tests 0 FAIL
+  (baseline 872 → +115 dont 11 nouveaux tests explicites + variations
+  découverte Cucumber). Kover VERT, validatePlugins VERT.
+* 9 suites Cucumber dédiées VERTES (dont `cucumberTestDoubtBridge` 5/5).
+* `CodexIngestRetrieveIT` testcontainers PASSED (chemin R2DBC réel).
+
+== Zéro
+
+Zéro bump BOM (codebase N1 0.0.15 / BOM 0.0.43 déjà classpath), zéro
+secret, zéro régression, backward compat totale (`excludeDoubtfulDocs`
+défaut false, champs JSON additifs, colonnes DDL additives).
+Page-provenance (join chunk→page du `OcrQualityReport`) documentée HORS
+SCOPE (D6) — EPIC futur distinct.
+
+== Livrables
+
+* `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` (nouveau)
+* `src/main/kotlin/codex/tasks/CodexIngestTask.kt` (thin wrapper + seam)
+* `src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt` (doubt-aware)
+* `src/main/kotlin/codex/CodexExtension.kt` + `CodexPlugin.kt`
+  (`excludeDoubtfulDocs` + wiring)
+* Tests : `CodexIngestDoubtTest` (4), `CodexCompositeContextDoubtTest` (4),
+  `CodexExtensionDoubtTest` (3)
+* BDD : `codex_doubt_bridge.feature` (5), `DoubtBridgeSteps`,
+  `CodexDoubtBridgeCucumberRunner`
+* `build.gradle.kts` (`cucumberTestDoubtBridge`)
+
+== Clôture
+
+* EPIC CDX-DOUBT-BRIDGE 3/3 US (US-0 ✅, US-1 ✅, US-2 ✅) — GBL-003.4
+  codex complété (la tâche n'est plus un contournement).
+* Backlog sync : INDEX, BACKLOG, PROMPT_REPRISE, SESSIONS_HISTORY,
+  archive 2026-09, table boroughs AGENTS.adoc racine.
+* Commit/push accordé pilote.

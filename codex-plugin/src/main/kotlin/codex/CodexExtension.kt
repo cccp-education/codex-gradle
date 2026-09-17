@@ -46,4 +46,12 @@ abstract class CodexExtension {
      * (backward compat).
      */
     abstract val licenceRouting: Property<Boolean>
+
+    /**
+     * CDX-DOUBT-BRIDGE-2 — when `true`, `generateCompositeContext` drops the
+     * chunks flagged doubtful by the OCR policy from the Docs channel instead
+     * of annotating them. Default `false` — doubtful chunks are kept and
+     * annotated with the `[DOUBTFUL confidence=…]` marker (backward compat).
+     */
+    abstract val excludeDoubtfulDocs: Property<Boolean>
 }

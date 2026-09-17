@@ -1,6 +1,32 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
 :date: 2026-09-17
-:session: 218
+:session: 219
+
+== Session 219 — CDX-DOUBT-BRIDGE (+115 tests, 987/987 PASS)
+
+[cols="2,3,2"]
+|===
+| Fichier | Tests | Résultat
+| `test/kotlin/codex/tasks/CodexIngestDoubtTest.kt` (nouveau) | 4 unit | ✅ PASS — délégation au socle `ingestWithDoubt`, chunk `[ILLISIBLE]` doubtful + confidence 0.0, chunk propre confidence 1.0, marqueur dans le sectionPath
+| `test/kotlin/codex/tasks/CodexCompositeContextDoubtTest.kt` (nouveau) | 4 unit | ✅ PASS — retrieval `searchWithDoubt`, canal Docs annote le douteux par défaut, exclut en opt-in, propriété `excludeDoubtfulDocs` défaut false
+| `test/kotlin/codex/CodexExtensionDoubtTest.kt` (nouveau) | 3 FT | ✅ PASS — propriété `excludeDoubtfulDocs`, défaut false, wiring vers `generateCompositeContext`
+| `test/kotlin/codex/tasks/CodexIngestRetrieveIT.kt` | 1 IT | ✅ PASS — chemin R2DBC réel via `ingestWithDoubt` (avg_confidence écrit)
+| `features/codex_doubt_bridge.feature` (nouveau) | 5 scénarios `@doubt-bridge` | ✅ PASS — illisible doubtful/confiance zéro, chunk propre pleine confiance, Docs annote par défaut, Docs exclut en opt-in, retrieval doubt-aware
+|===
+
+*Coverage impact* : baseline 872 (S-218) → 987 tests 0 FAIL (+115 net dont
+11 tests explicites nouveaux + variations découverte cucumber par le task
+`test` qui scanne `src/test/resources/features/`). `check` VERT, 9 suites
+cucumber dédiées VERTES, Kover VERT, validatePlugins VERT.
+
+*Nouveau testé* :
+- `CodexIngestTask.ingestInto(store, chunks)` — seam de délégation doubt-aware
+  au socle N1, 4 unit via `RecordingRagStore` (sans Docker) + IT testcontainers.
+- `CodexCompositeContextTask.searchDoubtAware(...)` / `buildDocsContent(...)`
+  — délégation `searchWithDoubt` + `DoubtExposure`, 4 unit via
+  `RecordingRagStore` + provenance préservée.
+- `CodexExtension.excludeDoubtfulDocs` + wiring plugin — 3 FT.
+- BDD end-to-end du pont (ingestion + exposition) — 5 scénarios.
 
 == Session 218 — OCR-QUALITY US-1/2 (+168 tests, 872/872 PASS)
 

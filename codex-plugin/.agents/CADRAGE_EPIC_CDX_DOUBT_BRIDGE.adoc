@@ -1,0 +1,103 @@
+= Cadrage EPIC CDX-DOUBT-BRIDGE — Pont doute acquisition → RAG + contexte augmenté (GBL-003.4 codex)
+:date: 2026-09-17
+:session: 219
+:epic: CDX-DOUBT-BRIDGE
+:origine: BACKLOG racine § GBL-003.4 (critical path MVP0) + PROMPT_REPRISE S-218 Option A
+:methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
+
+== Contexte
+
+La chaîne OCR-QUALITY est complète (US-1/2 codex S-218, US-3 document
+S-251, US-4 codebase S-213) et le socle N1 sait ingérer puis exposer le
+doute (`DoubtPolicy`, `DoubtMetadata`, `ingestWithDoubt`,
+`searchWithDoubtBlocking`, `DoubtExposure`). Le run réel GBL-003.4
+(S-214, codebase) a ingéré 387 chunks / 18 doubtful / avg 0.953.
+
+Mais la *surface tâche* de codex — les tâches Gradle `collectIngest` et
+`generateCompositeContext`, qui sont le contrat N3 (`composite-context.json`)
+— est restée **aveugle au doute** : elle insère les chunks avec
+`StoreStatements.insertChunk()` (5 binds, zéro `confidence`/`doubtful`) et
+requête avec `searchBlocking()` (SELECT sans colonnes de doute). Résultat :
+un corpus ingéré *via les tâches codex* n'est pas doubt-aware, et le
+`composite-context.json` produit ne pèse ni n'annote les passages douteux —
+alors que le socle N1 le permet déjà.
+
+== Constats (audit S-219, état réel du code)
+
+. *`CodexIngestTask`* (codex, 135 lignes) orchestre ses propres INSERT
+  R2DBC : `initSchema()` sans `doubtSchema()`, `insertChunk()` (5 binds,
+  pas de `confidence`/`doubtful`). Le chunk dérivé d'une page `[ILLISIBLE]`
+  est ingéré au même titre qu'un chunk propre.
+. *`CodexCompositeContextTask`* (codex, 183 lignes) appelle
+  `store.searchBlocking(q, k)` — le SELECT *sans* les colonnes additives
+  `confidence`/`doubtful` — et construit le canal Docs par jointure
+  manuelle (`[source / sectionPath] (similarity=…)`) sans passer par
+  `DoubtExposure`. Le doute n'atteint jamais le `composite-context.json`.
+. *Socle N1 déjà prêt* (S-213) : `DoubtPolicy.mark(chunks)` dérive le doute
+  depuis les marqueurs OCR `[ILLISIBLE]` (content/sectionPath/overlapNext) ;
+  `RagVectorStore.ingestWithDoubt(...)` fait le schéma additif + l'INSERT
+  7 binds + l'`avg_confidence` document ; `searchWithDoubtBlocking(...)`
+  lit les colonnes de doute ; `DoubtExposure.expose(results, exclude)`
+  annote `[DOUBTFUL confidence=…]` ou exclut.
+. *Asymétrie de boundary* : côté codebase, `CompositeContextBuilder`
+  (`codebase.rag`) est déjà doubt-aware (`excludeDoubtfulDocs` + 
+  `DoubtExposure`). Côté codex, l'équivalent tâche ne l'est pas — split-brain
+  de politique de contexte augmenté.
+. *Run réel* (S-214) : le corpus FPA a été ingéré via `CorpusIngestMain`
+  (codebase), pas via `collectIngest` (codex) — le run a contourné la tâche
+  aveugle. Tant que la tâche reste aveugle, tout consommateur qui l'utilise
+  réintroduit du texte douteux sans le savoir.
+
+== Décisions
+
+- D1 : *codex ne réimplémente pas la politique de doute* — il délègue au
+  socle N1 (`DoubtPolicy`, `ingestWithDoubt`, `searchWithDoubtBlocking`,
+  `DoubtExposure`). Flèche unique N2→N1 déjà établie (RAG-SOCLE, S-102) ;
+  zéro nouveau contrat, zéro bump BOM, zéro cycle.
+- D2 : *ingestion doubt-aware par délégation* — `CodexIngestTask.ingest()`
+  délègue à `RagVectorStore.ingestWithDoubt(DoubtPolicy.mark(chunks))`.
+  Codex devient un vrai thin wrapper (doctrine S-102), la boucle R2DBC
+  dupliquée est supprimée (Loi de l'Économie d'Encre : une seule implémentation
+  d'ingestion, côté socle).
+- D3 : *exposition doubt-aware* — `CodexCompositeContextTask` passe à
+  `searchWithDoubtBlocking` et compose le canal Docs via `DoubtExposure`
+  (annote par défaut, exclut en opt-in `excludeDoubtfulDocs`, mirror
+  `CompositeContextBuilder.excludeDoubtfulDocs`).
+- D4 : *propriété DSL additive* — `CodexExtension.excludeDoubtfulDocs`
+  (+ task property) défaut `false` : backward compat totale (le contrat
+  `composite-context.json` existant reste inchangé par défaut, seuls des
+  champs JSON additifs `confidence`/`doubtful` apparaissent par entrée).
+- D5 : *seam testable* — l'ingestion est extraite en méthode `internal`
+  (`ingestInto(store, chunks)`) injectable par un fake `RagVectorStore`
+  (classe `open`) : unit + Cucumber sans Docker. L'IT testcontainers existant
+  reste le gate d'intégration réelle (`@Tag("integration")`, hors `check`).
+- D6 : *page-provenance hors scope* — le join chunk→page (rapport
+  `OcrQualityReport` S-218) n'est pas faisable sans ajouter une provenance de
+  page aux chunks (le `SemanticChunker` produit des chunks par section, pas
+  par page). Le doute *marker-based* (canon socle N1) couvre le besoin
+  immédiat ; la provenance page est un EPIC futur distinct.
+- D7 : *baby-step DDD/TDD/BDD strict* — US-1 (ingestion) puis US-2
+  (exposition), 3 niveaux unit → fonctionnel → Cucumber, English only.
+
+== User Stories (~6 pts)
+
+|===
+| US | Description | Pts | Statut
+| CDX-DOUBT-BRIDGE-0 | Cadrage EPIC (gouvernance pure, zéro code) | 1 | ✅ TERMINÉ (S-219)
+| CDX-DOUBT-BRIDGE-1 | `CodexIngestTask` doubt-aware — délégation `DoubtPolicy.mark` + `RagVectorStore.ingestWithDoubt`, seam `ingestInto` (unit + Cucumber + IT) | 3 | 🟡 À FAIRE
+| CDX-DOUBT-BRIDGE-2 | `CodexCompositeContextTask` doubt-aware — `searchWithDoubtBlocking` + `DoubtExposure` canal Docs + `excludeDoubtfulDocs` + champs JSON additifs (unit + Cucumber) | 2 | 🟡 À FAIRE
+|===
+
+== Ordre
+
+US-1 (ingestion) → US-2 (exposition). US-1 est le maillon critique : sans
+ingestion doubt-aware, l'exposition n'a rien à exposer. Chaque US gâte son
+niveau ; l'ensemble débloque le RAG propre (GBL-003.4) et le contexte
+augmenté fiable pour la génération SPG/SPD (anneau A2).
+
+== Débloque
+
+- GBL-003.4 complet côté tâche codex (le run réel S-214 avait contourné
+  la tâche aveugle).
+- Contexte augmenté fiable : le `composite-context.json` N3 porte le doute,
+  cohérent avec le `CompositeContextBuilder` N1.

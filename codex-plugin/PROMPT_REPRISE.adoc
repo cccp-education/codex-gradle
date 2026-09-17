@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 219
-:session: 219
+= PROMPT_REPRISE — Codex — Session 220
+:session: 220
 :date: 2026-09-17
 :status: PRET
 
@@ -7,52 +7,61 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 872 tests 0 FAIL (S-218)
+./gradlew check           # baseline 987 tests 0 FAIL (S-219)
 ----
 
-== Session 218 terminée — OCR-QUALITY US-1/2 (codex) TERMINÉES
+== Session 219 terminée — EPIC CDX-DOUBT-BRIDGE TERMINÉ 3/3 US
 
-*OCR-QUALITY-1 ✅* — vraie confidence Tesseract : `TesseractTsvParser`
-objet pur (moyenne TSV word-level normalisée [0,1], mots blancs/confiance
-négative ignorés) + `TesseractOcrEngine` invoqué avec config `tsv` +
-`metadata["confidenceSource"]` = `"tsv"` ou `"degraded"`. `OcrPipeline`
-ne gate plus sur la confiance (signal de doute aval, pas critère de
-fallback — sinon le texte dégradé serait jeté).
+*CDX-DOUBT-BRIDGE-0 ✅* — cadrage (5 constats, 7 décisions). Doc
+`.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`.
 
-*OCR-QUALITY-2 ✅* — `OcrQualityAnalyzer` objet pur (ILLISIBLE, TOO_SHORT,
-LOW_CONFIDENCE, IMAGE_MISSING, macro `image::?` bloc+inline) +
-`CollectOcrTask.qualityReportFile` optionnel (rapport JSON) +
-`CodexExtension.ocrLowConfidenceThreshold` (défaut 0.5).
+*CDX-DOUBT-BRIDGE-1 ✅* — `CodexIngestTask` doubt-aware : seam
+`internal ingestInto` délègue à `DoubtPolicy.mark` +
+`RagVectorStore.ingestWithDoubt` ; boucle R2DBC dupliquée supprimée
+(thin wrapper, 135→111 lignes). `CodexIngestDoubtTest` 4 UT +
+`CodexIngestRetrieveIT` testcontainers PASSED (chemin R2DBC réel).
 
-*EPIC OCR-QUALITY complété* : US-1/2 codex (S-218) + US-3 document
-(S-251 ✅) + US-4 codebase (S-213 ✅).
+*CDX-DOUBT-BRIDGE-2 ✅* — `CodexCompositeContextTask` doubt-aware :
+`searchDoubtAware` → `searchWithDoubt` ; `buildDocsContent` →
+`DoubtExposure` (annote/exclut) avec provenance préservée ; entrées JSON
++`confidence`/`doubtful` (additif) ; `CodexExtension.excludeDoubtfulDocs`
+(défaut false) + wiring. `CodexCompositeContextDoubtTest` 4 UT +
+`CodexExtensionDoubtTest` 3 UT. BDD `codex_doubt_bridge.feature` 5
+scénarios `@doubt-bridge` + 9e runner dédié.
 
-Gate : check VERT 872 tests 0 FAIL (baseline 704 → +168). 9 suites
-cucumber dédiées VERTES. + Fix drift BOM 0.0.39→0.0.43 cross-borough
-MEMPHIS (piège #13).
+*GBL-003.4 codex complété* : la surface tâche n'est plus un contournement
+du doute (le run réel S-214 passait par `CorpusIngestMain` codebase).
 
-Rapport : `.agents/sessions/218-ocr-quality-confidence-detection.adoc`.
+Gate : check VERT 987 tests 0 FAIL (baseline 872 → +115). 9 suites
+cucumber dédiées VERTES. Zéro bump BOM, zéro secret, backward compat.
 
-== Prochaine session — 219 : objectifs
+Rapport : `.agents/sessions/219-cdx-doubt-bridge.adoc`.
 
-=== Option A — GBL-003.4 RAG doubt metadata (critical path, P0) 🟡 RECOMMANDÉE
+== Prochaine session — 220 : objectifs
 
-* Les rapports de doute sont désormais produits des deux côtés (codex
-  acquisition `OcrQualityReport`, document assembly `BookOcrIssueReport`).
-* Coordination codebase (US-4 ✅ S-213 `DoubtMetadata`/`ingestWithDoubt`
-  déjà en place) : brancher le rapport d'acquisition codex sur l'ingestion
-  RAG pour que le contexte augmenté pèse/exclut les pages douteuses.
-* Option B : dogfooding run corpus FPA réel avec le nouveau rapport
-  qualité (mesure du gain vs découverte manuelle).
+=== Option A — Publication codex-plugin 0.0.8 (si accord pilote) 🟡
 
-=== Option B — Publication codex-plugin (si accord pilote)
-
-* HEAD (S-218) non publié. Version locale 0.0.7, Central 0.0.7 (S-217).
+* HEAD (S-219) non publié. Version locale 0.0.7, Central 0.0.7 (S-217).
 * Bump 0.0.8 requis + MEMPHIS catalog/BOM.
+* Contenu depuis 0.0.7 : OCR-QUALITY (S-218) + CDX-DOUBT-BRIDGE (S-219).
+
+=== Option B — Dogfooding run corpus FPA `collectIngest` doubt-aware
+
+* Le corpus FPA (387 chunks, 18 doubtful) a été ingéré via
+  `CorpusIngestMain` (codebase) S-214. Vérifier que la tâche codex
+  `collectIngest` produit désormais le même résultat doubt-aware.
+* Mesure du gain vs découverte manuelle (rapport `OcrQualityReport`).
 
 === Option C — Maintenance / cross-borough
 
 * À la demande pilote uniquement.
+
+== Hors scope (documenté)
+
+* *Page-provenance* (D6 cadrage) : join chunk→page du `OcrQualityReport`
+  vers le doute par chunk — nécessite d'ajouter une provenance de page
+  aux chunks (le `SemanticChunker` produit par section, pas par page).
+  EPIC futur distinct.
 
 == Méthode
 
@@ -67,7 +76,6 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-218)
-- `.agents/BACKLOG.adoc` (EPIC OCR-QUALITY ✅ 4/4 US)
-- `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (EPIC complet)
-- `codex-out/RAPPORT_CDX_CORPUS_RUN.adoc` (chunks douteux GBL-003.4)
+- `.agents/INDEX.adoc` (à jour S-219)
+- `.agents/BACKLOG.adoc` (EPIC CDX-DOUBT-BRIDGE ✅ 3/3 US)
+- `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`

@@ -72,6 +72,7 @@ class CodexPlugin : Plugin<Project> {
         extension.ocrLanguage.convention("fr")
         extension.ocrLowConfidenceThreshold.convention(0.5)
         extension.licenceRouting.convention(false)
+        extension.excludeDoubtfulDocs.convention(false)
 
         project.tasks.register(
             "collectText",
@@ -208,6 +209,9 @@ class CodexPlugin : Plugin<Project> {
             it.pgUser.convention(extension.pgvectorUser)
             it.pgPassword.convention(extension.pgvectorPassword)
             it.outputFile.set(project.layout.buildDirectory.file("codex/composite-context.json"))
+            // CDX-DOUBT-BRIDGE-2 : Docs channel honors the OCR doubt policy
+            // (annotate by default, exclude in opt-in).
+            it.excludeDoubtfulDocs.convention(extension.excludeDoubtfulDocs)
             // CDX-4-3 : câblage canal Graphify — enrichedJsonFile consomme
             // la sortie de `enrichJsonLdd` (List<EnrichedLddNode> JSON).
             // Backward compat : la propriété reste @Optional, non configurée

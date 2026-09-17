@@ -4,9 +4,36 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 218 — **OCR-QUALITY US-1/2 (codex) ✅ TERMINÉES** — EPIC transverse complété 4/4 US : US-1 vraie confidence Tesseract (`TesseractTsvParser` + config tsv + `confidenceSource`) + US-2 détection images problématiques à l'acquisition (`OcrQualityAnalyzer` + `CollectOcrTask.qualityReportFile` JSON). `OcrPipeline` : la confiance devient un signal de doute aval. check VERT 872/0. Fix drift BOM 0.0.43 cross-borough MEMPHIS.)_
+_Dernière mise à jour : 2026-09-17 (session 219 — **CDX-DOUBT-BRIDGE ✅ TERMINÉ 3/3 US** — le doute OCR acquisition atteint l'ingestion RAG et le contexte augmenté côté tâche codex : `CodexIngestTask` délègue à `DoubtPolicy`/`ingestWithDoubt` (thin wrapper, boucle R2DBC dupliquée supprimée), `CodexCompositeContextTask` requête `searchWithDoubt` + canal Docs via `DoubtExposure` + `excludeDoubtfulDocs` (défaut false) + champs JSON additifs `confidence`/`doubtful`. BDD `codex_doubt_bridge.feature` 5 scénarios. check VERT 987/0 (baseline 872 → +115). GBL-003.4 codex complété.)_
 
 '''
+== ✅ EPIC CDX-DOUBT-BRIDGE — Pont doute acquisition → RAG + contexte augmenté (GBL-003.4 codex) ✅ TERMINÉ 3/3 US (S-219)
+
+_Origine : BACKLOG racine § GBL-003.4 (critical path MVP0) + PROMPT_REPRISE S-218 Option A._
+_Cadrage : `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`._
+
+La chaîne OCR-QUALITY est complète (codex S-218 + document S-251 +
+codebase S-213) et le socle N1 est doubt-aware, mais la surface tâche
+Gradle de codex (`collectIngest`, `generateCompositeContext`) restait
+aveugle au doute : elle insérait avec `insertChunk` (5 binds) et
+requêtait avec `searchBlocking` (SELECT sans colonnes de doute).
+
+|===
+| US | Description | Pts | Statut
+| CDX-DOUBT-BRIDGE-0 | Cadrage EPIC (gouvernance pure, zéro code) | 1 | ✅ TERMINÉ (S-219 — 5 constats, 7 décisions, doc `CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`)
+| CDX-DOUBT-BRIDGE-1 | `CodexIngestTask` doubt-aware — délégation `DoubtPolicy.mark` + `RagVectorStore.ingestWithDoubt`, seam `ingestInto` (4 UT + IT testcontainers) | 3 | ✅ TERMINÉ (S-219 — thin wrapper, boucle R2DBC dupliquée supprimée, 135→111 lignes)
+| CDX-DOUBT-BRIDGE-2 | `CodexCompositeContextTask` doubt-aware — `searchWithDoubt` + `DoubtExposure` canal Docs + `excludeDoubtfulDocs` + champs JSON additifs (4 UT + 3 FT DSL + BDD 5 scénarios) | 2 | ✅ TERMINÉ (S-219)
+|===
+
+*Boundary* : codex délègue au socle N1 (`DoubtPolicy`, `ingestWithDoubt`,
+`searchWithDoubt`, `DoubtExposure`) — flèche unique N2→N1, zéro nouveau
+contrat, zéro bump BOM. *Hors scope (D6)* : page-provenance (join
+chunk→page du `OcrQualityReport`) — nécessite une provenance de page dans
+les chunks, EPIC futur distinct.
+
+'''
+
+
 == EPIC OCR-QUALITY — Détection automatique images problématiques + transcriptions douteuses ✅ TERMINÉ 4/4 US
 
 _Origine : demande pilote 2026-09-07. Cadrage transverse : `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` (identique dans codex/document/codebase)._

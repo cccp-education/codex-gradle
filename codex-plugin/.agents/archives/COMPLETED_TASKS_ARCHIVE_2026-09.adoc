@@ -63,3 +63,43 @@
 - Gates : check VERT 682 tests 0 FAIL, zéro code prod (2 lignes pin), zéro secret.
 - CDX-CORPUS-2 ⏳ reporté (graphe GF-FPA pas encore produit).
 - Next : OCR-QUALITY-1/2 codex (critical path P0, cadrage S-215 prêt).
+== S-217 (2026-09-10) — CDX-CORPUS US-2 enrichment récursif via graphify (GBL-003.3) ✅
+
+- `SectionTitleNormalizer` (nouveau, objet pur, 19 UT) — normalise les titres
+  LDD/chunks (entities HTML, footnote macros, tags HTML, apostrophes typo,
+  dot leaders 2+, footnote markers) → join titres 30/111 → 110/111.
+- `JsonLddEnricher.enrich` rendu récursif (champ `children` + `enrichNode`)
+  — join par titre appliqué à chaque nœud.
+- Run réel : 115/115 sections titrées enrichies (184 chunks + 521 graphify
+  nodes), 468 nœuds totaux. Output PROPRIETARY dans office/ (Règle 2).
+- Fix drift BOM 0.0.36/0.0.37 → 0.0.38 (MEMPHIS S-218, garde attrapée).
+- Gates : check VERT 704 tests 0 FAIL (+22), publishToMavenLocal 0.0.6.
+
+== S-218 (2026-09-17) — OCR-QUALITY US-1/2 codex ✅
+
+- US-1 vraie confidence Tesseract : `TesseractTsvParser` (7 UT, moyenne TSV
+  word-level normalisée, mots blancs/confiance négative/malformés ignorés) +
+  config `tsv` + `confidenceSource` tsv/degraded + fix gate `OcrPipeline`
+  (la confiance est un signal aval, pas un critère de fallback).
+- US-2 détection images problématiques : `OcrQualityAnalyzer` (11 UT,
+  ILLISIBLE/TOO_SHORT/LOW_CONFIDENCE/IMAGE_MISSING, macro `image::?` bloc +
+  inline) + `CollectOcrTask.qualityReportFile` JSON + `ocrLowConfidenceThreshold`.
+- BDD `codex_ocr_quality.feature` 11 scénarios + 8e runner dédié.
+- EPIC transverse OCR-QUALITY complété 4/4 US (codex S-218 + document S-251
+  + codebase S-213).
+- Fix drift BOM 0.0.39 → 0.0.43 cross-borough MEMPHIS (piège #13).
+- Gates : check VERT 872 tests 0 FAIL (baseline 704 → +168), 9 suites Cucumber.
+
+== S-219 (2026-09-17) — CDX-DOUBT-BRIDGE ✅ TERMINÉ 3/3 US
+
+- US-0 cadrage (5 constats, 7 décisions, doc `CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`).
+- US-1 `CodexIngestTask` doubt-aware : `ingestInto` délègue à `DoubtPolicy.mark`
+  + `RagVectorStore.ingestWithDoubt` ; boucle R2DBC dupliquée supprimée
+  (thin wrapper 135→111 lignes). 4 UT + IT testcontainers PASSED.
+- US-2 `CodexCompositeContextTask` doubt-aware : `searchWithDoubt` +
+  `DoubtExposure` canal Docs + `excludeDoubtfulDocs` (défaut false) + entrées
+  JSON `confidence`/`doubtful` additifs. 4 UT + 3 FT DSL.
+- BDD `codex_doubt_bridge.feature` 5 scénarios + 9e runner dédié.
+- GBL-003.4 codex complété — la tâche n'est plus un contournement.
+- Gates : check VERT 987 tests 0 FAIL (baseline 872 → +115), 9 suites Cucumber.
+- Zéro bump BOM, zéro secret, backward compat totale.

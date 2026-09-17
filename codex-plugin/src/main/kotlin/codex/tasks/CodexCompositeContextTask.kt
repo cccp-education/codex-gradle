@@ -4,6 +4,7 @@ import contracts.context.ChannelBudget
 import contracts.context.CompositeContext
 import contracts.context.CompositeContextConfig
 import contracts.context.ContextChannel
+import codebase.store.DoubtExposure
 import codebase.store.RagVectorStore
 import codebase.store.RetrieveResult
 import codex.Metadata
@@ -56,6 +57,14 @@ abstract class CodexCompositeContextTask : DefaultTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
+    // CDX-DOUBT-BRIDGE-2 : when true, chunks flagged doubtful by the OCR
+    // policy are dropped from the Docs channel instead of annotated (mirror
+    // the N1 `CompositeContextBuilder.excludeDoubtfulDocs`). Default false —
+    // backward compat : doubtful chunks stay, annotated with the marker.
+    @get:Input
+    @get:Optional
+    abstract val excludeDoubtfulDocs: Property<Boolean>
+
     // CDX-4-3 : canal Graphify peuplé depuis le JSON enrichi produit par
     // `enrichJsonLdd` (List<EnrichedLddNode> sérialisée). Propriété
     // optionnelle — backward compat : absente → graphifySection = "".
@@ -86,6 +95,38 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         }
     }
 
+    /**
+     * Doubt-aware retrieval seam — delegates to the N1 socle
+     * [RagVectorStore.searchWithDoubt] so the SELECT reads the additive
+     * `confidence` / `doubtful` columns (CDX-DOUBT-BRIDGE-2).
+     *
+     * `internal` so the delegation is verifiable with a recording fake
+     * (no Docker); the real R2DBC path is covered by the integration suite.
+     */
+    internal suspend fun searchDoubtAware(
+        store: RagVectorStore,
+        query: String,
+        topK: Int,
+    ): List<RetrieveResult> = store.searchWithDoubt(query, topK)
+
+    /**
+     * Composes the Docs channel text from the doubt-aware results, honoring
+     * the socle exposure policy [DoubtExposure]: doubtful chunks are
+     * annotated with the marker + confidence by default, or dropped when
+     * [excludeDoubtful] is true (mirror `CompositeContextBuilder` N1).
+     *
+     * Provenance (`[source / sectionPath]`, similarity) is preserved on top
+     * of the socle-rendered line so the N3 consumer keeps its citation
+     * context while the doubt policy stays owned by N1.
+     */
+    internal fun buildDocsContent(results: List<RetrieveResult>, excludeDoubtful: Boolean): String {
+        val lines = DoubtExposure.expose(results, excludeDoubtful = excludeDoubtful)
+        val retained = if (excludeDoubtful) results.filterNot { it.doubtful } else results
+        return retained.zip(lines).joinToString("\n\n") { (r, line) ->
+            "[${r.sourceDocument} / ${r.sectionPath}] (similarity=${"%.3f".format(r.similarity)})\n$line"
+        }
+    }
+
     @TaskAction
     fun execute() {
         val q = query.orNull ?: "architecture du workspace"
@@ -98,9 +139,11 @@ abstract class CodexCompositeContextTask : DefaultTask() {
             username = pgUser.get(),
             password = pgPassword.get()
         )
-        val results: List<RetrieveResult> = store.searchBlocking(q, k)
+        val results: List<RetrieveResult> = kotlinx.coroutines.runBlocking {
+            searchDoubtAware(store, q, k)
+        }
 
-        // ── JSON compatible N3/N4 (inchangé) ──
+        // ── JSON compatible N3/N4 — champs de doute additifs (backward compat) ──
         val entries = results.map { r ->
             mapOf(
                 "source" to "codex",
@@ -109,7 +152,9 @@ abstract class CodexCompositeContextTask : DefaultTask() {
                 "sectionPath" to r.sectionPath,
                 "headingLevel" to r.headingLevel,
                 "sourceDocument" to r.sourceDocument,
-                "similarity" to r.similarity
+                "similarity" to r.similarity,
+                "confidence" to r.confidence,
+                "doubtful" to r.doubtful
             )
         }
 
@@ -122,9 +167,8 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         )
 
         // ── EPIC 3 : typed ContextChannel.Docs + CompositeContext ──
-        val docsContent = results.joinToString("\n\n") { r ->
-            "[${r.sourceDocument} / ${r.sectionPath}] (similarity=${"%.3f".format(r.similarity)})\n${r.chunkText}"
-        }
+        // CDX-DOUBT-BRIDGE-2 : the Docs channel honors the socle doubt policy.
+        val docsContent = buildDocsContent(results, excludeDoubtfulDocs.getOrElse(false))
         val docsChannel = ContextChannel.Docs(docsContent)
 
         val config = CompositeContextConfig(

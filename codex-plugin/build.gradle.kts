@@ -366,3 +366,28 @@ val cucumberTestOcrQuality by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── CDX-DOUBT-BRIDGE — Dedicated Cucumber runner for the doubt bridge (pattern S-082) ──
+// Scoped to CodexDoubtBridgeCucumberRunner so only codex_doubt_bridge.feature runs,
+// not the full src/test/resources/features/*.feature suite.
+// Overrides cucumber.features from junit-platform.properties (which points to
+// the full features dir for the default cucumberTest task).
+val cucumberTestDoubtBridge by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_doubt_bridge.feature Cucumber suite (CDX-DOUBT-BRIDGE)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexDoubtBridgeCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_doubt_bridge.feature")
+    systemProperty("cucumber.filter.tags", "@doubt-bridge and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}

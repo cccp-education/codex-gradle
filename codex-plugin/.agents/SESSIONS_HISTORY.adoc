@@ -3147,3 +3147,42 @@ Clôture de la session selon la procédure standard de 6 étapes (rapport de ses
 
 '''
 purs + ~10 unit + publication Central.
+
+== Session 219 (2026-09-17) — CDX-DOUBT-BRIDGE (US-0 cadrage + US-1/2 impl + BDD)
+
+=== A. Sujet
+GBL-003.4 — brancher le doute OCR acquisition sur l'ingestion RAG et le
+contexte augmenté *côté tâche codex*. La chaîne OCR-QUALITY est complète et
+le socle N1 est doubt-aware, mais `collectIngest`/`generateCompositeContext`
+restaient aveugles au doute.
+
+=== B. Réalisations
+. US-0 cadrage EPIC CDX-DOUBT-BRIDGE (`CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`,
+   5 constats, 7 décisions, 2 US ~6 pts) — gouvernance pure.
+. US-1 `CodexIngestTask` doubt-aware : seam `internal ingestInto` délègue à
+   `DoubtPolicy.mark` + `RagVectorStore.ingestWithDoubt` ; boucle R2DBC
+   dupliquée supprimée (thin wrapper, 135→111 lignes). `CodexIngestDoubtTest`
+   4 UT (RecordingRagStore) + `CodexIngestRetrieveIT` testcontainers PASSED.
+. US-2 `CodexCompositeContextTask` doubt-aware : `searchDoubtAware` →
+   `searchWithDoubt` ; `buildDocsContent` → `DoubtExposure` (annote/exclut)
+   avec provenance préservée ; entrées JSON +`confidence`/`doubtful` ;
+   `CodexExtension.excludeDoubtfulDocs` (défaut false) + wiring.
+   `CodexCompositeContextDoubtTest` 4 UT + `CodexExtensionDoubtTest` 3 UT.
+. BDD `codex_doubt_bridge.feature` 5 scénarios `@doubt-bridge` +
+   `DoubtBridgeSteps` + `CodexDoubtBridgeCucumberRunner` (9e runner) +
+   `cucumberTestDoubtBridge`. 5/5 PASSED.
+- Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR aux 3 niveaux.
+
+=== C. Gates
+- `./gradlew check` BUILD SUCCESSFUL 3m24s — 987 tests 0 FAIL (baseline
+  872 → +115 dont 11 tests explicites + variations découverte Cucumber).
+- 9 suites Cucumber dédiées VERTES. Kover VERT, validatePlugins VERT.
+- Zéro bump BOM, zéro secret, zéro régression, backward compat totale.
+
+=== D. État EPIC
+- CDX-DOUBT-BRIDGE ✅ TERMINÉ 3/3 US (US-0 ✅, US-1 ✅, US-2 ✅). GBL-003.4
+  codex complété — la tâche n'est plus un contournement.
+
+=== E. Prochaine session (220)
+Publication codex-plugin 0.0.8 (si accord pilote) OU maintenance
+cross-borough. Voir PROMPT_REPRISE.
