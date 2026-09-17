@@ -3452,3 +3452,62 @@ VERT.
 *Zéro* : zéro bump BOM, zéro secret, zéro régression, backward compat
 totale (champ additif, `@InputFiles` tolérante, dégradé silencieux).
 *Rapport* : `.agents/sessions/224-cdx-page-provenance.adoc`.
+
+'''
+== Session 225 — 2026-09-17 — Cadrage EPIC CB-PAGE-PROVENANCE (gouvernance pure, cross-borough)
+
+*Date* : 2026-09-17
+*Type* : gouvernance pure (zéro code) — pattern S-057/S-063
+*Objectif* : cadrer la persistance de la page au retrieval N1 (Option A
+PROMPT_REPRISE S-225), c'est-à-dire traiter la décision D7 du cadrage
+`CDX-PAGE-PROVENANCE` (S-223) — « persister la page (N1 Queens) est un
+changement cross-borough reporté, conditionnel à un besoin avéré ».
+
+*Contexte* : l'EPIC amont S-224 a livré une jointure **dérivée non stockée**
+(sidecar `page-provenance.json`) ; au retrieval, `RetrieveResult` n'expose
+que `chunkId: Long` (BIGSERIAL) et `sectionPath` — la jointure retrieval →
+page est **heuristique** (titres OCR vs TOC rédigés), mesurée à **70,8 %**
+sur le corpus FPA réel (déviation D6 S-224).
+
+*Audit (11 constats, état réel du code N1 + N2)* :
+- N1 `codebase.store.DocumentChunk`, `codex_chunks`, `RetrieveResult` :
+  aucun champ page.
+- `RagVectorStore.ingestWithDoubt` = **seul chemin d'ingestion** (7 binds) ;
+  `insertChunk()`/`IngestIndexing` légacy morts.
+- **Découverte structurante** : `DocumentChunk.id` (SHA-256,
+  `generateChunkId`) survit dans `chunks.json`, et le sidecar
+  `ChunkPageProvenance.chunkId` keye sur ce **même SHA-256** → la jointure
+  sidecar ↔ chunk **à l'ingestion est exacte** (vs heuristique au retrieval).
+- `ignoreUnknownKeys = true` côté codex et codebase → un champ `pages` non
+  porté par le type N1 serait silencieusement ignoré.
+- `CodexIngestTask` (thin wrapper) ne connaît pas le sidecar.
+- Précédent `training-gradle` : `pages TEXT` comma-joined (pas d'array).
+- `initSchema` non destructif (`CREATE TABLE IF NOT EXISTS`) mais
+  `insertDocument` sans upsert → re-run duplique (orthogonal).
+- Boundary DAG : codex (N2) dépend de codebase (N1) — la page est dérivée
+  N2, transportée N1 (patron doute DOUBT-BRIDGE S-219).
+
+*Décisions (11)* — D1 page = métadonnée **transportée** (comme le doute) ;
+D2 colonne additive `pages TEXT` comma-joined via `provenanceSchema()` ;
+D3 `DocumentChunk.pages: List<Int>` ; D4 bind 8 (`insertChunkWithDoubt`
+7→8) ; D5 `RetrieveResult.pages` + SELECT parse ; D6 transport N2
+`CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern
+S-221) + jointure exacte SHA-256 + dégradé silencieux ; D7 sidecar conservé
+(coexistence) ; D8 exposition canal Docs N1 ; D9 zéro bump BOM (types de
+store N1, pas de contrat N0) ; D10 backfill base jetable (pattern S-216) ;
+D11 baby-step strict.
+
+*Options écartées (5)* : A1 statu quo (70,8 %) · A2 array PostgreSQL
+(binding R2DBC lourd) · A3 backfill UPDATE-only (ONNX local non metered) ·
+A4 contrat N0 « page-provenance-contracts » (même rejet que RAG-SOCLE D5 :
+store = service, pas des types purs) · A5 extension `DoubtMetadata`
+(localisation ≠ qualité).
+
+*US (5 ~9 pts)* : US-0 ✅ cadrage + doc `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` ;
+US-1 N1 transport 🟡 · US-2 N2 transport codex 🟡 · US-3 N1 exposition 🟡 ·
+US-4 BDD cross-borough 🟡. Publication optionnelle (accord pilote) :
+codebase-first puis codex.
+
+*Gate* : zéro code modifié, baseline préservée `check` VERT 1393 tests
+0 FAIL, zéro bump BOM, zéro secret. Cross-borough Brooklyn (N2) + Queens (N1).
+*Rapport* : `.agents/sessions/225-cadrage-cb-page-provenance.adoc`.

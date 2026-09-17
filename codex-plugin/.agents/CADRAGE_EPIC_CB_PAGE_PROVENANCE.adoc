@@ -1,0 +1,352 @@
+= Cadrage EPIC CB-PAGE-PROVENANCE — Persistance de la page au retrieval (N1)
+:date: 2026-09-17
+:session: 225
+:epic: CB-PAGE-PROVENANCE
+:origine: PROMPT_REPRISE S-225 Option A + CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc (D7, S-223)
+:methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
+:statut: À ARBITRER PAR LE PILOTE
+:portee: cross-borough — Brooklyn (codex N2, transport) + Queens (codebase N1, persistance + exposition)
+
+== Contexte
+
+L'EPIC CDX-PAGE-PROVENANCE (S-223 cadrage, S-224 implémentation, codex
+N2) a rétabli le maillon « chunk douteux → page source » par une
+**jointure dérivée non stockée** : le sidecar `page-provenance.json`
+(`PageProvenanceReport`) joint TOC (section → page) × chunks
+(`sectionPath`) × rapport d'acquisition (page → doute). Zéro DDL, zéro
+re-vectorisation — Loi de l'Économie d'Encre.
+
+Mais la jointure retrieval → page y est **approximative** : au retrieval,
+le `RetrieveResult` de codebase N1 expose `chunkId: Long` (BIGSERIAL
+pgvector) et `sectionPath` — jamais l'id sémantique SHA-256. Le sidecar
+keye pourtant sur le SHA-256. La seule identité partagée est
+`sourceDocument + sectionPath`, d'où la **déviation D6** documentée
+S-224 : jointure par `sectionPath`.
+
+Conséquence mesurée sur le corpus FPA réel : **70,8 %** des chunks
+joignent une page (274/387), via une marche d'ancêtre deepest-first + un
+normaliseur de titre. C'est une heuristique de titre (titres OCR vs
+titres TOC rédigés) : 29,2 % des chunks ne localisent aucune page, et
+deux sections homonymes peuvent s'attribuer mutuellement leurs pages.
+
+La décision D7 du cadrage S-223 a explicitement reporté la correction :
+« Persister la page dans `codex_chunks` (colonne additive + bind +
+`RetrieveResult.page`) serait un changement cross-borough N1 (Queens) —
+hors périmètre codex. Documenté en EPIC futur `CB-PAGE-PROVENANCE`
+conditionnel : à décider seulement si un consommateur N3/N4 exige la
+page *au retrieval* sans sidecar. » C'est cet EPIC.
+
+== Constats (audit S-225, état réel du code N1 + N2)
+
+. *`codebase.store.DocumentChunk`* (`DocumentChunk.kt:23`) n'a **pas de
+  champ page** — `id` (SHA-256 `chk-…`), `sourceDocument`, `sectionPath`,
+  `headingLevel`, `content`, `codeBlocks`, `entities`, `overlapNext`,
+  `license`. Split-brain connu (S-223) : `codex.tasks.DocumentChunk`
+  porte le même JSON (migration verbatim RAG-1), seul le type codex est
+  producteur.
+
+. *`codex_chunks`* (DDL `StoreStatements.initSchema():23`) n'a **pas de
+  colonne page** : `id, document_id, chunk_index, chunk_text,
+  section_path, heading_level, embedding, created_at`. La migration
+  OCR-QUALITY US-4 a ajouté `confidence` + `doubtful` via
+  `doubtSchema()` (`ALTER TABLE … ADD COLUMN IF NOT EXISTS`, idempotent,
+  zéro re-vectorisation) — précédent direct pour une colonne additive.
+
+. *`RetrieveResult`* (`RetrieveResult.kt:26`) n'a **pas de champ page** :
+  `chunkId: Long, chunkIndex, chunkText, sectionPath, headingLevel,
+  sourceDocument, similarity, confidence (défaut 1.0), doubtful (défaut
+  false)`. `@Serializable` — un champ additif defaulté est backward
+  compatible (JSON + call sites).
+
+. *`RagVectorStore.ingestWithDoubt(chunks: List<DoubtfulChunk>)`*
+  (`RagVectorStore.kt:79`) est **le seul chemin d'ingestion** : 7 binds
+  (`insertChunkWithDoubt`), `DoubtfulChunk = DocumentChunk + DoubtMetadata`.
+  `insertChunk()` (5 binds) et `IngestIndexing.assignLocalIndices` sont
+  **du code legacy sans appelant de production** (seuls les tests les
+  référencent) — constat à ne pas aggraver (Économie d'Encre, cleanup
+  orthogonal hors scope).
+
+. *Le SHA-256 survit dans `chunks.json`* — `DocumentChunk.id` est
+  `generateChunkId(sourceDocument, sectionPath)` (`SemanticChunker.kt:143`),
+  et le sidecar `page-provenance.json` keye `ChunkPageProvenance.chunkId`
+  sur ce **même SHA-256**. **La jointure sidecar ↔ chunk à l'ingestion
+  est donc exacte** (`DocumentChunk.id`), contrairement à la jointure
+  retrieval (`sectionPath`) qui est heuristique. C'est la découverte qui
+  rend l'EPIC nécessaire et propre.
+
+. *`CorpusChunksLoader`* (`CorpusChunksLoader.kt:19`) décode
+  `chunks.json` avec `ignoreUnknownKeys = true` — un champ `pages` ajouté
+  côté N2 serait **silencieusement ignoré** tant que le type N1 ne le
+  porte pas. Même comportement dans `CodexIngestTask` (`Json {
+  ignoreUnknownKeys = true }`, `CodexIngestTask.kt:67`).
+
+. *`CodexIngestTask`* (N2, codex) est un **thin wrapper** : lit
+  `chunksFile` (`List<codebase.store.DocumentChunk>`), délègue à
+  `RagVectorStore.ingestWithDoubt(DoubtPolicy.mark(chunks))`. Il ne
+  connaît **pas** le sidecar `page-provenance.json` (produit par
+  `collectPageProvenance`, tâche séparée). Rien ne relie aujourd'hui les
+  pages au payload d'ingestion.
+
+. *Consommateurs de `RetrieveResult`* : `CompositeContextBuilder.loadDocsContext`
+  (N1, canal Docs) construit `[Doc] source=… section=… sim=…` ;
+  `CodebaseCompositeContextTask` (N1) écrit des entrées `Map` (jackson) ;
+  `CodexCompositeContextTask` (N2, N3 contract) joint le sidecar par
+  `sectionPath` (`buildPageIndex()`, `pageIndex[r.sectionPath]`).
+  Aucun n'expose de page aujourd'hui — mais tous gagneraient la page
+  **au retrieval** si `RetrieveResult.pages` existait.
+
+. *`training-gradle`* a déjà tranché la représentation : `pages TEXT`
+  (`IngestDatasetTask.createTable`) + `joinToString(",")` à l'insert +
+  `rs.getString("pages")?.split(",")?.mapNotNull { it.toIntOrNull() }` au
+  SELECT (`QueryDatasetTask.kt:77`, `TrainingRetrieveTask.kt:75`). Précédent
+  workspace pour un `List<Int>` persisté en `TEXT` comma-joined — pas
+  d'array PostgreSQL, pas de binding R2DBC array (complexité évitée).
+
+. *Boundary DAG* : codex (N2) **dépend** de codebase (N1)
+  (`implementation(libs.codebase.plugin)`). La page est **dérivée** par
+  N2 (TOC join, S-224) ; N1 **transporte et expose** (comme le doute,
+  DOUBT-BRIDGE S-219). N1 n'a aucune connaissance de TOC ni de métier —
+  transport générique.
+
+. *`initSchema()` est `CREATE TABLE IF NOT EXISTS`* (non destructif) et
+  `insertDocument()` n'a **pas d'`ON CONFLICT`** : rejouer l'ingestion sur
+  une base existante **duplique** les documents (nouveaux BIGSERIAL).
+  Comportement préexistant, orthogonal — le backfill d'un corpus déjà
+  ingéré s'exécute sur une base jetable (pattern S-216 Règle 2).
+
+== Le problème en une phrase
+
+La page est **dérivée** (N2) et **non stockée** : au retrieval, N1 ne
+peut la fournir qu'en rejouant une jointure de titre approximative
+(70,8 %) contre un sidecar externe. Persister la page à l'ingestion —
+jointure **exacte** par SHA-256 au moment où le chunk et le sidecar
+coexistent — rend la localisation disponible **au retrieval, sans
+sidecar**, avec un taux de jointure de 100 % pour les chunks dont la page
+est connue.
+
+== Décisions proposées
+
+- D1 : *La page est une métadonnée **transportée**, comme le doute.* La
+  TOC-jointure reste N2 (codex, S-224) ; N1 (codebase) transporte la page
+  dans le chunk et l'expose au retrieval. Précédent exact : OCR-QUALITY
+  US-4 (doute marker-based dérivé N2, transporté N1). Zéro connaissance
+  TOC/métier dans N1.
+- D2 : *Colonne additive `pages TEXT` sur `codex_chunks`*, comma-joined
+  (`"40,41"`), via un nouveau `StoreStatements.provenanceSchema()` :
+  `ALTER TABLE codex_chunks ADD COLUMN IF NOT EXISTS pages TEXT`
+  (idempotent, zéro re-vectorisation — Loi de l'Économie d'Encre).
+  Représentation alignée sur `training-gradle` (`pages TEXT`), pas
+  d'array PostgreSQL ni de binding R2DBC array. `initSchema()` gagne
+  `pages TEXT` dans le `CREATE TABLE` pour les bases neuves.
+- D3 : *`codebase.store.DocumentChunk` gagne `pages: List<Int> = emptyList()`*
+  (champ additif defaulté). La page est **intrinsèque au chunk** (comme
+  `sectionPath`/`headingLevel` — sa localisation), distincte du doute
+  (signal de qualité). `DoubtMetadata` et `DoubtfulChunk` **inchangés**.
+- D4 : *Ingestion* : `StoreStatements.insertChunkWithDoubt` gagne la
+  colonne `pages` (bind 8, comma-joiné). `insertChunkWithDoubtBindCount()`
+  passe 7 → 8. `RagVectorStore.ingestWithDoubt` bind 8 =
+  `entry.chunk.pages.joinToString(",")`. Le template `insertChunk()`
+  (5 binds, legacy) reste inchangé.
+- D5 : *Exposition* : `RetrieveResult` gagne `pages: List<Int> = emptyList()`
+  (champ additif defaulté, `@Serializable`). Les deux SELECT
+  (`searchSimilar`, `searchSimilarWithDoubt`) lisent `pages` et le
+  parsent (`split(",").mapNotNull { toIntOrNull() }`), pattern
+  `training-gradle`. Backward compat totale (défaut vide).
+- D6 : *Transport N2 → N1* : `CodexIngestTask` gagne une propriété
+  optionnelle `pageProvenanceFile` (`@InputFiles` tolérante, pattern
+  CDX-CONTEXT-HARDENING S-221) ; quand le sidecar existe, le task joint
+  `ChunkPageProvenance.chunkId` (SHA-256) ↔ `DocumentChunk.id` et attache
+  les pages au chunk **avant** `ingestWithDoubt`. Absent → aucun page
+  (dégradé silencieux, jamais forcer `collectPageProvenance`, Économie
+  d'Encre). La jointure est **exacte** (id SHA-256), pas heuristique.
+- D7 : *Le sidecar `page-provenance.json` (S-224) n'est **pas** supprimé.*
+  Il sert la jointure dérivée *sans ré-ingestion* (N2 composite context,
+  backward compat S-224) et reste la **source** des pages persistées.
+  La colonne est le chemin rapide du retrieval ; le sidecar l'artefact
+  d'acquisition. Coexistence sans contradiction. (Simplification
+  optionnelle — N3 consommant `RetrieveResult.pages` au lieu du sidecar —
+  hors scope, à décider plus tard si le sidecar devient mort.)
+- D8 : *Exposition aval (N1)* : le canal Docs (`CompositeContextBuilder.loadDocsContext`)
+  et les entrées de `CodebaseCompositeContextTask` gagnent `pages`
+  (additif) quand il est non vide. Backward compat : aucune page → ligne
+  identique à aujourd'hui.
+- D9 : *Zéro bump BOM.* Les types modifiés (`DocumentChunk`,
+  `RetrieveResult`) vivent dans codebase (N1), **pas** dans un artefact
+  N0 `contracts.*`. Aucun changement cross-borough N0 → pas de bump
+  MEMPHIS. Seuls `codebase-plugin` (+ `codex-plugin`) sont bumpés si
+  publication (accord pilote requis, DAG codebase-first).
+- D10 : *Backfill corpus FPA = run de configuration sur base jetable*
+  (pattern S-216 Règle 2) : `initSchema` non destructif + `insertDocument`
+  sans upsert → un re-run duplique ; le backfill s'exécute donc sur une
+  base recréée (ONNX local, non metered). Zéro re-vectorisation *partielle* :
+  on ne fait pas d'UPDATE isolé — on ré-ingère proprement (choix de
+  simplicité ; alternative UPDATE documentée en option écartée A3).
+- D11 : *Baby-step DDD/TDD/BDD strict* — US-1 (transport N1) → US-2
+  (transport N2 codex) → US-3 (exposition N1) → US-4 (BDD cross-borough),
+  3 niveaux unit → fonctionnel (testcontainers `PostgresFixture`) →
+  Cucumber, English only, RED → GREEN → REFACTOR.
+
+== Options écartées
+
+- *A1 — Le sidecar reste la seule source (statu quo).* Coût : jointure
+  heuristique 70,8 %, mis-attribution possible sur titres homonymes,
+  sidecar requis au retrieval. Contredit l'objectif explicite (page au
+  retrieval sans sidecar).
+- *A2 — Array PostgreSQL `INTEGER[]`.* Binding R2DBC array + mapping
+  `java.sql.Array` plus lourd que le `TEXT` comma-joined déjà éprouvé
+  (`training-gradle`). Écarté pour simplicité (Économie d'Encre).
+- *A3 — Backfill par `UPDATE codex_chunks SET pages=…` (zéro ré-insertion,
+  zéro ré-embedding).* Évite la duplication mais ajoute un chemin
+  d'écriture SQL dédié (nouveau binding, nouveau template, nouvelle
+  surface de test) pour économiser un embedding ONNX **local non
+  metered**. Cohérent avec « ne pas recomputer un résultat météré », mais
+  ONNX local n'est pas météré. Écarté au profit d'une ré-ingestion propre
+  sur base jetable (D10) ; à réévaluer si le corpus grossit.
+- *A4 — Nouveau contrat N0 `page-provenance-contracts` (MEMPHIS 10e).*
+  Les types concernés (`DocumentChunk`, `RetrieveResult`) sont des types
+  **de store** (N1), pas des contrats partagés purs — même raisonnement
+  que le rejet N0 de CDX-RAG-SOCLE D5 (« store = service implémenté »).
+  Écarté : pas de bump BOM, transport direct N2→N1 (pattern doute).
+- *A5 — Ajouter la page au `DoubtMetadata`/`DoubtfulChunk`.* Confond la
+  **localisation** (où est le chunk) et la **qualité** (est-il douteux).
+  Un chunk confiant a aussi une page. Écarté : la page est intrinsèque au
+  chunk (D3).
+
+== User Stories (~9 pts)
+
+|===
+| US | Description | Pts | Statut
+
+| CB-PAGE-PROVENANCE-0
+| Cadrage EPIC (gouvernance pure, zéro code) — audit N1/N2, constats,
+| décisions, options écartées, découpage US. Ce document.
+| 1
+| 🟡 EN COURS (S-225 — à valider par le pilote)
+
+| CB-PAGE-PROVENANCE-1
+| N1 transport — `DocumentChunk.pages: List<Int> = emptyList()` +
+| `StoreStatements.provenanceSchema()` (`ALTER TABLE … ADD COLUMN IF NOT
+| EXISTS pages TEXT`) + `initSchema()` `pages TEXT` + `insertChunkWithDoubt`
+| bind 8 (comma-joined, bind count 7→8) + `RagVectorStore.ingestWithDoubt`
+| bind + `RetrieveResult.pages` + SELECT read/parse. TDD strict : unit
+| (`DocumentChunk`, `StoreStatements`, `RetrieveResult`) + fonctionnel
+| testcontainers (`PostgresFixture`, round-trip ingestion → retrieval).
+| 3
+| 🟡 À FAIRE
+
+| CB-PAGE-PROVENANCE-2
+| N2 transport (codex) — `CodexIngestTask.pageProvenanceFile`
+| (`@InputFiles` tolérante, pattern S-221) + jointure exacte
+| `ChunkPageProvenance.chunkId` (SHA-256) ↔ `DocumentChunk.id` + attache
+| `pages` avant `ingestWithDoubt` + dégradé silencieux si sidecar absent.
+| Wiring `CodexPlugin`. TDD strict : unit (seam de jointure, fake
+| `RagVectorStore`). Cross-borough Brooklyn.
+| 2
+| 🟡 À FAIRE
+
+| CB-PAGE-PROVENANCE-3
+| N1 exposition — `CompositeContextBuilder.loadDocsContext` (canal Docs)
+| + `CodebaseCompositeContextTask` entrées `pages` (additif, omis si
+| vide). Backward compat : aucune page → sortie identique. Unit +
+| fonctionnel.
+| 2
+| 🟡 À FAIRE
+
+| CB-PAGE-PROVENANCE-4
+| BDD Cucumber cross-borough — scénarios `@page-retrieval` : sidecar
+| joint à l'ingestion (exact par SHA-256), page exposée au retrieval,
+| absence de sidecar → dégradé silencieux, multi-pages préservé,
+| backward compat JSON. Runner dédié (pattern S-082) + fakes in-memory
+| (pattern S-088/S-214).
+| 1
+| 🟡 À FAIRE (estimation indicative — à fixer par US-1)
+
+|===
+
+*Total* : ~9 pts (5 US)
+*Publication* (optionnelle, US-5 hors découpage — accord pilote) :
+bump `codebase-plugin` puis `codex-plugin` Central (DAG codebase-first ;
+N2 dépend de N1). Zéro bump MEMPHIS (D9).
+
+== Ordre
+
+US-1 (transport N1) → US-2 (transport N2 codex) → US-3 (exposition N1)
+→ US-4 (BDD). L'ordre respecte le DAG : N1 pose le type et la colonne,
+N2 branche la source, N1 expose, le BDD prouve le bout-en-bout. Chaque US
+gâte son niveau (unit → fonctionnel → Cucumber).
+
+== Frontière / hors scope
+
+- *N1 (codebase)* : colonne `pages`, `DocumentChunk.pages`,
+  `RetrieveResult.pages`, SELECT, exposition canal Docs.
+- *N2 (codex)* : `CodexIngestTask` merge sidecar (jointure exacte
+  SHA-256), wiring tolérant. La TOC-jointure reste `PageProvenanceResolver`
+  (S-224), inchangée.
+- *Hors scope* : suppression du sidecar S-224 (D7 — coexistence) ;
+  array PostgreSQL (A2) ; backfill UPDATE-only (A3) ; contrat N0 (A4) ;
+  extension de `DoubtMetadata` (A5).
+- *Hors scope* : le re-run d'ingestion sur base existante duplique
+  (`insertDocument` sans upsert) — orthogonal, non traité ici (D10).
+- *Hors scope* : cleanup `insertChunk()` / `IngestIndexing` legacy morts.
+- *Hors scope* : ancre de page in-band (S-223 A1) ; re-chunking par page
+  (S-223 A2).
+- *Hors scope* : correction de la pollution TOC/OCR du corpus FPA (cause
+  racine amont, `office/`).
+
+== Risques
+
+[cols="2,3,3", options="header"]
+|===
+| Risque | Impact | Mitigation
+
+| Re-ingestion duplique les documents (pas d'upsert) | Base polluée, chunks en double
+| Backfill sur base jetable (D10) ; documenter le comportement préexistant ;
+| `CREATE TABLE IF NOT EXISTS` n'échoue pas mais n'upsert pas — run propre
+
+| Binding `pages` NULL pour les chunks legacy | Parse à vide
+| `joinToString(",")` sur `emptyList()` = `""` ; SELECT
+| `split(",").mapNotNull { toIntOrNull() }` → `emptyList()` (pas de crash)
+
+| Sidecar absent au moment de `collectIngest` | Pages non persistées, retrieval sans page
+| Input tolérant (D6), dégradé silencieux, jamais forcer
+| `collectPageProvenance` (Économie d'Encre) ; l'ordre du DAG documenté
+
+| Deux `DocumentChunk` homonymes (split-brain codex/N1) | Drift si l'un gagne un champ sans l'autre
+| Champ additif defaulté des deux côtés si nécessaire ; N1 est le type
+| d'ingestion (`CodexIngestTask` importe déjà `codebase.store.DocumentChunk`)
+
+| `StoreStatements` template modifié (bind count 7→8) | Tests `@doubt-quality` (9 scénarios) cassent
+| Mise à jour TDD du test de bind count + non-régression `@doubt-quality`
+| obligatoire (US-1 gate)
+|===
+
+== Débloque
+
+. *Localisation exacte au retrieval* — un consommateur N3/N4 (runner,
+   training, planner) lit `RetrieveResult.pages` sans sidecar, sans
+   jointure de titre. Taux de jointure 100 % pour les chunks dont le
+   sidecar porte la page (vs 70,8 % heuristique).
+. *Clôture de la chaîne GBL-003.4* — le doute OCR remonte de la page
+   source jusqu'au retrieval, de bout en bout, sans artefact externe.
+. *Symétrie doute/page* — le doute (S-219) et la page (cet EPIC) sont
+   tous deux dérivés N2, transportés N1, exposés au retrieval. Deux
+   métadonnées, un seul patron de transport.
+. *Itération humaine ciblée au retrieval* — la page est disponible là où
+   l'agent consomme le contexte, pas seulement dans un sidecar de build.
+
+== Références
+
+- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` — EPIC amont (S-223), décision D7
+- `.agents/sessions/224-cdx-page-provenance.adoc` — implémentation S-224 (jointure 70,8 %)
+- `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` — patron de transport N2→N1 (S-219)
+- `.agents/CADRAGE_EPIC_CDX_RAG_SOCLE.adoc` — rejet N0 pour un type de store (D5)
+- `.agents/CADRAGE_EPIC_CDX_OCR_BOUNDARY.adoc` — boundary N1/N2
+- `codebase-gradle/.../codebase/store/DocumentChunk.kt`
+- `codebase-gradle/.../codebase/store/StoreStatements.kt`
+- `codebase-gradle/.../codebase/store/RagVectorStore.kt`
+- `codebase-gradle/.../codebase/store/RetrieveResult.kt`
+- `codebase-gradle/.../codebase/rag/CompositeContextBuilder.kt`
+- `codebase-gradle/.../codebase/rag/CodebaseCompositeContextTask.kt`
+- `codex-gradle/.../codex/tasks/CodexIngestTask.kt`
+- `codex-gradle/.../codex/provenance/PageProvenanceResolver.kt`
+- `training-gradle/.../training/IngestDatasetTask.kt` (`pages TEXT` précédent)

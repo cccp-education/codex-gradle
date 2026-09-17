@@ -1,5 +1,27 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-225 (2026-09-17) — Cadrage EPIC CB-PAGE-PROVENANCE (cross-borough) ✅
+
+- CB-PAGE-PROVENANCE-0 ✅ — cadrage (gouvernance pure, zéro code). Doc
+  `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`.
+- Contexte : jointure dérivée S-224 **approximative** (70,8 % par
+  `sectionPath`) → la persistance par jointure **exacte** SHA-256 à
+  l'ingestion porte la page **au retrieval sans sidecar**.
+- Audit 11 constats (N1 sans page, `ingestWithDoubt` seul chemin,
+  **SHA-256 survit dans `chunks.json`**, `ignoreUnknownKeys`, `CodexIngestTask`
+  ignore le sidecar, précédent `training-gradle` `pages TEXT`).
+- 11 décisions (transport comme le doute, colonne `pages TEXT` additive,
+  `DocumentChunk.pages`, bind 8, `RetrieveResult.pages`, transport N2
+  tolérant, sidecar conservé, exposition canal Docs, zéro bump BOM,
+  backfill base jetable, baby-step strict).
+- 5 options écartées (statu quo, array PostgreSQL, backfill UPDATE-only,
+  contrat N0, extension `DoubtMetadata`).
+- 5 US ~9 pts (US-0 ✅ cadrage, US-1→4 🟡 À FAIRE). Cross-borough Brooklyn
+  (N2 transport) + Queens (N1 persistance + exposition).
+- Gate : zéro code modifié, baseline `check` VERT 1393 tests 0 FAIL, zéro
+  bump BOM, zéro secret.
+- Rapport : `.agents/sessions/225-cadrage-cb-page-provenance.adoc`.
+
 == S-224 (2026-09-17) — EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US ✅
 
 - CDX-PAGE-PROVENANCE-1 ✅ — domaine `codex.provenance` : `TocSection` +

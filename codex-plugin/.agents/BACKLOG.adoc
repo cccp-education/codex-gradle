@@ -4,7 +4,86 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 224 — **EPIC CDX-PAGE-PROVENANCE TERMINÉ 5/5 US** (implémentation). Domaine `codex.provenance` créé (6 fichiers prod) + tâche `collectPageProvenance` → `page-provenance.json` + champ N3 additif `pages` + BDD `@provenance` 8 scénarios (10e runner). **Découverte majeure** : le grain du cadrage D2 (dernier segment) joint seulement 24,8 % du corpus FPA réel ; la marche d'ancêtre deepest-first + `ProvenanceTitleNormalizer` atteint **70,8 %** (274/387), pinné par test d'intégration. Déviation D6 documentée : jointure par `sectionPath` (le `chunkId` de `RetrieveResult` est le BIGSERIAL pgvector). Baby-step DDD/TDD/BDD strict. Gate `check` VERT 11m17s — 1393 tests 0 FAIL (+75 vs S-223), Kover VERT, validatePlugins VERT. Zéro bump BOM, zéro secret, backward compat totale.)_
+_Dernière mise à jour : 2026-09-17 (session 225 — **cadrage EPIC CB-PAGE-PROVENANCE** (cross-borough Brooklyn + Queens, gouvernance pure zéro code, pattern S-057/S-063). Persister la page au retrieval N1 : la jointure dérivée S-224 est **approximative** (70,8 % par `sectionPath`), la persistance par jointure **exacte** `ChunkPageProvenance.chunkId` (SHA-256) ↔ `DocumentChunk.id` à l'ingestion porte la page **au retrieval sans sidecar**. 11 constats (le SHA-256 survit dans `chunks.json` — découverte qui rend l'EPIC propre), 11 décisions, 5 options écartées, 5 US ~9 pts. Doc `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`. Zéro bump BOM (types de store N1, pas de contrat N0), zéro code modifié.)_
+
+'''
+== 🟡 EPIC CB-PAGE-PROVENANCE — Persistance de la page au retrieval (N1) — Cadrage S-225 (Brooklyn + Queens)
+
+_Origine : PROMPT_REPRISE S-225 Option A + CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc (décision D7, S-223)._
+_Doc cadrage : `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (S-225, côté codex)._
+_Pattern_ : gouvernance pure S-057/S-063 (cadrage) + baby-step DDD/TDD/BDD strict (implémentation).
+_Portée_ : cross-borough N1 (Queens, persistance + exposition) + N2 (Brooklyn, transport).
+_Statut_ : 🟡 CADRÉ (S-225) — à implémenter.
+
+Le sidecar `page-provenance.json` (S-224) joint TOC × chunks × rapport
+d'acquisition — mais au retrieval, `RetrieveResult` n'expose que
+`chunkId: Long` (BIGSERIAL) et `sectionPath` : la jointure retrieval → page
+est **heuristique** (titres OCR vs TOC rédigés), mesurée à **70,8 %** sur le
+corpus FPA réel (déviation D6 S-224). Cet EPIC persiste la page à l'ingestion
+par une jointure **exacte** `ChunkPageProvenance.chunkId` (SHA-256) ↔
+`DocumentChunk.id` — les deux coexistent dans `chunks.json` — et l'expose
+dans `RetrieveResult.pages`. Patron de transport : le doute (DOUBT-BRIDGE
+S-219, dérivé N2, transporté N1, exposé au retrieval).
+
+*Découverte S-225* : la jointure sidecar ↔ chunk à l'ingestion est
+**exacte** (id SHA-256), contrairement à la jointure retrieval (sectionPath,
+heuristique). C'est ce qui rend la persistance supérieure au statu quo.
+
+[cols="1,3,2,1", options="header"]
+|===
+| US | Description | Statut | Pts
+
+| CB-PAGE-PROVENANCE-0
+| Cadrage EPIC (gouvernance pure, zéro code) — audit N1/N2, 11 constats,
+| 11 décisions, 5 options écartées, 5 US. Doc
+| `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`.
+| ✅ TERMINÉ (S-225)
+| 1
+
+| CB-PAGE-PROVENANCE-1
+| N1 transport — `DocumentChunk.pages: List<Int> = emptyList()` +
+| `StoreStatements.provenanceSchema()` (`ALTER TABLE … ADD COLUMN IF NOT
+| EXISTS pages TEXT`, comma-joined) + `initSchema()` `pages TEXT` +
+| `insertChunkWithDoubt` bind 8 (bind count 7→8) + `RagVectorStore` bind +
+| `RetrieveResult.pages` + SELECT read/parse. Unit + fonctionnel
+| testcontainers `PostgresFixture`.
+| 🟡 À FAIRE
+| 3
+
+| CB-PAGE-PROVENANCE-2
+| N2 transport (codex) — `CodexIngestTask.pageProvenanceFile`
+| (`@InputFiles` tolérante pattern S-221) + jointure exacte
+| `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id` + attache `pages`
+| avant `ingestWithDoubt` + dégradé silencieux. Wiring `CodexPlugin`. Unit.
+| 🟡 À FAIRE
+| 2
+
+| CB-PAGE-PROVENANCE-3
+| N1 exposition — `CompositeContextBuilder.loadDocsContext` (canal Docs) +
+| `CodebaseCompositeContextTask` entrées `pages` (additif, omis si vide).
+| Unit + fonctionnel.
+| 🟡 À FAIRE
+| 2
+
+| CB-PAGE-PROVENANCE-4
+| BDD Cucumber cross-borough `@page-retrieval` — sidecar joint (exact
+| SHA-256), page exposée au retrieval, dégradé silencieux, multi-pages
+| préservé, backward compat. Runner dédié (pattern S-082) + fakes.
+| 🟡 À FAIRE
+| 1
+
+|===
+
+*Total* : ~9 pts (5 US) — EPIC CADRÉ S-225.
+*Ordre* : US-1 (N1 transport) → US-2 (N2 codex) → US-3 (N1 exposition) →
+US-4 (BDD).
+*Publication* (optionnelle, accord pilote) : bump `codebase-plugin` puis
+`codex-plugin` Central (DAG codebase-first). Zéro bump MEMPHIS (types de
+store N1, pas de contrat N0).
+*Hors scope* : suppression du sidecar S-224 (coexistence), array PostgreSQL,
+backfill UPDATE-only, contrat N0, extension `DoubtMetadata`.
+*Débloque* : localisation exacte au retrieval sans sidecar ; clôture de la
+chaîne GBL-003.4 (acquisition → RAG → contexte).
 
 '''
 == ✅ EPIC CDX-PAGE-PROVENANCE — Traçabilité du doute OCR jusqu'à la page source (GBL-003.4) ✅ TERMINÉ 5/5 US (S-224)

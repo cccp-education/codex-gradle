@@ -1,0 +1,142 @@
+= Rapport Session 225 — Cadrage EPIC CB-PAGE-PROVENANCE
+:session: 225
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn) — cross-borough Queens (codebase N1)
+:status: TERMINÉ
+:type: gouvernance pure (zéro code)
+
+== Objectif
+
+Mission actée par le pilote : *cadrage de l'EPIC `CB-PAGE-PROVENANCE`*
+(Option A du PROMPT_REPRISE S-225), c'est-à-dire traiter la décision D7
+du cadrage `CDX-PAGE-PROVENANCE` (S-223) — persister la page dans le
+socle N1 (codebase) pour la localiser **au retrieval**, sans sidecar.
+
+Session de gouvernance pure (pattern S-057/S-063) : audit du code réel
+N1 + N2, constats, décisions architecturales, options écartées, découpage
+US. Zéro ligne de code produite.
+
+== Ouverture — baseline vérifiée
+
+. `git status` propre, branche `main` à jour (HEAD `5c15ca8`).
+. Baseline `check` VERT — **1393 tests 0 FAIL**, S-224.
+. Queens état réel : S-263 (drift mineur de la table boroughs racine qui
+   pointe encore S-190/S-197 → à corriger en synchro).
+
+== Le problème (rappel)
+
+L'EPIC amont S-224 (codex N2) a livré la provenance de page par
+**jointure dérivée non stockée** (sidecar `page-provenance.json`) : zéro
+DDL, zéro re-vectorisation. Mais la jointure retrieval → page y est
+**approximative** : `RetrieveResult` n'expose que `chunkId: Long`
+(BIGSERIAL pgvector) et `sectionPath`, jamais l'id sémantique SHA-256 ;
+la seule identité partagée est `sourceDocument + sectionPath` → jointure
+de titre heuristique, mesurée à **70,8 %** sur le corpus FPA réel
+(déviation D6 S-224).
+
+== Audit (11 constats — état réel du code)
+
+. *`codebase.store.DocumentChunk`* — pas de champ page. Split-brain connu
+   avec `codex.tasks.DocumentChunk` (même JSON, migration verbatim RAG-1).
+. *`codex_chunks`* (DDL `StoreStatements.initSchema():23`) — pas de
+   colonne page ; `doubtSchema()` (OCR-QUALITY US-4) est le précédent
+   direct d'une colonne additive (`ALTER TABLE … ADD COLUMN IF NOT
+   EXISTS`).
+. *`RetrieveResult`* — pas de champ page ; `@Serializable`, un champ
+   additif defaulté est backward compatible.
+. *`RagVectorStore.ingestWithDoubt`* — **seul chemin d'ingestion** (7
+   binds). `insertChunk()` et `IngestIndexing` sont du code légacy **mort**
+   (seuls les tests les référencent) — ne pas aggraver.
+. *Découverte structurante* : le SHA-256 (`DocumentChunk.id` =
+   `generateChunkId`) survit dans `chunks.json`, et le sidecar
+   `ChunkPageProvenance.chunkId` keye sur ce **même SHA-256** → la
+   jointure sidecar ↔ chunk **à l'ingestion est exacte**, contrairement à
+   la jointure retrieval (`sectionPath`) qui est heuristique. C'est ce qui
+   rend la persistance supérieure au statu quo.
+. *`ignoreUnknownKeys = true`* (codex + codebase) → un champ `pages` non
+   porté par le type N1 serait silencieusement ignoré.
+. *`CodexIngestTask`* (thin wrapper) ne connaît **pas** le sidecar — rien
+   ne relie aujourd'hui les pages au payload d'ingestion.
+. *Consommateurs* : `CompositeContextBuilder.loadDocsContext` (N1),
+   `CodebaseCompositeContextTask` (N1, jackson), `CodexCompositeContextTask`
+   (N2, jointure `sectionPath`) — aucun n'expose la page au retrieval.
+. *`training-gradle`* a déjà tranché : `pages TEXT` comma-joined
+   (`joinToString(",")` / `split(",").mapNotNull { toIntOrNull() }`).
+10. *Boundary DAG* : codex (N2) dépend de codebase (N1) ; la page est
+    dérivée N2, transportée N1 (patron doute DOUBT-BRIDGE S-219).
+11. *`initSchema` non destructif mais `insertDocument` sans upsert* — un
+    re-run duplique (orthogonal ; backfill sur base jetable, pattern S-216).
+
+== Décisions (11)
+
+- D1 : la page est une métadonnée **transportée**, comme le doute — TOC
+  join N2, transport N1. Zéro connaissance TOC/métier dans N1.
+- D2 : colonne additive `pages TEXT` comma-joined via un nouveau
+  `StoreStatements.provenanceSchema()` (`ALTER TABLE … ADD COLUMN IF NOT
+  EXISTS`), `initSchema()` gagne `pages TEXT` pour les bases neuves.
+- D3 : `DocumentChunk.pages: List<Int> = emptyList()` (champ additif).
+- D4 : `insertChunkWithDoubt` gagne la colonne `pages` (bind 8, bind count
+  7 → 8) ; `insertChunk()` legacy inchangé.
+- D5 : `RetrieveResult.pages: List<Int> = emptyList()` ; les 2 SELECT
+  lisent et parsent `pages` (pattern `training-gradle`).
+- D6 : `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante,
+  pattern S-221) + jointure **exacte** SHA-256 + dégradé silencieux si le
+  sidecar est absent.
+- D7 : le sidecar S-224 n'est **pas** supprimé (coexistence sans
+  contradiction).
+- D8 : exposition N1 (canal Docs + entrées `CodebaseCompositeContextTask`)
+  gagne `pages` (additif, omis si vide).
+- D9 : zéro bump BOM (types de store N1, pas de contrat N0).
+- D10 : backfill corpus FPA = run sur base jetable (pattern S-216).
+- D11 : baby-step DDD/TDD/BDD strict.
+
+== Options écartées (5)
+
+- A1 statu quo (sidecar seul) — 70,8 %, mis-attribution possible.
+- A2 array PostgreSQL `INTEGER[]` — binding R2DBC lourd.
+- A3 backfill `UPDATE`-only — économiser un embedding ONNX local non metered.
+- A4 contrat N0 `page-provenance-contracts` — même rejet que RAG-SOCLE D5.
+- A5 extension de `DoubtMetadata` — confond localisation et qualité.
+
+== Découpage US (~9 pts)
+
+[cols="1,3,2,1"]
+|===
+| US | Livrable | Niveau tests | Pts
+
+| CB-PAGE-PROVENANCE-0 | Cadrage | gouvernance pure | 1
+| CB-PAGE-PROVENANCE-1 | N1 transport (colonne, types, SELECT) | unit + FT testcontainers | 3
+| CB-PAGE-PROVENANCE-2 | N2 transport `CodexIngestTask` | unit | 2
+| CB-PAGE-PROVENANCE-3 | N1 exposition (canal Docs) | unit + FT | 2
+| CB-PAGE-PROVENANCE-4 | BDD Cucumber cross-borough | ~5 scénarios + runner | 1
+|===
+
+== Gates / vérifications
+
+- Baseline préservée : `check` VERT 1393 tests 0 FAIL (zéro code modifié).
+- Zéro secret, zéro bump BOM, zéro publication Central.
+- Étape 7 (sync backlog) : `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` +
+  BACKLOG codex (table + section détaillée) + INDEX codex (session +
+  roadmap) + SESSIONS_HISTORY + PROMPT_REPRISE + archive 2026-09 +
+  BACKLOG/INDEX Queens (référence cross-borough) + AGENTS racine.
+
+== Leçons
+
+. *Persister ce qui est joint est plus propre que joindre ce qui est
+   persisté.* La jointure d'ingestion (SHA-256) est exacte parce que le
+   chunk et le sidecar coexistent au même instant ; la jointure de
+   retrieval (sectionPath) est heuristique parce qu'elle reconstitue une
+   identité perdue. Stocker la page supprime la reconstitution.
+. *Le patron de transport existe déjà.* Le doute (DOUBT-BRIDGE S-219) a
+   posé « dérivé N2 → transporté N1 → exposé au retrieval » ; la page
+   suit exactement le même chemin. Un patron réutilisé, zéro invention.
+. *Un type de store n'est pas un contrat N0.* `DocumentChunk`/`RetrieveResult`
+   vivent dans `codebase.store` (N1) — les extraire serait un faux partage,
+   même raisonnement que le rejet N0 de RAG-SOCLE (D5).
+
+== Commits
+
+Clôture gouvernance : `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` +
+`.agents/sessions/225-*.adoc` + `BACKLOG.adoc` + `INDEX.adoc` +
+`SESSIONS_HISTORY.adoc` + `PROMPT_REPRISE.adoc` + archive 2026-09 +
+gouvernance Queens + `AGENTS.adoc` racine.
