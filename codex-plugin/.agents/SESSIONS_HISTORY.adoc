@@ -3338,3 +3338,50 @@ tolérant `@InputFiles` + preuve TestKit, US-2 test d'exécution `execute()`
 via seam `storeOverride` + audit 16 `@TaskAction`).
 *Zéro* : zéro secret, zéro régression, backward compat totale.
 *Rapport* : `.agents/sessions/222-publication-codex-0010.adoc`.
+
+== Session 223 — 2026-09-17 — Cadrage EPIC CDX-PAGE-PROVENANCE (gouvernance pure)
+
+*Date* : 2026-09-17
+*Type* : gouvernance pure (pattern S-057/S-063, zéro code)
+*Objectif* : cadrer la traçabilité du doute OCR jusqu'à la page source —
+décision D6 du cadrage `CDX-DOUBT-BRIDGE` (S-219), PROMPT_REPRISE S-223
+Option A.
+
+*Audit (10 constats)* :
+- `SemanticChunker.chunk(text, sourceDocument, license)` découpe par
+  *section*, jamais par *page* (aucune notion de page dans la signature).
+- `DocumentChunk` (codex.tasks) — 9 champs, aucun n'est une page ;
+  split-brain avec `codebase.store.DocumentChunk` (copie verbatim RAG-1).
+- `OcrQualityReport` (S-218) localise le doute par page mais est un
+  artefact **orphelin** (zéro consommateur en production).
+- `CollectOcrTask.outputDir` nomme les pages `NNN-<pageId>.adoc` — le
+  numéro de page vit dans le nom de fichier, l'assemblage le perd.
+- `livre.adoc` FPA réel : **une seule** ancre `[[page-10]]` pour 202 pages.
+- TOC racine `Devenir_..._II.adoc` (117 sections) = source de vérité
+  section→page.
+- `SectionTitleNormalizer` (S-217) — canon de titre prouvé 115/115.
+- `codex_chunks` sans colonne page — persister la page = cross-borough N1.
+- `RetrieveResult` sans page — la provenance doit être jointe *après* le
+  retrieval.
+- `buildCompositeJson` (S-220) a déjà des champs additifs (`confidence`,
+  `doubtful`) — un champ `pages` serait additif.
+
+*Décisions (9)* : provenance = jointure dérivée non stockée (zéro DDL,
+zéro re-vectorisation) ; join par titre normalisé ; domaine
+`codex.provenance` (object pur + tâche thin wrapper) ; tâche
+`collectPageProvenance` (groupe `collect`, `tocFile` explicite) ; champ N3
+additif `pages` via `@InputFiles` tolérante (pattern S-221) ; pgvector hors
+scope (EPIC futur conditionnel `CB-PAGE-PROVENANCE`) ; doute marker-based
+conservé ; baby-step DDD/TDD/BDD strict.
+
+*Options écartées* : ancre de page in-band (chaîne 3 boroughs), re-chunk
+page par page (contredit RD1 S-216), colonne pgvector (reportée).
+
+*Livrable* : `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (10 constats, 9
+décisions, 3 options écartées, 5 US ~10 pts : US-0 ✅ cadrage, US-1
+résolveur pur, US-2 tâche, US-3 contrat N3, US-4 Cucumber).
+
+*Baseline préservée* : `check` VERT 1164 tests 0 FAIL. Option D S-223
+vérifiée : propagation repo1 `codex-plugin 0.0.10` **confirmée** (HTTP 200).
+*Zéro* : zéro code, zéro bump BOM, zéro secret.
+*Rapport* : `.agents/sessions/223-cadrage-cdx-page-provenance.adoc`.

@@ -1,0 +1,132 @@
+= Rapport Session 223 — Cadrage EPIC CDX-PAGE-PROVENANCE
+:session: 223
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+:type: gouvernance pure (zéro code)
+
+== Objectif
+
+Mission actée par le pilote : *cadrer l'EPIC page-provenance* (Option A du
+PROMPT_REPRISE S-223), c'est-à-dire traiter la décision D6 du cadrage
+`CDX-DOUBT-BRIDGE` (S-219) — la traçabilité du doute OCR jusqu'à la page
+source d'origine.
+
+Session de gouvernance pure (pattern S-057/S-063) : audit du code réel,
+constats, décisions architecturales, options écartées, découpage US. Zéro
+ligne de code produite.
+
+== Ouverture — baseline vérifiée
+
+. `git status` propre, branche `main` à jour (HEAD `a5bab2f`).
+. `./gradlew build -x test` VERT (compile + validatePlugins).
+. `./gradlew check` VERT — **1164 tests (1050 unit + 114 cucumber), 0 FAIL**,
+   baseline S-221/S-222 préservée.
+. *Option D vérifiée* : propagation repo1 `codex-plugin 0.0.10` **confirmée**
+   (POM/JAR/module HTTP 200, `maven-metadata.xml` release 0.0.10) — le
+   polling annoncé S-222 est terminé. Option D soldée de fait.
+
+== Audit (état réel du code — S-223)
+
+. *`SemanticChunker.chunk(text, sourceDocument, license)`* — découpe un
+   document assemblé par heading. Sa signature ne porte aucune notion de
+   page : le chunk est une unité *sémantique* (section), pas *physique*
+   (page).
+. *`DocumentChunk`* (codex.tasks) — 9 champs, aucun n'est une page.
+   Split-brain avec `codebase.store.DocumentChunk` (copie verbatim RAG-1,
+   même JSON) ; seul le type codex est producteur.
+. *`OcrQualityReport`/`OcrQualityIssue`* (codex.ocr, S-218) — localisent le
+   doute par `pageId` (nom d'image) + `reason`
+   (ILLISIBLE/TOO_SHORT/LOW_CONFIDENCE/IMAGE_MISSING) + `detail`. Écrit par
+   `CollectOcrTask.qualityReportFile` — **zéro consommateur en production**.
+. *`CollectOcrTask.outputDir`* — une page `.adoc` par image, nommée
+   `NNN-<pageId>.adoc` (contrat `PageOrder`, S-075). Le numéro de page vit
+   dans le *nom de fichier*, pas dans le contenu ; l'assemblage concatène
+   et **perd les frontières**.
+. *`livre.adoc` FPA réel* (7787 lignes) — **une seule** ancre `[[page-10]]`
+   (scan 010) sur 202 pages. Provenance non récupérable a posteriori depuis
+   le document assemblé seul.
+. *`Devenir_..._II.adoc`* — TOC racine FPA (128 lignes, 117 sections),
+   `Référence | Titre | Page | Fichier`. **Source de vérité section→page.**
+. *`SectionTitleNormalizer`* (S-217) — canon de titre prouvé : jointure
+   LDD↔chunks↔graphify **115/115** titres titrés. Réutilisable pour
+   section TOC ↔ chunk.
+. *`CodexCompositeContextTask.buildCompositeJson`* (S-220) — champs
+   additifs déjà en place (`confidence`, `doubtful`) ; un champ `pages`
+   serait additif et backward compatible.
+. *`CodexIngestTask`* — `ignoreUnknownKeys = true`, délègue à
+   `ingestWithDoubt`. Un champ page dans le JSON serait **silencieusement
+   ignoré** côté N1 : `codex_chunks` n'a pas de colonne page
+   (`StoreStatements.doubtSchema()` = `confidence` + `doubtful`).
+. *`RetrieveResult`* (codebase.store) — pas de page. Toute provenance
+   exposée par le contexte augmenté doit être jointe **après** le retrieval.
+
+== Décisions (9)
+
+- D1 : *Provenance dérivée, non stockée* — jointure calculée à la demande
+  (TOC × chunks × rapport), zéro DDL, zéro re-vectorisation (Économie de
+  l'Encre).
+- D2 : *Join par titre normalisé* — `SectionTitleNormalizer` sur le dernier
+  segment de `sectionPath` (canon prouvé S-217).
+- D3 : *Domaine `codex.provenance`* — object pur + tâche thin wrapper
+  (pattern `JsonLddEnricher`/`OntologyDeriver`).
+- D4 : *Tâche `collectPageProvenance`* (groupe `collect`) — `chunksFile` +
+  `tocFile` + `qualityReportFile` (`@Optional`) → `page-provenance.json`.
+- D5 : *TOC input explicite* — codex ne connaît pas le métier FPA ; le TOC
+  vit dans `office/` (œuvre dérivée).
+- D6 : *Contrat N3 additif* — `pageProvenanceFile` (`@InputFiles` tolérante,
+  pattern S-221) + champ JSON `pages: [N,...]` par entrée, backward compat.
+- D7 : *Pas de pgvector dans cet EPIC* — persister la page (N1 Queens) est
+  un changement cross-borough reporté, conditionnel à un besoin avéré.
+- D8 : *Doute marker-based conservé* — cet EPIC localise, ne re-pondère pas.
+- D9 : *Baby-step DDD/TDD/BDD strict* — US-1 résolveur pur → US-2 tâche →
+  US-3 contrat N3 → US-4 Cucumber ; unit → fonctionnel → Cucumber.
+
+== Options écartées
+
+- *A1 ancre de page in-band* (`[[page-N]]` dans le chunk) — impose une
+  chaîne cross-borough (CollectOcrTask → BookAssembler → ConvertToMarkdown
+  → SemanticChunker), 3 boroughs, ré-ingestion. Coût disproportionné.
+- *A2 re-chunk page par page* — contredit RD1 (S-216, « pas re-chunkées
+  individuellement »), créerait un graphe de chunks parallèle.
+- *A3 colonne page pgvector* — reportée (D7), cross-borough.
+
+== Découpage US (~10 pts)
+
+[cols="1,3,2,1"]
+|===
+| US | Livrable | Niveau tests | Pts
+
+| CDX-PAGE-PROVENANCE-0 | Cadrage | gouvernance pure | 1
+| CDX-PAGE-PROVENANCE-1 | Résolveur pur `codex.provenance` | ~15-20 unit | 3
+| CDX-PAGE-PROVENANCE-2 | Tâche `collectPageProvenance` | ~6 FT + 1 wiring | 2
+| CDX-PAGE-PROVENANCE-3 | Contrat N3 additif `pages` | ~5 unit | 2
+| CDX-PAGE-PROVENANCE-4 | Cucumber `@provenance` | ~6 scénarios + runner | 2
+|===
+
+== Gates / vérifications
+
+- Baseline préservée : `check` VERT 1164 tests 0 FAIL (zéro code modifié).
+- `validatePlugins` VERT.
+- Zéro secret, zéro bump BOM, zéro publication Central.
+- Étape 7 (sync backlog) : EPIC CDX-PAGE-PROVENANCE ajouté à `BACKLOG.adoc`
+  (table + section détaillée), en-tête et paragraphe agrégé mis à jour ;
+  INDEX + SESSIONS_HISTORY + PROMPT_REPRISE synchronisés.
+
+== Leçons
+
+. *Un artefact orphelin est une dette silencieuse* : `OcrQualityReport` est
+   produit depuis S-218 et n'a jamais été consommé — sa valeur n'existe
+   qu'au moment où un consommateur réel l'exploite (US-3 câble le N3).
+. *La provenance est une jointure, pas un état* : stocker la page dans le
+   store aurait imposé DDL + re-vectorisation + cross-borough ; la dériver
+   depuis le TOC + le canon de titre coûte zéro infrastructure.
+. *Le canon de titre existe déjà* : `SectionTitleNormalizer` (S-217,
+   115/115) évite d'inventer une heuristique de matching — réutilisation
+   directe, cohérence inter-EPIC.
+
+== Commits
+
+Clôture gouvernance : `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` + `BACKLOG.adoc`
++ `INDEX.adoc` + `SESSIONS_HISTORY.adoc` + `PROMPT_REPRISE.adoc` +
+`.agents/sessions/223-*.adoc` + archive 2026-09.

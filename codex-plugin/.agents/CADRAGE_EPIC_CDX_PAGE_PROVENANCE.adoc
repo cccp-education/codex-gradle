@@ -1,0 +1,280 @@
+= Cadrage EPIC CDX-PAGE-PROVENANCE — Traçabilité du doute OCR jusqu'à la page source
+:date: 2026-09-17
+:session: 223
+:epic: CDX-PAGE-PROVENANCE
+:origine: PROMPT_REPRISE S-223 Option A + CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc décision D6
+:methode: Cadrage (gouvernance pure, zéro code) — pattern S-057/S-063
+:statut: À ARBITRER PAR LE PILOTE (périmètre codex-only vs cross-borough)
+
+== Contexte
+
+Le doute OCR est aujourd'hui *marker-based* : `DoubtPolicy` (codebase N1)
+dérive le doute de la présence du marqueur `[ILLISIBLE]` dans
+`content` / `sectionPath` / `overlapNext` d'un chunk. Le
+`composite-context.json` (N3) porte donc `confidence` / `doubtful` par
+entrée (S-219), et le canal Docs annote ou exclut les passages douteux.
+
+Mais le doute ne dit **pas d'où il vient** : le chunk est douteux, et
+l'humain qui doit corriger le scan ne sait pas *quelle page* ouvrir. Le
+rapport d'acquisition `OcrQualityReport` (S-218, codex) localise pourtant
+le doute page par page (`pageId` + `imageFile` + `reason` +
+`detail`) — mais c'est un artefact **orphelin** : produit par
+`CollectOcrTask.qualityReportFile`, jamais consommé en production (seuls
+les tests le lisent). Le maillon « chunk douteux → page source d'origine »
+est rompu.
+
+La décision D6 du cadrage `CDX-DOUBT-BRIDGE` (S-219) a explicitement
+reporté ce travail : « le join chunk→page n'est pas faisable sans ajouter
+une provenance de page aux chunks (le `SemanticChunker` produit des chunks
+par section, pas par page) — EPIC futur distinct ». C'est cet EPIC.
+
+== Constats (audit S-223, état réel du code)
+
+. *`SemanticChunker.chunk(text, sourceDocument, license)`* (codex.tasks,
+   209 lignes) découpe un document *assemblé* par heading. Sa signature ne
+   reçoit aucune notion de page — ni le texte d'entrée, ni le type de
+   sortie ne portent un numéro de page. Le chunk est une unité *sémantique*
+   (section), jamais *physique* (page).
+. *`DocumentChunk`* (codex.tasks `ChunkDocumentTask.kt:34` + copie
+   `codebase.store.DocumentChunk`) n'a pas de champ page. Les champs sont
+   `id`, `sourceDocument`, `sectionPath`, `headingLevel`, `content`,
+   `codeBlocks`, `entities`, `overlapNext`, `license`. **Split-brain** :
+   deux types portent le même nom et le même JSON (migration verbatim
+   RAG-1), mais seul le type codex est producteur.
+. *`OcrQualityReport` / `OcrQualityIssue`* (codex.ocr,
+   `OcrQualityAnalyzer.kt`) localisent le doute par `pageId` (= nom
+   d'image sans extension) + `imageFile` + `reason`
+   (`ILLISIBLE`/`TOO_SHORT`/`LOW_CONFIDENCE`/`IMAGE_MISSING`) + `detail`.
+   Écrit par `CollectOcrTask.qualityReportFile` (JSON) — **zéro
+   consommateur en production**.
+. *`CollectOcrTask.outputDir`* produit une page AsciiDoc par image, nommée
+   `NNN-<pageId>.adoc` (contrat N2↔N2 `PageOrder.fromFileName`, S-075).
+   Le *numéro de page* `NNN` et le `pageId` coexistent donc **dans le nom
+   du fichier**, pas dans le contenu. L'assemblage du livre concatène ces
+   pages et **perd les frontières de page**.
+. *`livre.adoc` FPA réel* (7787 lignes, assemblage plat S-078) ne contient
+   qu'**une seule** ancre `[[page-10]]` (scan 010). Les 201 autres pages
+   n'ont aucune frontière en bande. La provenance de page n'est pas
+   récupérable *a posteriori* depuis le document assemblé seul.
+. *`Devenir_..._II.adoc`* (TOC racine FPA, 128 lignes) est la **source de
+   vérité de l'ordre** : chaque ligne mappe `Référence | Titre | Page |
+   Fichier` (ex. `1.2.1.1 | Organiser le contenu du scénario | 40 |
+   040.pdf`). Le numéro de page y est explicite.
+. *`SectionTitleNormalizer`* (codex.enrichment, S-217) normalise déjà les
+   titres pour joindre LDD ↔ chunks ↔ graphify (unescape HTML, strip
+   footnote/HTML/dot-leaders, lowercase). Le run S-217 a prouvé une
+   jointure **115/115** titres titrés. Le même canon de titre est
+   réutilisable pour joindre **section TOC ↔ chunk**.
+. *`CodexCompositeContextTask.buildCompositeJson`* (S-220) écrit déjà des
+   champs additifs par entrée (`confidence`, `doubtful`). Un champ
+   `pages` serait additif, backward compatible.
+. *`CodexIngestTask`* décode `List<DocumentChunk>` avec
+   `ignoreUnknownKeys = true` et délègue à
+   `RagVectorStore.ingestWithDoubt`. Un champ `pageNumber` ajouté au JSON
+   produit par le chunker serait **silencieusement ignoré** côté N1 : la
+   table `codex_chunks` n'a pas de colonne page (DDL
+   `StoreStatements.doubtSchema()` : `confidence` + `doubtful` seulement).
+   **Persister la page dans pgvector = changement cross-borough N1.**
+. *`RetrieveResult`* (codebase.store) porte `chunkId`, `chunkIndex`,
+   `chunkText`, `sectionPath`, `headingLevel`, `sourceDocument`,
+   `similarity`, `confidence`, `doubtful` — pas de page. Toute provenance
+   exposée par le contexte augmenté doit donc être jointe **après** le
+   retrieval, hors pgvector.
+
+== Le problème en une phrase
+
+Le chunk sait qu'il est douteux, mais pas **de quelle page** il vient ;
+le rapport d'acquisition sait **quelle page** est douteuse, mais ne sait
+pas **quels chunks** en dérivent. Les deux moitiés existent, la jointure
+manque.
+
+== Décisions proposées
+
+- D1 : *La provenance de page est une jointure dérivée, pas un état
+  stocké.* On ne re-vectorise rien, on ne modifie pas la table
+  `codex_chunks` (Loi de l'Économie d'Encre). La provenance se calcule au
+  moment où elle est demandée, à partir de trois entrées déjà disponibles :
+  le TOC (section → page), les chunks (sectionPath), et le rapport
+  d'acquisition (page → doute). Zéro DDL, zéro bump BOM, zéro
+  re-embedding.
+- D2 : *Join par titre normalisé.* La jointure section TOC ↔ chunk réutilise
+  `SectionTitleNormalizer` (canon prouvé S-217 115/115) sur le **dernier
+  segment** de `sectionPath` (le titre de section). Pas de nouvelle
+  heuristique de matching, pas de dépendance à un parseur ad hoc.
+- D3 : *Nouveau domaine `codex.provenance`* (objet pur + tâche thin
+  wrapper). Le résolveur est un `object` pur, sans Gradle, sans I/O,
+  unit-testable en isolation (pattern `JsonLddEnricher` /
+  `OntologyDeriver`).
+- D4 : *Tâche `collectPageProvenance`* (groupe `collect`) — thin wrapper
+  Gradle. Entrées : `chunksFile` (`@InputFile`), `tocFile`
+  (`@InputFile`), `qualityReportFile` (`@InputFile @Optional` — dégradé
+  silencieux si absent, Économie d'Encre). Sortie : `pageProvenanceFile`
+  (`@OutputFile`, `page-provenance.json`). `@DisableCachingByDefault`
+  (pattern des autres tâches), `validatePlugins` respecté.
+- D5 : *Le TOC est un input explicite, jamais hardcodé.* Codex est READ :
+  il consomme un TOC en argument (fichier AsciiDoc table `Référence |
+  Titre | Page | Fichier`), il ne connaît pas le métier FPA. Le contenu du
+  TOC vit dans `office/` (œuvre dérivée), jamais dans le repo public.
+- D6 : *Provenance additive dans le contrat N3.*
+  `CodexCompositeContextTask` gagne une propriété optionnelle
+  `pageProvenanceFile` (`@InputFiles`, collection tolérante — pattern
+  CDX-CONTEXT-HARDENING S-221) et expose, par entrée JSON, un champ
+  additif `pages: [N, ...]` (défaut absent/`null` → backward compat
+  totale). La jointure retrieval→page se fait par `chunkId` (stable,
+  SHA-256) quand le sidecar le porte.
+- D7 : *Pas de persistance pgvector dans cet EPIC.* Persister la page dans
+  `codex_chunks` (colonne additive + 8e bind + `RetrieveResult.page`)
+  serait un changement cross-borough N1 (Queens) — hors périmètre codex.
+  Documenté en « EPIC futur CB-PAGE-PROVENANCE » conditionnel : à décider
+  seulement si un consommateur N3/N4 exige la page *au retrieval* sans
+  sidecar.
+- D8 : *Le doute reste marker-based, la page est un localisateur.* Cet EPIC
+  n'invente pas une nouvelle politique de doute (D1 DOUBT-BRIDGE tient) :
+  il **localise** le doute existant. Le rapport d'acquisition enrichit la
+  provenance avec `reason`/`detail` par page — l'humain sait *pourquoi* et
+  *où*.
+- D9 : *Baby-step DDD/TDD/BDD strict* — US-1 (résolveur pur) → US-2 (tâche)
+  → US-3 (contrat N3) → US-4 (Cucumber), 3 niveaux unit → fonctionnel
+  (`ProjectBuilder`) → Cucumber, English only, RED → GREEN → REFACTOR.
+
+== Options écartées
+
+- *A1 — Ancre de page in-band (`[[page-N]]` dans le chunk).* Séduisant
+  (« la provenance vit dans le chunk ») mais impose une chaîne amont
+  cross-borough : `CollectOcrTask` devrait émettre l'ancre (codex),
+  `BookAssembler` la préserver (document), `ConvertToMarkdownTask` la
+  convertir (codex), `SemanticChunker` la lire (codex). Trois boroughs,
+  modification du format d'assemblage, ré-ingestion des chunks. Coût et
+  risque disproportionnés pour la valeur (localiser un scan). Écartée au
+  profit de D1/D2 ; documentée comme évolution possible si la jointure
+  par titre s'avère insuffisante.
+- *A2 — Re-chuncker page par page (`scans/NNN.adoc`).* Donnerait une
+  provenance exacte par construction, mais contredit la décision RD1 du
+  run CDX-CORPUS (S-216 : « les 203 pages scans restent la source brute,
+  pas re-chunkées individuellement — Économie d'Encre ») et produirait un
+  graphe de chunks parallèle. Écartée.
+- *A3 — Colonne page dans pgvector (N1).* Voir D7 — reportée, cross-borough.
+
+== User Stories (~10 pts)
+
+|===
+| US | Description | Pts | Statut
+
+| CDX-PAGE-PROVENANCE-0
+| Cadrage EPIC (gouvernance pure, zéro code) — audit, constats, décisions,
+| options écartées, découpage US.
+| 1
+| 🟡 EN COURS (S-223, ce document — à valider par le pilote)
+
+| CDX-PAGE-PROVENANCE-1
+| Domaine `codex.provenance` + `PageProvenanceResolver` object pur :
+| `resolve(chunks, tocSections, qualityReport)` → provenance par chunk
+| (dernier segment `sectionPath` normalisé → titre TOC → page(s) → doute
+| acquisition). `TocPageIndex` (parse du TOC AsciiDoc table, pur) +
+| `ChunkPageProvenance` / `PageDoubt` data classes `@Serializable`.
+| Réutilise `SectionTitleNormalizer`. Dégradé silencieux : TOC absent →
+| vide, page non résolue → `null`, rapport absent → doute vide.
+| ~15-20 unit.
+| 3
+| 🟡 À FAIRE
+
+| CDX-PAGE-PROVENANCE-2
+| Tâche `collectPageProvenance` (groupe `collect`) thin wrapper +
+| wiring `CodexPlugin` (défauts `build/codex/...`, `tocFile` non câblé par
+| défaut — input explicite D5). Écrit `page-provenance.json`. ~6
+| fonctionnel (`ProjectBuilder`) + 1 wiring.
+| 2
+| 🟡 À FAIRE
+
+| CDX-PAGE-PROVENANCE-3
+| `CodexCompositeContextTask` : propriété `pageProvenanceFile`
+| (`@InputFiles` tolérante) + jointure par `chunkId` + champ JSON additif
+| `pages` par entrée. Backward compat totale. ~5 unit.
+| 2
+| 🟡 À FAIRE
+
+| CDX-PAGE-PROVENANCE-4
+| Cucumber BDD `codex_page_provenance.feature` — scénarios
+| `@provenance` (chunk résolu vers une page, section multi-pages, titre
+| pollué dot-leaders normalisé, TOC absent → dégradé, rapport doute
+| exposé, contrat N3 additif). Runner dédié (pattern S-082, 10e runner
+| codex) + `cucumberTestPageProvenance`.
+| 2
+| 🟡 À FAIRE
+
+|===
+
+*Total* : ~10 pts (5 US)
+
+== Ordre
+
+US-1 (résolveur pur) → US-2 (tâche) → US-3 (contrat N3) → US-4 (Cucumber).
+Chaque US gâte son niveau ; l'ensemble rend le pipeline complet traçable
+de la page source au contexte augmenté.
+
+== Frontière / hors scope
+
+- *codex-only* (ce repo) : résolveur, tâche, sidecar JSON, champ N3 additif.
+- *Hors scope* : colonne page dans `codex_chunks` + `RetrieveResult.page`
+  (N1, Queens) — D7, EPIC futur conditionnel `CB-PAGE-PROVENANCE`.
+- *Hors scope* : ancre de page in-band / modification de l'assemblage
+  (document-gradle) — option A1 écartée.
+- *Hors scope* : re-chunking page par page — option A2 écartée (RD1 S-216).
+- *Hors scope* : correction de la pollution TOC du corpus FPA (99 chunks
+  dot-leaders) — cause racine amont OCR/scan, PROMPT_REPRISE Option C.
+- *Hors scope* : nouvelle politique de doute — D1 DOUBT-BRIDGE tient
+  (marker-based) ; cet EPIC localise, ne pondère pas davantage.
+
+== Risques
+
+[cols="2,3,3", options="header"]
+|===
+| Risque | Impact | Mitigation
+
+| Jointure titre TOC ↔ chunk instable (titres OCR vs titres TOC rédigés)
+| Provenance partielle, faux négatifs
+| Réutiliser `SectionTitleNormalizer` (canon prouvé S-217 115/115) ;
+| mesurer le taux de jointure sur le corpus FPA réel avant US-2 ;
+| dégradé silencieux (page `null`) jamais d'échec de build
+
+| Section multi-pages (TOC « 5, 6, 7, 8 »)
+| Une section → plusieurs pages
+| Le modèle `ChunkPageProvenance.pages: List<Int>` porte la liste, pas une
+| page unique (le TOC étend déjà les multi-pages, `BookTocParser` S-012)
+
+| `OcrQualityReport.pageId` (nom d'image) ≠ page TOC (numéro)
+| Join d'acquisition impossible dans le cas FPA (201 scans hétérogènes)
+| Traiter le rapport comme *enrichissement optionnel* (`@Optional`),
+| clé primaire = page TOC ; documenter la limite, non bloquant
+
+| Sidecar orphelin comme `OcrQualityReport` avant lui
+| Travail sans consommateur
+| US-3 câble réellement le champ N3 `pages` (le sidecar est consommé) ;
+| BDD US-4 prouve le contrat end-to-end
+|===
+
+== Débloque
+
+. *GBL-003.4 — traçabilité complète* : le doute OCR remonte de la page
+   source (`scans/NNN.adoc`) au contexte augmenté, chaîne complète
+   acquisition → RAG → contexte.
+. *Itération humaine ciblée* : le pilote sait *quelle page* corriger
+   (`OcrQualityReport` + provenance), au lieu de relire 201 scans.
+. *Symétrie N1/N2* : `CompositeContextBuilder` (N1) et
+   `CodexCompositeContextTask` (N2) gagnent la même capacité de
+   localisation (le doute était déjà symétrique depuis S-219).
+
+== Références
+
+- `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` — décision D6 (origine)
+- `.agents/CADRAGE_EPIC_OCR_QUALITY.adoc` — `OcrQualityReport` (S-218)
+- `.agents/CADRAGE_CDX_CORPUS_RUN.adoc` — RD1 (pas de re-chunking par page)
+- `.agents/CADRAGE_EPIC_CDX_CORPUS.adoc` — acquisition corpus FPA (S-215)
+- `src/main/kotlin/codex/tasks/SemanticChunker.kt`
+- `src/main/kotlin/codex/tasks/ChunkDocumentTask.kt` (`DocumentChunk`)
+- `src/main/kotlin/codex/ocr/OcrQualityAnalyzer.kt` (`OcrQualityReport`)
+- `src/main/kotlin/codex/enrichment/SectionTitleNormalizer.kt` (canon de titre)
+- `src/main/kotlin/codex/tasks/CodexCompositeContextTask.kt` (contrat N3)
+- `foundry/public/document-gradle/.../BookTocParser.kt` (format TOC)
+- `foundry/public/document-gradle/.../PageOrder.kt` (contrat `NNN-`)
+- `foundry/public/codebase-gradle/.../codebase/store/` (N1, hors scope D7)

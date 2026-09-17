@@ -1,79 +1,87 @@
-= PROMPT_REPRISE — Codex — Session 223
-:session: 223
+= PROMPT_REPRISE — Codex — Session 224
+:session: 224
 :date: 2026-09-17
 :status: PRET
-:mission: à la demande du pilote
+:mission: implémenter CDX-PAGE-PROVENANCE-1 (domaine `codex.provenance`)
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 1050 unit + 114 cucumber, 0 FAIL (S-221/S-222)
+./gradlew check           # baseline 1164 tests (1050 unit + 114 cucumber), 0 FAIL
 ----
 
-== Session 222 terminée — PUBLICATION codex-plugin 0.0.10 TERMINÉE
+== Session 223 terminée — Cadrage EPIC CDX-PAGE-PROVENANCE
 
-*Mission pilote (Option A)* : publier la 0.0.10 pour rendre le fix
-CDX-CONTEXT-HARDENING (S-221) disponible aux consommateurs.
+Traçabilité du doute OCR jusqu'à la page source (décision D6 du cadrage
+CDX-DOUBT-BRIDGE S-219). Gouvernance pure, zéro code.
 
-*Ordre DAG MEMPHIS-first* exécuté en baby-step TDD (garde RED → bump GREEN) :
-. MEMPHIS : `PlatformCatalogAlignmentTest` épinglé 0.0.47 (RED) →
-   toml `workspace-bom = "0.0.47"` + `codex-plugin = "0.0.10"` (GREEN) →
-   mavenLocal VERT → Central bundle `48b061ce-20c5-4fd0-92d3-8a7508b21c88`.
-. codex : `CodexPluginPublicationTest` 2/3 RED → toml local 0.0.10 + pin
-   settings `workspace-catalog:0.0.47` + pin platform `workspace-bom:0.0.47`
-   (GREEN 3/3) → `properties` version 0.0.10 → `build -x test` VERT →
-   Central bundle `3a1b95e9-e4a4-48a0-9dc2-ea1413e7ff55`.
-. Non-régression : `check` VERT 1164 tests 0 FAIL (baseline préservée).
-. Propagation : BOM + catalog 0.0.47 repo1 HTTP 200 ; codex 0.0.10 en
-   polling (7-27 min).
+*Problème* : le chunk sait qu'il est douteux mais pas *de quelle page* il
+vient ; `OcrQualityReport` (S-218) sait quelle page est douteuse mais est
+*orphelin* (zéro consommateur). La jointure manque.
 
-Rapport : `.agents/sessions/222-publication-codex-0010.adoc`.
+*Décision structurante* : provenance = **jointure dérivée non stockée**
+(TOC × chunks × rapport), join par titre normalisé (`SectionTitleNormalizer`,
+canon prouvé 115/115 S-217) — zéro DDL, zéro re-vectorisation (Économie
+d'Encre). Nouveau domaine `codex.provenance` (object pur + tâche thin
+wrapper), champ N3 additif `pages`, TOC input explicite. 3 options écartées
+(ancre in-band 3 boroughs, re-chunk par page contredit RD1 S-216, colonne
+pgvector reportée).
 
-== Prochaine session — 223 : objectifs (à trancher par le pilote)
+Doc : `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` (10 constats, 9
+décisions, 5 US ~10 pts). Rapport : `.agents/sessions/223-cadrage-cdx-page-provenance.adoc`.
 
-=== Option A — Page-provenance (D6 cadrage S-219)
+== Enjeux gardés pour la reprise (à trancher par le pilote)
 
-* Join chunk→page du `OcrQualityReport` — nécessite une provenance de page
-  dans les chunks. EPIC futur distinct, hors scope DOUBT-BRIDGE.
-* Valeur : traçabilité du doute OCR jusqu'à la page source d'origine.
+. *Arbitrage de périmètre codex-only* — confirmer que la persistance pgvector
+   (colonne page `codex_chunks` + `RetrieveResult.page`, N1 Queens) reste
+   **hors scope** (D7) ; sinon EPIC cross-borough `CB-PAGE-PROVENANCE` à cadrer.
+. *Décision D1 — provenance dérivée vs stockée* — valider le pari
+   architectural (jointure dérivée, zéro DDL) avant US-1 : il conditionne tout
+   l'EPIC.
+. *Risque de jointure titre TOC ↔ chunk* — taux **non mesuré** sur le corpus
+   FPA réel. À mesurer en pré-US-2 (mitigation : canon `SectionTitleNormalizer`).
+   Dégradé silencieux (page `null`), jamais d'échec de build.
+. *Limite d'admission du rapport d'acquisition* — `OcrQualityReport.pageId`
+   (nom d'image) ≠ page TOC (numéro) sur les 201 scans hétérogènes. Rapport =
+   enrichissement **optionnel** (`@Optional`, clé = page TOC), non bloquant.
+. *Grain du `sectionPath`* — la jointure normalise le **dernier segment**.
+   Confirmer ce grain (vs path complet) : impact direct sur le taux de jointure.
+. *Validation du cadrage* — US-1 ne démarre qu'après validation pilote du
+   `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc`. Désaccord → traité au cadrage.
 
-=== Option B — Dogfooding enrichi (canal Graphify réel)
+== Prochaine session — 224 : CDX-PAGE-PROVENANCE-1
 
-* Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
-  avec le canal Graphify peuplé, mesurer le `composite-context.json` complet
-  (EAGER/RAG/GRAPHIFY/DOCS). Consommateur transitoire `/tmp` (Règle 2),
-  pgvector jetable (docker).
+. `TocPageIndex` — parse TOC AsciiDoc table (`Référence | Titre | Page |
+  Fichier`, format `BookTocParser`) → sections typées. Pur.
+. `ChunkPageProvenance` / `PageDoubt` — data classes `@Serializable`.
+. `PageProvenanceResolver` — `resolve(chunks, tocSections, qualityReport)` :
+  dernier segment `sectionPath` normalisé → titre TOC → page(s) → doute
+  acquisition. Multi-pages (`pages: List<Int>`), dégradé silencieux.
+. ~15-20 unit. Baby-step TDD strict RED → GREEN → REFACTOR.
 
-=== Option C — Pollution TOC corpus FPA (99 chunks dot-leaders)
+*Gate* : `check` VERT (baseline 1164 + tests), Kover + validatePlugins VERTS.
+Zéro bump BOM, zéro secret.
 
-* Cause racine amont OCR/scan, pas le chunking codex (documenté S-216).
-* Nécessite probablement une action côté acquisition (codex) ou amont.
+== Ordre global EPIC
 
-=== Option D — Vérifier propagation repo1 0.0.10
-
-* Confirmer `https://repo1.maven.org/maven2/education/cccp/codex-plugin/0.0.10/`
-  HTTP 200 + aligner d'éventuels consommateurs si besoin.
+US-1 (résolveur pur) → US-2 (tâche `collectPageProvenance`) → US-3 (champ N3
+additif `pages`) → US-4 (Cucumber `@provenance`, 10e runner).
 
 == Hors scope (documenté)
 
-* Page-provenance (D6 cadrage S-219) : EPIC futur distinct.
-* Pollution TOC du corpus FPA : cause racine amont OCR/scan.
+Pgvector N1 (D7) · ancre de page in-band (A1) · re-chunking par page (A2) ·
+pollution TOC corpus FPA (cause racine amont).
 
-== Méthode
+== Méthode / Règles
 
 Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
-fonctionnel TestKit → Cucumber), English only.
-
-== Règles
-
-- COMMITS/PUSH — autorisés (décision pilote 2026-09-17).
-- PAS DE publishToMavenLocal / publication Central sans permission explicite.
-- SECRETS via configuration/ — jamais en dur dans build.gradle.kts.
+fonctionnel TestKit/ProjectBuilder → Cucumber), English only.
+COMMITS/PUSH autorisés (décision pilote 2026-09-17). PAS de publication sans
+permission. SECRETS via configuration/.
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-222)
-- `.agents/BACKLOG.adoc` (PUB-3.14 ✅ TERMINÉ)
-- `.agents/sessions/222-publication-codex-0010.adoc`
-- `workspace-bom/` (0.0.47 publié, ordre DAG MEMPHIS-first)
+- `.agents/INDEX.adoc` (S-223) · `.agents/BACKLOG.adoc` (EPIC 🟡 CADRÉ S-223)
+- `.agents/CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` · `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` (D6)
+- `src/main/kotlin/codex/enrichment/SectionTitleNormalizer.kt` (canon de titre)

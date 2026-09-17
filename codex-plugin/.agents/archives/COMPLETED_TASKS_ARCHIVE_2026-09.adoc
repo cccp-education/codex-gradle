@@ -1,5 +1,24 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-223 (2026-09-17) — Cadrage EPIC CDX-PAGE-PROVENANCE ✅
+
+- CDX-PAGE-PROVENANCE-0 ✅ — cadrage (gouvernance pure, zéro code, pattern
+  S-057/S-063). Traçabilité du doute OCR jusqu'à la page source (décision
+  D6 du cadrage CDX-DOUBT-BRIDGE S-219). Doc
+  `CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc` : audit 10 constats, 9 décisions,
+  3 options écartées, 5 US ~10 pts (US-0 ✅ cadrage, US-1→4 🟡 À FAIRE).
+- Décision structurante : provenance = **jointure dérivée non stockée**
+  (TOC × chunks × rapport d'acquisition), join par titre normalisé
+  (`SectionTitleNormalizer`, canon prouvé 115/115 S-217) — zéro DDL, zéro
+  re-vectorisation (Loi de l'Économie d'Encre).
+- Nouveau domaine cible `codex.provenance` (US-1) + tâche
+  `collectPageProvenance` (US-2) + champ N3 additif `pages` (US-3) +
+  Cucumber `@provenance` (US-4, 10e runner codex).
+- Option D S-223 vérifiée : propagation repo1 `codex-plugin 0.0.10`
+  **confirmée** (HTTP 200).
+- Baseline préservée : `check` VERT 1164 tests 0 FAIL. Zéro bump BOM,
+  zéro secret.
+
 == S-222 (2026-09-17) — Publication codex-plugin 0.0.10 + MEMPHIS 0.0.47 ✅
 
 - PUB-3.14 ✅ — `codex-plugin:0.0.10` publié Central (bundle
