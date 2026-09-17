@@ -9,7 +9,7 @@ import codex.provenance.PageProvenanceReport
 import codex.provenance.PageProvenanceResolver
 import codex.provenance.TocSection
 import codex.tasks.CodexCompositeContextTask
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import io.cucumber.java8.En
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray

@@ -298,3 +298,25 @@
   Kover VERT, validatePlugins VERT. Zéro secret, zéro publication,
   zéro bump, zéro test modifié.
 - *Rapport* : `.agents/sessions/228-c1-drift-memphis.adoc`.
+
+== S-229 (2026-09-17) — C-2 Split-brain `DocumentChunk` ✅ (baby-step DDD/TDD/BDD)
+
+- *RED* — driver `DocumentChunkUnificationTest` (le compilateur Kotlin prouve
+  statiquement le split-brain `Check for instance is always 'false'` ; le test
+  reçoit le chunk typé `Any` → échec explicite) + characterization
+  `ChunkDocumentJsonContractTest` 3 tests (contrat `chunks.json` décodable
+  intégralement dans `codebase.store.DocumentChunk`, round-trip byte-identique
+  `prettyPrint`, défauts + `overlapNext` null préservés) →
+  `76 tests completed, 1 failed`.
+- *GREEN* — suppression de la data class `codex.tasks.DocumentChunk` (25
+  lignes, `ChunkDocumentTask.kt`) + bascule des imports des 7 fichiers prod
+  (`SemanticChunker`/`ChunkDocumentTask`/`ExportKnowledgeBaseTask`/
+  `CollectPageProvenanceTask`/`EnrichJsonLddTask`/`JsonLddEnricher`/
+  `PageProvenanceResolver`) et 12 fichiers de test vers le type N1 — flèche
+  unique N2→N1 (pattern RAG-3), zéro référence résiduelle.
+- *Gate* — `check` VERT 2m52s : 1397 tests (1267 unit + 130 cucumber) 0 FAIL
+  (+4 unit : +1 driver +3 characterization), Kover VERT, validatePlugins VERT,
+  non-régression `@provenance`/`@enrichment`/`@doubt-bridge` VERTS. Zéro
+  secret, zéro publication, zéro bump, backward compat JSON totale.
+- *Valeur* — **A-1 débloqué** (un seul type portera `pages`).
+- *Rapport* : `.agents/sessions/229-c2-split-brain-documentchunk.adoc`.

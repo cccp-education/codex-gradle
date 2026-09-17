@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codebase.store.DocumentChunk
 import codex.enrichment.EnrichedLddNode
 import codex.enrichment.GraphifyFileResolver
 import codex.enrichment.JsonLddEnricher

@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codebase.store.DocumentChunk
 import kotlinx.serialization.json.Json
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals

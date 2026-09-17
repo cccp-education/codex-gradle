@@ -1,8 +1,8 @@
-= PROMPT_REPRISE — Codex — Session 229
-:session: 229
+= PROMPT_REPRISE — Codex — Session 230
+:session: 230
 :date: 2026-09-17
 :status: PRET
-:mission: C-2 — split-brain `DocumentChunk` (prérequis structurel de A-1)
+:mission: C-3 — dead code N1 + désynchronisation gouvernance (clôture dette structurelle)
 
 == Quick Start
 ----
@@ -19,62 +19,89 @@ Le pilote a tranché S-227 : *C (maintenance) → A (EPIC CB-PAGE-PROVENANCE)
 
 - *C-1 (S-228)* ✅ TERMINÉ — drift MEMPHIS pins `0.0.49` → `0.0.50`, garde
   `CodexPluginPublicationTest` 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
-  Audit pins N1 : BOM contraint `codebase-plugin` à 0.0.16, pas de drift.
-- *C-2 (S-229)* — **mission ci-dessous**.
-- *C-3 (S-230)* : dead code N1 (`StoreStatements.insertChunk()` 5 binds +
-  `IngestIndexing.assignLocalIndices`, zéro appelant prod) + 8 désync
-  gouvernance (`SESSION_PROCEDURE.adoc` chemins pré-S-105 + commande
-  `:codex-plugin` erronée, `SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:18` règle
-  « INTERDICTION FORMELLE » contredisant la décision 2026-09-17, `AGENT.adoc`
-  § Fichiers, `README.md` badges 0.0.1).
+- *C-2 (S-229)* ✅ TERMINÉ — split-brain `DocumentChunk` soldé : la data
+  class `codex.tasks.DocumentChunk` supprimée, les 7 fichiers prod + 12
+  fichiers de test consomment `codebase.store.DocumentChunk` (type N1).
+  Driver `DocumentChunkUnificationTest` RED → GREEN + characterization
+  `ChunkDocumentJsonContractTest` 3/3 (byte-compatibilité `chunks.json`).
+  `check` VERT 1397 tests 0 FAIL. **A-1 débloqué (un seul type portera `pages`).**
+- *C-3 (S-230)* — **mission ci-dessous**.
 - *C-4 (S-231)* : pollution TOC chunking (99/387 au run FPA S-216), BDD
   `@toc-noise`, clôture C + go/no-go A.
 
-== Mission S-229 — C-2 (baby-step DDD/TDD/BDD strict)
+== Mission S-230 — C-3 (dead code N1 + désync gouvernance)
 
-*Constat* : deux data classes `DocumentChunk` identiques coexistent —
-`codex.tasks.DocumentChunk` (`codex/tasks/ChunkDocumentTask.kt:34`,
-producteur) et `codebase.store.DocumentChunk` (`codebase/store/DocumentChunk.kt:23`,
-type N1, migration verbatim RAG-1). `CodexIngestTask` décode **déjà** dans
-le type N1 (`ignoreUnknownKeys = true`). Les autres tasks codex
-(`SemanticChunker`, `ChunkDocumentTask`, `ExportKnowledgeBaseTask`,
-`CollectPageProvenanceTask`, `EnrichJsonLddTask`, `JsonLddEnricher`,
-`PageProvenanceResolver`) utilisent le type producteur.
+Deux volets, cross-borough.
 
-*Travail* :
+=== Volonté A — dead code N1 (Queens / codebase-gradle)
 
-. Décision (déjà actée S-227) : le type de store vit en N1
-   (`codebase.store`), le producteur codex **consomme** le type N1 —
-   pattern RAG-3 (codex dépend déjà de `libs.codebase.plugin`).
-   Alternative écartée : garder le doublon (double maintenance du futur
-   `pages` de A-1).
-. Characterization tests **avant** bascule : contrat JSON `chunks.json`
-   byte-compatible (`@Serializable` identique) — RED → GREEN.
-3. Suppression du type `codex.tasks.DocumentChunk` + bascule des 7 fichiers
-   prod (imports) vers `codebase.store.DocumentChunk`.
-. Non-régression : `@provenance` (8 scénarios), corpus enrichment,
-   `CodexIngestDoubtTest`, `CodexIngestRetrieveIT`.
-. Gate : `check` VERT, baseline 1393 tests 0 FAIL, zéro régression,
-   backward compat JSON totale.
+*Constat S-225 #4* : côté N1, `StoreStatements.insertChunk()` (5 binds) et
+`IngestIndexing.assignLocalIndices` n'ont **aucun appelant de production**
+(seuls les tests les référencent). `initSchema()` les provisionne encore.
 
-*Valeur* : **débloque A-1** (un seul type porte `pages`), supprime un drift
-structurel documenté depuis S-223.
+*Travail* : audit de production (`grep` sur tout le workspace, hors `build/`)
+puis décision **documentée** :
+- *suppression* (code mort avéré, zéro appelant prod) — privilégiée si
+  confirmée ; ou
+- *conservation* argumentée (API publique d'un artefact publié N1, rétro-compat
+  consommateurs externes — `codebase-plugin` est sur Central).
 
-*Risque* : `codex.tasks.DocumentChunk` est référencé par 8 fichiers de test
-— migration mécanique, gate par suite complète.
+Si suppression : baby-step TDD strict côté Queens (characterization avant,
+retrait, `test` + `check` VERT), ordre DAG respecté (N1 d'abord). Sinon,
+consigner la décision dans le BACKLOG Queens et clore le constat.
+
+=== Volonté B — désynchronisation gouvernance (codex, 8 points)
+
+[cols="2,3", options="header"]
+|===
+| Fichier | Désynchronisation à corriger
+
+| `.agents/SESSION_PROCEDURE.adoc:64`
+| `./gradlew :codex-plugin:compileKotlin` — chemin inexistant (le projet
+  racine **est** `codex-plugin`) → `./gradlew compileKotlin`
+
+| `.agents/SESSION_PROCEDURE.adoc:5,61`
+| `foundry/codex-gradle/.agents/sessions/…` — chemin pré-S-105 → `codex-plugin/.agents/sessions/…`
+
+| `.agents/SESSION_PROCEDURE.adoc:69`
+| « les types partagés vivent dans `codex/src/main/kotlin/` » — faux →
+  `codex-plugin/src/main/kotlin/codex/`
+
+| `.agents/SESSION_PROCEDURE.adoc:70`
+| « Version unique dans `gradle.properties` — `codex.version=1.0.0` » — faux
+  (version dérivée `ws.versions.codex.plugin`, toml local `0.0.11`)
+
+| `.agents/SESSION_CHECKLIST.adoc:8`
+| Même chemin de build erroné (`:codex-plugin:compileKotlin`)
+
+| `.agents/INDEX.adoc:18`
+| « 1. COMMITS/GIT — INTERDICTION FORMELLE sans permission » — contredit la
+  décision pilote 2026-09-17 (commit/push **autorisés**), déjà dans `AGENT.adoc:11`
+
+| `AGENT.adoc` § Fichiers du Projet
+| Chemins `codex/src/main/kotlin/`, `codex-plugin/src/` (pré-aplatissement),
+  `buildSrc/` (supprimé)
+
+| `README.md:11,52,143`
+| Badges `0.0.1`, `workspace-bom:0.0.1`, `codebase-contracts:0.0.1` — drift
+  depuis ≥ 10 releases
+|===
+
+*Travail* : corriger chaque point, puis **vérification post-fix par `grep`**
+(`:codex-plugin:`, `buildSrc/`, `codex/src/`, `0.0.1`, « INTERDICTION
+FORMELLE »). Gate : `check` VERT (zéro code prod touché côté codex).
 
 == Pièges connus
 
 - *mavenLocal partagé entre boroughs* : une session parallèle peut réécrire
-  un jar pendant `check` (course S-226 `CodexIngestRetrieveIT`,
-  `NoClassDefFoundError: DocumentChunk$$serializer`). Vérifier par stash
-  avant d'accuser le diff.
-- *Le projet racine **est** `codex-plugin`* — utiliser `./gradlew check`
-  (PAS `:codex-plugin:check`, qui échoue). C-3 corrige ce chemin dans
-  `SESSION_PROCEDURE.adoc`.
-- *Garde de publication* : `CodexPluginPublicationTest` lit le toml du repo
-  voisin `../workspace-bom/gradle/libs.versions.toml` (source de vérité).
-  Pins alignés 0.0.50 (C-1).
+  un jar pendant `check` (course S-226). Vérifier par stash avant d'accuser
+  le diff.
+- *Le projet racine **est** `codex-plugin`* — `./gradlew check` (PAS
+  `:codex-plugin:check`).
+- *C-3 est majoritairement de la gouvernance* — zéro publication, zéro bump.
+- *Côté Queens (dead code)* : la décision appartient à la propriétaire N1.
+  Ne pas supprimer à l'aveugle une API de `codebase-plugin` publié Central
+  sans vérifier les consommateurs externes.
 
 == Méthode / Règles
 Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
@@ -84,7 +111,7 @@ permission. SECRETS via configuration/. Ne JAMAIS lancer la suite globale
 sans nécessité (règle EAGER cycle build/test piloté par le delta source).
 
 == References
-- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B)
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B, § C-3)
+- `.agents/sessions/229-c2-split-brain-documentchunk.adoc` (rapport C-2)
 - `.agents/sessions/228-c1-drift-memphis.adoc` (rapport C-1)
-- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (EPIC A, S-225)
-- `codebase.store.DocumentChunk` · `codex/tasks/ChunkDocumentTask.kt`
+- `codebase.store.StoreStatements` · `codebase.store.IngestIndexing` (Queens)

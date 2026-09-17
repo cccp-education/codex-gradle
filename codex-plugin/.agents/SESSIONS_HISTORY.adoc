@@ -3658,3 +3658,52 @@ Brooklyn) + snapshot `vision-archive`.
 zéro secret, zéro publication, zéro bump de version, zéro test modifié.
 
 *Rapport* : `.agents/sessions/228-c1-drift-memphis.adoc`.
+
+'''
+
+== Session 229 — 2026-09-17 — C-2 Split-brain `DocumentChunk` (baby-step DDD/TDD/BDD)
+
+*Mission* : 2e sous-tâche du bloc C (maintenance) de la séquence C → A → B —
+supprimer le split-brain `DocumentChunk` (prérequis structurel de A-1). Deux
+data classes identiques coexistaient : `codex.tasks.DocumentChunk`
+(producteur N2) et `codebase.store.DocumentChunk` (type N1, migration verbatim
+RAG-1). Le producteur codex doit consommer le type N1 (pattern RAG-3).
+
+*Baby-step DDD/TDD/BDD strict* :
+
+1. *RED* — driver `DocumentChunkUnificationTest` (`SemanticChunker` doit
+   émettre le type N1 ; le compilateur Kotlin prouve statiquement le
+   split-brain `Check for instance is always 'false'`, le test reçoit le chunk
+   typé `Any` pour un échec de test explicite) + characterization
+   `ChunkDocumentJsonContractTest` 3 tests (contrat `chunks.json` décodable
+   intégralement dans `codebase.store.DocumentChunk`, round-trip byte-identique
+   `prettyPrint`, défauts + `overlapNext` null préservés) →
+   `76 tests completed, 1 failed` (driver FAILED, characterization PASSED).
+2. *GREEN* — suppression de la data class `codex.tasks.DocumentChunk` (25
+   lignes dans `ChunkDocumentTask.kt`) + bascule des imports des 7 fichiers
+   prod (`SemanticChunker`, `ChunkDocumentTask`, `ExportKnowledgeBaseTask`,
+   `CollectPageProvenanceTask`, `EnrichJsonLddTask`, `JsonLddEnricher`,
+   `PageProvenanceResolver`) et 12 fichiers de test vers le type N1 — flèche
+   unique N2→N1, zéro référence résiduelle.
+3. *REFACTOR (gate)* — non-régression ciblée (unit + 3 runners Cucumber
+   `@provenance`/`@enrichment`/`@doubt-bridge`) puis `./gradlew check` BUILD
+   SUCCESSFUL 2m52s — **1397 tests (1267 unit + 130 cucumber) 0 FAIL**
+   (+4 unit vs S-228), Kover VERT, validatePlugins VERT.
+
+*Ouverture (règle EAGER)* : `git status` propre (HEAD `8f2e614`, main à jour),
+sources fraîches → `compileKotlin` + `compileTestKotlin` VERT seulement.
+
+*Valeur* : **A-1 débloqué** — un seul type portera `pages`. Drift structurel
+documenté depuis S-223 soldé.
+
+*Gouvernance mise à jour* : `sessions/229-c2-split-brain-documentchunk.adoc`
+(créé) · `PROMPT_REPRISE.adoc` (S-230 = C-3) · `INDEX.adoc` (session 229,
+table, roadmap, prochaine) · `BACKLOG.adoc` (C-2 ✅, EPIC SÉQUENCE-C) ·
+`SESSIONS_HISTORY.adoc` + archive. Race racine : `AGENTS.adoc` (entrée
+Brooklyn) + snapshot `vision-archive`.
+
+*Gates* : driver RED → PASSED ; characterization JSON 3/3 ; `check` VERT 1397
+tests 0 FAIL ; zéro secret, zéro publication, zéro bump de version, backward
+compat JSON totale.
+
+*Rapport* : `.agents/sessions/229-c2-split-brain-documentchunk.adoc`.

@@ -1,6 +1,6 @@
 package codex.enrichment
 
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import codex.tasks.LddNode
 import kotlinx.serialization.Serializable
 

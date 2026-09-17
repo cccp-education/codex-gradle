@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codebase.store.DocumentChunk
 import codex.ocr.OcrQualityIssue
 import codex.ocr.OcrQualityReason
 import codex.ocr.OcrQualityReport

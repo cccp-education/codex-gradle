@@ -1,7 +1,7 @@
 package codex.tasks
 
 import codex.enrichment.EnrichedLddNode
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import codex.tasks.LddNode
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json

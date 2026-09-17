@@ -3,7 +3,7 @@ package codex.provenance
 import codex.ocr.OcrQualityIssue
 import codex.ocr.OcrQualityReason
 import codex.ocr.OcrQualityReport
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

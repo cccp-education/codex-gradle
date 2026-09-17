@@ -1,6 +1,6 @@
 package codex.provenance
 
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertTrue

@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 228 — **C-1 TERMINÉ : drift MEMPHIS 0.0.49 → 0.0.50 + baseline verte**. Baby-step TDD strict : garde `CodexPluginPublicationTest` RED prouvée → GREEN (bump pins `settings.gradle.kts` + `build.gradle.kts:31`, toml local inchangé) → `check` VERT 3m42s, **1393 tests (1263 unit + 130 cucumber) 0 FAIL**, Kover VERT, validatePlugins VERT. Audit pins N1 : BOM 0.0.50 contraint `codebase-plugin` à 0.0.16 (pin local 0.0.12 neutralisé) — pas de drift latent. Bloc C en cours : reste C-2/C-3/C-4.)_
+_Dernière mise à jour : 2026-09-17 (session 229 — **C-2 TERMINÉ : split-brain `DocumentChunk` soldé**. Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR. RED : driver `DocumentChunkUnificationTest` (le compilateur Kotlin prouve statiquement le split-brain `Check for instance is always 'false'`) × characterization `ChunkDocumentJsonContractTest` 3 tests (contrat `chunks.json` décodable dans `codebase.store.DocumentChunk`, round-trip byte-identique) → `76 tests completed, 1 failed`. GREEN : data class `codex.tasks.DocumentChunk` supprimée (25 lignes) + 7 fichiers prod + 12 tests basculés vers le type N1 → `check` VERT 2m52s, **1397 tests (1267 unit + 130 cucumber) 0 FAIL** (+4 unit), Kover VERT, validatePlugins VERT. **A-1 débloqué**. Bloc C en cours : reste C-3/C-4.)_
 
 '''
 == 🟡 SÉQUENCE PILOTE C → A → B (ordonnancement S-227)
@@ -23,7 +23,7 @@ sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc
 | C-1 drift MEMPHIS 0.0.49→0.0.50 + baseline verte · C-2 split-brain
   `DocumentChunk` (prérequis A-1) · C-3 dead code N1 + 8 désync gouvernance ·
   C-4 pollution TOC chunking + clôture C
-| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; reste C-2/C-3/C-4
+| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; reste C-3/C-4
 
 | A — CB-PAGE-PROVENANCE
 | S-232 · S-233 · S-234 · S-235
@@ -48,7 +48,7 @@ Central, rien à republier avant).
 '''
 == 🟡 EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette)
 
-_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; reste C-2 (S-229), C-3 (S-230), C-4 (S-231).
+_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; reste C-3 (S-230), C-4 (S-231).
 _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 
 [cols="1,3,1", options="header"]
@@ -69,12 +69,13 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 | C-2 (S-229)
 | **Split-brain `DocumentChunk`** — `codex.tasks.DocumentChunk`
   (`ChunkDocumentTask.kt:34`) et `codebase.store.DocumentChunk`
-  (`DocumentChunk.kt:23`) sont deux data classes identiques (migration
-  verbatim RAG-1). Suppression du type codex + bascule des 7 fichiers prod
-  vers le type N1 (codex dépend déjà de `libs.codebase.plugin`), pattern
-  RAG-3. Characterization JSON `chunks.json` byte-compatible + non-régression
-  `@provenance`/enrichment/ingest. **Débloque A-1.**
-| 🟡 À FAIRE
+  (`DocumentChunk.kt:23`) étaient deux data classes identiques (migration
+  verbatim RAG-1). Data class codex **supprimée** + 7 fichiers prod + 12
+  tests basculés vers le type N1 (codex dépend de `libs.codebase.plugin`),
+  pattern RAG-3. Driver `DocumentChunkUnificationTest` RED → GREEN +
+  characterization `ChunkDocumentJsonContractTest` 3/3 (byte-compatibilité
+  `chunks.json`). `check` VERT 1397 tests 0 FAIL. **A-1 débloqué.**
+| ✅ TERMINÉ (S-229)
 
 | C-3 (S-230)
 | **Dead code + désync gouvernance** — (A) N1 : `StoreStatements.insertChunk()`
@@ -104,8 +105,8 @@ _Doc cadrage : `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (S-225, côté codex)._
 _Pattern_ : gouvernance pure S-057/S-063 (cadrage) + baby-step DDD/TDD/BDD strict (implémentation).
 _Portée_ : cross-borough N1 (Queens, persistance + exposition) + N2 (Brooklyn, transport).
 _Statut_ : 🟡 ORDONNANCÉ (S-227) — **bloc A** de la séquence C→A→B, 4 sessions
-S-232 → S-235 (une US par session). Prérequis : **C-2 (S-229)** — unifier
-`DocumentChunk` avant d'ajouter `pages`. Publication = bloc B (S-236 → S-238).
+S-232 → S-235 (une US par session). Prérequis : **C-2 (S-229) ✅ TERMINÉ** —
+`DocumentChunk` unifié (type N1 unique). Publication = bloc B (S-236 → S-238).
 
 Le sidecar `page-provenance.json` (S-224) joint TOC × chunks × rapport
 d'acquisition — mais au retrieval, `RetrieveResult` n'expose que
@@ -139,7 +140,7 @@ heuristique). C'est ce qui rend la persistance supérieure au statu quo.
 | `insertChunkWithDoubt` bind 8 (bind count 7→8) + `RagVectorStore` bind +
 | `RetrieveResult.pages` + SELECT read/parse. Unit + fonctionnel
 | testcontainers `PostgresFixture`.
-| 🟡 À FAIRE — **session S-232** (bloc A) · prérequis C-2 (S-229)
+| 🟡 À FAIRE — **session S-232** (bloc A) · prérequis C-2 (S-229) ✅ TERMINÉ (type N1 unique)
 | 3
 
 | CB-PAGE-PROVENANCE-2

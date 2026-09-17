@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codebase.store.DocumentChunk
 import codebase.store.RetrieveResult
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString

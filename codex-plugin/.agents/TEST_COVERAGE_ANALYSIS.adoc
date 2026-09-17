@@ -931,3 +931,31 @@ préservée exactement : `check` VERT 6m28s, **1393 tests** (1263 unit +
 cause = **course cross-borough sur mavenLocal** (jar `codebase-plugin-0.0.15`
 réécrit par une session Queens parallèle), non imputable au diff (IT 4/4
 PASS vérifié par stash à HEAD puis après stabilisation).
+
+== Session 229 — C-2 Split-brain `DocumentChunk` (+4 tests)
+
+*Delta* : **+4 unit** — deux suites ajoutées, zéro test existant supprimé
+(12 fichiers de test ont seulement basculé leur import vers le type N1).
+
+[cols="2,2,3", options="header"]
+|===
+| Suite | Tests | Rôle
+
+| `DocumentChunkUnificationTest`
+| 1
+| Driver RED → GREEN : `SemanticChunker` émet le type N1
+  `codebase.store.DocumentChunk` (le compilateur Kotlin prouve statiquement
+  le split-brain, le test reçoit le chunk typé `Any` pour un échec de test
+  explicite plutôt qu'une erreur de compilation).
+
+| `ChunkDocumentJsonContractTest`
+| 3
+| Characterization du contrat `chunks.json` : décodage intégral dans le type
+  N1 (tous champs), round-trip byte-identique avec les réglages producteur
+  (`prettyPrint`), défauts + `overlapNext` null préservés. GREEN avant et
+  après la bascule — preuve de backward compatibilité des artefacts disque.
+|===
+
+*Baseline* : **1397 tests (1267 unit + 130 cucumber) 0 FAIL** (S-228 :
+1393). Kover VERT, validatePlugins VERT. Non-régression ciblée
+`@provenance`/`@enrichment`/`@doubt-bridge` VERTS.

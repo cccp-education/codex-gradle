@@ -1,0 +1,230 @@
+= Rapport Session 229 — C-2 Split-brain `DocumentChunk`
+:session: 229
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn) — prérequis structurel de A-1
+:status: TERMINÉ
+:type: maintenance (baby-step DDD/TDD/BDD strict — RED → GREEN → REFACTOR)
+:bloc: C (maintenance) — 2e sous-tâche de la séquence C → A → B
+
+== Objectif
+
+Mission du PROMPT_REPRISE S-229 : **C-2** — supprimer le split-brain
+`DocumentChunk`. Deux data classes identiques coexistaient :
+`codex.tasks.DocumentChunk` (`ChunkDocumentTask.kt:34`, producteur N2) et
+`codebase.store.DocumentChunk` (`DocumentChunk.kt:23`, type N1, migration
+verbatim RAG-1). Le producteur codex doit **consommer** le type N1 — pattern
+RAG-3 (codex dépend déjà de `libs.codebase.plugin`). Sans cette unification,
+le champ `pages` de A-1 serait maintenu dans deux types (prérequis
+structurel acté S-227).
+
+== Contexte — pourquoi C-2 existe
+
+C-2 est un **prérequis de A-1** (CB-PAGE-PROVENANCE US-1) : l'EPIC A ajoute
+`pages: List<Int>` au type N1 `codebase.store.DocumentChunk`. Si le doublon
+`codex.tasks.DocumentChunk` subsiste, le champ serait à maintenir **deux
+fois** — exactement le drift que C-2 élimine. Le type N1 est déjà le type
+réellement porté sur le classpath : `CodexIngestTask` décode **déjà** dans
+`codebase.store.DocumentChunk` (`ignoreUnknownKeys = true`, S-219).
+
+== Baby-step DDD/TDD/BDD strict — RED → GREEN → REFACTOR
+
+=== 1. RED (constat reproduit)
+
+Deux suites écrites avant la bascule :
+
+. *Driver* `DocumentChunkUnificationTest` — `SemanticChunker` doit émettre
+   le type N1, pas le doublon codex. Note : le compilateur Kotlin **prouve
+   statiquement le split-brain** (`Check for instance is always 'false'`) ;
+   le test reçoit le chunk typé `Any` pour produire un échec de test
+   explicite plutôt qu'une erreur de compilation.
+. *Characterization* `ChunkDocumentJsonContractTest` — 3 tests pinent le
+   contrat JSON `chunks.json` : décodage intégral dans le type N1, round-trip
+   byte-identique avec les réglages producteur (`prettyPrint`), défauts +
+   `overlapNext` null préservés. GREEN **avant** la bascule (les deux types
+   sérialisent identiquement) et **après** (type unique) — preuve de
+   backward compatibilité des artefacts `chunks.json` sur disque.
+
+[source,shell]
+----
+./gradlew test --tests 'codex.tasks.DocumentChunkUnificationTest' \
+              --tests 'codex.tasks.ChunkDocumentJsonContractTest'
+----
+
+Résultat **RED** : `76 tests completed, 1 failed` — driver FAILED
+(`AssertionFailedError`), les 3 characterization PASSED.
+
+=== 2. GREEN (suppression du doublon + bascule des imports)
+
+Production (7 fichiers, imports seuls sauf `ChunkDocumentTask` qui perd la
+data class) :
+
+. `codex/tasks/ChunkDocumentTask.kt` — **suppression** de la data class
+   `DocumentChunk` (25 lignes) + import `codebase.store.DocumentChunk` +
+   KDoc pointant le type N1.
+. `codex/tasks/SemanticChunker.kt` — import `codebase.store.DocumentChunk`.
+3. `codex/tasks/ExportKnowledgeBaseTask.kt` — idem.
+. `codex/tasks/CollectPageProvenanceTask.kt` — idem.
+. `codex/tasks/EnrichJsonLddTask.kt` — idem.
+. `codex/enrichment/JsonLddEnricher.kt` — idem.
+. `codex/provenance/PageProvenanceResolver.kt` — idem.
+
+Tests consommateurs (10 fichiers) : imports `codex.tasks.DocumentChunk` →
+`codebase.store.DocumentChunk` (5 par sed, 4 par insertion d'import dans le
+même package `codex.tasks`, 1 déjà N1). Les steps BDD et tests de provenance,
+enrichment, chunking, export, ingest basculent mécaniquement.
+
+[source,shell]
+----
+./gradlew compileKotlin compileTestKotlin
+----
+
+Résultat : **BUILD SUCCESSFUL** — zéro référence résiduelle
+(`grep "codex.tasks.DocumentChunk" src/` ne matche que le KDoc du driver).
+
+=== 3. REFACTOR (gate complète)
+
+Non-régression ciblée d'abord (unit + 3 runners Cucumber) :
+`DocumentChunkUnificationTest` **PASSED**, `ChunkDocumentJsonContractTest`
+**3/3 PASSED**, `ChunkDocumentTaskTest` 11/11, `ExportKnowledgeBaseTaskTest`
+10/10, `CollectPageProvenanceTaskTest` 8/8, enrichment + provenance +
+`CodexIngestDoubtTest` + `CodexPipelineIntegrationTest` VERTS.
+`cucumberTestPageProvenance` + `cucumberTestEnrichment` +
+`cucumberTestDoubtBridge` VERTS.
+
+[source,shell]
+----
+./gradlew check
+----
+
+Résultat : **BUILD SUCCESSFUL in 2m 52s** — 24 tâches. Kover VERT,
+validatePlugins VERT.
+
+== Baseline mesurée (gate de sortie)
+
+Décompte des rapports JUnit XML :
+
+[cols="2,1,1,1,1", options="header"]
+|===
+| Suite | Tests | Skipped | Failures | Errors
+
+| `test` (unit + découverte)
+| 1267
+| 656
+| 0
+| 0
+
+| `cucumberTestDoubtBridge`
+| 20 | 0 | 0 | 0
+
+| `cucumberTestEnrichment`
+| 8 | 0 | 0 | 0
+
+| `cucumberTestLicence`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestOcr`
+| 20 | 14 | 0 | 0
+
+| `cucumberTestOcrQuality`
+| 22 | 0 | 0 | 0
+
+| `cucumberTestOntology`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestPageProvenance`
+| 16 | 0 | 0 | 0
+
+| `cucumberTestPipelineRouting`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestPipelineUnify`
+| 6 | 0 | 0 | 0
+
+| `cucumberTestSessionMemory`
+| 20 | 0 | 0 | 0
+|===
+
+*Baseline* : **1397 tests (1267 unit + 130 cucumber) 0 FAIL** — +4 unit vs
+S-228 (1393), dont +1 driver d'unification et +3 characterization JSON.
+Kover VERT, validatePlugins VERT.
+
+== Ouverture de session — état constaté
+
+. `git status` propre, branche `main` à jour (HEAD `8f2e614`, S-228).
+. Règle EAGER (delta source) : `git status --porcelain -- src/` vide et
+   aucune source plus récente que `build/test-results/test` → **compiler
+   seulement** (`compileKotlin compileTestKotlin`) → BUILD SUCCESSFUL.
+   Aucune suite globale lancée à l'ouverture.
+. Point de repère : le projet racine **est** `codex-plugin` — `./gradlew`
+   depuis `codex-plugin/` (PAS `:codex-plugin:…`, corrigé C-3).
+
+== Fichiers modifiés
+
+Code production (7) :
+
+. `codex/tasks/ChunkDocumentTask.kt` — data class supprimée + import N1.
+. `codex/tasks/SemanticChunker.kt` — import N1.
+3. `codex/tasks/ExportKnowledgeBaseTask.kt` — import N1.
+4. `codex/tasks/CollectPageProvenanceTask.kt` — import N1.
+5. `codex/tasks/EnrichJsonLddTask.kt` — import N1.
+6. `codex/enrichment/JsonLddEnricher.kt` — import N1.
+7. `codex/provenance/PageProvenanceResolver.kt` — import N1.
+
+Tests (12 : 2 créés + 10 basculés) :
+
+. `codex/tasks/DocumentChunkUnificationTest.kt` — **créé** (driver RED).
+2. `codex/tasks/ChunkDocumentJsonContractTest.kt` — **créé** (characterization).
+3→12. `ChunkDocumentTaskTest`, `ExportKnowledgeBaseTaskTest`,
+   `CollectPageProvenanceTaskTest`, `CodexIngestRetrieveIT`,
+   `CodexPipelineIntegrationTest`, `CodexCompositeContextGraphifyTest`,
+   `JsonLddEnricherTest`, `GraphifySectionBuilderTest`,
+   `PageProvenanceResolverTest`, `FpaPageProvenanceJoinRateTest`,
+   `PageProvenanceSteps` — imports basculés.
+
+Gouvernance (7) :
+
+. `.agents/sessions/229-c2-split-brain-documentchunk.adoc` — **créé**.
+2. `.agents/PROMPT_REPRISE.adoc` — réécrit pour S-230 (mission C-3).
+3. `.agents/INDEX.adoc` — session 229, table, roadmap, prochaine session.
+4. `.agents/SESSIONS_HISTORY.adoc` — entrée session 229.
+5. `.agents/BACKLOG.adoc` — C-2 ✅ TERMINÉ (S-229), EPIC SÉQUENCE-C mis à jour.
+6. `.agents/archives/COMPLETED_TASKS_ARCHIVE_2026-09.adoc` — entrée S-229.
+7. Racine workspace : `AGENTS.adoc` (entrée Brooklyn) + snapshot `vision-archive`.
+
+*Non modifié* : `.agents/TEST_COVERAGE_ANALYSIS.adoc` (2 tests ajoutés —
+mis à jour si le décompte global y figure).
+
+== Gates
+
+- Driver `DocumentChunkUnificationTest` — RED prouvée → **PASSED**.
+- Characterization `ChunkDocumentJsonContractTest` — **3/3 GREEN** avant et
+  après (byte-compatibilité `chunks.json` prouvée).
+- `./gradlew check` — **BUILD SUCCESSFUL 2m52s**, 1397 tests 0 FAIL,
+  Kover VERT, validatePlugins VERT.
+- Zéro secret, zéro publication Central, zéro bump de version, zéro
+  régression, backward compat JSON totale.
+
+== Valeur
+
+**Débloque A-1** : un seul type (`codebase.store.DocumentChunk`) portera
+`pages` — la double maintenance est éliminée. Drift structurel documenté
+depuis S-223 soldé. La flèche N2→N1 reste unique (pattern RAG-3).
+
+== Prochaine session (230) — mission C-3
+
+**Dead code N1 + désynchronisation gouvernance**. (A) Côté Queens :
+`StoreStatements.insertChunk()` (5 binds) + `IngestIndexing.assignLocalIndices`
+sans appelant de production (constat S-225 #4) — décision suppression vs
+conservation. (B) Côté codex : 8 désynchronisations —
+`SESSION_PROCEDURE.adoc` (chemin projet `:codex-plugin` erroné, chemins
+pré-S-105, `codex/src/`, version `gradle.properties` 1.0.0 faux),
+`SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:18` (règle « INTERDICTION FORMELLE »
+contredisant la décision pilote 2026-09-17), `AGENT.adoc` § Fichiers,
+`README.md` badges 0.0.1. Vérification par `grep` post-fix.
+
+== Références
+
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C / C-2
+- `.agents/sessions/228-c1-drift-memphis.adoc` (rapport C-1)
+- `.agents/CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (EPIC A, S-225)
+- `codebase.store.DocumentChunk` · `codex/tasks/ChunkDocumentTask.kt`

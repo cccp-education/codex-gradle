@@ -1,7 +1,7 @@
 package codex.provenance
 
+import codebase.store.DocumentChunk
 import codex.ocr.OcrQualityReport
-import codex.tasks.DocumentChunk
 
 /**
  * Pure resolver that closes the acquisition chain: a doubtful chunk now knows

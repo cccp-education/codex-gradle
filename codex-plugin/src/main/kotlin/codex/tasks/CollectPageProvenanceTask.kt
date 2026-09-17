@@ -1,5 +1,6 @@
 package codex.tasks
 
+import codebase.store.DocumentChunk
 import codex.ocr.OcrQualityReport
 import codex.provenance.PageProvenanceReport
 import codex.provenance.PageProvenanceResolver

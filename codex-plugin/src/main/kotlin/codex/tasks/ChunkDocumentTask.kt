@@ -1,6 +1,6 @@
 package codex.tasks
 
-import kotlinx.serialization.Serializable
+import codebase.store.DocumentChunk
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
@@ -15,40 +15,15 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 /**
- * A single semantic chunk extracted from a Markdown document.
- *
- * Each chunk corresponds to one heading section with its content,
- * optional overlap hint for the next section, and any code blocks found.
- *
- * @property id deterministic SHA-256 based identifier (e.g. "chk-a1b2c3d4")
- * @property sourceDocument name of the source document file
- * @property sectionPath hierarchical section path (e.g. "Chapter 1 > Section 1.2")
- * @property headingLevel heading depth (1-6)
- * @property content full section content including heading line
- * @property codeBlocks extracted fenced code blocks as strings
- * @property entities named entity references (placeholder for future extraction)
- * @property overlapNext first two sentences of the following section for context continuity
- * @property license license tag for this chunk (Apache-2.0 / PROPRIETARY / UNKNOWN)
- */
-@Serializable
-data class DocumentChunk(
-    val id: String,
-    val sourceDocument: String,
-    val sectionPath: String,
-    val headingLevel: Int,
-    val content: String,
-    val codeBlocks: List<String> = emptyList(),
-    val entities: List<String> = emptyList(),
-    val overlapNext: String? = null,
-    val license: String = "UNKNOWN"
-)
-
-/**
  * Splits a Markdown document into semantic chunks by heading.
  *
  * One chunk per heading section. Each chunk contains the heading,
  * its body content, extracted code blocks, and an overlap of the
  * next section's first two sentences for retrieval context continuity.
+ *
+ * The chunk type is the N1 store type `codebase.store.DocumentChunk`
+ * (SÉQUENCE-C C-2 — single type; the former codex-local duplicate was
+ * removed so the future `pages` field is maintained in one place only).
  *
  * @property markdownFile input Markdown file
  * @property chunksFile output JSON file containing the list of [DocumentChunk]

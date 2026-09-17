@@ -1,6 +1,6 @@
 package codex.enrichment
 
-import codex.tasks.DocumentChunk
+import codebase.store.DocumentChunk
 import codex.tasks.LddNode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
