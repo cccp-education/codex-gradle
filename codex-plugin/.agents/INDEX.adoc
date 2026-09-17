@@ -9,7 +9,7 @@ _Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG
 _Derniere mise a jour_ : 2026-09-17 (session 221 — **EPIC CDX-CONTEXT-HARDENING TERMINÉ 2/2 US**. US-1 : fallback `enrichedJsonFile` standalone rendu atteignable — l'`@InputFile @Optional` était wired inconditionnellement (`CodexPlugin.kt:219`) → `generateCompositeContext` seule échouait en validation Gradle (`Input file does not exist`). Correctif : input tolérant `@InputFiles` (`ConfigurableFileCollection`) — artefact ciblé par défaut, absence → `""` (Économie d'Encre, jamais forcer `enrichJsonLdd`). Preuve par TestKit réel (sentinel `doFirst`). US-2 : test d'exécution `execute()` (comble le trou P0 S-220) via seam `@Internal storeOverride` + fake in-memory `RecordingRagStore` — JSON N3 + vibecoding + metadata + standalone + dégradé + canal Graphify ; audit des 16 `@TaskAction` toutes couvertes. BDD : 3 scénarios `hardened` ajoutés à `codex_doubt_bridge.feature` (runner dédié réutilisé), 10/10 PASSED. check VERT 1050 unit + 114 cucumber, 0 FAIL.)
 _Session terminee_ : 221 ✅ — EPIC CDX-CONTEXT-HARDENING (US-1 fallback tolérant + TestKit, US-2 test d'exécution + audit).
 _Session precedente_ : 220 ✅ — maintenance + publication 0.0.9 + dogfooding doubt-aware.
-_Prochaine session_ : 222 — dogfooding enrichi canal Graphify réel OU page-provenance (D6) OU publication 0.0.10. Voir PROMPT_REPRISE.
+_Prochaine session_ : 222 — **PUBLICATION codex-plugin 0.0.10** (décision pilote — rend le fix CDX-CONTEXT-HARDENING S-221). Ordre DAG MEMPHIS-first (BOM/catalog 0.0.47) puis codex (pin 0.0.47 + Central). Voir PROMPT_REPRISE.
 _Session en cours_ : —
 
 '''

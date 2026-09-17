@@ -2,6 +2,7 @@
 :session: 222
 :date: 2026-09-17
 :status: PRET
+:mission: PUBLICATION codex-plugin 0.0.10 (décision pilote)
 
 == Quick Start
 ----
@@ -32,23 +33,41 @@ Rapport : `.agents/sessions/221-cdx-context-hardening.adoc`.
 
 == Prochaine session — 222 : objectifs
 
-=== Option A — Dogfooding enrichi (canal Graphify réel)
+=== Option A (RETENUE — décision pilote) — Publication codex-plugin 0.0.10
 
-* Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
-  avec le canal Graphify peuplé, mesurer le `composite-context.json`
-  complet (EAGER/RAG/GRAPHIFY/DOCS). Le fallback tolérant S-221 est
-  désormais prouvé ; reste à mesurer le run nominal en réel.
-* Consommateur transitoire `/tmp` (pattern Règle 2), base pgvector jetable.
+*Objectif prioritaire acté par le pilote : publier la release 0.0.10.*
+Contenu depuis 0.0.9 : EPIC CDX-CONTEXT-HARDENING (S-221, fix input
+tolérant `enrichedJsonFile` standalone + test d'exécution `execute()`).
+La release rend le correctif US-1 disponible aux consommateurs.
+
+Ordre DAG strict (pattern S-220) :
+. *MEMPHIS d'abord* : bump `workspace-bom/gradle/libs.versions.toml`
+   `codex-plugin = "0.0.9"` → `"0.0.10"` + version BOM/catalog `0.0.46`
+   → `0.0.47` ; gardes `contracts.catalog.*` + `PlatformCatalogAlignmentTest` ;
+   `publishToMavenLocal` VERT → publication Central (bundle AUTOMATIC).
+. *codex ensuite* : bump `codex-plugin/gradle/libs.versions.toml`
+   `codex-plugin = "0.0.9"` → `"0.0.10"` + pin platform `workspace-bom:0.0.47`
+   + settings `workspace-catalog:0.0.47` ; garde `CodexPluginPublicationTest`
+   3/3 (D5 — toml local == toml MEMPHIS, platform pin == catalog BOM) ;
+   `build -x test` VERT → `publishAggregationToCentralPortal --no-daemon`.
+. *Propagation* : vérifier repo1 HTTP 200 (codex-plugin 0.0.10 + BOM/catalog
+   0.0.47) ; aligner consommateurs (le cas échéant).
+. Note PUB-3.14 au BACKLOG (état 🟡 À FAIRE → ✅ TERMINÉ avec bundles).
+
+*Aucun publish ne se fait sans permission explicite* — mais la décision
+pilote acte que la 222 EST la session de publication.
 
 === Option B — Page-provenance (D6 cadrage S-219)
 
 * Join chunk→page du `OcrQualityReport` — nécessite une provenance de page
   dans les chunks. EPIC futur distinct, hors scope DOUBT-BRIDGE.
 
-=== Option C — Publication / maintenance / cross-borough
+=== Option C — Dogfooding enrichi (canal Graphify réel)
 
-* À la demande pilote uniquement. Une release 0.0.10 porterait le fix
-  CDX-CONTEXT-HARDENING (US-1) — l'utilisateur décide.
+* Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
+  avec le canal Graphify peuplé, mesurer le `composite-context.json`
+  complet (EAGER/RAG/GRAPHIFY/DOCS).
+* Consommateur transitoire `/tmp` (pattern Règle 2), base pgvector jetable.
 
 === Option D — Pollution TOC corpus FPA (99 chunks dot-leaders)
 
@@ -67,11 +86,13 @@ fonctionnel TestKit → Cucumber), English only.
 == Règles
 
 - COMMITS/PUSH — autorisés (décision pilote 2026-09-17).
-- PAS DE publishToMavenLocal automatique sans permission.
+- PAS DE publishToMavenLocal automatique sans permission — mais la décision
+  pilote acte explicitement que la S-222 EST la session de publication 0.0.10.
 - SECRETS via configuration/ — jamais en dur dans build.gradle.kts.
 
 == References
 
 - `.agents/INDEX.adoc` (à jour S-221)
-- `.agents/BACKLOG.adoc`
+- `.agents/BACKLOG.adoc` (PUB-3.14 🟡 À FAIRE)
 - `.agents/sessions/221-cdx-context-hardening.adoc`
+- `workspace-bom/` (bump 0.0.46 → 0.0.47, ordre DAG MEMPHIS-first)

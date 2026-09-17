@@ -227,6 +227,24 @@ parcouru, pas `indexOf`.
 . MEMPHIS Central : bundle `d199bf00-9183-4716-abb6-3bc79fdb2fd2` (BOM/catalog 0.0.45) ✅
 . codex Central : bundle `b573cf61-3686-4814-b7a3-612e707246b5` ✅ propagation repo1 HTTP 200.
 
+=== PUB-3.14 — codex-plugin 0.0.10 🟡 À FAIRE (S-222 — décision pilote)
+**Priorite** : P1
+**Estimation** : 1 pt
+**Dependances** : MEMPHIS BOM/catalog 0.0.47 (à publier d'abord — ordre DAG)
+
+. *Motif* : rendre disponible le fix CDX-CONTEXT-HARDENING (S-221) —
+  fallback `enrichedJsonFile` tolérant (`@InputFiles`) : `generateCompositeContext`
+  s'exécute désormais standalone sans `enrichJsonLdd` préalable. La 0.0.9
+  échouait en validation Gradle sur ce cas.
+. *Ordre DAG* : MEMPHIS-first (bump `codex-plugin` 0.0.9 → 0.0.10 + version
+  BOM/catalog 0.0.46 → 0.0.47, gardes, Central) → codex (bump toml local +
+  pin platform/settings 0.0.47, garde `CodexPluginPublicationTest` 3/3,
+  `publishAggregationToCentralPortal`).
+. Contenu depuis 0.0.9 : EPIC CDX-CONTEXT-HARDENING (US-1 input tolérant +
+  TestKit, US-2 test d'exécution `execute()` + audit 16 `@TaskAction`).
+  1050 unit + 114 cucumber 0 FAIL.
+. *À renseigner à la publication* : bundles MEMPHIS + codex, propagation repo1.
+
 === PUB-3.13 — codex-plugin 0.0.9 (corrective) ✅ TERMINÉ (S-220)
 **Priorite** : P0 (corrective — P0 cassé en production)
 **Estimation** : 1 pt
