@@ -4,7 +4,46 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 219 — **CDX-DOUBT-BRIDGE ✅ TERMINÉ 3/3 US** — le doute OCR acquisition atteint l'ingestion RAG et le contexte augmenté côté tâche codex : `CodexIngestTask` délègue à `DoubtPolicy`/`ingestWithDoubt` (thin wrapper, boucle R2DBC dupliquée supprimée), `CodexCompositeContextTask` requête `searchWithDoubt` + canal Docs via `DoubtExposure` + `excludeDoubtfulDocs` (défaut false) + champs JSON additifs `confidence`/`doubtful`. BDD `codex_doubt_bridge.feature` 5 scénarios. check VERT 987/0 (baseline 872 → +115). GBL-003.4 codex complété.)_
+_Dernière mise à jour : 2026-09-17 (session 220 — **Maintenance + publication 0.0.9 + dogfooding**. C : drift MEMPHIS réaligné (0.0.43→0.0.44, garde publication RED à HEAD). A : 2 releases Central — 0.0.8 (bundle `b573cf61`, MEMPHIS 0.0.45 `d199bf00`) puis **0.0.9 corrective** (bundle `7849b4b1`, MEMPHIS 0.0.46 `d1c09b5e`). B : dogfooding `collectIngest` → 387 chunks/18 doubtful/avg 0.9535 (identique S-214) **+ découverte bug P0 préexistant** `generateCompositeContext` (`Serializer for class 'Any' is not found`) corrigé TDD strict (3 UT + 2 BDD). check VERT 1010 unit + 108 cucumber 0 FAIL. Nouvelle US candidate : fallback `enrichedJsonFile` standalone.)_
+
+'''
+== ✅ EPIC CDX-CORPUS-JSON (fix P0) — Contrat N3 `composite-context.json` sérialisable ✅ TERMINÉ 2/2 US (S-220)
+
+_Origine : dogfooding B S-220 (run corpus FPA via tâche codex doubt-aware)._
+
+Le run réel a révélé que `generateCompositeContext` **levait à
+l'exécution** : `Serializer for class 'Any' is not found`.
+`CodexCompositeContextTask.execute()` sérialisait `Map<String, Any>` via
+`Json.encodeToString(...)`, or kotlinx.serialization n'a aucun serializer
+pour `Any`. Le contrat N3 (`composite-context.json`) était cassé en
+production, silencieusement — aucun test n'exécutait `execute()` (seuls
+les propriétés et les seams `internal` étaient couverts). Bug présent
+depuis le rename S-058.
+
+|===
+| US | Description | Pts | Statut
+| CDX-CORPUS-JSON-1 | Seams `buildCompositeJson`/`buildVibecodingJson` via `JsonObject`/`JsonPrimitive` (pattern `ExportKnowledgeBaseTask`) + 3 UT `CodexCompositeContextJsonTest` | 2 | ✅ TERMINÉ (S-220 — RED 3× Unresolved → GREEN, `execute()` consomme les seams)
+| CDX-CORPUS-JSON-2 | BDD contrat N3 — 2 scénarios `codex_doubt_bridge.feature` (runner dédié réutilisé) + re-run dogfooding vert (12 entries, 1 doubtful) | 1 | ✅ TERMINÉ (S-220)
+|===
+
+'''
+== 🟡 EPIC CDX-CONTEXT-HARDENING — Fallback `enrichedJsonFile` standalone + test d'exécution `execute()`
+
+_Origine : second constat dogfooding B S-220._
+
+Le wiring plugin pose `enrichedJsonFile` **inconditionnellement**
+(`CodexPlugin.kt:219`, `build/codex/enriched-ldd.json`) alors que la
+propriété est `@Optional` et que `buildGraphifySection()` gère
+explicitement l'absence (fallback `""`). Conséquence : `generateCompositeContext`
+seule échoue en validation Gradle (`Input file does not exist`) sans
+`enrichJsonLdd` préalable — le fallback documenté est inatteignable dans
+le cas standalone.
+
+|===
+| US | Description | Pts | Statut
+| CDX-CONTEXT-HARDENING-1 | Décider + appliquer : retirer le wiring par défaut (fallback `""` atteignable) OU `dependsOn("enrichJsonLdd")` (canal Graphify par défaut). TDD strict. | 2 | 🟡 À FAIRE
+| CDX-CONTEXT-HARDENING-2 | Test d'exécution `execute()` avec fake `RagVectorStore` + fichier temporaire (comble le trou qui a laissé passer le P0). Audit des autres `execute()` non couverts. | 2 | 🟡 À FAIRE
+|===
 
 '''
 == ✅ EPIC CDX-DOUBT-BRIDGE — Pont doute acquisition → RAG + contexte augmenté (GBL-003.4 codex) ✅ TERMINÉ 3/3 US (S-219)
@@ -170,6 +209,32 @@ parcouru, pas `indexOf`.
 . Contenu depuis 0.0.2 : S-072 OCR Pipeline (LlmOcrEngine + OcrPipeline + collectOcr) +
   S-073 EPIC CDX-CR3 (3 bugs P0/P1) + US-CDX-13-1 cache OCR + US-CDX-13-2 tests intégration.
   204 tests, 0 failures.
+
+=== PUB-3.12 — codex-plugin 0.0.8 ✅ TERMINÉ (S-220)
+**Priorite** : P1
+**Estimation** : 1 pt
+**Dependances** : MEMPHIS BOM/catalog 0.0.45 ✅ Central (S-220)
+
+. Bump `codex-plugin/gradle/libs.versions.toml` `codex-plugin = "0.0.7"` → `"0.0.8"` ✅ FAIT S-220
+. Bump constraint codex `0.0.7` → `0.0.8` côté MEMPHIS (`workspace-bom/gradle/libs.versions.toml:51`) ✅ FAIT S-220
+. Contenu depuis 0.0.7 : OCR-QUALITY (S-218) + CDX-DOUBT-BRIDGE (S-219). 987 tests 0 FAIL.
+. MEMPHIS Central : bundle `d199bf00-9183-4716-abb6-3bc79fdb2fd2` (BOM/catalog 0.0.45) ✅
+. codex Central : bundle `b573cf61-3686-4814-b7a3-612e707246b5` ✅ propagation repo1 HTTP 200.
+
+=== PUB-3.13 — codex-plugin 0.0.9 (corrective) ✅ TERMINÉ (S-220)
+**Priorite** : P0 (corrective — P0 cassé en production)
+**Estimation** : 1 pt
+**Dependances** : MEMPHIS BOM/catalog 0.0.46 ✅ Central (S-220)
+
+. *Motif* : 0.0.8 embarque le bug P0 découvert en dogfooding
+  (`generateCompositeContext` → `Serializer for class 'Any' is not found`).
+  Central étant immuable, correction par nouvelle release.
+. Bump `codex-plugin` 0.0.8 → `0.0.9` (toml codex + toml MEMPHIS) ✅ FAIT S-220
+. Garde `PlatformCatalogAlignmentTest` (workspace-bom) épingle 0.0.46 ✅ FAIT S-220
+. Contenu depuis 0.0.8 : fix sérialisation N3 (`buildCompositeJson`/
+  `buildVibecodingJson`) + 2 scénarios BDD. 1010 unit + 108 cucumber 0 FAIL.
+. MEMPHIS Central : bundle `d1c09b5e-79d9-47ee-a504-2f180445f0a7` (BOM/catalog 0.0.46) ✅
+. codex Central : bundle `7849b4b1-46a3-4018-b255-015ef136bdd4` ✅ propagation repo1 HTTP 200.
 
 === PUB-3.11 — codex-plugin 0.0.5 ✅ TERMINÉ (S-095)
 **Priorite** : P1

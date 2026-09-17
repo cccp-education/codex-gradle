@@ -3186,3 +3186,55 @@ restaient aveugles au doute.
 === E. Prochaine session (220)
 Publication codex-plugin 0.0.8 (si accord pilote) OU maintenance
 cross-borough. Voir PROMPT_REPRISE.
+
+'''
+== Session 220 — 2026-09-17 — Maintenance cross-borough + publication 0.0.9 + dogfooding doubt-aware
+
+=== A. Objectif
+Trois missions pilote dans l'ordre C → A → B : maintenance cross-borough,
+publication Maven Central, dogfooding run corpus FPA via tâche codex
+doubt-aware (GBL-003.4).
+
+=== B. Actions
+. *C — Maintenance* : garde `CodexPluginPublicationTest` RED à HEAD (pin
+   codex 0.0.43 vs MEMPHIS 0.0.44 publié S-216). Réalignement pin settings
+   + platform 0.0.43 → 0.0.44, garde 3/3 VERTE. Marqueur périmé CADRAGE
+   DOUBT-BRIDGE US-1/2 `🟡 À FAIRE` → `✅ TERMINÉ (S-219)` (étape 7 en retard).
+. *A — Publication* : 2 releases Central. 0.0.8 nominal — MEMPHIS bump
+   0.0.44→0.0.45 (bundle `d199bf00`), codex 0.0.8 (bundle `b573cf61`),
+   contenu OCR-QUALITY S-218 + DOUBT-BRIDGE S-219. Puis **0.0.9 corrective**
+   après la découverte B — MEMPHIS 0.0.46 (bundle `d1c09b5e`), codex 0.0.9
+   (bundle `7849b4b1`). Propagation repo1 HTTP 200 (4 artefacts).
+. *B — Dogfooding* : consommateur transitoire /tmp (Règle 2) + pgvector
+   jetable pg17 port 32777, plugin 0.0.8 buildscript classpath.
+   `collectIngest` → 387 chunks / 18 doubtful / 387 embeddings / avg 0.9535,
+   identique run de référence S-214 `CorpusIngestMain`. **Bug P0 préexistant
+   découvert** : `generateCompositeContext` levait `Serializer for class
+   'Any' is not found` (`Map<String, Any>` + kotlinx.serialization, présent
+   depuis le rename S-058, jamais exécuté). Corrigé baby-step TDD strict
+   RED (3× Unresolved) → GREEN (seams `buildCompositeJson`/
+   `buildVibecodingJson` via `JsonObject`/`JsonPrimitive`, pattern
+   `ExportKnowledgeBaseTask`) → REFACTOR + 2 scénarios BDD
+   `codex_doubt_bridge.feature` (runner dédié réutilisé). Re-run vert :
+   12 entries, 1 doubtful exposé, canal Docs peuplé.
+
+=== C. Gates
+- `./gradlew check` BUILD SUCCESSFUL — **1010 unit + 108 cucumber dédiés,
+   0 FAIL** (baseline 987 → +23). Kover VERT, validatePlugins VERT.
+- Garde publication 3/3 VERTE. Zéro secret, zéro régression, backward
+   compat totale (JSON additif S-219 préservé, désormais valide).
+
+=== D. Constat non corrigé (documenté)
+Wiring `enrichedJsonFile` inconditionnel (`CodexPlugin.kt:219`) vs
+propriété `@Optional` — `generateCompositeContext` seule échoue si
+`enrichJsonLdd` n'a pas tourné (fallback `""` inatteignable). US future.
+
+=== E. Leçons
+Le dogfooding réel attrape ce que les tests de seams ne voient pas : aucun
+test n'exécutait `execute()`. `Map<String, Any>` + kotlinx = bombe à
+retardement. Drift MEMPHIS silencieux si la garde n'est pas exécutée après
+un bump cross-borough.
+
+=== F. Prochaine session (221)
+Second constat B (fallback `enrichedJsonFile`) OU test d'exécution
+`execute()` OU dogfooding canal Graphify. Voir PROMPT_REPRISE.

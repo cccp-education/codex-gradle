@@ -84,8 +84,8 @@ alors que le socle N1 le permet déjà.
 |===
 | US | Description | Pts | Statut
 | CDX-DOUBT-BRIDGE-0 | Cadrage EPIC (gouvernance pure, zéro code) | 1 | ✅ TERMINÉ (S-219)
-| CDX-DOUBT-BRIDGE-1 | `CodexIngestTask` doubt-aware — délégation `DoubtPolicy.mark` + `RagVectorStore.ingestWithDoubt`, seam `ingestInto` (unit + Cucumber + IT) | 3 | 🟡 À FAIRE
-| CDX-DOUBT-BRIDGE-2 | `CodexCompositeContextTask` doubt-aware — `searchWithDoubtBlocking` + `DoubtExposure` canal Docs + `excludeDoubtfulDocs` + champs JSON additifs (unit + Cucumber) | 2 | 🟡 À FAIRE
+| CDX-DOUBT-BRIDGE-1 | `CodexIngestTask` doubt-aware — délégation `DoubtPolicy.mark` + `RagVectorStore.ingestWithDoubt`, seam `ingestInto` (unit + Cucumber + IT) | 3 | ✅ TERMINÉ (S-219)
+| CDX-DOUBT-BRIDGE-2 | `CodexCompositeContextTask` doubt-aware — `searchWithDoubtBlocking` + `DoubtExposure` canal Docs + `excludeDoubtfulDocs` + champs JSON additifs (unit + Cucumber) | 2 | ✅ TERMINÉ (S-219)
 |===
 
 == Ordre

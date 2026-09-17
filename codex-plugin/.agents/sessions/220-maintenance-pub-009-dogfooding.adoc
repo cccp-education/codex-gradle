@@ -1,0 +1,200 @@
+= Rapport Session 220 — Maintenance cross-borough + publication 0.0.9 + dogfooding doubt-aware
+:session: 220
+:date: 2026-09-17
+:borough: codex-gradle (Brooklyn)
+:status: TERMINÉ
+
+== Objectif
+
+Trois missions demandées par le pilote, exécutées dans l'ordre C → A → B :
+maintenance cross-borough, publication Maven Central, puis dogfooding du
+run corpus FPA via la tâche codex doubt-aware (GBL-003.4).
+
+== Baseline — check VERT
+
+`./gradlew check` d'ouverture : 987 tests 0 FAIL, 9 suites Cucumber
+dédiées vertes (baseline S-219 préservée).
+
+== C — Maintenance cross-borough : drift MEMPHIS réaligné
+
+=== Constat
+
+La garde `CodexPluginPublicationTest` était *RED* à HEAD : elle lit le
+toml MEMPHIS réel (`workspace-bom/gradle/libs.versions.toml`) et compare
+les versions. MEMPHIS avait publié **BOM/catalog 0.0.44** (S-216, graphify
+0.0.4) alors que codex pin encore **0.0.43**. Drift latent non détecté
+jusqu'ici car `check` n'avait pas été lancé après le bump MEMPHIS S-216.
+
+Dérive corollaire vérifiée : le toml codex local épinglait `codebase-plugin
+= "0.0.12"` vs catalogue MEMPHIS `0.0.15` — sans impact (la contrainte BOM
+résout 0.0.15, vérifié `gradle dependencies`).
+
+=== Correctif
+
+. `settings.gradle.kts` : pin `workspace-catalog` 0.0.43 → **0.0.44**.
+. `build.gradle.kts` : platform `workspace-bom` 0.0.43 → **0.0.44**.
+. Garde publication 3/3 VERTE (`workspace bom platform pin matches ws
+  catalog bom version` PASSED).
+. Baseline préservée : `check` VERT 987 tests 0 FAIL.
+. Marqueur périmé corrigé : `CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc` — US-1/2
+  passées de `🟡 À FAIRE` à `✅ TERMINÉ (S-219)` (étape 7 en retard S-219).
+
+== A — Publication Maven Central (deux releases)
+
+=== Release 1 — 0.0.8 (nominal)
+
+. MEMPHIS bump 0.0.44 → **0.0.45** (`codex-plugin = "0.0.8"`), gardes
+  `contracts.catalog.*` VERTES, mavenLocal VERT.
+. MEMPHIS Central : bundle `d199bf00-9183-4716-abb6-3bc79fdb2fd2`.
+. codex bump toml 0.0.7 → **0.0.8**, pin platform/catalog 0.0.45,
+  garde 3/3 VERTE, `build -x test` VERT.
+. codex Central : bundle `b573cf61-3686-4814-b7a3-612e707246b5`.
+
+Contenu 0.0.8 depuis 0.0.7 : OCR-QUALITY (S-218) + CDX-DOUBT-BRIDGE (S-219).
+
+=== Release 2 — 0.0.9 (corrective, découvarte B)
+
+Le dogfooding B a mis au jour un **bug P0 latent** (voir § B) : la tâche
+`generateCompositeContext` échouait à l'exécution. Central étant immuable,
+la correction exige une nouvelle release.
+
+. MEMPHIS bump 0.0.45 → **0.0.46** (`codex-plugin = "0.0.9"`), Garde
+  `PlatformCatalogAlignmentTest` épingle mise à jour (0.0.46), gates VERTES.
+. MEMPHIS Central : bundle `d1c09b5e-79d9-47ee-a504-2f180445f0a7`.
+. codex bump toml 0.0.8 → **0.0.9**, pin platform/catalog 0.0.46,
+  garde 3/3 VERTE.
+. codex Central : bundle `7849b4b1-46a3-4018-b255-015ef136bdd4`.
+
+Contenu 0.0.9 depuis 0.0.8 : fix P0 sérialisation `composite-context.json`
++ scénarios BDD N3 (voir § B).
+
+=== Propagation repo1
+
+| Artefact | URL repo1 | HTTP
+| codex-plugin 0.0.8 | `.../codex-plugin/0.0.8/` | 200
+| codex-plugin 0.0.9 | `.../codex-plugin/0.0.9/` | 200
+| workspace-bom 0.0.45 | `.../workspace-bom/0.0.45/` | 200
+| workspace-bom 0.0.46 | `.../workspace-bom/0.0.46/` | 200
+| workspace-catalog 0.0.45/0.0.46 | `.../workspace-catalog/...` | 200
+
+== B — Dogfooding run corpus FPA (GBL-003.4)
+
+=== Méthode
+
+Consommateur transitoire `/tmp/opencode/fpa-doubt-build` (pattern Règle 2 —
+buildDir /tmp, wiped après run), plugin `education.cccp:codex-plugin:0.0.8`
+via buildscript classpath + `apply(plugin)` (pattern S-216 : le marker N2
+transitif codebase-plugin ne se résout pas via `plugins {}` dans un build
+sans conventions). Base pgvector jetable `pgvector/pgvector:pg17`
+(port 32777). Corpus = `codex-out/chunks.json` (387 chunks S-216).
+
+=== Run `collectIngest` (US-1 doubt-aware)
+
+----
+[codex] collectIngest : chunks.json → pgvector (localhost:32777/codex)
+[codex]   book (387 chunks, avg_confidence=0,95) (markers=doubt-aware, batch=32)
+[codex] ✓ collectIngest — 1 docs, 387 chunks (doubt-aware)
+----
+
+.Requête SQL de vérification
+----
+ chunks | doubtful | with_embedding | avg_conf
+--------+----------+----------------+----------
+    387 |       18 |            387 |   0.9535
+----
+
+**Résultat identique au run de référence S-214** (`CorpusIngestMain`
+codebase : 387 chunks / 18 doubtful / avg 0.953). La *tâche codex* n'est
+plus un contournement : `collectIngest` produit le même corpus doubt-aware.
+
+=== Bug P0 découvert — `generateCompositeContext` casse à l'exécution
+
+Run `generateCompositeContext` (US-2 exposition doubt-aware) → **échec** :
+
+----
+Execution failed for task ':generateCompositeContext'.
+> Serializer for class 'Any' is not found.
+----
+
+.Root cause
+`CodexCompositeContextTask.execute()` sérialisait `Map<String, Any>` via
+`Json.encodeToString(...)`. kotlinx.serialization n'a **aucun serializer
+pour `Any`** — l'exécution lève, alors que `check` reste vert. Aucun test
+n'exécutait `execute()` : les suites ne couvraient que le wiring des
+propriétés (`CodexCompositeContextTaskTest`) et les seams `internal`
+(`buildDocsContent`, `searchDoubtAware`). Bug **préexistant** (depuis le
+rename S-058 : `mapOf<String, Any>` présent dans le fichier initial,
+`git log -S` confirme), jamais détecté car la tâche n'avait jamais été
+exécutée en réel. Le contrat N3 (`composite-context.json`) était donc
+cassé en production, silencieusement.
+
+.Le pattern voisin faisait déjà bien
+`ExportKnowledgeBaseTask` construit son JSON avec `JsonObject`/
+`JsonPrimitive` — précisément parce que `Map<String, Any>` ne se sérialise
+pas.
+
+=== Correctif — baby-step TDD strict RED → GREEN → REFACTOR
+
+. *RED* — `CodexCompositeContextJsonTest` (3 UT) : `buildCompositeJson`
+  et `buildVibecodingJson` absents → 3× `Unresolved reference`.
+. *GREEN* — extraction de 2 seams purs dans `CodexCompositeContextTask` :
+  `internal fun buildCompositeJson(results, query, topK): String` et
+  `internal fun buildVibecodingJson(docsSection, query, topK, count): String`,
+  construits via `buildJsonObject`/`JsonPrimitive`/`JsonArray` (pattern
+  `ExportKnowledgeBaseTask`). `execute()` consomme les seams.
+  `.writeText(buildCompositeJson(results, q, k))` +
+  `.writeText(buildVibecodingJson(...))`.
+. *REFACTOR* — import du dead code (`mapOf` entries) retiré, `entries =
+  results` (la liste `RetrieveResult` typée remplace les maps inline),
+  imports kotlinx ajoutés.
+. *BDD* — 2 scénarios ajoutés à `codex_doubt_bridge.feature`
+  (`The composite context JSON contract is serializable`, `The
+  vibecoding JSON contract is serializable`) + 4 step defs préfixés
+  "composite JSON"/"vibecoding JSON" (anti-collision S-088). Runner dédié
+  existant réutilisé (Économie d'Encre — pas de 10e runner). 7/7 PASSED.
+. *Preuve par re-run* — `publishToMavenLocal` + re-run consommateur :
+  `generateCompositeContext — 12 entries, docsSection=3206 tokens` OK,
+  `composite-context.json` porte 1 entry `doubtful=true` (query
+  « comment organiser le contenu d'un scénario pédagogique »), le canal
+  Docs expose la provenance + la query pertinente (SPG/SPD).
+
+=== Second constat B (non corrigé, documenté)
+
+Le wiring plugin pose `enrichedJsonFile` **inconditionnellement**
+(`build/codex/enriched-ldd.json`, `CodexPlugin.kt:219`) alors que la
+propriété est `@Optional` et que `buildGraphifySection()` gère
+explicitement l'absence (fallback `""`). Résultat : exécuter
+`generateCompositeContext` seule échoue en validation Gradle
+(`Input file does not exist`) si `enrichJsonLdd` n'a pas tourné — le
+fallback documenté est inatteignable dans le cas standalone. Non corrigé
+cette session (hors périmètre du P0, décision à acter) — à traiter en
+EPIC/ US dédiée.
+
+== Gates — check VERT final
+
+. `check` VERT : **1010 unit** (+23 vs baseline 987) + **108 cucumber
+  dédiés** (dont +4 doubt-bridge BDD), **0 FAIL**.
+. Kover VERT, validatePlugins VERT.
+. 3 nouveaux tests unit `CodexCompositeContextJsonTest` + 4 step defs
+  BDD (re-runnées vertes).
+. Zéro secret, zéro régression, backward compat totale (le JSON additif
+  `confidence`/`doubtful` S-219 est préservé à l'identique — la sortie est
+  désormais *valide*, pas modifiée dans sa forme).
+
+== Leçons
+
+. *Le dogfooding réel attrape ce que les tests de seams ne voient pas* :
+  `check` vert ne prouve pas que la tâche s'exécute. Les seams `internal`
+  (testés) ont masqué le défaut de l'`execute()` (non testé). Un test
+  d'exécution — même via un fake store — aurait suffi.
+. *`Map<String, Any>` + kotlinx.serialization = bombe à retardement* :
+  le pattern `JsonObject` du voisin (`ExportKnowledgeBaseTask`) était le
+  bon ; la dette a survécu au rename S-058 sans jamais exploser.
+. *Drift MEMPHIS silencieux* : une garde RED non exécutée après un bump
+  cross-borough laisse une baseline fausse. `check` en ouverture de
+  session aurait dû la révéler (fait S-220).
+
+== Commits
+
+. `codex-gradle` : maintenance + fix P0 + BDD + bump 0.0.9.
+. `workspace-bom` : BOM/catalog 0.0.45 + 0.0.46 (garde alignée).

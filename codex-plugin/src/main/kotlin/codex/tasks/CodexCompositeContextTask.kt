@@ -13,6 +13,9 @@ import codex.enrichment.GraphifySectionBuilder
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -127,6 +130,63 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         }
     }
 
+    /**
+     * Serialization seam for the N3 `composite-context.json` contract.
+     *
+     * kotlinx.serialization has no serializer for `Any` — writing
+     * `Map<String, Any>` directly threw `Serializer for class 'Any' is not
+     * found` at execution time (discovered by the S-220 dogfooding run). The
+     * neighbouring [ExportKnowledgeBaseTask] already builds JSON with
+     * [JsonObject]/[JsonPrimitive]; this seam mirrors that pattern so the
+     * contract is serializable and unit-testable without a database.
+     */
+    internal fun buildCompositeJson(results: List<RetrieveResult>, query: String, topK: Int): String {
+        val entries = results.map { r ->
+            buildJsonObject {
+                put("source", JsonPrimitive("codex"))
+                put("chunkId", JsonPrimitive(r.chunkId))
+                put("chunkText", JsonPrimitive(r.chunkText.take(500)))
+                put("sectionPath", JsonPrimitive(r.sectionPath))
+                put("headingLevel", JsonPrimitive(r.headingLevel))
+                put("sourceDocument", JsonPrimitive(r.sourceDocument))
+                put("similarity", JsonPrimitive(r.similarity))
+                put("confidence", JsonPrimitive(r.confidence))
+                put("doubtful", JsonPrimitive(r.doubtful))
+            }
+        }
+        val composite = buildJsonObject {
+            put("source", JsonPrimitive("brooklyn"))
+            put("query", JsonPrimitive(query))
+            put("topK", JsonPrimitive(topK))
+            put("entries", JsonArray(entries))
+            put("count", JsonPrimitive(entries.size))
+        }
+        return Json { prettyPrint = true }.encodeToString(composite)
+    }
+
+    /**
+     * Serialization seam for the typed vibecoding context
+     * (`composite-context-vibecoding.json`) — mirrors [buildCompositeJson].
+     */
+    internal fun buildVibecodingJson(docsSection: String, query: String, topK: Int, count: Int): String {
+        val budget = buildJsonObject {
+            put("totalTokenBudget", JsonPrimitive(8000))
+            put("eager", JsonPrimitive(0.40))
+            put("rag", JsonPrimitive(0.30))
+            put("graphify", JsonPrimitive(0.20))
+            put("docs", JsonPrimitive(0.10))
+        }
+        val vibecodingJson = buildJsonObject {
+            put("source", JsonPrimitive("brooklyn"))
+            put("query", JsonPrimitive(query))
+            put("topK", JsonPrimitive(topK))
+            put("docsSection", JsonPrimitive(docsSection))
+            put("budget", budget)
+            put("count", JsonPrimitive(count))
+        }
+        return Json { prettyPrint = true }.encodeToString(vibecodingJson)
+    }
+
     @TaskAction
     fun execute() {
         val q = query.orNull ?: "architecture du workspace"
@@ -144,27 +204,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         }
 
         // ── JSON compatible N3/N4 — champs de doute additifs (backward compat) ──
-        val entries = results.map { r ->
-            mapOf(
-                "source" to "codex",
-                "chunkId" to r.chunkId,
-                "chunkText" to r.chunkText.take(500),
-                "sectionPath" to r.sectionPath,
-                "headingLevel" to r.headingLevel,
-                "sourceDocument" to r.sourceDocument,
-                "similarity" to r.similarity,
-                "confidence" to r.confidence,
-                "doubtful" to r.doubtful
-            )
-        }
-
-        val composite = mapOf<String, Any>(
-            "source" to "brooklyn",
-            "query" to q,
-            "topK" to k,
-            "entries" to entries,
-            "count" to entries.size
-        )
+        val entries = results
 
         // ── EPIC 3 : typed ContextChannel.Docs + CompositeContext ──
         // CDX-DOUBT-BRIDGE-2 : the Docs channel honors the socle doubt policy.
@@ -192,25 +232,18 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         // ── Écriture JSON compatible (N3/N4 existant) ──
         val output = outputFile.asFile.get()
         output.parentFile.mkdirs()
-        output.writeText(Json { prettyPrint = true }.encodeToString(composite))
+        output.writeText(buildCompositeJson(results, q, k))
 
         // ── Écriture vibecoding typed context (EPIC 3) ──
         val typedFile = java.io.File(output.parentFile, "composite-context-vibecoding.json")
-        val vibecodingJson = mapOf(
-            "source" to "brooklyn",
-            "query" to q,
-            "topK" to k,
-            "docsSection" to typedCompositeContext.docsSection,
-            "budget" to mapOf(
-                "totalTokenBudget" to config.totalTokenBudget,
-                "eager" to config.budgetEagerLazy,
-                "rag" to config.budgetRag,
-                "graphify" to config.budgetGraphify,
-                "docs" to config.budgetDocs
-            ),
-            "count" to entries.size
+        typedFile.writeText(
+            buildVibecodingJson(
+                docsSection = typedCompositeContext.docsSection,
+                query = q,
+                topK = k,
+                count = entries.size,
+            )
         )
-        typedFile.writeText(Json { prettyPrint = true }.encodeToString(vibecodingJson))
 
         Metadata.writeTo(
             output.parentFile,

@@ -10,7 +10,12 @@ import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexIngestTask
 import io.cucumber.java8.En
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 
@@ -33,6 +38,8 @@ class DoubtBridgeSteps : En {
     private val results = mutableListOf<RetrieveResult>()
     private var docsContent: String = ""
     private var excluded: Boolean = false
+    private var compositeJson: String = ""
+    private var vibecodingJson: String = ""
 
     private fun ingestTask(): CodexIngestTask =
         ProjectBuilder.builder().build()
@@ -129,6 +136,35 @@ class DoubtBridgeSteps : En {
 
         Then("the socle doubt-aware search was used") {
             assertTrue(retrieveStore.called, "searchWithDoubt must be used, not the doubt-blind search")
+        }
+
+        // ── N3 JSON contract scenarios (bug P0 S-220) ────────────────────
+
+        When("the composite context JSON is built") {
+            compositeJson = contextTask().buildCompositeJson(results, "query", 12)
+        }
+
+        Then("the composite JSON parses with {int} entries") { expected: Int ->
+            val root = Json.parseToJsonElement(compositeJson).jsonObject
+            assertEquals(expected, root["entries"]!!.jsonArray.size)
+            assertEquals(expected.toString(), root["count"]!!.jsonPrimitive.content)
+        }
+
+        Then("the composite JSON exposes a doubtful entry") {
+            val doubtful = Json.parseToJsonElement(compositeJson).jsonObject["entries"]!!
+                .jsonArray.map { it.jsonObject }
+                .filter { it["doubtful"]!!.jsonPrimitive.content == "true" }
+            assertTrue(doubtful.isNotEmpty(), "a doubtful entry must be exposed with doubtful=true")
+        }
+
+        When("the vibecoding JSON is built") {
+            docsContent = contextTask().buildDocsContent(results, excludeDoubtful = false)
+            vibecodingJson = contextTask().buildVibecodingJson(docsContent, "query", 12, results.size)
+        }
+
+        Then("the vibecoding JSON exposes the docs section") {
+            val root = Json.parseToJsonElement(vibecodingJson).jsonObject
+            assertEquals(docsContent, root["docsSection"]!!.jsonPrimitive.content)
         }
     }
 

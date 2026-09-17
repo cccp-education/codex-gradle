@@ -1,5 +1,5 @@
-= PROMPT_REPRISE — Codex — Session 220
-:session: 220
+= PROMPT_REPRISE — Codex — Session 221
+:session: 221
 :date: 2026-09-17
 :status: PRET
 
@@ -7,61 +7,71 @@
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 ./gradlew build -x test   # compile OK, validatePlugins OK
-./gradlew check           # baseline 987 tests 0 FAIL (S-219)
+./gradlew check           # baseline 1010 unit + 108 cucumber, 0 FAIL (S-220)
 ----
 
-== Session 219 terminée — EPIC CDX-DOUBT-BRIDGE TERMINÉ 3/3 US
+== Session 220 terminée — maintenance + publication 0.0.9 + dogfooding
 
-*CDX-DOUBT-BRIDGE-0 ✅* — cadrage (5 constats, 7 décisions). Doc
-`.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`.
+*C — Maintenance* : drift MEMPHIS réaligné (pin 0.0.43→0.0.44, garde
+`CodexPluginPublicationTest` était RED à HEAD). Marqueur périmé CADRAGE
+DOUBT-BRIDGE corrigé.
 
-*CDX-DOUBT-BRIDGE-1 ✅* — `CodexIngestTask` doubt-aware : seam
-`internal ingestInto` délègue à `DoubtPolicy.mark` +
-`RagVectorStore.ingestWithDoubt` ; boucle R2DBC dupliquée supprimée
-(thin wrapper, 135→111 lignes). `CodexIngestDoubtTest` 4 UT +
-`CodexIngestRetrieveIT` testcontainers PASSED (chemin R2DBC réel).
+*A — Publication* : deux releases Central. 0.0.8 (bundle `b573cf61`,
+MEMPHIS 0.0.45 `d199bf00`) puis 0.0.9 corrective (bundle `7849b4b1`,
+MEMPHIS 0.0.46 `d1c09b5e`). Propagation repo1 vérifiée HTTP 200.
 
-*CDX-DOUBT-BRIDGE-2 ✅* — `CodexCompositeContextTask` doubt-aware :
-`searchDoubtAware` → `searchWithDoubt` ; `buildDocsContent` →
-`DoubtExposure` (annote/exclut) avec provenance préservée ; entrées JSON
-+`confidence`/`doubtful` (additif) ; `CodexExtension.excludeDoubtfulDocs`
-(défaut false) + wiring. `CodexCompositeContextDoubtTest` 4 UT +
-`CodexExtensionDoubtTest` 3 UT. BDD `codex_doubt_bridge.feature` 5
-scénarios `@doubt-bridge` + 9e runner dédié.
+*B — Dogfooding* : run `collectIngest` doubt-aware → **387 chunks /
+18 doubtful / avg 0.9535** (identique S-214). Le run a découvert un
+**bug P0 préexistant** : `generateCompositeContext` levait
+`Serializer for class 'Any' is not found` (`Map<String, Any>` non
+sérialisable kotlinx). Corrigé TDD strict (3 UT `CodexCompositeContextJsonTest`
++ 2 scénarios BDD) via seams `buildCompositeJson`/`buildVibecodingJson`
+(pattern `JsonObject` de `ExportKnowledgeBaseTask`). Re-run vert : 12
+entries, 1 doubtful exposé, canal Docs peuplé.
 
-*GBL-003.4 codex complété* : la surface tâche n'est plus un contournement
-du doute (le run réel S-214 passait par `CorpusIngestMain` codebase).
+Rapport : `.agents/sessions/220-maintenance-pub-009-dogfooding.adoc`.
 
-Gate : check VERT 987 tests 0 FAIL (baseline 872 → +115). 9 suites
-cucumber dédiées VERTES. Zéro bump BOM, zéro secret, backward compat.
+== Prochaine session — 221 : objectifs
 
-Rapport : `.agents/sessions/219-cdx-doubt-bridge.adoc`.
+=== Option A — Second constat B : fallback `enrichedJsonFile` standalone
 
-== Prochaine session — 220 : objectifs
+* Le wiring plugin pose inconditionnellement `enrichedJsonFile`
+  (`CodexPlugin.kt:219`, `build/codex/enriched-ldd.json`) alors que la
+  propriété est `@Optional` et que `buildGraphifySection()` gère
+  l'absence (fallback `""`).
+* Conséquence : `generateCompositeContext` seule échoue en validation
+  Gradle (`Input file does not exist`) sans `enrichJsonLdd` préalable —
+  le fallback documenté est inatteignable.
+* Correctif candidat : soit retirer le wiring par défaut (laisser la
+  propriété non configurée → fallback `""`), soit `dependsOn("enrichJsonLdd")`.
+  Décider (économie d'encre vs canal Graphify par défaut).
+* TDD strict : test d'exécution `execute()` avec fake store (comble le
+  trou qui a laissé passer le P0).
 
-=== Option A — Publication codex-plugin 0.0.8 (si accord pilote) 🟡
+=== Option B — Test d'exécution `execute()` (comble le trou P0)
 
-* HEAD (S-219) non publié. Version locale 0.0.7, Central 0.0.7 (S-217).
-* Bump 0.0.8 requis + MEMPHIS catalog/BOM.
-* Contenu depuis 0.0.7 : OCR-QUALITY (S-218) + CDX-DOUBT-BRIDGE (S-219).
+* Aucun test n'exécute `CodexCompositeContextTask.execute()` de bout en
+  bout. Un test avec `RagVectorStore` fake (sous-classe open) + fichier
+  temporaire couvrirait la vraie chaîne (résultats → JSON → écriture →
+  metadata).
+* Généraliser aux autres tâches à `execute()` non couvert (audit).
 
-=== Option B — Dogfooding run corpus FPA `collectIngest` doubt-aware
+=== Option C — Dogfooding enrichi (canal Graphify réel)
 
-* Le corpus FPA (387 chunks, 18 doubtful) a été ingéré via
-  `CorpusIngestMain` (codebase) S-214. Vérifier que la tâche codex
-  `collectIngest` produit désormais le même résultat doubt-aware.
-* Mesure du gain vs découverte manuelle (rapport `OcrQualityReport`).
+* Rejouer `enrichJsonLdd` (S-217, 115/115 sections) → `generateCompositeContext`
+  avec le canal Graphify peuplé, mesurer le `composite-context.json`
+  complet (EAGER/RAG/GRAPHIFY/DOCS).
 
-=== Option C — Maintenance / cross-borough
+=== Option D — Maintenance / cross-borough
 
 * À la demande pilote uniquement.
 
 == Hors scope (documenté)
 
-* *Page-provenance* (D6 cadrage) : join chunk→page du `OcrQualityReport`
-  vers le doute par chunk — nécessite d'ajouter une provenance de page
-  aux chunks (le `SemanticChunker` produit par section, pas par page).
-  EPIC futur distinct.
+* *Page-provenance* (D6 cadrage S-219) : join chunk→page du
+  `OcrQualityReport` — EPIC futur distinct.
+* *Pollution TOC* du corpus FPA (99 chunks dot-leaders) : cause racine
+  amont OCR/scan, pas le chunking codex.
 
 == Méthode
 
@@ -76,6 +86,6 @@ Baby-step TDD strict RED → GREEN → REFACTOR, 3 niveaux (unit → fonctionnel
 
 == References
 
-- `.agents/INDEX.adoc` (à jour S-219)
-- `.agents/BACKLOG.adoc` (EPIC CDX-DOUBT-BRIDGE ✅ 3/3 US)
-- `.agents/CADRAGE_EPIC_CDX_DOUBT_BRIDGE.adoc`
+- `.agents/INDEX.adoc` (à jour S-220)
+- `.agents/BACKLOG.adoc`
+- `.agents/sessions/220-maintenance-pub-009-dogfooding.adoc`

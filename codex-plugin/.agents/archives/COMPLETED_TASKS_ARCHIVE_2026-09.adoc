@@ -103,3 +103,24 @@
 - GBL-003.4 codex complété — la tâche n'est plus un contournement.
 - Gates : check VERT 987 tests 0 FAIL (baseline 872 → +115), 9 suites Cucumber.
 - Zéro bump BOM, zéro secret, backward compat totale.
+
+== S-220 (2026-09-17) — Maintenance + publication 0.0.9 + dogfooding
+
+- C — Drift MEMPHIS réaligné : garde `CodexPluginPublicationTest` RED à HEAD
+  (pin codex 0.0.43 vs MEMPHIS 0.0.44 S-216) → pin settings/platform 0.0.43
+  → 0.0.44, garde 3/3 VERTE. Marqueur CADRAGE DOUBT-BRIDGE US-1/2 corrigé
+  (`🟡 À FAIRE` → `✅ TERMINÉ (S-219)`).
+- A — Deux releases Central : 0.0.8 (MEMPHIS 0.0.45 `d199bf00`, codex
+  `b573cf61`) puis 0.0.9 corrective (MEMPHIS 0.0.46 `d1c09b5e`, codex
+  `7849b4b1`). Propagation repo1 HTTP 200.
+- B — Dogfooding `collectIngest` : 387 chunks / 18 doubtful / 387 embeddings
+  / avg 0.9535 (identique S-214). Bug P0 préexistant découvert
+  `generateCompositeContext` (`Serializer for class 'Any' is not found`,
+  `Map<String, Any>` non sérialisable kotlinx, depuis rename S-058) —
+  corrigé TDD strict 3 UT (`CodexCompositeContextJsonTest`) + 2 BDD
+  (`codex_doubt_bridge.feature`), seams `buildCompositeJson`/
+  `buildVibecodingJson` via `JsonObject`.
+- Gates : check VERT 1010 unit + 108 cucumber 0 FAIL, Kover VERT,
+  validatePlugins VERT. Zéro secret.
+- Constat non corrigé (documenté) : wiring `enrichedJsonFile`
+  inconditionnel vs `@Optional` (US future).

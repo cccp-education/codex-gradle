@@ -811,3 +811,30 @@ pure BDD. Les 3 scénarios `@ocr-boundary` valident les contrats
 boundary sans modifier le code de production (counting fake engines +
 in-memory cache prouvent l'économie d'encre et la non-invocation de
 Tesseract).
+
+'''
+== Session 220 — Fix P0 sérialisation N3 + dogfooding doubt-aware
+
+*Delta* : 987 → 1010 unit (+23) + 108 cucumber dédiés (+4 doubt-bridge
+BDD). `check` VERT 2m54s, 1010 unit + 108 cucumber 0 FAIL.
+
+[cols="2,2,2", options="header"]
+|===
+| Fichier | Tests | Statut
+| `test/kotlin/codex/tasks/CodexCompositeContextJsonTest.kt` (nouveau) | 3 UT | ✅ PASS (composite JSON sérialisable + champs doute + troncature 500 chars + vibecoding JSON budget)
+| `test/kotlin/codex/bdd/DoubtBridgeSteps.kt` (étendu) | +4 step defs | ✅ PASS (2 scénarios N3 : composite JSON + vibecoding JSON)
+| `test/resources/features/codex_doubt_bridge.feature` | 7 scénarios (was 5) | ✅ PASS (2 scénarios contrat N3 sérialisable ajoutés)
+|===
+
+*Couverture* : Kover VERT (seuil préservé). Le nouveau test comble un
+*trou* : `CodexCompositeContextTask.execute()` n'était pas exercé de bout
+en bout — le bug P0 (`Serializer for class 'Any' is not found`) a survécu
+des mois car seuls les propriétés et les seams `internal` étaient testés.
+Le seam `buildCompositeJson`/`buildVibecodingJson` est désormais pinné
+(désormais sérialisation via `JsonObject`, pattern `ExportKnowledgeBaseTask`).
+
+*Dogfooding* : le run réel (`collectIngest` + `generateCompositeContext`
+sur le corpus FPA, consommateur transitoire /tmp + pgvector jetable) a
+produit 387 chunks / 18 doubtful / avg 0.9535 (identique S-214) et 12
+entries augmented (1 doubtful exposé). C'est le dogfooding qui a révélé
+le P0 — l'enseignement : `check` vert ne prouve pas que la tâche s'exécute.

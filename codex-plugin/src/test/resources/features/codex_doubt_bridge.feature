@@ -34,3 +34,15 @@ Feature: Doubt bridge — acquisition OCR doubt reaches the RAG ingestion and th
     Given a clean retrieved chunk "clean section"
     When the composite context retrieval runs
     Then the socle doubt-aware search was used
+
+  Scenario: The composite context JSON contract is serializable
+    Given a clean retrieved chunk "clean section"
+    And a doubtful retrieved chunk "shaky OCR section"
+    When the composite context JSON is built
+    Then the composite JSON parses with 2 entries
+    And the composite JSON exposes a doubtful entry
+
+  Scenario: The vibecoding JSON contract is serializable
+    Given a clean retrieved chunk "clean section"
+    When the vibecoding JSON is built
+    Then the vibecoding JSON exposes the docs section
