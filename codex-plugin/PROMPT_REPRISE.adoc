@@ -107,8 +107,11 @@ FORMELLE »). Gate : `check` VERT (zéro code prod touché côté codex).
 Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
 fonctionnel TestKit/ProjectBuilder/testcontainers → Cucumber), English only.
 COMMITS/PUSH autorisés (décision pilote 2026-09-17). PAS de publication sans
-permission. SECRETS via configuration/. Ne JAMAIS lancer la suite globale
-sans nécessité (règle EAGER cycle build/test piloté par le delta source).
+permission. SECRETS via configuration/. Local = BUILD, Tests = CI (règle EAGER) :
+en local, compiler/builder seulement (`compileKotlin`, `compileTestKotlin`,
+`build -x test`) ; jamais de `test`/`functionalTest`/`cucumberTest`/`check` sur
+le poste ; la CI (GitHub Actions) exécute les suites après push et son vert est
+la preuve de validité.
 
 == References
 - `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B, § C-3)
