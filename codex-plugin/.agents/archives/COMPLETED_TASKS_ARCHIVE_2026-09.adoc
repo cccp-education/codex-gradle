@@ -1,5 +1,24 @@
 = COMPLETED_TASKS_ARCHIVE_2026-09 — codex-gradle
 
+== S-230 (2026-09-29) — CB-PAGE-PROVENANCE US-2 (N2 transport codex) ✅ — EPIC A clos 5/5
+
+- *US-2 N2 transport* : `CodexIngestTask.pageProvenanceFile` (`@InputFiles`
+  tolérante, pattern S-221) + noyau pur `codex.provenance.PageProvenanceAttacher`
+  (jointure **exacte** SHA-256 `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`)
+  + seam `internal attachPages` + wiring `CodexPlugin` défaut
+  `build/codex/page-provenance.json`. Dégradé silencieux (sidecar absent/vide/
+  corrompu → pas de page).
+- *Baby-step DDD/TDD/BDD strict* : RED prouvé ×2 (compilation
+  `Unresolved reference` ×15 puis `'pageProvenanceFile'`/`'attachPages'`) →
+  GREEN (8 UT domaine + 6 UT seam/wiring + BDD `@provenance` ×2 traversant le
+  vrai `ingestInto` via fake in-memory).
+- *EPIC CB-PAGE-PROVENANCE terminé 5/5 US* (US-0 S-225, US-1 S-265, US-2 S-230,
+  US-3 S-267, US-4 S-269). Symétrie doute/page achevée ; chaîne GBL-003.4 close.
+- Gate locale (Local = Build) : compile VERT, validatePlugins VERT, assemble
+  VERT, publishToMavenLocal VERT (0.0.11). Tests = CI.
+- Zéro bump, zéro publication Central, zéro secret.
+- Rapport : `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`.
+
 == S-226 (2026-09-17) — Maintenance (Option C) + publication 0.0.11 (Option B) ✅
 
 - *Option C — maintenance* : drift corrigé. Pin codex `0.0.47` vs MEMPHIS

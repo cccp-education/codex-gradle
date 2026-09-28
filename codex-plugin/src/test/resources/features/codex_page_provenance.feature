@@ -61,3 +61,14 @@ Feature: Page provenance — the OCR doubt is localised back to the source page
     And a retrieval result in section "Chapitre 1 > Organiser le contenu du scénario"
     When the composite context JSON is built with the page provenance
     Then the composite entry exposes page 40
+
+  Scenario: The ingestion transports the page from the sidecar by exact id
+    Given a chunk "chk-1" in section "Chapitre 1 > Organiser le contenu du scénario"
+    And a page provenance sidecar resolving chunk "chk-1" to page 40
+    When the chunks are ingested with the page provenance
+    Then the ingested chunk "chk-1" carries page 40
+
+  Scenario: The ingestion degrades silently when no sidecar exists
+    Given a chunk "chk-1" in section "Chapitre 1 > Organiser le contenu du scénario"
+    When the chunks are ingested with the page provenance
+    Then the ingested chunk "chk-1" carries no page

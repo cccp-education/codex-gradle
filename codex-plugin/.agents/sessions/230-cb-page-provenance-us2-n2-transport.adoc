@@ -1,0 +1,143 @@
+= Session 230 — CB-PAGE-PROVENANCE US-2 (N2 transport codex) ✅ TERMINÉ
+
+:session: 230
+:date: 2026-09-29
+:type: dev (baby-step DDD/TDD/BDD strict, 3 niveaux)
+:borough: Brooklyn — codex-gradle (N2) — cross-borough avec Queens (N1)
+:epic: CB-PAGE-PROVENANCE (US-2/5 — dernière US)
+
+== Contexte
+
+Mission S-271 du `PROMPT_REPRISE` codebase (Queens) : **CB-PAGE-PROVENANCE
+US-2 (N2 transport, codex/Brooklyn)** — le dernier volet cross-borough de
+l'EPIC. Ouverture du borough codex `foundry/public/codex-gradle/codex-plugin`.
+
+Rappel architecture : la page est **dérivée** N2 (jointure TOC, S-224) mais
+**non stockée** → au retrieval N1 elle n'était accessible que par une
+jointure heuristique (`sectionPath`, 70,8 %, déviation D6). L'EPIC persiste la
+page à l'ingestion par jointure **exacte** `ChunkPageProvenance.chunkId`
+(SHA-256) ↔ `DocumentChunk.id` (les deux coexistent dans `chunks.json`).
+US-1 (N1 transport), US-3 (N1 exposition), US-4 (N1 BDD) sont déjà livrées
+côté Queens (S-265/S-267/S-269 par une session codebase parallèle). US-2 est
+le chaînon N2 manquant : brancher le sidecar au payload d'ingestion.
+
+Règle EAGER rappelée : **Local = Build, Tests = CI** — seules
+`compileKotlin`/`compileTestKotlin` (+ `validatePlugins`, `assemble`,
+`publishToMavenLocal`) en local ; aucun `test`/`check`/`cucumberTest`.
+
+== Ouverture (hook)
+
+* `git status` codex + codebase : propres, branche `main` à jour.
+* `./gradlew compileKotlin compileTestKotlin` codebase puis codex : VERT.
+* Lectures gouvernance : `AGENT.adoc` codex, `.agents/INDEX.adoc`,
+  `.agents/BACKLOG.adoc`, `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc`.
+
+== Audit (constats S-225 vérifiés sur le code réel)
+
+. `codebase.store.DocumentChunk` porte `pages: List<Int> = emptyList()`
+   (US-1 S-265) — le carrier N1 existe.
+. `CodexIngestTask` est un **thin wrapper** : lit `chunksFile`
+   (`List<DocumentChunk>`), `attachPages` (nouveau), délègue à
+   `RagVectorStore.ingestWithDoubt(DoubtPolicy.mark(...))`. Il ne connaissait
+   pas le sidecar — c'était la surface à ajouter.
+. `PageProvenanceReport` (sidecar S-224) keye `ChunkPageProvenance.chunkId`
+   sur le **même SHA-256** que `DocumentChunk.id` → jointure exacte possible.
+. `CodexCompositeContextTask.pageProvenanceFile` (`@InputFiles` tolérante,
+   pattern S-221) était le précédent exact à répliquer.
+
+== Baby-step DDD/TDD/BDD strict (RED → GREEN → REFACTOR)
+
+=== Niveau 1 — Unit domaine pur
+
+* **RED prouvé** : `PageProvenanceAttacherTest` (8 tests) →
+  `compileTestKotlin` échoue `Unresolved reference 'PageProvenanceAttacher'`
+  (15 erreurs de compilation, aucun fichier prod à ce stade).
+* **GREEN** : `codex/provenance/PageProvenanceAttacher.kt` — object pur
+  `attach(chunks, report)` : jointure exacte par id, préserve les pages
+  existantes, dégrade silencieux (null / vide / non-match → **même instance**
+  de liste, zéro allocation inutile — Loi de l'Économie d'Encre).
+
+=== Niveau 2 — Unit seam de tâche + wiring plugin
+
+* **RED prouvé** : `CodexIngestPageProvenanceTest` (6 tests) →
+  `Unresolved reference 'pageProvenanceFile'` puis `'attachPages'`.
+* **GREEN** :
+  * `CodexIngestTask` gagne `pageProvenanceFile: ConfigurableFileCollection`
+    (`@InputFiles` tolérante) + seam `internal attachPages(chunks)` +
+    `private readPageProvenance()` (dégradé silencieux, warn) ; `ingest()`
+    ingère désormais `attachPages(chunks)`.
+  * `CodexPlugin` câble la valeur par défaut
+    `build/codex/page-provenance.json` (collection tolérante, absence dégrade).
+  * KDoc tâche mis à jour (EPIC + propriété).
+
+=== Niveau 3 — BDD Cucumber
+
+* **RED non exécuté en local** (règle EAGER) : les scénarios ont été ajoutés
+  au feature existant `codex_page_provenance.feature` (`@provenance`, runner
+  dédié `cucumberTestPageProvenance` déjà câblé — S-224) :
+  * « The ingestion transports the page from the sidecar by exact id » ;
+  * « The ingestion degrades silently when no sidecar exists ».
+* **GREEN (compilation)** : `PageProvenanceSteps` étendu (steps préfixés
+  « page provenance » / « ingested », anti-collision S-088) + fake in-memory
+  `RecordingIngestStore` (pattern S-102/S-214) — le scénario traverse le
+  **vrai** `ingestInto` (page rode dans le `DoubtfulChunk.chunk` jusqu'au
+  socle), pas seulement le seam.
+* Vérification statique anti-doublon de glue : grep des nouveaux steps dans
+  `codex/bdd/` = zéro collision.
+
+=== REFACTOR / gates locaux (Local = Build)
+
+* `./gradlew compileKotlin compileTestKotlin --rerun-tasks` : VERT.
+* `./gradlew validatePlugins` : VERT.
+* `./gradlew assemble` : VERT.
+* `./gradlew publishToMavenLocal` : VERT (0.0.11 local, POM/BOM inchangés).
+* Tests (`test`/`cucumberTestPageProvenance`/`check`) : **délégués CI** après
+  push — le vert de la CI est la preuve de validité.
+
+== Fichiers
+
+* Créés : `src/main/kotlin/codex/provenance/PageProvenanceAttacher.kt`,
+  `src/test/kotlin/codex/provenance/PageProvenanceAttacherTest.kt`,
+  `src/test/kotlin/codex/tasks/CodexIngestPageProvenanceTest.kt`.
+* Modifiés : `src/main/kotlin/codex/tasks/CodexIngestTask.kt`,
+  `src/main/kotlin/codex/CodexPlugin.kt`,
+  `src/test/resources/features/codex_page_provenance.feature`,
+  `src/test/kotlin/codex/bdd/PageProvenanceSteps.kt`.
+
+== Valeur
+
+* **EPIC CB-PAGE-PROVENANCE TERMINÉ 5/5 US** (US-0 cadrage S-225, US-1 N1
+  transport S-265, US-2 N2 transport S-230, US-3 N1 exposition S-267, US-4
+  N1 BDD S-269). La jointure sidecar ↔ chunk à l'ingestion est **exacte**
+  (SHA-256), là où la jointure retrieval reste heuristique (70,8 %) — la
+  persistance rend la page disponible au retrieval sans sidecar pour les
+  chunks localisables.
+* **Symétrie doute/page** achevée : deux métadonnées dérivées N2, transportées
+  N1, exposées au retrieval (patron DOUBT-BRIDGE S-219).
+* **Chaîne GBL-003.4 close** : le doute OCR remonte de la page source jusqu'au
+  retrieval de bout en bout.
+
+== Décisions
+
+. Le carrier N1 (`DocumentChunk.pages`) existant suffit — zéro changement de
+   type N0/BOM (D9), transport direct N2→N1 (pattern doute).
+. La tâche N2 **consomme** le sidecar, elle ne le produit pas : `collectIngest`
+   ne dépend pas de `collectPageProvenance` (collection `@InputFiles`
+   tolérante, jamais forcer — Économie d'Encre). Ordre du DAG documenté.
+. Le sidecar S-224 n'est pas supprimé (D7, coexistence) : il sert la jointure
+   dérivée sans ré-ingestion (N2 composite context) et reste la source des
+   pages persistées.
+. Zéro bump de version : le type modifié vit dans codebase N1 (déjà livré
+   0.0.16), pas dans un artefact N0. Publication éventuelle = accord pilote.
+
+== Échecs préexistants / orthogonaux
+
+* Aucun test local lancé (règle EAGER). Les échecs connus côté codex
+   (`CodexIngestRetrieveIT` race mavenLocal cross-borough S-226) sont hors
+   périmètre et observés uniquement en CI.
+
+== Prochaine session
+
+* **C-3** (bloc C codex) : dead code N1 + 8 désynchronisations gouvernance —
+   cf. `PROMPT_REPRISE` et `CADRAGE_ROADMAP_S227_C_A_B.adoc`.
+* Publication codex-plugin (bloc B de la séquence C→A→B) — accord pilote.

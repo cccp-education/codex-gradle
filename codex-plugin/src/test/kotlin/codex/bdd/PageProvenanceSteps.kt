@@ -1,6 +1,8 @@
 package codex.bdd
 
 import codebase.store.RetrieveResult
+import codebase.store.DoubtfulChunk
+import codebase.store.RagVectorStore
 import codex.ocr.OcrQualityIssue
 import codex.ocr.OcrQualityReason
 import codex.ocr.OcrQualityReport
@@ -9,8 +11,11 @@ import codex.provenance.PageProvenanceReport
 import codex.provenance.PageProvenanceResolver
 import codex.provenance.TocSection
 import codex.tasks.CodexCompositeContextTask
+import codex.tasks.CodexIngestTask
 import codebase.store.DocumentChunk
 import io.cucumber.java8.En
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -19,6 +24,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import java.io.File
 
 /**
  * Cucumber steps for `codex_page_provenance.feature` (CDX-PAGE-PROVENANCE-4).
@@ -41,9 +47,17 @@ class PageProvenanceSteps : En {
     private var compositeJson: String = ""
     private var retrieval: RetrieveResult? = null
 
+    // CDX-PAGE-PROVENANCE-2 — ingestion-side transport.
+    private var sidecarFile: File? = null
+    private var ingestedChunks: List<DocumentChunk> = emptyList()
+
     private fun task(): CodexCompositeContextTask =
         ProjectBuilder.builder().build()
             .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+
+    private fun ingestTask(): CodexIngestTask =
+        ProjectBuilder.builder().build()
+            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
 
     init {
 
@@ -54,6 +68,8 @@ class PageProvenanceSteps : En {
             provenance = emptyList()
             compositeJson = ""
             retrieval = null
+            sidecarFile = null
+            ingestedChunks = emptyList()
         }
 
         Given("a chunk {string} in section {string}") { id: String, sectionPath: String ->
@@ -140,6 +156,47 @@ class PageProvenanceSteps : En {
                 listOf(page.toString()),
                 entry["pages"]!!.jsonArray.map { it.jsonPrimitive.content },
             )
+        }
+
+        // ── CDX-PAGE-PROVENANCE-2 — N2 ingestion transport ───────────────
+
+        Given("a page provenance sidecar resolving chunk {string} to page {int}") { id: String, page: Int ->
+            val report = PageProvenanceReport.of(
+                "livre",
+                listOf(ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = listOf(page))),
+            )
+            sidecarFile = File.createTempFile("page-provenance-", ".json").apply {
+                deleteOnExit()
+                writeText(Json.encodeToString(report))
+            }
+        }
+
+        When("the chunks are ingested with the page provenance") {
+            val task = ingestTask()
+            sidecarFile?.let { task.pageProvenanceFile.setFrom(it) }
+            val store = RecordingIngestStore()
+            runBlocking { task.ingestInto(store, task.attachPages(chunks.toList())) }
+            ingestedChunks = store.received!!.map { it.chunk }
+        }
+
+        Then("the ingested chunk {string} carries page {int}") { id: String, page: Int ->
+            assertEquals(listOf(page), ingestedChunks.single { it.id == id }.pages)
+        }
+
+        Then("the ingested chunk {string} carries no page") { id: String ->
+            assertTrue(ingestedChunks.single { it.id == id }.pages.isEmpty())
+        }
+    }
+
+    /** Recording in-memory store — no pgvector, no Docker (pattern S-102/S-214). */
+    private class RecordingIngestStore : RagVectorStore() {
+        var received: List<DoubtfulChunk>? = null
+        override suspend fun ingestWithDoubt(
+            chunks: List<DoubtfulChunk>,
+            batchLogger: (String) -> Unit,
+        ): Int {
+            received = chunks
+            return chunks.map { it.chunk.sourceDocument }.distinct().size
         }
     }
 

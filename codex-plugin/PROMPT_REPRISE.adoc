@@ -1,6 +1,6 @@
-= PROMPT_REPRISE — Codex — Session 230
-:session: 230
-:date: 2026-09-17
+= PROMPT_REPRISE — Codex — Session 231
+:session: 231
+:date: 2026-09-29
 :status: PRET
 :mission: C-3 — dead code N1 + désynchronisation gouvernance (clôture dette structurelle)
 
@@ -13,23 +13,23 @@ git status --porcelain -- src/    # vide ? → règle EAGER
 
 == Contexte — bloc C (maintenance), séquence C → A → B
 
-Le pilote a tranché S-227 : *C (maintenance) → A (EPIC CB-PAGE-PROVENANCE)
-→ B (publication)*, 11 sessions S-228 → S-238. Plan :
-`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`.
+Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
+**C** (maintenance) → **A** (EPIC CB-PAGE-PROVENANCE) → **B** (publication).
 
 - *C-1 (S-228)* ✅ TERMINÉ — drift MEMPHIS pins `0.0.49` → `0.0.50`, garde
   `CodexPluginPublicationTest` 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
-- *C-2 (S-229)* ✅ TERMINÉ — split-brain `DocumentChunk` soldé : la data
-  class `codex.tasks.DocumentChunk` supprimée, les 7 fichiers prod + 12
-  fichiers de test consomment `codebase.store.DocumentChunk` (type N1).
-  Driver `DocumentChunkUnificationTest` RED → GREEN + characterization
-  `ChunkDocumentJsonContractTest` 3/3 (byte-compatibilité `chunks.json`).
-  `check` VERT 1397 tests 0 FAIL. **A-1 débloqué (un seul type portera `pages`).**
-- *C-3 (S-230)* — **mission ci-dessous**.
-- *C-4 (S-231)* : pollution TOC chunking (99/387 au run FPA S-216), BDD
-  `@toc-noise`, clôture C + go/no-go A.
+- *C-2 (S-229)* ✅ TERMINÉ — split-brain `DocumentChunk` soldé (type N1 unique).
+- *A — CB-PAGE-PROVENANCE* ✅ **TERMINÉ 5/5 US** — **US-2 (N2 transport codex)
+  livrée S-230** (cette session-1) : `PageProvenanceAttacher` (jointure exacte
+  SHA-256) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante) +
+  wiring `CodexPlugin` + BDD `@provenance` ×2. US-1/US-3/US-4 livrées côté
+  Queens (S-265/S-267/S-269). Le bloc A a donc été délivré **hors ordre**
+  (session parallèle Queens + présente session codex).
+- *C-3 (S-231)* — **mission ci-dessous**.
+- *C-4 (S-232)* : pollution TOC chunking (99/387 au run FPA S-216), BDD
+  `@toc-noise`, clôture C + go/no-go B.
 
-== Mission S-230 — C-3 (dead code N1 + désync gouvernance)
+== Mission S-231 — C-3 (dead code N1 + désync gouvernance)
 
 Deux volets, cross-borough.
 
@@ -115,6 +115,7 @@ la preuve de validité.
 
 == References
 - `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B, § C-3)
+- `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc` (rapport S-230)
 - `.agents/sessions/229-c2-split-brain-documentchunk.adoc` (rapport C-2)
 - `.agents/sessions/228-c1-drift-memphis.adoc` (rapport C-1)
 - `codebase.store.StoreStatements` · `codebase.store.IngestIndexing` (Queens)

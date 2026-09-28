@@ -162,6 +162,10 @@ class CodexPlugin : Plugin<Project> {
             it.pgUser.convention(extension.pgvectorUser)
             it.pgPassword.convention(extension.pgvectorPassword)
             it.batchSize.convention("32")
+            // CDX-PAGE-PROVENANCE-2 : transport N2 de la page à l'ingestion.
+            // Sidecar ciblé par défaut, collection tolérante — son absence
+            // dégrade à aucune page (pattern S-221, Économie d'Encre).
+            it.pageProvenanceFile.setFrom(project.layout.buildDirectory.file("codex/page-provenance.json"))
         }
 
         project.tasks.register(

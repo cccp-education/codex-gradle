@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-17 (session 229 — **C-2 TERMINÉ : split-brain `DocumentChunk` soldé**. Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR. RED : driver `DocumentChunkUnificationTest` (le compilateur Kotlin prouve statiquement le split-brain `Check for instance is always 'false'`) × characterization `ChunkDocumentJsonContractTest` 3 tests (contrat `chunks.json` décodable dans `codebase.store.DocumentChunk`, round-trip byte-identique) → `76 tests completed, 1 failed`. GREEN : data class `codex.tasks.DocumentChunk` supprimée (25 lignes) + 7 fichiers prod + 12 tests basculés vers le type N1 → `check` VERT 2m52s, **1397 tests (1267 unit + 130 cucumber) 0 FAIL** (+4 unit), Kover VERT, validatePlugins VERT. **A-1 débloqué**. Bloc C en cours : reste C-3/C-4.)_
+_Dernière mise à jour : 2026-09-29 (session 230 — **CB-PAGE-PROVENANCE US-2 TERMINÉE — EPIC A clos 5/5 US**. Mission S-271 du `PROMPT_REPRISE` codebase (Queens) : ouvrir le borough codex pour le dernier volet cross-borough. Baby-step DDD/TDD/BDD strict, 3 niveaux. **RED prouvé localement** (`Unresolved reference 'PageProvenanceAttacher'` ×15, puis `'pageProvenanceFile'`/`'attachPages'`). **GREEN** : noyau pur `codex.provenance.PageProvenanceAttacher` (jointure **exacte** SHA-256 `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`, préserve les pages existantes, dégrade silencieux sans allocation) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern S-221) + seam `internal attachPages` + `CodexPlugin` wiring défaut `build/codex/page-provenance.json`. **BDD** : `codex_page_provenance.feature` `@provenance` +2 scénarios (transport exact + dégradé silencieux) traversant le **vrai** `ingestInto` via fake in-memory (pattern S-102/S-214). Gates locaux (Local = Build) : compileKotlin/compileTestKotlin VERT, validatePlugins VERT, assemble VERT, publishToMavenLocal VERT (0.0.11). Tests = CI. Zéro bump, zéro publication Central, zéro secret.)_
 
 '''
 == 🟡 SÉQUENCE PILOTE C → A → B (ordonnancement S-227)
@@ -29,26 +29,32 @@ sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc
 | S-232 · S-233 · S-234 · S-235
 | 4
 | US-1 N1 transport · US-2 N2 transport · US-3 N1 exposition · US-4 BDD
-| 🔲 PLANIFIÉ (après C)
+| ✅ TERMINÉ 5/5 US — **délivré hors ordre** : US-1/US-3/US-4 côté Queens
+  (codebase S-265/S-267/S-269, session parallèle) ; **US-2 côté codex
+  (S-230, cette session)**. Le prérequis C-2 était satisfait (S-229).
 
 | B — Publication
 | S-236 · S-237 · S-238
 | 3
 | B-1 codebase-first (N1) · B-2 codex-plugin 0.0.12 · B-3 propagation
   repo1 + alignement consommateurs + dogfooding backfill
-| 🔲 PLANIFIÉ (après A)
+| 🔲 PLANIFIÉ (accord pilote — bloc A désormais clos)
 |===
 
 *Pourquoi C avant A* : (1) baseline non verte à HEAD (drift C-1 prouvé
 S-227) ; (2) C-2 supprime le doublon `DocumentChunk` — sans lui, le champ
 `pages` de A-1 serait maintenu dans deux types.
+*Note S-230* : le bloc A a été délivré **hors ordre strict** — les US N1
+(Queens) par une session codebase parallèle, l'US N2 (codex) par la présente
+session. Le bloc C reste ouvert (C-3/C-4). L'ordre C→A→B reste la référence
+pour la clôture de C et la publication B.
 *Pourquoi A avant B* : B publie le contenu produit par A (0.0.11 est déjà
 Central, rien à republier avant).
 
 '''
 == 🟡 EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette)
 
-_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; reste C-3 (S-230), C-4 (S-231).
+_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; **A (CB-PAGE-PROVENANCE) ✅ TERMINÉ S-230 (hors ordre)** ; reste C-3 (S-231), C-4 (S-232).
 _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 
 [cols="1,3,1", options="header"]
@@ -77,7 +83,7 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
   `chunks.json`). `check` VERT 1397 tests 0 FAIL. **A-1 débloqué.**
 | ✅ TERMINÉ (S-229)
 
-| C-3 (S-230)
+| C-3 (S-231)
 | **Dead code + désync gouvernance** — (A) N1 : `StoreStatements.insertChunk()`
   (5 binds) + `IngestIndexing.assignLocalIndices` sans appelant de production
   (constat S-225 #4) — décision Queens suppression vs conservation. (B) codex :
@@ -88,25 +94,25 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
   `README.md` badges 0.0.1.
 | 🟡 À FAIRE
 
-| C-4 (S-231)
+| C-4 (S-232)
 | **Pollution TOC chunking + clôture C** — 99 chunks TOC pollués / 387 au
   run FPA (S-216, dot leaders + entrées de table des matières). Détection/
   exclusion au `SemanticChunker` **ou** marquage `doubtful` (zéro
   re-vectorisation privilégiée — Économie d'Encre), characterization corpus
-  réel, BDD `@toc-noise`. Clôture C + go/no-go A.
+  réel, BDD `@toc-noise`. Clôture C + go/no-go B.
 | 🟡 À FAIRE
 |===
 
 '''
-== 🟡 EPIC CB-PAGE-PROVENANCE — Persistance de la page au retrieval (N1) — Cadrage S-225 (Brooklyn + Queens)
+== ✅ EPIC CB-PAGE-PROVENANCE — Persistance de la page au retrieval (N1) — Cadrage S-225 (Brooklyn + Queens) — TERMINÉ 5/5 US
 
 _Origine : PROMPT_REPRISE S-225 Option A + CADRAGE_EPIC_CDX_PAGE_PROVENANCE.adoc (décision D7, S-223)._
 _Doc cadrage : `CADRAGE_EPIC_CB_PAGE_PROVENANCE.adoc` (S-225, côté codex)._
 _Pattern_ : gouvernance pure S-057/S-063 (cadrage) + baby-step DDD/TDD/BDD strict (implémentation).
 _Portée_ : cross-borough N1 (Queens, persistance + exposition) + N2 (Brooklyn, transport).
-_Statut_ : 🟡 ORDONNANCÉ (S-227) — **bloc A** de la séquence C→A→B, 4 sessions
-S-232 → S-235 (une US par session). Prérequis : **C-2 (S-229) ✅ TERMINÉ** —
-`DocumentChunk` unifié (type N1 unique). Publication = bloc B (S-236 → S-238).
+_Statut_ : ✅ TERMINÉ 5/5 US (S-225→S-269 + S-230 codex).
+  US-0 cadrage S-225 · US-1 N1 transport S-265 · **US-2 N2 transport S-230 (codex)** ·
+  US-3 N1 exposition S-267 · US-4 N1 BDD S-269. Publication = bloc B (S-236→S-238).
 
 Le sidecar `page-provenance.json` (S-224) joint TOC × chunks × rapport
 d'acquisition — mais au retrieval, `RetrieveResult` n'expose que
@@ -140,40 +146,49 @@ heuristique). C'est ce qui rend la persistance supérieure au statu quo.
 | `insertChunkWithDoubt` bind 8 (bind count 7→8) + `RagVectorStore` bind +
 | `RetrieveResult.pages` + SELECT read/parse. Unit + fonctionnel
 | testcontainers `PostgresFixture`.
-| 🟡 À FAIRE — **session S-232** (bloc A) · prérequis C-2 (S-229) ✅ TERMINÉ (type N1 unique)
+| ✅ TERMINÉ (S-265, Queens)
 | 3
 
 | CB-PAGE-PROVENANCE-2
 | N2 transport (codex) — `CodexIngestTask.pageProvenanceFile`
 | (`@InputFiles` tolérante pattern S-221) + jointure exacte
-| `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id` + attache `pages`
-| avant `ingestWithDoubt` + dégradé silencieux. Wiring `CodexPlugin`. Unit.
-| 🟡 À FAIRE — **session S-233** (bloc A) · dépend de US-1 (S-232)
+| `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id` (noyau pur
+| `PageProvenanceAttacher`) + attache `pages` avant `ingestWithDoubt` +
+| dégradé silencieux. Wiring `CodexPlugin` (défaut
+| `build/codex/page-provenance.json`). 8 UT domaine + 6 UT seam/wiring,
+| BDD `@provenance` +2 scénarios (sidecar exact + dégradé).
+| ✅ TERMINÉ (S-230, Brooklyn)
 | 2
 
 | CB-PAGE-PROVENANCE-3
 | N1 exposition — `CompositeContextBuilder.loadDocsContext` (canal Docs) +
 | `CodebaseCompositeContextTask` entrées `pages` (additif, omis si vide).
 | Unit + fonctionnel.
-| 🟡 À FAIRE — **session S-234** (bloc A)
+| ✅ TERMINÉ (S-267, Queens)
 | 2
 
 | CB-PAGE-PROVENANCE-4
 | BDD Cucumber cross-borough `@page-retrieval` — sidecar joint (exact
 | SHA-256), page exposée au retrieval, dégradé silencieux, multi-pages
 | préservé, backward compat. Runner dédié (pattern S-082) + fakes.
-| 🟡 À FAIRE — **session S-235** (bloc A)
+| Périmètre N1 ✅ (S-269, Queens — `page_retrieval.feature` 5 scénarios).
+| Volet N2 sidecar ✅ (S-230, Brooklyn — 2 scénarios dans
+| `codex_page_provenance.feature`).
+| ✅ TERMINÉ (S-269 N1 + S-230 N2)
 | 1
 
 |===
 
-*Total* : ~9 pts (5 US) — EPIC CADRÉ S-225, **ORDONNANCÉ S-227** (bloc A de
-la séquence C→A→B, 4 sessions S-232→S-235, une US par session).
-*Ordre* : US-1 (N1 transport) → US-2 (N2 codex) → US-3 (N1 exposition) →
-US-4 (BDD).
-*Publication* (optionnelle, accord pilote) : bump `codebase-plugin` puis
-`codex-plugin` Central (DAG codebase-first). Zéro bump MEMPHIS (types de
-store N1, pas de contrat N0).
+*Total* : ~9 pts (5 US) — **EPIC TERMINÉ 5/5** (US-0 S-225, US-1 S-265,
+US-2 S-230, US-3 S-267, US-4 S-269).
+*Bilan* : la page est dérivée N2 (S-224), **transportée** N2→N1 à l'ingestion
+par jointure exacte SHA-256 (US-2), **persistée** (`codex_chunks.pages`, US-1),
+**exposée** au retrieval (`RetrieveResult.pages` + canal Docs, US-3), **prouvée**
+en BDD des deux côtés (US-4). Symétrie complète avec le doute (DOUBT-BRIDGE
+S-219).
+*Publication* (optionnelle, accord pilote — bloc B de la séquence C→A→B) :
+bump `codebase-plugin` puis `codex-plugin` Central (DAG codebase-first).
+Zéro bump MEMPHIS (types de store N1, pas de contrat N0).
 *Hors scope* : suppression du sidecar S-224 (coexistence), array PostgreSQL,
 backfill UPDATE-only, contrat N0, extension `DoubtMetadata`.
 *Débloque* : localisation exacte au retrieval sans sidecar ; clôture de la

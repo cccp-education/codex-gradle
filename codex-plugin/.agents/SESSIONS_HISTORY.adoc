@@ -3707,3 +3707,54 @@ tests 0 FAIL ; zéro secret, zéro publication, zéro bump de version, backward
 compat JSON totale.
 
 *Rapport* : `.agents/sessions/229-c2-split-brain-documentchunk.adoc`.
+
+== Session 230 — 2026-09-29 — CB-PAGE-PROVENANCE US-2 (N2 transport codex) ✅ TERMINÉ — EPIC A clos 5/5
+
+*Mission* : S-271 du `PROMPT_REPRISE` codebase (Queens) — ouvrir le borough
+codex pour le dernier volet cross-borough de l'EPIC CB-PAGE-PROVENANCE : le
+transport N2 de la page (le sidecar S-224 vers le payload d'ingestion).
+
+*Baby-step DDD/TDD/BDD strict (3 niveaux)* :
+
+1. *RED (unit domaine)* — `PageProvenanceAttacherTest` (8 tests) →
+   `compileTestKotlin` échoue `Unresolved reference 'PageProvenanceAttacher'`
+   (15 erreurs, aucun fichier prod).
+2. *GREEN (domaine)* — `codex/provenance/PageProvenanceAttacher.kt` : object pur
+   `attach(chunks, report)`, jointure **exacte** SHA-256
+   (`ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`), préserve les pages
+   existantes, dégrade silencieux (null/vide/non-match → **même instance**,
+   zéro allocation — Économie d'Encre).
+3. *RED (unit seam)* — `CodexIngestPageProvenanceTest` (6 tests) →
+   `Unresolved reference 'pageProvenanceFile'` puis `'attachPages'`.
+4. *GREEN (tâche + wiring)* — `CodexIngestTask.pageProvenanceFile`
+   (`@InputFiles` tolérante, pattern S-221) + seam `internal attachPages` +
+   `private readPageProvenance()` (dégradé silencieux) ; `ingest()` ingère
+   `attachPages(chunks)`. `CodexPlugin` câble la valeur par défaut
+   `build/codex/page-provenance.json`.
+5. *BDD* — `codex_page_provenance.feature` (`@provenance`, runner dédié
+   `cucumberTestPageProvenance` S-224) +2 scénarios : « transport exact » et
+   « dégradé silencieux ». `PageProvenanceSteps` étendu + fake in-memory
+   `RecordingIngestStore` (pattern S-102/S-214) — le scénario traverse le
+   **vrai** `ingestInto` (page rode dans le `DoubtfulChunk.chunk`).
+6. *REFACTOR/gates locaux (Local = Build)* — `compileKotlin`/`compileTestKotlin`
+   VERT, `validatePlugins` VERT, `assemble` VERT, `publishToMavenLocal` VERT
+   (0.0.11). Tests = CI.
+
+*Ouverture (règle EAGER)* : `git status` codex + codebase propres, branche
+`main` à jour ; `compileKotlin compileTestKotlin` VERT seulement.
+
+*Valeur* : **EPIC CB-PAGE-PROVENANCE TERMINÉ 5/5 US** (US-0 S-225, US-1
+S-265, US-2 S-230, US-3 S-267, US-4 S-269). Symétrie doute/page achevée
+(DOUBT-BRIDGE S-219) : deux métadonnées dérivées N2, transportées N1,
+exposées au retrieval. Chaîne GBL-003.4 close.
+
+*Gouvernance mise à jour* : `sessions/230-cb-page-provenance-us2-n2-transport.adoc`
+(créé) · `BACKLOG.adoc` (EPIC A ✅ 5/5, séquence C→A→B réordonnancée) ·
+`INDEX.adoc` (session 230, table, roadmap, prochaine) · `SESSIONS_HISTORY.adoc`
++ archive · `PROMPT_REPRISE` (S-231 = C-3). Cross-borough : BACKLOG + INDEX
+Queens (EPIC clos 5/5).
+
+*Gates* : RED prouvé ×2 (compilation) ; compile/build VERT ; `publishToMavenLocal`
+VERT ; zéro bump, zéro publication Central, zéro secret.
+
+*Rapport* : `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`.
