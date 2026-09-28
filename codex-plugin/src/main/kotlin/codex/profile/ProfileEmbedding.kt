@@ -3,33 +3,33 @@ package codex.profile
 import contracts.runtime.LearnerProfile
 
 /**
- * EPIC CDX-RC-04-1 — Embedding du profil stagiaire.
+ * EPIC CDX-RC-04-1 — Embedding of the learner profile.
  *
- * Calcule le texte à embedder depuis un [LearnerProfile]. Sémantique cible :
- * "points faibles + notes pédagogiques" requêtable par recherche sémantique.
+ * Computes the text to embed from a [LearnerProfile]. Target semantics:
+ * "weak points + annotations" queryable by semantic search.
  *
- * Décisions (cadrage S-076) :
- * - Embedding = concaténation `weakPoints.joinToString` +
+ * Decisions (cadrage S-076):
+ * - Embedding = concatenation `weakPoints.joinToString` +
  *   `annotations.values.joinToString`.
- * - PAS d'embedding sur `completedModules` (liste de IDs, pas sémantique).
- * - PAS d'embedding sur `progressionPct`/`comprehensionScore` (numériques,
- *   filtrage SQL direct).
- * - PAS d'embedding sur `currentModule` (ID de module, pas sémantique).
+ * - NO embedding on `completedModules` (list of IDs, not semantic).
+ * - NO embedding on `progressionPct`/`comprehensionScore` (numeric,
+ *   direct SQL filtering).
+ * - NO embedding on `currentModule` (module ID, not semantic).
  *
- * Objet pur (sans état, sans effet de bord) — unit-testable sans ONNX.
+ * Pure object (stateless, side-effect free) — unit-testable without ONNX.
  */
 object ProfileEmbedding {
 
     /**
-     * Calcule le texte à embedder depuis un [LearnerProfile].
+     * Computes the text to embed from a [LearnerProfile].
      *
-     * @param profile le profil stagiaire
-     * @return la concaténation des weakPoints + annotations values,
-     *         ou string vide si les deux sont vides (profil sans signal
-     *         sémantique — l'embedding sera alors calculé sur un texte vide,
-     *         ce qui produit un vecteur nul/non-requêtable, ce qui est
-     *         acceptable : un profil sans weak points ni annotations n'a
-     *         pas vocation à être retrouvé par recherche sémantique)
+     * @param profile the learner profile
+     * @return the concatenation of weakPoints + annotation values,
+     *         or an empty string if both are empty (a profile with no
+     *         semantic signal — the embedding is then computed on an empty
+     *         text, producing a null/non-queryable vector, which is
+     *         acceptable: a profile with neither weak points nor annotations
+     *         is not meant to be found by semantic search)
      */
     fun textToEmbed(profile: LearnerProfile): String {
         val weakPointsText = profile.weakPoints.joinToString(separator = " ")

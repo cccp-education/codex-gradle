@@ -20,8 +20,8 @@ import codex.enrichment.SectionTitleNormalizer
  *    (`Les compétences.`, `Comprendre la démarche 57`); the TOC title does not.
  *    Trailing `:`, `.`, ellipsis, middle-dot and whitespace runs are stripped.
  *
- * The join rate on the real FPA corpus is measured by
- * `FpaPageProvenanceJoinRateTest` (S-223 cadrage risk). Deterministic,
+ * The join rate on the real corpus is measured by
+ * `PageProvenanceJoinRateTest` (S-223 cadrage risk). Deterministic,
  * side-effect free, idempotent — never fails.
  */
 object ProvenanceTitleNormalizer {

@@ -241,7 +241,7 @@ class CodexPlugin : Plugin<Project> {
         // CDX-PAGE-PROVENANCE-2 : page provenance sidecar (TOC × chunks ×
         // acquisition report, derived join — zéro DDL, zéro re-vectorisation).
         // The TOC is an explicit input (D5): codex is READ, it never knows the
-        // FPA business content. The acquisition report is optional (degraded).
+        // private business content. The acquisition report is optional (degraded).
         project.tasks.register(
             "collectPageProvenance",
             CollectPageProvenanceTask::class.java
@@ -274,7 +274,7 @@ class CodexPlugin : Plugin<Project> {
             PersistLearnerProfileTask::class.java
         ) {
             it.group = "codex-memory"
-            it.description = "Persiste un profil stagiaire JSON dans pgvector via le pont RAG SessionMemoryContract (memoire de session)"
+            it.description = "Persists a learner profile JSON into pgvector via the SessionMemoryContract RAG bridge (session memory)"
             it.pgHost.convention(extension.pgvectorHost)
             it.pgPort.convention(extension.pgvectorPort)
             it.pgDatabase.convention(extension.pgvectorDatabase)

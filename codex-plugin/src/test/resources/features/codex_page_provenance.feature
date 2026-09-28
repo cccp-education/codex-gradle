@@ -16,8 +16,8 @@ Feature: Page provenance — the OCR doubt is localised back to the source page
     And the chunk "chk-1" is not doubtful
 
   Scenario: A multi-page section is localised to all its pages
-    Given a chunk "chk-1" in section "Devenir Formateur Professionnel d'Adultes"
-    And a toc section "1.0.1" titled "Devenir Formateur Professionnel d'Adultes" on pages 5, 6, 7, 8
+    Given a chunk "chk-1" in section "Maîtriser l'architecture logicielle"
+    And a toc section "1.0.1" titled "Maîtriser l'architecture logicielle" on pages 5, 6, 7, 8
     When the page provenance is resolved
     Then the chunk "chk-1" is localised on pages 5, 6, 7, 8
 
@@ -28,7 +28,7 @@ Feature: Page provenance — the OCR doubt is localised back to the source page
     Then the chunk "chk-1" is localised on page 40
 
   Scenario: A polluted leaf is resolved by walking to the matching ancestor
-    Given a chunk "chk-1" in section "FPA II > Historique du Titre Professionnel : ...13 > Organiser le contenu du scénario ....40"
+    Given a chunk "chk-1" in section "Corpus II > Historique de l'architecture logicielle : ...13 > Organiser le contenu du scénario ....40"
     And a toc section "1.2.1.1" titled "Organiser le contenu du scénario" on page 40
     When the page provenance is resolved
     Then the chunk "chk-1" is localised on page 40

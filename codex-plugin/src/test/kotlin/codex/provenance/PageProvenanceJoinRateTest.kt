@@ -10,31 +10,30 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 /**
- * CDX-PAGE-PROVENANCE-1 — join rate measurement on the real FPA corpus.
+ * CDX-PAGE-PROVENANCE-1 — join rate measurement on a real acquired corpus.
  *
  * The cadrage rated the TOC ↔ chunk join as the main risk (titles are written
  * by a human in the TOC, extracted by OCR in the chunks — the canonical form
- * is the only bridge). This test measures the real rate on the acquired corpus
- * (`office/metiers/FPA/.../codex-out/chunks.json` + the root TOC) and pins a
- * floor, so a regression in `SectionTitleNormalizer` or in the resolver is
- * caught on the real data rather than on synthetic fixtures.
+ * is the only bridge). This test measures the real rate on an acquired corpus
+ * and pins a floor, so a regression in `SectionTitleNormalizer` or in the
+ * resolver is caught on real data rather than on synthetic fixtures.
  *
- * Skips cleanly when the private corpus is absent (fresh clone, CI) — the
- * corpus is never committed (office/ = private derivative work).
+ * The corpus is private: its location is supplied by the caller through the
+ * system properties `codex.pageProvenance.chunks` (a `chunks.json`) and
+ * `codex.pageProvenance.toc` (the book TOC `.adoc`). The public repo never
+ * hardcodes the private business content. The test skips cleanly when the
+ * properties are absent (fresh clone, CI).
  *
  * Reads only — never mutates the corpus (Loi de l'Économie d'Encre).
  */
 @Tag("integration")
-class FpaPageProvenanceJoinRateTest {
+class PageProvenanceJoinRateTest {
 
-    private val chunksFile: File? = locate(
-        "office/metiers/FPA/Devenir_Formateur_Professionnel_d_Adultes_FPA_II/codex-out/chunks.json"
-    )
-    private val tocFile: File? = locate(
-        "office/metiers/FPA/Devenir_Formateur_Professionnel_d_Adultes_FPA_II/Devenir_Formateur_Professionnel_d_Adultes_FPA_II.adoc"
-    )
+    private val chunksFile: File? = locate(System.getProperty("codex.pageProvenance.chunks"))
+    private val tocFile: File? = locate(System.getProperty("codex.pageProvenance.toc"))
 
-    private fun locate(relative: String): File? {
+    private fun locate(relative: String?): File? {
+        if (relative.isNullOrBlank()) return null
         val direct = File(relative)
         if (direct.exists()) return direct
         var dir = File(".").absoluteFile.parentFile
@@ -47,10 +46,10 @@ class FpaPageProvenanceJoinRateTest {
     }
 
     @Test
-    fun `real fpa corpus join rate holds above the cadrage floor`() {
+    fun `real corpus join rate holds above the cadrage floor`() {
         assumeTrue(
             chunksFile != null && tocFile != null,
-            "FPA corpus absent (office/ not present) — skipping real join rate measurement"
+            "corpus absent (set codex.pageProvenance.chunks/toc) — skipping real join rate measurement"
         )
 
         val chunks = Json { ignoreUnknownKeys = true }
@@ -60,7 +59,7 @@ class FpaPageProvenanceJoinRateTest {
         val provenance = PageProvenanceResolver.resolve(chunks, sections, qualityReport = null)
         val rate = PageProvenanceResolver.joinRate(provenance)
 
-        println("[codex] FPA page-provenance join rate: ${"%.3f".format(rate)} " +
+        println("[codex] page-provenance join rate: ${"%.3f".format(rate)} " +
             "(${provenance.count { it.pages.isNotEmpty() }}/${provenance.size} chunks, " +
             "${sections.size} TOC sections)")
 

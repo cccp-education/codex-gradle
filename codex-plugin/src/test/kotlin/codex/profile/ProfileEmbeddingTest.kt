@@ -6,18 +6,18 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * TDD — EPIC CDX-RC-04-1 : embedding du profil stagiaire.
+ * TDD — EPIC CDX-RC-04-1: `codex.profile` embedding.
  *
- * [ProfileEmbedding] calcule le texte à embedder depuis un [LearnerProfile].
- * Sémantique cible : "points faibles + notes pédagogiques" requêtable.
+ * [ProfileEmbedding] computes the text to embed from a [LearnerProfile].
+ * Target semantics: "weak points + annotations" queryable.
  *
- * Décisions (cadrage S-076) :
- * - Embedding = concaténation `weakPoints.joinToString` + `annotations.values.joinToString`.
- * - PAS d'embedding sur `completedModules` (liste de IDs, pas sémantique).
- * - PAS d'embedding sur `progressionPct`/`comprehensionScore` (numériques,
- *   filtrage SQL direct).
+ * Decisions (cadrage S-076):
+ * - Embedding = concatenation `weakPoints.joinToString` + `annotations.values.joinToString`.
+ * - NO embedding on `completedModules` (list of IDs, not semantic).
+ * - NO embedding on `progressionPct`/`comprehensionScore` (numeric,
+ *   direct SQL filtering).
  *
- * Object pur — unit-testable sans ONNX ni base de données.
+ * Pure object — unit-testable without ONNX or a database.
  */
 class ProfileEmbeddingTest {
 

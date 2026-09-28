@@ -67,7 +67,7 @@ object PageProvenanceResolver {
         if (trimmed.isEmpty()) return emptyList()
         // Deepest-first walk: the most precise matching segment (closest to the
         // leaf) wins, falling back to an ancestor when the leaf is OCR-polluted
-        // beyond recognition. Measured on the real FPA corpus: leaf-only joins
+        // beyond recognition. Measured on the real corpus: leaf-only joins
         // 24.8% of chunks, the ancestor walk 70.8% (cadrage S-223 risk).
         val segments = trimmed.split('>').map { it.trim() }.filter { it.isNotEmpty() }
         for (segment in segments.asReversed()) {

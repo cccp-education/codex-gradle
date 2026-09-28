@@ -46,13 +46,13 @@ class CodexCompositeContextTypedTest {
     @Test
     fun `codex results populate docsSection in CompositeContext`() {
         val docsContent = """
-            [Document: AFNOR_Referentiel.adoc]
-            Chapitre 2: Competences professionnelles
+            [Document: ARCHITECTURE_Reference.adoc]
+            Chapitre 2: Competences techniques
             Sous-section: Evaluation des acquis
             
-            [Document: REAC_GuidePedagogique.adoc]
-            Module 3: Methodes pedagogiques
-            Approche par competences recommandee pour les formations FPA
+            [Document: DOC_GuideLogiciel.adoc]
+            Module 3: Methodes logicielles
+            Approche par competences recommandee pour les projets logiciels
         """.trimIndent()
 
         val ctx = CompositeContext(
@@ -67,8 +67,8 @@ class CodexCompositeContextTypedTest {
         val channels = ctx.toChannels()
         val docsChannel = channels.find { it is ContextChannel.Docs }!!
         assertTrue(docsChannel.contentNonEmpty)
-        assertTrue(docsChannel.content.contains("AFNOR_Referentiel"))
-        assertTrue(docsChannel.content.contains("Competences professionnelles"))
+        assertTrue(docsChannel.content.contains("ARCHITECTURE_Reference"))
+        assertTrue(docsChannel.content.contains("Competences techniques"))
     }
 
     @Test

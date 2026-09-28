@@ -43,8 +43,8 @@ class CollectPageProvenanceTaskTest {
     private fun tocText(): String =
         """
         | Référence | Sujet / Titre de la section | Page | Fichier
-        | 1.2.1.1 | Organiser le contenu du scénario | 40 | 040.pdf
-        | 1.0.1 | Devenir Formateur Professionnel d'Adultes | 5, 6, 7, 8 | 005.pdf, 006.pdf, 007.pdf, 008.pdf
+        | 1.2.1.1 | Organiser le contenu du plan | 40 | 040.pdf
+        | 1.0.1 | Maîtriser l'architecture logicielle | 5, 6, 7, 8 | 005.pdf, 006.pdf, 007.pdf, 008.pdf
         """.trimIndent()
 
     private fun task() =
@@ -76,7 +76,7 @@ class CollectPageProvenanceTaskTest {
     @Test
     fun `resolves a multi-page section to all its pages`(@TempDir dir: File) {
         val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Devenir Formateur Professionnel d'Adultes"))
+            writeText(chunkJson("chk-1" to "Maîtriser l'architecture logicielle"))
         }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
         val out = File(dir, "page-provenance.json")

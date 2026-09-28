@@ -22,19 +22,19 @@ class TocPageIndexTest {
     @Test
     fun `parses a single-page row`() {
         val sections = TocPageIndex.parse(
-            "| 1.2.1 | Créer un Scénario Pédagogique Détaillé (SPD) | 39 | 039.pdf"
+            "| 1.2.1 | Rédiger un document détaillé (DOC) | 39 | 039.pdf"
         )
 
         assertEquals(1, sections.size)
         assertEquals("1.2.1", sections[0].ref)
-        assertEquals("Créer un Scénario Pédagogique Détaillé (SPD)", sections[0].title)
+        assertEquals("Rédiger un document détaillé (DOC)", sections[0].title)
         assertEquals(listOf(39), sections[0].pages)
     }
 
     @Test
     fun `parses a multi-page row into an ordered page list`() {
         val sections = TocPageIndex.parse(
-            "| 1.0.1 | Devenir Formateur Professionnel d'Adultes | 5, 6, 7, 8 | 005.pdf, 006.pdf, 007.pdf, 008.pdf"
+            "| 1.0.1 | Maîtriser l'architecture logicielle | 5, 6, 7, 8 | 005.pdf, 006.pdf, 007.pdf, 008.pdf"
         )
 
         assertEquals(listOf(5, 6, 7, 8), sections[0].pages)
@@ -107,7 +107,7 @@ class TocPageIndexTest {
             [cols="1,3,1,1", options="header"]
             |===
             | Référence | Sujet / Titre de la section | Page | Fichier
-            | 1.2.1 | Créer un Scénario Pédagogique Détaillé (SPD) | 39 | 039.pdf
+            | 1.2.1 | Rédiger un document détaillé (DOC) | 39 | 039.pdf
             |===
             """.trimIndent()
         )
@@ -134,10 +134,10 @@ class TocPageIndexTest {
     @Test
     fun `page index normalizes polluted titles with dot leaders`() {
         val index = TocPageIndex.pageIndex(
-            listOf(TocSection(ref = "1.1.3", title = "Élaborer un SPG..........26", pages = listOf(26)))
+            listOf(TocSection(ref = "1.1.3", title = "Élaborer un document global..........26", pages = listOf(26)))
         )
 
-        assertEquals(listOf(26), index["élaborer un spg"])
+        assertEquals(listOf(26), index["élaborer un document global"])
     }
 
     @Test

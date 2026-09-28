@@ -44,19 +44,19 @@ class PageProvenanceResolverTest {
 
     @Test
     fun `joins a section whose leaf is OCR-polluted by walking to the matching ancestor`() {
-        // Real FPA shape: the chunks sectionPath nests many polluted segments;
+        // Real corpus shape: the chunks sectionPath nests many polluted segments;
         // the leaf is unrecognizable, but an ancestor matches the TOC.
         val provenance = PageProvenanceResolver.resolve(
             chunks = listOf(
                 chunk(
                     "chk-1",
-                    "Devenir Formateur Professionnel d'Adultes > FPA II > " +
-                        "Historique du Titre Professionnel : ...13 > Organiser le contenu du scénario ....40"
+                    "Maîtriser l'architecture logicielle > Corpus II > " +
+                        "Historique de l'architecture logicielle : ...13 > Organiser le contenu du plan ....40"
                 )
             ),
             tocSections = listOf(
                 toc("1.2.1.1", "Organiser le contenu du scénario", listOf(40)),
-                toc("1.0.2", "Historique du Titre Professionnel : Évolution des REAC (v1 à v7)", listOf(14)),
+                toc("1.0.2", "Historique de l'architecture logicielle : Évolution des DOC (v1 à v7)", listOf(14)),
             ),
             qualityReport = null,
         )
@@ -70,12 +70,12 @@ class PageProvenanceResolverTest {
             chunks = listOf(
                 chunk(
                     "chk-1",
-                    "Devenir Formateur Professionnel d'Adultes > " +
+                    "Maîtriser l'architecture logicielle > " +
                         "Les compétences. 14 > Le numérique. 15"
                 )
             ),
             tocSections = listOf(
-                toc("1.0.1", "Devenir Formateur Professionnel d'Adultes", listOf(5, 6, 7, 8)),
+                toc("1.0.1", "Maîtriser l'architecture logicielle", listOf(5, 6, 7, 8)),
                 toc("1.0.2.1", "Les compétences", listOf(14)),
                 toc("1.0.2.2", "Le numérique", listOf(15)),
             ),
@@ -101,8 +101,8 @@ class PageProvenanceResolverTest {
     @Test
     fun `resolves a multi-page section to all its pages`() {
         val provenance = PageProvenanceResolver.resolve(
-            chunks = listOf(chunk("chk-1", "Devenir Formateur Professionnel d'Adultes")),
-            tocSections = listOf(toc("1.0.1", "Devenir Formateur Professionnel d'Adultes", listOf(5, 6, 7, 8))),
+            chunks = listOf(chunk("chk-1", "Maîtriser l'architecture logicielle")),
+            tocSections = listOf(toc("1.0.1", "Maîtriser l'architecture logicielle", listOf(5, 6, 7, 8))),
             qualityReport = null,
         )
 
@@ -112,8 +112,8 @@ class PageProvenanceResolverTest {
     @Test
     fun `joins despite polluted titles on either side`() {
         val provenance = PageProvenanceResolver.resolve(
-            chunks = listOf(chunk("chk-1", "Chapitre 1 > Élaborer un SPG..........26")),
-            tocSections = listOf(toc("1.1.3", "Élaborer un Scénario Pédagogique Global (SPG)", listOf(26))),
+            chunks = listOf(chunk("chk-1", "Chapitre 1 > Élaborer un DOC..........26")),
+            tocSections = listOf(toc("1.1.3", "Élaborer un document global (DOC)", listOf(26))),
             qualityReport = null,
         )
 
@@ -199,8 +199,8 @@ class PageProvenanceResolverTest {
     @Test
     fun `doubt is attached to any of the resolved multi-pages`() {
         val provenance = PageProvenanceResolver.resolve(
-            chunks = listOf(chunk("chk-1", "Devenir Formateur Professionnel d'Adultes")),
-            tocSections = listOf(toc("1.0.1", "Devenir Formateur Professionnel d'Adultes", listOf(5, 6, 7, 8))),
+            chunks = listOf(chunk("chk-1", "Maîtriser l'architecture logicielle")),
+            tocSections = listOf(toc("1.0.1", "Maîtriser l'architecture logicielle", listOf(5, 6, 7, 8))),
             qualityReport = report(
                 OcrQualityIssue("007", "007.pdf", OcrQualityReason.LOW_CONFIDENCE, detail = "0.31")
             ),

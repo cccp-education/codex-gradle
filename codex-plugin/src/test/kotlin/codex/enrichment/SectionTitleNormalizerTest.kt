@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  *    (`......24`).
  *
  * Sans normalisation, la jointure exacte (case-insensitive) ne matche que
- * 30/111 sections du corpus FPA — avec normalisation, 110/111.
+ * 30/111 sections du corpus — avec normalisation, 110/111.
  *
  * Baby-step TDD strict RED (type inexistant) → GREEN → REFACTOR.
  */
@@ -50,8 +50,8 @@ class SectionTitleNormalizerTest {
     @Test
     fun `unescapes html entities`() {
         assertEquals(
-            "devenir formateur professionnel d'adultes",
-            SectionTitleNormalizer.normalize("Devenir Formateur Professionnel d&#8217;Adultes")
+            "maîtriser l'architecture logicielle",
+            SectionTitleNormalizer.normalize("Maîtriser l&#8217;architecture logicielle")
         )
     }
 
@@ -106,8 +106,8 @@ class SectionTitleNormalizerTest {
     @Test
     fun `strips trailing unicode ellipsis runs`() {
         assertEquals(
-            "devenir formateur professionnel d'adultes",
-            SectionTitleNormalizer.normalize("Devenir Formateur Professionnel d'Adultes \u2026\u200b\u2026\u200b\u2026\u200b")
+            "maîtriser l'architecture logicielle",
+            SectionTitleNormalizer.normalize("Maîtriser l'architecture logicielle \u2026\u200b\u2026\u200b\u2026\u200b")
         )
     }
 
@@ -139,7 +139,7 @@ class SectionTitleNormalizerTest {
 
     @Test
     fun `normalization is idempotent`() {
-        val once = SectionTitleNormalizer.normalize("1-1.3 Élaborer un Scénario Pédagogique Global, SPG.......22")
+        val once = SectionTitleNormalizer.normalize("1-1.3 Élaborer un document global, DOC.......22")
         val twice = SectionTitleNormalizer.normalize(once)
         assertEquals(once, twice, "normalize(normalize(x)) == normalize(x)")
     }
@@ -152,7 +152,7 @@ class SectionTitleNormalizerTest {
     }
 
     @Test
-    fun `real fpa corpus join - ldd title matches chunk sectionPath last segment`() {
+    fun `real corpus join - ldd title matches chunk sectionPath last segment`() {
         // Reproduction exacte du run S-217 : LDD (AsciidoctorJ) vs chunk (SemanticChunker)
         val lddTitle = "1-1.2 Différencier : activité et modules, compétences et séquences&#8230;&#8203; &#8230;&#8203;&#8230;&#8203;&#8230;&#8203;.24"
         val chunkLastSegment = " 1-1.2 Différencier : activité et modules, compétences et séquences... ..........24"
@@ -164,7 +164,7 @@ class SectionTitleNormalizerTest {
     }
 
     @Test
-    fun `real fpa corpus join - footnote macro vs sup html`() {
+    fun `real corpus join - footnote macro vs sup html`() {
         val lddTitle = "2-3.2 Développer son état d'esprit, le mind set.<sup class=\"footnote\">[<a id=\"_footnote_ref\">1</a>]</sup>"
         val chunkLastSegment = " 2-3.2 Développer son état d'esprit, le Mind Set.footnote:[102]"
         assertEquals(

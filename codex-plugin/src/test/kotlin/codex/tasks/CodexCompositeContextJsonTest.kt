@@ -49,11 +49,11 @@ class CodexCompositeContextJsonTest {
             result(2L, "shaky OCR section", doubtful = true, confidence = 0.0),
         )
 
-        val raw = task().buildCompositeJson(results, query = "scénario pédagogique", topK = 12)
+        val raw = task().buildCompositeJson(results, query = "architecture logicielle", topK = 12)
 
         val root = Json.parseToJsonElement(raw).jsonObject
         assertEquals("brooklyn", root["source"]!!.jsonPrimitive.content)
-        assertEquals("scénario pédagogique", root["query"]!!.jsonPrimitive.content)
+        assertEquals("architecture logicielle", root["query"]!!.jsonPrimitive.content)
         assertEquals("12", root["topK"]!!.jsonPrimitive.content)
         assertEquals("2", root["count"]!!.jsonPrimitive.content)
 

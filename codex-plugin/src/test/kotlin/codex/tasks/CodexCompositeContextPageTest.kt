@@ -74,9 +74,9 @@ class CodexCompositeContextPageTest {
     @Test
     fun `composite entry exposes a multi-page list`(@TempDir dir: File) {
         val t = task()
-        t.pageProvenanceFile.setFrom(sidecar(dir, "Devenir Formateur Professionnel d'Adultes" to listOf(5, 6, 7, 8)))
+        t.pageProvenanceFile.setFrom(sidecar(dir, "Maîtriser l'architecture logicielle" to listOf(5, 6, 7, 8)))
 
-        val raw = t.buildCompositeJson(listOf(result("Devenir Formateur Professionnel d'Adultes")), "q", 5, t.buildPageIndex())
+        val raw = t.buildCompositeJson(listOf(result("Maîtriser l'architecture logicielle")), "q", 5, t.buildPageIndex())
 
         val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
         assertEquals(listOf("5", "6", "7", "8"), entry["pages"]!!.jsonArray.map { it.jsonPrimitive.content })

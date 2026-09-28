@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
  *
  * Codex is READ: it consumes a TOC (AsciiDoc table
  * `Référence | Titre | Page | Fichier`, format `BookTocParser`) as an explicit
- * input, never hardcoded — the FPA business content lives in `office/`, never
- * in this public repo.
+ * input, never hardcoded — the private business content lives in `office/`,
+ * never in this public repo.
  *
  * @property ref hierarchical reference (e.g. `1.2.1.1`)
  * @property title the section title as written in the TOC

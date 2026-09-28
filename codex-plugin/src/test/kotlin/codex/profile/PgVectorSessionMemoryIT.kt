@@ -12,13 +12,13 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 
 /**
- * TDD — EPIC CDX-RC-04-2 : functional test R2DBC testcontainers du pont RAG
- * session memory.
+ * TDD — EPIC CDX-RC-04-2: functional R2DBC testcontainers test of the session
+ * memory RAG bridge.
  *
- * Valide l'adapter [PgVectorSessionMemory] contre une vraie pgvector via
- * Testcontainers. Le profil stagiaire est persisté dans `codex_learner_profiles`
- * (séparée du corpus documentaire) avec un embedding 384-dim ONNX calculé
- * depuis les weakPoints + annotations.
+ * Validates the [PgVectorSessionMemory] adapter against a real pgvector via
+ * Testcontainers. The learner profile is persisted in `codex_learner_profiles`
+ * (separate from the document corpus) with a 384-dim ONNX embedding computed
+ * from the weakPoints + annotations.
  *
  * Pattern `CodexIngestRetrieveIT` — `@Tag("integration")` (skip si Docker
  * indisponible via `assumeTrue` dans le runner, ici le container démarre

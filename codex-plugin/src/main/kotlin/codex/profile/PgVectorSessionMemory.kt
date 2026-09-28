@@ -17,14 +17,13 @@ import kotlinx.serialization.json.Json
 import reactor.core.publisher.Mono
 
 /**
- * EPIC CDX-RC-04-2 — Implémentation privée du pont RAG `SessionMemoryContract`.
+ * EPIC CDX-RC-04-2 — Private implementation of the `SessionMemoryContract` RAG bridge.
  *
- * Consomme le contrat N0 `SessionMemoryContract` (MEMPHIS `runtime-contracts`)
- * et l'implémente côté codex N2 via pgvector. Le profil stagiaire est persisté
- * dans une table dédiée `codex_learner_profiles` (séparée du corpus
- * documentaire — voir [ProfileStatements.initSchema]) avec un embedding
- * 384-dim ONNX calculé depuis les weakPoints + annotations (voir
- * [ProfileEmbedding]).
+ * Consumes the N0 contract `SessionMemoryContract` (MEMPHIS `runtime-contracts`)
+ * and implements it on the codex N2 side via pgvector. The learner profile is
+ * persisted in a dedicated table `codex_learner_profiles` (separate from the
+ * document corpus — see [ProfileStatements.initSchema]) with a 384-dim ONNX
+ * embedding computed from the weakPoints + annotations (see [ProfileEmbedding]).
  *
  * Pattern `RagVectorStore` (codebase.store) / `CodexIngestTask` :
  * - ONNX `AllMiniLmL6V2EmbeddingModel` pour l'embedding (lazy).
