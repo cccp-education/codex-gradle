@@ -130,14 +130,47 @@ Règle EAGER rappelée : **Local = Build, Tests = CI** — seules
 . Zéro bump de version : le type modifié vit dans codebase N1 (déjà livré
    0.0.16), pas dans un artefact N0. Publication éventuelle = accord pilote.
 
+== Blocage découvert — CI codex rouge en compilation (stale N1 Central)
+
+Le sauvetage CI de cette session (3 verrous de configuration levés — JDK 25,
+`working-directory: codex-plugin`, fallback nmcp `?: ""`, miroir codebase
+S-269) a **un-maské un blocage réel** (leçon S-269 : une CI morte en
+configuration masque toute la dette en aval) :
+
+* **Symptôme CI** : `PageProvenanceAttacher.kt:45 Unresolved reference 'pages'`
+   à `:compileKotlin` (run `36492115436`).
+* **Cause racine** : la CI consomme `education.cccp:codebase-plugin:0.0.16`
+   depuis **Maven Central**, or le 0.0.16 Central a été publié **S-264
+   (2026-09-17 15:58) — AVANT** l'US-1 `DocumentChunk.pages` (S-265, session
+   Queens parallèle du 2026-09-28). Le jar Central `DocumentChunk` a 9 champs,
+   **zéro `pages`** (vérifié `javap` sur le jar repo1). En local, la
+   compilation passe uniquement parce que mavenLocal porte un **0.0.16
+   republié** (S-265/S-267 `publishToMavenLocal`) — même version, bytes
+   différents : piège classique (une version publiée est immuable).
+* **Conséquence** : le code US-2 est **correct** (compile localement contre le
+  type N1) mais sa **preuve CI** exige que le N1 `pages` soit disponible sur
+  Central. C'est exactement **le bloc B** de la séquence C→A→B (`B-1
+  codebase-first`) — la publication N1 doit précéder la preuve N2.
+* **Résolution proposée (accord pilote requis, Règle 2)** : bump
+   `codebase-plugin` 0.0.16 → **0.0.17** (le 0.0.16 Central est immuable),
+   publication Central ; puis bump `codex-plugin` 0.0.11 → **0.0.12** (bloc
+   B-2), re-run CI codex. Zéro bump MEMPHIS (types de store N1, pas de contrat
+   N0 — D9).
+* **État honnête** : US-2 **code-complete**, CI bloquée par un **prérequis de
+   publication N1** (hors périmètre sans accord pilote). Le nettoyage CI
+   (3 verrous) reste acquis : une fois le 0.0.17 Central disponible, la CI
+   codex devrait passer.
+
 == Échecs préexistants / orthogonaux
 
-* Aucun test local lancé (règle EAGER). Les échecs connus côté codex
-   (`CodexIngestRetrieveIT` race mavenLocal cross-borough S-226) sont hors
-   périmètre et observés uniquement en CI.
+* Aucun test local lancé (règle EAGER). Le blocage ci-dessus est un
+   prérequis de publication, pas un défaut du code US-2.
+* CI codebase (Queens) **VERTE** : Fast Tests ✓ 1m48s + Full Test Suite ✓
+   21m12s (run `36491810975`).
 
 == Prochaine session
 
+* **Bloc B (publication N1→N2) — PRÉREQUIS DUR de la preuve CI de US-2**
+   (voir ci-dessus). Accord pilote requis (Règle 2).
 * **C-3** (bloc C codex) : dead code N1 + 8 désynchronisations gouvernance —
    cf. `PROMPT_REPRISE` et `CADRAGE_ROADMAP_S227_C_A_B.adoc`.
-* Publication codex-plugin (bloc B de la séquence C→A→B) — accord pilote.

@@ -3751,10 +3751,24 @@ exposées au retrieval. Chaîne GBL-003.4 close.
 *Gouvernance mise à jour* : `sessions/230-cb-page-provenance-us2-n2-transport.adoc`
 (créé) · `BACKLOG.adoc` (EPIC A ✅ 5/5, séquence C→A→B réordonnancée) ·
 `INDEX.adoc` (session 230, table, roadmap, prochaine) · `SESSIONS_HISTORY.adoc`
-+ archive · `PROMPT_REPRISE` (S-231 = C-3). Cross-borough : BACKLOG + INDEX
-Queens (EPIC clos 5/5).
++ archive · `PROMPT_REPRISE` (S-231 = bloc B prérequis / C-3). Cross-borough :
+BACKLOG + INDEX Queens (EPIC clos 5/5).
+
+*CI ressuscitée + blocage un-maské* : la CI codex était rouge en
+**configuration** depuis ≥ S-270 (2 verrous : JDK 24 vs `jvmToolchain(25)`
+des conventions 0.0.7 ; `:codex-plugin:check`/`publishToMavenLocal` au root
+alors que le projet racine **est** `codex-plugin`). 3 verrous levés (JDK 25,
+`defaults.run.working-directory: codex-plugin`, fallback nmcp `?: ""` — miroir
+codebase S-269). La CI réparée **un-masque un blocage réel** : `:compileKotlin`
+échoue `PageProvenanceAttacher.kt:45 Unresolved reference 'pages'` (run
+`36492115436`) car le `codebase-plugin:0.0.16` **Central** a été publié S-264
+(avant l'US-1 `pages` de S-265) — en local seul mavenLocal (0.0.16 republié)
+compile. **=> le bloc B (publication N1→N2 : codebase 0.0.17 puis codex 0.0.12)
+devient le prérequis dur de la preuve CI de US-2** — accord pilote requis.
+US-2 **code-complete**, preuve CI en attente de la publication N1.
 
 *Gates* : RED prouvé ×2 (compilation) ; compile/build VERT ; `publishToMavenLocal`
-VERT ; zéro bump, zéro publication Central, zéro secret.
+VERT local ; CI codebase (Queens) VERTE Fast 1m48s + Full 21m12s ; zéro bump,
+zéro publication Central, zéro secret.
 
 *Rapport* : `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`.

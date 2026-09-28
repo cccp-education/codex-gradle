@@ -2,7 +2,7 @@
 :session: 231
 :date: 2026-09-29
 :status: PRET
-:mission: C-3 — dead code N1 + désynchronisation gouvernance (clôture dette structurelle)
+:mission: Bloc B (publication N1→N2) — prérequis dur de la preuve CI de US-2
 
 == Quick Start
 ----
@@ -10,6 +10,24 @@ cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 git status --porcelain -- src/    # vide ? → règle EAGER
 ./gradlew compileKotlin compileTestKotlin   # environnement
 ----
+
+== ⚠ Blocage CI à résoudre en priorité (découvert S-230)
+
+La CI codex a été **ressuscitée** en S-230 (3 verrous de configuration levés :
+JDK 25, `working-directory: codex-plugin`, fallback nmcp `?: ""` — miroir
+codebase S-269). Elle révèle un **blocage réel masqué** :
+
+* **Symptôme** : `PageProvenanceAttacher.kt:45 Unresolved reference 'pages'`
+  à `:compileKotlin` (run `36492115436`).
+* **Cause** : le `codebase-plugin:0.0.16` de **Maven Central** a été publié
+  **S-264 (2026-09-17) — avant** l'US-1 `DocumentChunk.pages` (S-265). Le jar
+  Central n'a pas `pages`. En local seul mavenLocal (0.0.16 republié S-265/
+  S-267) compile.
+* **Résolution (accord pilote requis, Règle 2)** : **bloc B** —
+  `codebase-plugin` 0.0.16 → **0.0.17** (Central d'abord) puis
+  `codex-plugin` 0.0.11 → **0.0.12**. Zéro bump MEMPHIS (D9).
+* Sans cette publication, la preuve CI de US-2 est impossible (le N1 `pages`
+  doit être résolvable depuis Central).
 
 == Contexte — bloc C (maintenance), séquence C → A → B
 
@@ -20,18 +38,20 @@ Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
   `CodexPluginPublicationTest` 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
 - *C-2 (S-229)* ✅ TERMINÉ — split-brain `DocumentChunk` soldé (type N1 unique).
 - *A — CB-PAGE-PROVENANCE* ✅ **TERMINÉ 5/5 US** — **US-2 (N2 transport codex)
-  livrée S-230** (cette session-1) : `PageProvenanceAttacher` (jointure exacte
-  SHA-256) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante) +
-  wiring `CodexPlugin` + BDD `@provenance` ×2. US-1/US-3/US-4 livrées côté
-  Queens (S-265/S-267/S-269). Le bloc A a donc été délivré **hors ordre**
-  (session parallèle Queens + présente session codex).
-- *C-3 (S-231)* — **mission ci-dessous**.
-- *C-4 (S-232)* : pollution TOC chunking (99/387 au run FPA S-216), BDD
-  `@toc-noise`, clôture C + go/no-go B.
+  livrée S-230** : `PageProvenanceAttacher` (jointure exacte SHA-256) +
+  `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante) + wiring
+  `CodexPlugin` + BDD `@provenance` ×2. Code-complete ; preuve CI bloquée par
+  le stale N1 Central (bloc B).
+- *C-3 (S-231)* — dead code N1 + 8 désync gouvernance (si le pilote préfère
+   la maintenance avant la publication).
+- *C-4 (S-232)* : pollution TOC chunking + clôture C.
 
-== Mission S-231 — C-3 (dead code N1 + désync gouvernance)
+== Mission S-231 (au choix du pilote)
 
-Deux volets, cross-borough.
+. **Bloc B (prioritaire)** — publication N1→N2 (voir ⚠ ci-dessus), accord
+   pilote requis.
+. Sinon **C-3** — dead code N1 (Queens) + 8 désynchronisations gouvernance
+   codex (détail ci-dessous).
 
 === Volonté A — dead code N1 (Queens / codebase-gradle)
 

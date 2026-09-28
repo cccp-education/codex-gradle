@@ -4,7 +4,7 @@
 :toc: left
 :sectnums:
 
-_Dernière mise à jour : 2026-09-29 (session 230 — **CB-PAGE-PROVENANCE US-2 TERMINÉE — EPIC A clos 5/5 US**. Mission S-271 du `PROMPT_REPRISE` codebase (Queens) : ouvrir le borough codex pour le dernier volet cross-borough. Baby-step DDD/TDD/BDD strict, 3 niveaux. **RED prouvé localement** (`Unresolved reference 'PageProvenanceAttacher'` ×15, puis `'pageProvenanceFile'`/`'attachPages'`). **GREEN** : noyau pur `codex.provenance.PageProvenanceAttacher` (jointure **exacte** SHA-256 `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`, préserve les pages existantes, dégrade silencieux sans allocation) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern S-221) + seam `internal attachPages` + `CodexPlugin` wiring défaut `build/codex/page-provenance.json`. **BDD** : `codex_page_provenance.feature` `@provenance` +2 scénarios (transport exact + dégradé silencieux) traversant le **vrai** `ingestInto` via fake in-memory (pattern S-102/S-214). Gates locaux (Local = Build) : compileKotlin/compileTestKotlin VERT, validatePlugins VERT, assemble VERT, publishToMavenLocal VERT (0.0.11). Tests = CI. Zéro bump, zéro publication Central, zéro secret.)_
+_Dernière mise à jour : 2026-09-29 (session 230 — **CB-PAGE-PROVENANCE US-2 TERMINÉE — EPIC A clos 5/5 US**. Mission S-271 du `PROMPT_REPRISE` codebase (Queens) : ouvrir le borough codex pour le dernier volet cross-borough. Baby-step DDD/TDD/BDD strict, 3 niveaux. **RED prouvé localement** (`Unresolved reference 'PageProvenanceAttacher'` ×15, puis `'pageProvenanceFile'`/`'attachPages'`). **GREEN** : noyau pur `codex.provenance.PageProvenanceAttacher` (jointure **exacte** SHA-256 `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`, préserve les pages existantes, dégrade silencieux sans allocation) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern S-221) + seam `internal attachPages` + `CodexPlugin` wiring défaut `build/codex/page-provenance.json`. **BDD** : `codex_page_provenance.feature` `@provenance` +2 scénarios (transport exact + dégradé silencieux) traversant le **vrai** `ingestInto` via fake in-memory (pattern S-102/S-214). Gates locaux (Local = Build) : compileKotlin/compileTestKotlin VERT, validatePlugins VERT, assemble VERT, publishToMavenLocal VERT (0.0.11). Tests = CI. **CI codex ressuscitée** (3 verrous de configuration levés : JDK 25, `working-directory: codex-plugin`, fallback nmcp `?: ""` — miroir codebase S-269) — elle **un-masque un blocage réel** : le `codebase-plugin:0.0.16` **Central** (publié S-264, avant US-1) n'a pas `pages`, la CI codex échoue à `:compileKotlin`. => **bloc B (publication N1→N2) devient le prérequis dur de la preuve CI de US-2**. Zéro bump, zéro publication Central (accord pilote requis), zéro secret. CI codebase (Queens) **VERTE** Fast 1m48s + Full 21m12s.)_
 
 '''
 == 🟡 SÉQUENCE PILOTE C → A → B (ordonnancement S-227)
@@ -38,7 +38,9 @@ sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc
 | 3
 | B-1 codebase-first (N1) · B-2 codex-plugin 0.0.12 · B-3 propagation
   repo1 + alignement consommateurs + dogfooding backfill
-| 🔲 PLANIFIÉ (accord pilote — bloc A désormais clos)
+| 🔴 PRÉREQUIS DUR de la preuve CI de A/US-2 (S-230) — le 0.0.16 Central est
+  stale (publié S-264, avant US-1 `pages`) ; bump N1 0.0.16→0.0.17 puis N2
+  0.0.11→0.0.12. Accord pilote requis (Règle 2).
 |===
 
 *Pourquoi C avant A* : (1) baseline non verte à HEAD (drift C-1 prouvé
