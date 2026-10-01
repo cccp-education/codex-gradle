@@ -425,3 +425,26 @@ val cucumberTestPageProvenance by tasks.registering(Test::class) {
     shouldRunAfter(tasks.named("test"))
     outputs.upToDateWhen { false }
 }
+
+// ── C-4 (S-233) — Dedicated Cucumber runner for TOC noise (pattern S-082) ───────
+// Scoped to CodexTocNoiseCucumberRunner so only codex_toc_noise.feature
+// runs, not the full src/test/resources/features/*.feature suite.
+val cucumberTestTocNoise by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the codex_toc_noise.feature Cucumber suite (C-4 TOC noise)"
+    testClassesDirs = sourceSets.getByName("test").output.classesDirs
+    classpath = configurations.getByName("testRuntimeClasspath") +
+        sourceSets.getByName("test").output +
+        sourceSets.getByName("main").output
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    filter {
+        includeTestsMatching("codex.bdd.CodexTocNoiseCucumberRunner")
+    }
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+    systemProperty("cucumber.features", "src/test/resources/features/codex_toc_noise.feature")
+    systemProperty("cucumber.filter.tags", "@toc-noise and not @wip and not @integration")
+    shouldRunAfter(tasks.named("test"))
+    outputs.upToDateWhen { false }
+}

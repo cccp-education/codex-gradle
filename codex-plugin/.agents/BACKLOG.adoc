@@ -7,23 +7,24 @@
 _Dernière mise à jour : 2026-10-02 (session 231 — **BLOC B (publication N1→N2) ✅ — codex-plugin 0.0.12 Central**. Mission S-231 du `PROMPT_REPRISE` : prérequis dur de la preuve CI de l'US-2 (S-230). Accord pilote explicite. Ordre DAG : **N0 MEMPHIS** BOM/catalog `0.0.61`→`0.0.62` (`codebase-plugin 0.0.17` + `codex-plugin 0.0.12`, bundle `7baf6567`) → **B-2 codex** pins `0.0.50`→`0.0.62` + toml `codebase-plugin 0.0.17`/`codex-plugin 0.0.12` + Central bundle `79d0ad3d`. Propagation repo1 HTTP 200 ×4. `compileKotlin`/`compileTestKotlin` VERT contre codebase 0.0.17 (avec `pages`), `publishToMavenLocal` → 0.0.12. **La CI codex peut compiler à nouveau → preuve CI US-2 débloquée.** Zéro secret.) Antérieur session 230 — **CB-PAGE-PROVENANCE US-2 TERMINÉE — EPIC A clos 5/5 US**. Mission S-271 du `PROMPT_REPRISE` codebase (Queens) : ouvrir le borough codex pour le dernier volet cross-borough. Baby-step DDD/TDD/BDD strict, 3 niveaux. **RED prouvé localement** (`Unresolved reference 'PageProvenanceAttacher'` ×15, puis `'pageProvenanceFile'`/`'attachPages'`). **GREEN** : noyau pur `codex.provenance.PageProvenanceAttacher` (jointure **exacte** SHA-256 `ChunkPageProvenance.chunkId` ↔ `DocumentChunk.id`, préserve les pages existantes, dégrade silencieux sans allocation) + `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante, pattern S-221) + seam `internal attachPages` + `CodexPlugin` wiring défaut `build/codex/page-provenance.json`. **BDD** : `codex_page_provenance.feature` `@provenance` +2 scénarios (transport exact + dégradé silencieux) traversant le **vrai** `ingestInto` via fake in-memory (pattern S-102/S-214). Gates locaux (Local = Build) : compileKotlin/compileTestKotlin VERT, validatePlugins VERT, assemble VERT, publishToMavenLocal VERT (0.0.11). Tests = CI. **CI codex ressuscitée** (3 verrous de configuration levés : JDK 25, `working-directory: codex-plugin`, fallback nmcp `?: ""` — miroir codebase S-269) — elle **un-masque un blocage réel** : le `codebase-plugin:0.0.16` **Central** (publié S-264, avant US-1) n'a pas `pages`, la CI codex échoue à `:compileKotlin`. => **bloc B (publication N1→N2) devient le prérequis dur de la preuve CI de US-2**. Zéro bump, zéro publication Central (accord pilote requis), zéro secret. CI codebase (Queens) **VERTE** Fast 1m48s + Full 21m12s.)_
 
 '''
-== 🟡 SÉQUENCE PILOTE C → A → B (ordonnancement S-227)
+== ✅ SÉQUENCE PILOTE C → A → B (ordonnancement S-227) — TERMINÉE (C 4/4 · A 5/5 · B ✅)
 
 _Décision pilote S-227 : exécuter dans l'ordre **C** (maintenance) → **A**
 (EPIC CB-PAGE-PROVENANCE) → **B** (publication). Chaque bloc = plusieurs
-sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc`._
+sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc`.
+**Clôture S-233 : les trois blocs sont TERMINÉS — séquence close.**_
 
 [cols="1,1,1,2,1", options="header"]
 |===
 | Bloc | Sessions | Nb | Contenu | Statut
 
 | C — Maintenance
-| S-228 · S-229 · S-230 · S-231
+| S-228 · S-229 · S-232 · S-233
 | 4
 | C-1 drift MEMPHIS 0.0.49→0.0.50 + baseline verte · C-2 split-brain
-  `DocumentChunk` (prérequis A-1) · C-3 dead code N1 + 8 désync gouvernance ·
-  C-4 pollution TOC chunking + clôture C
-| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; C-3 ✅ TERMINÉ (S-232) ; reste C-4 (S-233)
+  `DocumentChunk` (prérequis A-1) · C-3 dead code N1 + 8 désync gouvernance +
+  6 tests CI · C-4 pollution TOC chunking + clôture C
+| ✅ TERMINÉ 4/4 — C-1 ✅ (S-228) ; C-2 ✅ (S-229) ; C-3 ✅ (S-232) ; C-4 ✅ (S-233)
 
 | A — CB-PAGE-PROVENANCE
 | S-232 · S-233 · S-234 · S-235
@@ -51,13 +52,15 @@ S-227) ; (2) C-2 supprime le doublon `DocumentChunk` — sans lui, le champ
 (Queens) par une session codebase parallèle, l'US N2 (codex) par la présente
 session. Le bloc C reste ouvert (C-3/C-4). L'ordre C→A→B reste la référence
 pour la clôture de C et la publication B.
+*Clôture S-233* : **bloc C TERMINÉ 4/4** — la séquence pilote **C → A → B est
+close** (C S-228/229/232/233 · A S-230 · B S-231).
 *Pourquoi A avant B* : B publie le contenu produit par A (0.0.11 est déjà
 Central, rien à republier avant).
 
 '''
-== 🟡 EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette)
+== ✅ EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette) — TERMINÉ 4/4
 
-_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; **A (CB-PAGE-PROVENANCE) ✅ TERMINÉ S-230 (hors ordre)** ; **B (publication) ✅ TERMINÉ S-231** ; C-3 ✅ TERMINÉ (S-232) ; reste C-4 (S-233).
+_Statut_ : ✅ TERMINÉ 4/4 — C-1 ✅ (S-228) ; C-2 ✅ (S-229) ; C-3 ✅ (S-232) ; C-4 ✅ (S-233). **A (CB-PAGE-PROVENANCE) ✅ TERMINÉ S-230 (hors ordre)** ; **B (publication) ✅ TERMINÉ S-231**. Séquence C → A → B close.
 _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 
 [cols="1,3,1", options="header"]
@@ -106,12 +109,20 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 | ✅ TERMINÉ (S-232)
 
 | C-4 (S-233)
-| **Pollution TOC chunking + clôture C** — 99 chunks TOC pollués / 387 au
-  run FPA (S-216, dot leaders + entrées de table des matières). Détection/
-  exclusion au `SemanticChunker` **ou** marquage `doubtful` (zéro
-  re-vectorisation privilégiée — Économie d'Encre), characterization corpus
-  réel, BDD `@toc-noise`. Clôture C + go/no-go B.
-| 🟡 À FAIRE
+| **Pollution TOC chunking + clôture C** — 99 `sectionPath` / 387 portent des
+  dot leaders au run FPA (S-216). **Décision N2, pas N1** : la CI résout
+  `codebase-plugin` depuis Central — toute modif N1 forcerait une publication
+  + bump BOM (incompatible « zéro publication »). `codex.tasks.TocNoiseDetector`
+  (objet pur N2) superpose sa détection au `DoubtPolicy` N1. **Signal étroit** :
+  titre (`#`–`######`) à suite de ≥ 4 points = entrée TOC ; ellipse `...`,
+  coordonnées `3.3.6`, prose pointée **non** flaggées. Mesure corpus FPA réel :
+  **33 chunks flaggés** (81–132 chars), **0 substantiel** ; les 66 chunks
+  « ancêtre TOC pollué » au contenu réel restent retrievables. Exposition
+  **`doubtful`** (zéro re-chunking, zéro re-vectorisation). `CodexIngestTask
+  .ingestInto` → `TocNoiseDetector.markDoubt`. 12 UT + 3 FT seam + characterization
+  (synthétique CI + corpus réel skip-guardé) + BDD `@toc-noise` 6 scénarios +
+  11e runner `cucumberTestTocNoise`. Zéro publication, zéro bump.
+| ✅ TERMINÉ (S-233)
 |===
 
 '''
@@ -1376,7 +1387,7 @@ la contractualité du flow `collectOcr → assembleBook`.
 
 *Total* : ~5 pts (3 US)
 '''
-== 🟡 EPIC MEM-CAT-ROLLOUT — Adoption version catalog workspace (S-028, cross-borough MEMPHIS)
+== ✅ EPIC MEM-CAT-ROLLOUT — Adoption version catalog workspace (S-028, cross-borough MEMPHIS) — TERMINÉ 6/6
 
 _Origine : demande pilote S-028 (workspace-bom) — généralisation du pattern
 version catalog prouvé par le pilote bakery (S-208). Référentiel :
@@ -1391,8 +1402,8 @@ mavenLocal) → codex réaligné (platform pin 0.0.33, guards 3/3) → bakery
 migré (imports graphify.model canonique). S-218 : pin codex réaligné
 0.0.39 → 0.0.43 (garde publication attrapée, drift MEMPHIS S-217). S-220 :
 pin 0.0.44 → 0.0.45/0.0.46 (releases 0.0.8 + 0.0.9 corrective). S-222 : pin
-0.0.46 → 0.0.47 (publication 0.0.10). Reste ordre 6 : dashboard (gate bump
-MEMPHIS requis — zéro entrée catalog).
+0.0.46 → 0.0.47 (publication 0.0.10). Ordre 6 dashboard ✅ TERMINÉ S-215
+(dashboard-plugin 0.0.1 Central + entrée catalog 0.0.34).
 
 === US-ROLLOUT-2 — Pin workspace-catalog + version dérivée + platform 0.0.30
 

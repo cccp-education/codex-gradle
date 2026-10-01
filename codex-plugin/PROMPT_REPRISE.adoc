@@ -1,8 +1,8 @@
-= PROMPT_REPRISE — Codex — Session 233
-:session: 233
+= PROMPT_REPRISE — Codex — Session 234
+:session: 234
 :date: 2026-10-02
 :status: PRET
-:mission: C-4 (maintenance) — pollution TOC du chunking + clôture du bloc C (séquence C → A → B)
+:mission: Bloc C clos — prochaine orientation à la demande du pilote
 
 == Quick Start
 ----
@@ -11,51 +11,39 @@ git status --porcelain -- src/    # vide ? → règle EAGER
 ./gradlew compileKotlin compileTestKotlin   # environnement (projet racine = codex-plugin)
 ----
 
-== ✅ Bloc C-3 TERMINÉ (S-232) — CI codex verte
+== ✅ Bloc C TERMINÉ 4/4 (C-4 clôturé S-233)
 
-8 désync gouvernance codex corrigées + 6 tests CI préexistants **corrigés
-(test-only)** : `CodexPluginPublicationTest` ×2 (version publiée du catalogue
-**injectée par Gradle** — plus de lecture du repo voisin, pattern graphify
-D5-RACE / bakery S-243), `TesseractOcrEngineTest` (`assumeTrue` binaire absent),
-fixtures provenance S-270 réalignées. Le **dead code N1 était déjà supprimé
-S-268** (volonté A du cadrage). Zéro publication, zéro bump. **Preuve = CI
-verte** sur le commit poussé (run post-S-232).
+* *C-1 (S-228)* ✅ drift MEMPHIS + baseline · *C-2 (S-229)* ✅ split-brain
+  `DocumentChunk` · *C-3 (S-232)* ✅ désync gouvernance + 6 tests CI (CI verte)
+  · *C-4 (S-233)* ✅ **pollution TOC au chunking**.
+* *Bloc A* ✅ (CB-PAGE-PROVENANCE 5/5) · *Bloc B* ✅ (publication 0.0.12).
+* La séquence pilote **C → A → B est close**.
 
-== Contexte — séquence C → A → B
+== C-4 (S-233) — ce qui a été livré
 
-Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
-**C** (maintenance) → **A** (EPIC CB-PAGE-PROVENANCE) → **B** (publication).
+* `codex.tasks.TocNoiseDetector` (N2, objet pur) : une ligne de titre portant
+  une suite de ≥ 4 points est une entrée TOC. Seuil étroit — ellipse `...`,
+  coordonnées `3.3.6` et prose pointée **non** flaggées.
+* `CodexIngestTask.ingestInto` superpose `TocNoiseDetector.markDoubt` au
+  `DoubtPolicy` N1 → l'entrée TOC est ingérée **`doubtful` zéro confiance**
+  (transport existant, zéro re-chunking, zéro re-vectorisation).
+* **Décision** : détecteur en N2, pas N1 — la CI résout `codebase-plugin`
+  depuis Central, toute modif N1 forcerait une publication + bump BOM
+  (incompatible « zéro publication »). Le N1 reste agnostique du scan.
+* Mesure corpus FPA réel : **33 chunks flaggés** (entrées TOC pures, 81–132
+  chars), **0 chunk substantiel**. Les 66 chunks « ancêtre TOC pollué » mais au
+  contenu réel ne sont **pas** flaggés (contenu retrievable).
+* BDD `@toc-noise` 6 scénarios + 11e runner dédié `cucumberTestTocNoise`.
+* Zéro publication, zéro bump. **Preuve = CI verte** (run post-push).
 
-- *C-1 (S-228)* ✅ · *C-2 (S-229)* ✅ · *C-3 (S-232)* ✅ ·
-  *A (CB-PAGE-PROVENANCE)* ✅ 5/5 · *B (publication)* ✅ (S-231 codex + S-272 Queens).
-- *C-4 (S-233)* — pollution TOC du chunking + **clôture C**.
-
-== Mission S-233 — C-4 (maintenance, zéro publication)
-
-*Constat* : le run corpus FPA (S-216) a produit **99 chunks TOC pollués**
-(dot leaders `.......` + entrées de table des matières) sur **387**. Le bruit
-pollue le retrieval (des chunks « table des matières » remontent en similarité).
-
-*Travail* (baby-step DDD/TDD/BDD strict) :
-
-. `SemanticChunker` (N2) / heuristique de détection : sections de type TOC —
-   ratio de dot leaders, densité de lignes sans phrase, longueur de titre vs
-   contenu.
-. Décision d'exposition : **marquer `doubtful`** (déjà transporté N1 via
-   `DoubtPolicy`/`DoubtMetadata`, zéro re-vectorisation — Loi de l'Économie
-   d'Encre) **ou** exclure au chunking (re-chunk = re-vectorisation ONNX à
-   peser). La voie `doubtful` est privilégiée.
-. Characterization sur le corpus FPA réel (387 chunks, plancher de pollution).
-. BDD `@toc-noise` (runner dédié pattern S-082 ou extension d'un runner existant).
-. *Clôture C* : audit de sortie — dettes restantes, go/no-go, clôture du bloc C.
-
-== Contexte technique (S-232)
+== Contexte technique (S-233)
 
 * Build autonome : `cd codex-plugin && ./gradlew ...` (JDK 25). Version locale
   **0.0.12** (Central 0.0.12). Conventions 0.0.7. BOM/catalog 0.0.62.
 * `check` = projet racine `codex-plugin` (PAS `:codex-plugin:check`).
-* Pièges : mavenLocal partagé entre boroughs (course S-226) — vérifier par stash.
-  Une version Central est immuable.
+* `check` exécute **tous** les runners `cucumberTest*` (11 désormais).
+* Pièges : mavenLocal partagé entre boroughs (course S-226) — vérifier par
+  stash. Une version Central est immuable.
 
 == Règles absolues
 
@@ -64,10 +52,18 @@ pollue le retrieval (des chunks « table des matières » remontent en similarit
   `test`/`cucumberTest`/`check` s'exécutent en CI après push.
 * Git autorisé — zéro secret commité. Publication Central = accord pilote.
 * Vérifier le working tree avant toute mission (`git status`).
+* **Hors scope** : EPICs de traduction engageant un LLM (consigne pilote).
+
+== Candidats (accord pilote requis)
+
+* MEMPHIS resync releases + CI-1.4 (qwen3:0.6b, 1 pt).
+* codebase → conventions 0.0.7 + dette self-application (versions
+  0.0.10/0.0.11/0.0.17).
+* document DOC-SEMANTIC US-3→6.
+* Dormants (filler) : capsule gems JRuby, slider hygiène.
 
 == References
 
-* `.agents/sessions/232-c3-gouvernance-ci-verte.adoc` (rapport S-232)
-* `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (§ C-4)
-* `.agents/sessions/231-bloc-b-publication-n1-n2.adoc` (bloc B)
-* `codex/tasks/SemanticChunker.kt` · `codebase.store.{DoubtMetadata,StoreStatements}` (Queens)
+* `.agents/sessions/233-c4-toc-noise-cloture-bloc-c.adoc` (rapport S-233)
+* `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (séquence C → A → B, § Hors scope)
+* `src/main/kotlin/codex/tasks/TocNoiseDetector.kt` · `CodexIngestTask.kt`

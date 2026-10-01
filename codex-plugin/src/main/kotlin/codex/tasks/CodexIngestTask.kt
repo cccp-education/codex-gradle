@@ -30,6 +30,9 @@ import org.gradle.work.DisableCachingByDefault
  * loop nor the doubt policy — both live in codebase:
  * - [DoubtPolicy] derives the doubt from the OCR `[ILLISIBLE]` markers
  *   (content / sectionPath / overlapNext);
+ * - [TocNoiseDetector] (C-4, S-233) overlays it with the acquisition-local
+ *   TOC-pollution detection (dot-leader headings) so a table-of-contents
+ *   entry is flagged doubtful too — the N1 socle stays agnostic;
  * - [RagVectorStore.ingestWithDoubt] owns the additive schema, the 7-bind
  *   INSERT and the per-document `avg_confidence`.
  *
@@ -157,7 +160,7 @@ abstract class CodexIngestTask : DefaultTask() {
      */
     internal suspend fun ingestInto(store: RagVectorStore, chunks: List<DocumentChunk>): Int {
         val effectiveBatchSize = batchSize.orNull?.toIntOrNull() ?: 32
-        return store.ingestWithDoubt(DoubtPolicy.mark(chunks)) { doc ->
+        return store.ingestWithDoubt(TocNoiseDetector.markDoubt(chunks)) { doc ->
             logger.lifecycle("[codex]   $doc (markers=doubt-aware, batch=$effectiveBatchSize)")
         }
     }

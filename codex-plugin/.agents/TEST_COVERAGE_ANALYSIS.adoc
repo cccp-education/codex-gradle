@@ -1,6 +1,27 @@
 = TEST_COVERAGE_ANALYSIS — codex-gradle
-:date: 2026-09-17
-:session: 224
+:date: 2026-10-02
+:session: 233
+
+== Session 233 — C-4 TOC noise (+18 tests unit/fonctionnel + 6 scénarios BDD)
+
+*Delta* : ajout de la couverture du détecteur de pollution TOC (C-4). Tests
+exécutés en CI (Local = Build). `cucumberTestTocNoise` 11e runner dédié dans
+le graphe `check`.
+
+[cols="2,2,2", options="header"]
+|===
+| Fichier | Tests | Statut
+| `test/kotlin/codex/tasks/TocNoiseDetectorTest.kt` (nouveau) | 15 UT | ✅ RED→GREEN (dot-leader heading détecté avec/sans page, titre normal non flaggé, ellipse `...` non flaggée, coordonnées `3.3.6` non flaggées, prose pointée non flaggée, entier `isTocNoise`, multi-lignes, `doubtFor` TOC/propre, `markDoubt` TOC/`[ILLISIBLE]`/propre)
+| `test/kotlin/codex/tasks/CodexIngestTocNoiseTest.kt` (nouveau) | 3 FT | ✅ RED→GREEN (seam `ingestInto` : TOC flaggé doubtful zéro confiance, propre pleine confiance, `[ILLISIBLE]` préservé — RecordingRagStore sans Docker)
+| `test/kotlin/codex/tasks/TocNoiseCharacterizationTest.kt` (nouveau) | 1 UT + 1 IT | ✅ (synthétique chunker réel précision/rappel en CI ; corpus FPA réel `@Tag("integration")` skip-guardé `codex.tocNoise.chunks`, plancher 25, tous thin)
+| `test/kotlin/codex/bdd/TocNoiseSteps.kt` + `CodexTocNoiseCucumberRunner.kt` (nouveaux) | runner | ✅ 11e runner dédié (pattern S-082)
+| `test/resources/features/codex_toc_noise.feature` (nouveau) | 6 scénarios | ✅ (TOC flaggé doubtful zéro, propre pleine, `[ILLISIBLE]` préservé, ellipse non flaggée, coordonnées non flaggées, entrée détectée)
+|===
+
+*Nouveau testé* :
+- `TocNoiseDetector` — détection TOC (heading + dot leaders), précision
+  (aucun faux positif sur ellipse/coordonnées/prose), overlay `markDoubt`.
+- `CodexIngestTask.ingestInto` — la surcharge TOC du `DoubtPolicy` N1.
 
 == Session 224 — CDX-PAGE-PROVENANCE (+75 tests, 1263 + 130 cucumber PASS)
 

@@ -3843,3 +3843,47 @@ débloquée**. Contenu 0.0.12 depuis 0.0.11 : CB-PAGE-PROVENANCE US-2 (transport
 propagation repo1 200 ×4, zéro secret. Tests = CI.
 
 *Rapport* : `.agents/sessions/231-bloc-b-publication-n1-n2.adoc`.
+
+== Session 233 — 2026-10-02 — C-4 pollution TOC du chunking + clôture du bloc C ✅ TERMINÉ
+
+*Type* : maintenance (bloc C, séquence C → A → B) — zéro publication, zéro bump.
+*Mission* : C-4 du `PROMPT_REPRISE` — le run corpus FPA (S-216) produisait des
+entrées de table des matières (titres à dot leaders) devenues des chunks
+quasi-vides qui polluaient le retrieval.
+
+*Décision d'architecture — N2, pas N1* : la CI codex résout `codebase-plugin`
+depuis **Central** (mavenLocal vide en CI) ; modifier la signature
+`DoubtPolicy` N1 forcerait une **publication codebase + bump BOM**, incompatible
+avec « zéro publication ». La pollution TOC est un souci d'*acquisition* :
+le détecteur vit en N2 et surcharge le socle sans le toucher.
+
+*Travail* (baby-step DDD/TDD/BDD strict) :
+* `codex.tasks.TocNoiseDetector` (objet pur N2) — une ligne de titre
+  (`#`–`######`) portant une suite de **≥ 4 points** est une entrée TOC ; la
+  détection se fait sur le contenu (le heading réel), pas sur le `sectionPath`.
+* `markDoubt` superpose `DoubtPolicy.derive` (N1, `[ILLISIBLE]`) surchargé par
+  la détection TOC (no-op sur le propre) → `DoubtfulChunk`.
+* `CodexIngestTask.ingestInto` appelle `TocNoiseDetector.markDoubt` au lieu de
+  `DoubtPolicy.mark` — l'entrée TOC est ingérée `doubtful` zéro confiance
+  (zéro re-chunking, zéro re-vectorisation — Économie d'Encre).
+* RED prouvé ×2 (compilation) : `TocNoiseDetectorTest` (12 UT + 3 markDoubt) +
+  `CodexIngestTocNoiseTest` (3 FT seam, RecordingRagStore sans Docker).
+* `TocNoiseCharacterizationTest` — synthétique (chunker réel, précision/rappel,
+  tourne en CI) + corpus réel **skip-guardé** (`codex.tocNoise.chunks`, pattern
+  `PageProvenanceJoinRateTest`, plancher 25).
+* BDD `codex_toc_noise.feature` `@toc-noise` 6 scénarios + `TocNoiseSteps`
+  (préfixes S-088) + `CodexTocNoiseCucumberRunner` (**11e runner dédié**,
+  pattern S-082) + `cucumberTestTocNoise`.
+
+*Calibration corpus FPA réel (387 chunks)* : **33 flaggés** (entrées TOC pures,
+81–132 chars, < plancher 150), **0 substantiel** (précision 100 %). Les 66
+chunks au `sectionPath` pollué par un ancêtre TOC mais au contenu réel **ne
+sont pas flaggés** (contenu retrievable).
+
+*Gates* (Local = Build) : compileKotlin/compileTestKotlin VERT, validatePlugins
+VERT, assemble VERT, `check --dry-run` inclut `cucumberTestTocNoise`. Tests = CI.
+
+*Clôture du bloc C* : C-1 ✅ S-228 · C-2 ✅ S-229 · C-3 ✅ S-232 · C-4 ✅ S-233.
+Blocs A ✅ (S-230) et B ✅ (S-231) terminés → **séquence pilote C → A → B close**.
+
+*Rapport* : `.agents/sessions/233-c4-toc-noise-cloture-bloc-c.adoc`.

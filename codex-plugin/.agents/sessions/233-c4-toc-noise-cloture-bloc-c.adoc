@@ -1,0 +1,157 @@
+= Session 233 — C-4 : pollution TOC du chunking + clôture du bloc C ✅ TERMINÉ
+
+:session: 233
+:date: 2026-10-02
+:type: maintenance (bloc C, séquence C → A → B) — zéro publication, zéro bump
+:borough: Brooklyn — codex-gradle (N2) — zéro modification N1 (Queens)
+:statut: TERMINÉ — clôture du bloc C
+
+== Contexte
+
+Mission S-233 du `PROMPT_REPRISE` codex : **C-4 (maintenance)** — pollution
+des entrées de table des matières au chunking + **clôture du bloc C** de la
+séquence pilote C → A → B (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`).
+
+Constat (S-216, run corpus FPA) : le chunker produit des chunks quasi-vides
+issus des TOC du scan (`Titre ..........13`), qui polluent le retrieval (des
+chunks « table des matières » remontent en similarité). 99 `sectionPath` / 387
+portent des dot leaders.
+
+== Ouverture (hook)
+
+* `git status` codex + codebase + MEMPHIS : propres, branche `main`.
+* codex CI **verte** (runs `36937520884` + `36938028287`, success) — C-3
+  (S-232) a soldé la dette de tests masquée. Le diagnostic « CI rouge »
+  (`36935391742`) était antérieur à C-3.
+* Drifts gouvernance croisés déjà corrigés : codebase `.agents/PROMPT_REPRISE`
+  S-273 (`2b74b8d`), MEMPHIS S-278 (`80cec3d`). Aucun drift restant.
+* `./gradlew compileKotlin compileTestKotlin` : VERT (JDK 25).
+
+Règle EAGER : **Local = Build, Tests = CI**.
+
+== Décision d'architecture — pourquoi N2, pas N1
+
+Le cadrage C-4 privilégie le **marquage `doubtful`** (zéro re-vectorisation —
+Loi de l'Économie d'Encre) sur l'exclusion au chunking (re-chunk = re-embeddings
+ONNX). Deux voies étaient possibles pour le détecteur :
+
+. *N1 (`codebase.store.DoubtPolicy`)* — refusée. La CI codex résout
+  `codebase-plugin` depuis **Central** (mavenLocal vide en CI) : toute
+  modification de signature N1 forcerait une **publication codebase + bump
+  BOM**, incompatible avec « zéro publication / zéro bump » cette session.
+. *N2 (codex)* — **retenue**. La pollution TOC est un souci d'*acquisition* :
+  `CodexIngestTask` superpose sa détection locale au `DoubtPolicy` N1 avant
+  `ingestWithDoubt`. Zéro modification du socle, zéro publication, zéro
+  re-vectorisation. Le N1 reste agnostique du format de scan.
+
+== Détection — signal et calibration
+
+`codex.tasks.TocNoiseDetector` (objet pur, no-I/O) : une **ligne de titre**
+(préfixe `#`–`######`) portant une suite de **4 points ou plus** est une entrée
+TOC. Le seuil est délibérément étroit :
+
+* `...` (ellipse de titre réel, `1-1.2 Différencier : ...`) → **non flaggé**.
+* `3.3.6` (coordonnées pointées) → **non flaggé**.
+* prose pointée (`chapitre 1.1.2`) → **non flaggé**.
+
+Mesure sur le **corpus FPA réel** (387 chunks) :
+
+[cols="2,3", options="header"]
+|===
+| Mesure | Valeur
+
+| Chunks flaggés `isTocNoise` | **33** (entrées TOC pures)
+| `sectionPath` portant des dot leaders | 99
+| Dont contenu réel (ancêtre TOC pollué uniquement) | 66 — **non flaggés** (contenu retrievable, seul le chemin est bruité)
+| Taille des 33 flaggés | 81–132 chars (< 150, plancher pinné)
+| Chunks substantiels flaggés | **0** (précision 100 %)
+|===
+
+Le choix de ne flagger que le **chunk d'entrée TOC** (et pas ses descendants de
+contenu réel, dont le `sectionPath` est pollué par un ancêtre) est ce qui rend
+le détecteur sûr : on retire le bruit sans jamais retirer du contenu.
+
+== Travail (baby-step DDD/TDD/BDD strict)
+
+. *RED* : `TocNoiseDetectorTest` (12 tests, RED prouvé par compilation
+   `Unresolved reference 'TocNoiseDetector'` ×12) → *GREEN* : `TocNoiseDetector`
+   (`isTocHeading`/`isTocNoise`/`doubtFor`).
+. *RED* : 3 tests `markDoubt` (RED `Unresolved reference 'markDoubt'`)
+   → *GREEN* : overlay `markDoubt` = `DoubtPolicy.derive` N1 surchargé par la
+   détection TOC (préserve `[ILLISIBLE]`, no-op sur le propre).
+. *RED* : `CodexIngestTocNoiseTest` (test-only, comportemental — l'ancien
+   `ingestInto` appelait `DoubtPolicy.mark`) → *GREEN* : `CodexIngestTask`
+   appelle `TocNoiseDetector.markDoubt`.
+. *Characterization* : `TocNoiseCharacterizationTest` — synthétique
+   (chunker réel, précision/rappel, tourne en CI) + corpus réel **skip-guardé**
+   par `codex.tocNoise.chunks` (pattern `PageProvenanceJoinRateTest`, plancher
+   25, tous thin).
+. *BDD* : `codex_toc_noise.feature` `@toc-noise` 6 scénarios (entrée flaggée
+   doubtful zéro confiance, propre pleine confiance, policy `[ILLISIBLE]`
+   préservée, ellipse non flaggée, coordonnées non flaggées, entrée détectée) +
+   `TocNoiseSteps` (préfixes « toc noise », bug S-088) + `CodexTocNoiseCucumberRunner`
+   (**11e runner dédié**, pattern S-082) + `cucumberTestTocNoise` câblé
+   `build.gradle.kts`.
+
+== Validation (Local = Build)
+
+* `./gradlew compileKotlin compileTestKotlin --rerun-tasks` : BUILD SUCCESSFUL.
+* `./gradlew validatePlugins` : BUILD SUCCESSFUL.
+* `./gradlew assemble` : BUILD SUCCESSFUL.
+* `./gradlew `check` --dry-run` : `:cucumberTestTocNoise` présent dans le
+  graphe (11e runner dédié, comme les 10 autres exécutés par `check` en CI).
+* Aucun `test`/`check`/`cucumberTest` lancé en local (règle EAGER).
+* **Preuve de validité = CI verte** : run post-push (à observer).
+
+== Fichiers
+
+* Créés (prod) : `src/main/kotlin/codex/tasks/TocNoiseDetector.kt`.
+* Modifiés (prod) : `src/main/kotlin/codex/tasks/CodexIngestTask.kt`
+  (`ingestInto` → `TocNoiseDetector.markDoubt`, KDoc).
+* Créés (test) : `src/test/kotlin/codex/tasks/TocNoiseDetectorTest.kt`,
+  `src/test/kotlin/codex/tasks/CodexIngestTocNoiseTest.kt`,
+  `src/test/kotlin/codex/tasks/TocNoiseCharacterizationTest.kt`,
+  `src/test/kotlin/codex/bdd/TocNoiseSteps.kt`,
+  `src/test/kotlin/codex/bdd/CodexTocNoiseCucumberRunner.kt`,
+  `src/test/resources/features/codex_toc_noise.feature`.
+* Modifiés (build) : `build.gradle.kts` (`cucumberTestTocNoise`).
+* Gouvernance : `PROMPT_REPRISE.adoc`, `.agents/INDEX.adoc`,
+  `.agents/BACKLOG.adoc`, `.agents/SESSIONS_HISTORY.adoc`,
+  `.agents/TEST_COVERAGE_ANALYSIS.adoc`, `.agents/archives/…`.
+
+== Décisions
+
+. Critère de succès = **CI verte** (comme C-3), pas une publication : zéro
+   bump, zéro publication (Règle 2), `0.0.12` est déjà Central.
+. Le détecteur vit en **N2** : aucune modification N1, aucun bump BOM, le socle
+   reste agnostique (l'acquisition connaît le format de son scan).
+. Exposition **`doubtful`, pas exclusion** : transport déjà en place
+   (`DoubtMetadata`/`ingestWithDoubt`), zéro re-chunking, zéro re-vectorisation.
+. Précision > rappel : on ne flagge **que** l'entrée TOC (titre à dot leaders),
+   jamais un chunk substantiel ni un descendant dont l'ancêtre est pollué.
+
+== Clôture du bloc C
+
+[cols="1,2,1", options="header"]
+|===
+| Session | Objet | Statut
+
+| C-1 (S-228) | Drift MEMPHIS + baseline verte | ✅
+| C-2 (S-229) | Split-brain `DocumentChunk` (prérequis A-1) | ✅
+| C-3 (S-232) | Dead code N1 + 8 désync gouvernance + 6 tests CI | ✅
+| C-4 (S-233) | Pollution TOC + clôture C | ✅
+|===
+
+*Bloc C TERMINÉ 4/4.* Blocs A (CB-PAGE-PROVENANCE, 5/5) et B (publication
+0.0.12) déjà terminés. La séquence pilote C → A → B est **close**.
+
+*Dettes restantes (hors scope, documentées)* : correction de la pollution TOC à
+la source (`office/metiers/FPA`, OCR amont, ownership Tombouctou) — C-4 traite
+le symptôme au chunking uniquement (cf. cadrage § Hors scope).
+
+== Prochaine session
+
+* Bloc C clos — plus de maintenance ordonnée en attente côté codex.
+* Candidats (accord pilote) : MEMPHIS resync releases + CI-1.4 (qwen3:0.6b),
+  codebase → conventions 0.0.7, document DOC-SEMANTIC US-3→6.
+* Rappel : les EPICs de traduction LLM restent hors scope (consigne pilote).

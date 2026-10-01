@@ -32,3 +32,21 @@
   verte (run `36937520884`, commit `7bdfd52` : `:test` 0 failed, `:check`
   BUILD SUCCESSFUL 2m23s). Zéro publication, zéro bump, zéro secret.
 - *Rapport* : `.agents/sessions/232-c3-gouvernance-ci-verte.adoc`.
+
+== S-233 (2026-10-02) — C-4 pollution TOC du chunking + clôture bloc C ✅
+
+- *Contexte* : run corpus FPA (S-216) — entrées de table des matières (titres à
+  dot leaders) devenues des chunks quasi-vides qui polluaient le retrieval.
+- *Décision N2, pas N1* : la CI résout `codebase-plugin` depuis Central — toute
+  modif N1 forcerait une publication + bump BOM. Le détecteur vit en N2.
+- *Livré* : `codex.tasks.TocNoiseDetector` (objet pur — titre à suite de ≥ 4
+  points = entrée TOC ; ellipse `...`/coordonnées `3.3.6`/prose non flaggées) +
+  `CodexIngestTask.ingestInto` → `TocNoiseDetector.markDoubt` (exposition
+  `doubtful`, zéro re-chunking, zéro re-vectorisation).
+- *Mesure corpus FPA réel* : 33/387 chunks flaggés (81–132 chars), 0 substantiel.
+- *Tests* : 15 UT + 3 FT seam + characterization (synthétique CI + corpus réel
+  skip-guardé) + BDD `@toc-noise` 6 scénarios + 11e runner `cucumberTestTocNoise`.
+- *Gates* : compileKotlin/compileTestKotlin/validatePlugins/assemble VERT,
+  `check --dry-run` inclut le runner. Zéro publication, zéro bump, zéro secret.
+- *Clôture* : bloc C TERMINÉ 4/4 — séquence C → A → B close.
+- *Rapport* : `.agents/sessions/233-c4-toc-noise-cloture-bloc-c.adoc`.
