@@ -2,12 +2,33 @@ package codex.ocr
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
 
 class TesseractOcrEngineTest {
+
+    /**
+     * C-3 (S-232) — the `tesseract` binary is not installed on the GitHub Actions
+     * runner. Tests that exercise the *real* engine (clean image → real TSV
+     * confidence) must skip honestly through `assumeTrue`, exactly like the other
+     * environment-dependent suites (`OllamaProbe` / pgvector). The degradation
+     * path (binary absent → empty result) keeps its own deterministic tests.
+     */
+    private fun assumeTesseractAvailable() {
+        val available =
+            try {
+                ProcessBuilder("tesseract", "--version")
+                    .redirectErrorStream(true)
+                    .start()
+                    .waitFor() == 0
+            } catch (_: Exception) {
+                false
+            }
+        assumeTrue(available, "tesseract binary is not installed on this runner")
+    }
 
     @Test
     fun `TesseractOcrEngine implements OcrEngine`() {
@@ -17,6 +38,7 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine processes minimal image without throwing`(@TempDir dir: Path) {
+        assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "test.png")
         createMinimalPng(imageFile)
 
@@ -41,6 +63,7 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine maps language codes to tesseract format`(@TempDir dir: Path) {
+        assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "lang.png")
         createMinimalPng(imageFile)
 
@@ -53,6 +76,7 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine returns result with sourceFormat from request`(@TempDir dir: Path) {
+        assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "fmt.jpg")
         createMinimalPng(imageFile)
 
@@ -67,6 +91,7 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine reports real confidence from TSV word scores`(@TempDir dir: Path) {
+        assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "quality.png")
         writeTextPng(imageFile, "OCR QUALITY")
 
@@ -83,6 +108,7 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine marks a textless image with zero confidence`(@TempDir dir: Path) {
+        assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "blank.png")
         createMinimalPng(imageFile)
 

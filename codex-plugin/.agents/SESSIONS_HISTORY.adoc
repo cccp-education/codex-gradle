@@ -3773,6 +3773,44 @@ zéro publication Central, zéro secret.
 
 *Rapport* : `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`.
 
+== Session 232 — 2026-10-02 — C-3 désync gouvernance + dette de tests CI ✅ TERMINÉ — CI codex verte
+
+*Type* : maintenance (bloc C, séquence C → A → B) — zéro publication, zéro bump.
+*Mission* : C-3 — 8 désync gouvernance codex + dette de tests CI masquée,
+révélée par le bloc B. But tangible = **CI codex verte**.
+
+*Contexte* : le bloc B (S-231) a ressuscité la CI (compile N1 `pages`
+résolvable). `test` s'exécute pour la première fois (run `36935391742`) et
+échoue sur **6 tests préexistants masqués** — aucun causé par les bumps.
+
+*Travail (test-only + gouvernance)* :
+* **`CodexPluginPublicationTest` ×2** — ne lisent plus le repo voisin
+  `../workspace-bom/...` (absent CI). La version publiée du catalogue est
+  **injectée par Gradle** (`build.gradle.kts` : `systemProperty(
+  "codex.publishedCatalog.codexVersion", ws.versions.codex.plugin.get())` +
+  bomVersion) — pattern graphify D5-RACE S-029 / bakery BKY-CI-ISOLATION S-243,
+  propriété absente → `error(...)` explicite. `wsCatalogToml()` supprimé.
+* **`TesseractOcrEngineTest`** — 5 tests du vrai moteur conditionnés par
+  `assumeTesseractAvailable()` (`tesseract --version` + `assumeTrue`) ; les
+  tests de dégradation (binaire absent → vide, stub sans TSV) restent actifs.
+* **Fixtures provenance S-270** — le renommage `fa18f33` avait neutralisé une
+  seule moitié : TOC `Organiser le contenu du scénario` ↔ chunk `...du plan`
+  ne joignaient plus. Réalignement minimal (`PageProvenanceResolverTest.kt:54`
+  + `CollectPageProvenanceTaskTest.kt:46`).
+* **8 désync gouvernance** — `SESSION_PROCEDURE.adoc` (`:codex-plugin:` →
+  `compileKotlin`, chemins `codex-plugin/.agents/sessions/`,
+  `codex-plugin/src/main/kotlin/codex/`, version dérivée `ws.versions.codex.plugin`),
+  `SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:22` (COMMITS/GIT **autorisés**
+  2026-09-17), `AGENT.adoc` § Fichiers (mono-projet), `README.md` (0.0.12 /
+  BOM 0.0.62 / codebase-contracts 0.0.2, JDK 25, `./gradlew check`).
+* **Dead code N1 (Queens)** — déjà supprimé S-268 (`58dd6bc`) : volonté A du
+  cadrage C-3 déjà soldée, zéro code N1 modifié.
+
+*Gates* : `compileKotlin`/`compileTestKotlin --rerun-tasks` VERT. Preuve = CI
+verte après push. Zéro publication, zéro bump, zéro secret.
+
+*Rapport* : `.agents/sessions/232-c3-gouvernance-ci-verte.adoc`.
+
 == Session 231 — 2026-10-02 — Bloc B (publication N1→N2) ✅ TERMINÉ — codex-plugin 0.0.12 Central
 
 *Type* : publication (B-2 codex, ordre DAG MEMPHIS-first) + preuve CI débloquée.

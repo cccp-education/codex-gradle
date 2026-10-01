@@ -23,7 +23,7 @@ sessions distinctes (3 à 4). Plan détaillé : `CADRAGE_ROADMAP_S227_C_A_B.adoc
 | C-1 drift MEMPHIS 0.0.49→0.0.50 + baseline verte · C-2 split-brain
   `DocumentChunk` (prérequis A-1) · C-3 dead code N1 + 8 désync gouvernance ·
   C-4 pollution TOC chunking + clôture C
-| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; reste C-3/C-4
+| 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; C-3 ✅ TERMINÉ (S-232) ; reste C-4 (S-233)
 
 | A — CB-PAGE-PROVENANCE
 | S-232 · S-233 · S-234 · S-235
@@ -57,7 +57,7 @@ Central, rien à republier avant).
 '''
 == 🟡 EPIC SÉQUENCE-C — EPIC Maintenance (4 sous-tâches, prérequis et dette)
 
-_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; **A (CB-PAGE-PROVENANCE) ✅ TERMINÉ S-230 (hors ordre)** ; reste C-3 (S-231), C-4 (S-232).
+_Statut_ : 🟡 EN COURS — C-1 ✅ TERMINÉ (S-228) ; C-2 ✅ TERMINÉ (S-229) ; **A (CB-PAGE-PROVENANCE) ✅ TERMINÉ S-230 (hors ordre)** ; **B (publication) ✅ TERMINÉ S-231** ; C-3 ✅ TERMINÉ (S-232) ; reste C-4 (S-233).
 _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
 
 [cols="1,3,1", options="header"]
@@ -86,18 +86,26 @@ _Doc_ : `CADRAGE_ROADMAP_S227_C_A_B.adoc` § Option C.
   `chunks.json`). `check` VERT 1397 tests 0 FAIL. **A-1 débloqué.**
 | ✅ TERMINÉ (S-229)
 
-| C-3 (S-231)
-| **Dead code + désync gouvernance** — (A) N1 : `StoreStatements.insertChunk()`
-  (5 binds) + `IngestIndexing.assignLocalIndices` sans appelant de production
-  (constat S-225 #4) — décision Queens suppression vs conservation. (B) codex :
-  8 désynchronisations — `SESSION_PROCEDURE.adoc` (chemin projet `:codex-plugin`
-  erroné, chemins pré-S-105, `codex/src/`, version `gradle.properties` 1.0.0
-  faux), `SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:18` (règle « INTERDICTION
-  FORMELLE » contredisant la décision 2026-09-17), `AGENT.adoc` § Fichiers,
-  `README.md` badges 0.0.1.
-| 🟡 À FAIRE
+| C-3 (S-232)
+| **(A) Dead code N1** — `StoreStatements.insertChunk()` (5 binds) +
+  `IngestIndexing.assignLocalIndices` déjà supprimés S-268 (constat S-225 #4,
+  zéro appelant prod). **(B) 8 désync gouvernance codex corrigées** :
+  `SESSION_PROCEDURE.adoc` (`:codex-plugin` → `compileKotlin`, chemins
+  `codex-plugin/.agents/sessions/`, `codex-plugin/src/main/kotlin/codex/`,
+  version dérivée `ws.versions.codex.plugin` 0.0.12), `SESSION_CHECKLIST.adoc:8`,
+  `INDEX.adoc:22` (règle COMMITS/GIT **autorisés** 2026-09-17), `AGENT.adoc` §
+  Fichiers (mono-projet, `codex-plugin/src/`, catalogue), `README.md` badges
+  0.0.12/BOM 0.0.62/codebase-contracts 0.0.2 + JDK 25 + `./gradlew check`.
+  **(C) 6 tests CI préexistants masqués corrigés** (but tangible = **CI codex
+  verte**) : `CodexPluginPublicationTest` ×2 (version injectée par Gradle via
+  `systemProperty`, pattern graphify D5-RACE / bakery BKY-CI-ISOLATION),
+  `TesseractOcrEngineTest` (`assumeTrue` binaire absent du runner),
+  `PageProvenanceResolverTest` + `CollectPageProvenanceTaskTest` ×2 (fixture
+  TOC S-270 réalignée sur le chunk `Organiser le contenu du scénario`).
+  Zéro publication, zéro bump.
+| ✅ TERMINÉ (S-232)
 
-| C-4 (S-232)
+| C-4 (S-233)
 | **Pollution TOC chunking + clôture C** — 99 chunks TOC pollués / 387 au
   run FPA (S-216, dot leaders + entrées de table des matières). Détection/
   exclusion au `SemanticChunker` **ou** marquage `doubtful` (zéro

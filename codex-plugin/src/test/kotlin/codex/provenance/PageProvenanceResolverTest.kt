@@ -51,7 +51,7 @@ class PageProvenanceResolverTest {
                 chunk(
                     "chk-1",
                     "Maîtriser l'architecture logicielle > Corpus II > " +
-                        "Historique de l'architecture logicielle : ...13 > Organiser le contenu du plan ....40"
+                        "Historique de l'architecture logicielle : ...13 > Organiser le contenu du scénario ....40"
                 )
             ),
             tocSections = listOf(

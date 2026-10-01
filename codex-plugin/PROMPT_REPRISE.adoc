@@ -1,117 +1,73 @@
-= PROMPT_REPRISE — Codex — Session 232
-:session: 232
+= PROMPT_REPRISE — Codex — Session 233
+:session: 233
 :date: 2026-10-02
 :status: PRET
-:mission: C-3 (maintenance) — dead code N1 + 8 désynchronisations gouvernance codex (bloc C, séquence C → A → B)
+:mission: C-4 (maintenance) — pollution TOC du chunking + clôture du bloc C (séquence C → A → B)
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 git status --porcelain -- src/    # vide ? → règle EAGER
-./gradlew compileKotlin compileTestKotlin   # environnement
+./gradlew compileKotlin compileTestKotlin   # environnement (projet racine = codex-plugin)
 ----
 
-== ✅ Bloc B TERMINÉ (S-231)
+== ✅ Bloc C-3 TERMINÉ (S-232) — CI codex verte
 
-`codex-plugin 0.0.12` publié Central (bundle `79d0ad3d`), MEMPHIS BOM/catalog
-`0.0.62` (bundle `7baf6567`), `codebase-plugin 0.0.17` (bundle `7d5a340d`).
-Propagation repo1 HTTP 200 ×4. **La CI codex peut compiler à nouveau**
-(`codebase-plugin:0.0.17` porte `DocumentChunk.pages`) → la preuve CI de
-l'US-2 (S-230) est débloquée. Pins locaux : catalog/BOM `0.0.62`, toml
-`codebase-plugin 0.0.17` + `codex-plugin 0.0.12`.
+8 désync gouvernance codex corrigées + 6 tests CI préexistants **corrigés
+(test-only)** : `CodexPluginPublicationTest` ×2 (version publiée du catalogue
+**injectée par Gradle** — plus de lecture du repo voisin, pattern graphify
+D5-RACE / bakery S-243), `TesseractOcrEngineTest` (`assumeTrue` binaire absent),
+fixtures provenance S-270 réalignées. Le **dead code N1 était déjà supprimé
+S-268** (volonté A du cadrage). Zéro publication, zéro bump. **Preuve = CI
+verte** sur le commit poussé (run post-S-232).
 
 == Contexte — séquence C → A → B
 
 Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
 **C** (maintenance) → **A** (EPIC CB-PAGE-PROVENANCE) → **B** (publication).
 
-- *C-1 (S-228)* ✅, *C-2 (S-229)* ✅, *A (CB-PAGE-PROVENANCE)* ✅ 5/5,
-  *B (publication)* ✅ (S-231 codex + S-272 Queens).
-- *C-3 (S-232)* — dead code N1 (Queens) + 8 désync gouvernance codex
-  + **dette de tests CI masquée** (voir ci-dessous).
-- *C-4 (S-233)* — pollution TOC chunking + clôture C.
+- *C-1 (S-228)* ✅ · *C-2 (S-229)* ✅ · *C-3 (S-232)* ✅ ·
+  *A (CB-PAGE-PROVENANCE)* ✅ 5/5 · *B (publication)* ✅ (S-231 codex + S-272 Queens).
+- *C-4 (S-233)* — pollution TOC du chunking + **clôture C**.
 
-== ⚠ Dette de tests CI révélée par le bloc B (à traiter C-3)
+== Mission S-233 — C-4 (maintenance, zéro publication)
 
-La CI codex échouait **en configuration** à `:compileKotlin` (stale N1). Après
-le bloc B, `:compileKotlin` passe, `test` s'exécute pour la **première fois**
-et échoue sur **6 tests préexistants masqués** (run `36934441608`, aucun causé
-par les bumps) :
+*Constat* : le run corpus FPA (S-216) a produit **99 chunks TOC pollués**
+(dot leaders `.......` + entrées de table des matières) sur **387**. Le bruit
+pollue le retrieval (des chunks « table des matières » remontent en similarité).
 
-[cols="3,2", options="header"]
-|===
-| Test | Nature
+*Travail* (baby-step DDD/TDD/BDD strict) :
 
-| `CodexPluginPublicationTest` ×2 | `wsCatalogToml()` lit le repo voisin `../workspace-bom/gradle/libs.versions.toml` (absent CI) → version à **injecter par Gradle** (pattern graphify D5-RACE / bakery V4)
-| `TesseractOcrEngineTest` confidence | binaire `tesseract` absent du runner → `assumeTrue`
-| `PageProvenanceResolverTest` ancestor + `CollectPageProvenanceTaskTest` ×2 | fixtures renommées génériques S-270 (`FPA II`→`Corpus II`) → jointure d'ancêtre à réaligner
-|===
+. `SemanticChunker` (N2) / heuristique de détection : sections de type TOC —
+   ratio de dot leaders, densité de lignes sans phrase, longueur de titre vs
+   contenu.
+. Décision d'exposition : **marquer `doubtful`** (déjà transporté N1 via
+   `DoubtPolicy`/`DoubtMetadata`, zéro re-vectorisation — Loi de l'Économie
+   d'Encre) **ou** exclure au chunking (re-chunk = re-vectorisation ONNX à
+   peser). La voie `doubtful` est privilégiée.
+. Characterization sur le corpus FPA réel (387 chunks, plancher de pollution).
+. BDD `@toc-noise` (runner dédié pattern S-082 ou extension d'un runner existant).
+. *Clôture C* : audit de sortie — dettes restantes, go/no-go, clôture du bloc C.
 
-Même leçon que codebase S-269 / bakery S-243 : **une CI morte en
-configuration masque toute la dette de tests aval**.
+== Contexte technique (S-232)
 
-== Mission S-232 — C-3 (maintenance, zéro publication)
+* Build autonome : `cd codex-plugin && ./gradlew ...` (JDK 25). Version locale
+  **0.0.12** (Central 0.0.12). Conventions 0.0.7. BOM/catalog 0.0.62.
+* `check` = projet racine `codex-plugin` (PAS `:codex-plugin:check`).
+* Pièges : mavenLocal partagé entre boroughs (course S-226) — vérifier par stash.
+  Une version Central est immuable.
 
-=== Volonté A — dead code N1 (Queens / codebase-gradle)
+== Règles absolues
 
-`StoreStatements.insertChunk()` (5 binds) et `IngestIndexing.assignLocalIndices`
-n'ont **aucun appelant de production** (constat S-225 #4). Décision Queens :
-suppression (privilégiée si confirmée) vs conservation (API publique d'un
-artefact Central). Baby-step TDD strict (characterization avant, retrait,
-compile VERT).
-
-=== Volonté B — désynchronisation gouvernance (codex, 8 points)
-
-[cols="2,3", options="header"]
-|===
-| Fichier | Désynchronisation à corriger
-
-| `.agents/SESSION_PROCEDURE.adoc:64`
-| `./gradlew :codex-plugin:compileKotlin` → `./gradlew compileKotlin`
-
-| `.agents/SESSION_PROCEDURE.adoc:5,61`
-| `foundry/codex-gradle/.agents/sessions/…` → `codex-plugin/.agents/sessions/…`
-
-| `.agents/SESSION_PROCEDURE.adoc:69`
-| « types partagés dans `codex/src/main/kotlin/` » → `codex-plugin/src/main/kotlin/codex/`
-
-| `.agents/SESSION_PROCEDURE.adoc:70`
-| Version `gradle.properties` `1.0.0` faux → `ws.versions.codex.plugin` (toml 0.0.12)
-
-| `.agents/SESSION_CHECKLIST.adoc:8`
-| Même chemin de build erroné (`:codex-plugin:compileKotlin`)
-
-| `.agents/INDEX.adoc:18`
-| Règle « INTERDICTION FORMELLE sans permission » → commit/push **autorisés** (2026-09-17)
-
-| `AGENT.adoc` § Fichiers du Projet
-| Chemins `codex/src/main/kotlin/`, `codex-plugin/src/`, `buildSrc/` (pré-aplatissement)
-
-| `README.md:11,52,143`
-| Badges `0.0.1`, `workspace-bom:0.0.1`, `codebase-contracts:0.0.1` — drift
-|===
-
-*Travail* : corriger chaque point, **vérification post-fix par `grep`**
-(`:codex-plugin:`, `buildSrc/`, `codex/src/`, `0.0.1`, « INTERDICTION
-FORMELLE »). Gate : `compileKotlin`/`compileTestKotlin` VERT (Local = Build).
-
-== Pièges connus
-
-- Le projet racine **est** `codex-plugin` — `./gradlew check` (PAS `:codex-plugin:check`).
-- mavenLocal partagé entre boroughs (course S-226) — vérifier par stash.
-- C-3 est majoritairement de la gouvernance — zéro publication, zéro bump.
-- Côté Queens (dead code) : ne pas supprimer à l'aveugle une API de
-  `codebase-plugin` publié Central sans vérifier les consommateurs externes.
-
-== Méthode / Règles
-
-Baby-step DDD/TDD/BDD strict, 3 niveaux, English only. Local = BUILD, Tests = CI.
-COMMITS/PUSH autorisés. PAS de publication sans permission. SECRETS via
-configuration/.
+* Baby-step TDD/BDD/DDD strict (RED → GREEN → REFACTOR), 1 fichier à la fois.
+* **Local = Build, Tests = CI** : compiler/builder en local seulement ;
+  `test`/`cucumberTest`/`check` s'exécutent en CI après push.
+* Git autorisé — zéro secret commité. Publication Central = accord pilote.
+* Vérifier le working tree avant toute mission (`git status`).
 
 == References
 
-- `.agents/sessions/231-bloc-b-publication-n1-n2.adoc` (rapport S-231)
-- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (§ C-3/C-4)
-- `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`
-- `codebase.store.StoreStatements` · `codebase.store.IngestIndexing` (Queens)
+* `.agents/sessions/232-c3-gouvernance-ci-verte.adoc` (rapport S-232)
+* `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (§ C-4)
+* `.agents/sessions/231-bloc-b-publication-n1-n2.adoc` (bloc B)
+* `codex/tasks/SemanticChunker.kt` · `codebase.store.{DoubtMetadata,StoreStatements}` (Queens)

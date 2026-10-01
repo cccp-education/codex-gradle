@@ -43,8 +43,9 @@ Tout parametre sensible remonte depuis `configuration/settings/` ou `configurati
 == Regle 4 — Codex est le contrat READ
 
 Les types partages (BlockType, ExtractedBlock, ExtractedDocument, DocExtractor)
-vivent dans `codex-gradle/src/main/kotlin/`.
-Les sous-projets (codex-pdf, codex-epub) importent `codex` comme dependance via mavenLocal.
+vivent dans `codex-plugin/src/main/kotlin/codex/` (mono-projet depuis l'aplatissement).
+Le RAG (store vectoriel) appartient a codebase N1 : les briques importent le store
+via `libs.codebase.plugin`, jamais via un sous-projet codex.
 Pas de module doc-extractor separe — `codex` est le contrat d'acquisition documentaire.
 
 Le RAG (store vectoriel, contexte augmente) n'appartient PAS a codex. Apres
@@ -152,11 +153,10 @@ codebase l'ingere et l'expose aux briques de creation de contenu.
 | `.agents/SESSION_CHECKLIST.adoc` | ✅ Cree (bootstrap 2026-05-06)
 | `.agents/SESSIONS_HISTORY.adoc` | ✅ Cree (bootstrap 2026-05-06)
 | `AUGMENTED_CONTEXT_PIPELINE.adoc` | ✅ Spec canonique (1806 lignes)
-| `build.gradle.kts` | ✅ Squelette (readme + conventions)
-| `settings.gradle.kts` | ✅ rootProject.name = "codex-gradle"
-| `buildSrc/` | ✅ Convention plugin + version catalog
-| `codex-plugin/build.gradle.kts` | ✅ Plugin education.cccp.codex.doc-pipeline
-| `codex-plugin/src/` | ✅ CodexPlugin.kt + ExtractTextTask.kt + ExtractBookStructureTask.kt
+| `build.gradle.kts` | ✅ Plugin education.cccp.codex (mono-projet — projet racine, conventions education.cccp.build 0.0.7)
+| `settings.gradle.kts` | ✅ rootProject.name = "codex-plugin"
+| `gradle/libs.versions.toml` | ✅ Version catalog (version derivee `ws.versions.codex.plugin`)
+| `src/main/kotlin/codex/` | ✅ CodexPlugin.kt + CodexExtension.kt + tasks/ + ocr/ + provenance/ (+ codebase.store N1 via `libs.codebase.plugin`)
 |===
 
 [.text-right]

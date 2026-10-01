@@ -43,7 +43,7 @@ class CollectPageProvenanceTaskTest {
     private fun tocText(): String =
         """
         | Référence | Sujet / Titre de la section | Page | Fichier
-        | 1.2.1.1 | Organiser le contenu du plan | 40 | 040.pdf
+        | 1.2.1.1 | Organiser le contenu du scénario | 40 | 040.pdf
         | 1.0.1 | Maîtriser l'architecture logicielle | 5, 6, 7, 8 | 005.pdf, 006.pdf, 007.pdf, 008.pdf
         """.trimIndent()
 

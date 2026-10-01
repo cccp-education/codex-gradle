@@ -8,9 +8,9 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/cheroliv/codex-gradle/test.yml?branch=main&label=tests)](https://github.com/cheroliv/codex-gradle/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/cheroliv/codex-gradle?label=License)](../LICENSE)
 
-- **Version**: `0.0.1` · **Group**: `education.cccp` · **Plugin ID**: `education.cccp.codex`
-- **Toolchain**: Java 24 · Kotlin 2.3.20 · Gradle 9.5.1 (wrapper) · plugin-publish 1.3.1
-- **Build**: `./gradlew build -x test` · **Tests**: `./gradlew :codex-plugin:check` · **Coverage**: Kover 0.9.8 (on-fly; see known limitation below)
+- **Version**: `0.0.12` · **Group**: `education.cccp` · **Plugin ID**: `education.cccp.codex`
+- **Toolchain**: Java 25 · Kotlin 2.3.21 · Gradle 9.8.0 (wrapper) · plugin-publish 1.3.1
+- **Build**: `./gradlew build -x test` · **Tests**: `./gradlew check` (le projet racine EST `codex-plugin`) · **Coverage**: Kover 0.9.8 (on-fly; see known limitation below)
 
 🌐 Languages: **EN** | [中文](README.plugin/README.zh.md) | [हिन्दी](README.plugin/README.hi.md) | [Español](README.plugin/README.es.md) | [Français](README.plugin/README.fr.md) | [العربية](README.plugin/README.ar.md) | [বাংলা](README.plugin/README.bn.md) | [Português](README.plugin/README.pt.md) | [Русский](README.plugin/README.ru.md) | [اردو](README.plugin/README.ur.md)
 
@@ -19,22 +19,26 @@
 ## Module layout
 
 ```
-codex-gradle/
-├── build.gradle.kts                 # root placeholder (readme plugin disabled)
-├── settings.gradle.kts              # mavenLocal + gradlePluginPortal + mavenCentral
-├── gradle/libs.versions.toml         # root catalog (plugin versions)
+codex-gradle/                          # git root — the Gradle project root is codex-plugin/
 └── codex-plugin/
-    ├── build.gradle.kts              # plugin module (publishing, signing, kover)
+    ├── build.gradle.kts              # plugin (conventions education.cccp.build 0.0.7, publishing, kover)
+    ├── settings.gradle.kts           # pins workspace-catalog:0.0.62 (single pin per borough)
     ├── gradle/libs.versions.toml     # module catalog (all dependency versions)
     └── src/main/kotlin/codex/
-        ├── CodexPlugin.kt            # Plugin entry point — registers 12 tasks
+        ├── CodexPlugin.kt            # Plugin entry point
         ├── CodexExtension.kt         # `codex { ... }` extension (zone + pgvector)
         ├── Metadata.kt               # Workspace pivot metadata format
         ├── LicenseZoneDetector.kt    # Auto-detect OSS/CSS/UNKNOWN zone at load
-        ├── ocr/                      # OCR contracts (OcrConfig, OcrRequest, OcrResult, engines)
-        ├── store/                    # CodexVectorStore — R2DBC pgvector client
-        └── tasks/                    # 12 task implementations (+ DocNode, FontStyle)
+        ├── ocr/                      # OCR contracts + engines (Tesseract local)
+        ├── provenance/               # Page provenance (derived TOC ↔ chunk join)
+        ├── enrichment/               # JSON-LDD enrichment + title normalization
+        └── tasks/                    # task implementations (+ DocNode, FontStyle)
 ```
+
+The RAG vector store (`RagVectorStore`, `StoreStatements`, `DocumentChunk`,
+`RetrieveResult`, `IngestIndexing`) lives in **codebase N1** (`codebase.store`),
+consumed through `libs.codebase.plugin` — codex no longer owns a `store/` package
+(EPIC CDX-RAG-SOCLE, RAG-3).
 
 ## Registered tasks
 
@@ -49,12 +53,12 @@ codex-gradle/
 
 ## N0 contracts (from workspace-bom MEMPHIS)
 
-Codex imports `education.cccp:workspace-bom:0.0.1` as a platform BOM and directly
+Codex imports `education.cccp:workspace-bom:0.0.62` as a platform BOM and directly
 consumes:
 
 | Contract | Artifact | Provides |
 |----------|----------|----------|
-| `codebase-contracts` | `education.cccp:codebase-contracts:0.0.1` | `ContextChannel`, `ChannelBudget`, `CompositeContext`, `CompositeContextConfig` |
+| `codebase-contracts` | `education.cccp:codebase-contracts:0.0.2` | `ContextChannel`, `ChannelBudget`, `CompositeContext`, `CompositeContextConfig` |
 
 Other N0 contracts available via the BOM (not all directly imported by codex):
 `agent-contracts`, `llm-pool-contracts`, `opencode-session-contracts`,
@@ -93,7 +97,7 @@ Testcontainers provides `pgvector/pgvector:pg17`-style containers via
 `testcontainers-postgresql` 1.21.4 and `docker-java` 3.7.0 (httpclient5 transport).
 
 There is **no** `testFast`/`testAll`/`testEpics` split task and **no**
-`koverVerify` gate defined here — the single `:codex-plugin:check` task runs
+`koverVerify` gate defined here — the single `check` task (project root is `codex-plugin`) runs
 the full JUnit5 + Cucumber suite. Kover emits XML + HTML reports but is not
 wired into `check` (`onCheck = false`).
 
@@ -114,8 +118,8 @@ Upgrade path: Kover 1.x offline instrumentation (not yet released).
 
 ```bash
 ./gradlew build -x test                  # compile only
-./gradlew :codex-plugin:check           # full tests (JUnit5 + Cucumber)
-./gradlew :codex-plugin:test            # JUnit5 unit tests only
+./gradlew check                          # full tests (JUnit5 + Cucumber)
+./gradlew test                           # JUnit5 unit tests only
 ./gradlew koverHtmlReport               # coverage HTML report (manual)
 ./gradlew publishToMavenLocal           # local publish
 ./gradlew publishAggregationToCentralPortal --no-daemon   # Maven Central (CI)
@@ -127,10 +131,9 @@ Upgrade path: Kover 1.x offline instrumentation (not yet released).
 (`ubuntu-latest`, timeout 15 min):
 
 1. Checkout (`actions/checkout@v4`)
-2. Set up JDK 24 Temurin (`actions/setup-java@v4`)
+2. Set up JDK 25 Temurin (`actions/setup-java@v4`) — the `education.cccp.build` conventions require `jvmToolchain(25)`
 3. Set up Gradle (`gradle/actions/setup-gradle@v4`)
-4. `./gradlew publishToMavenLocal`
-5. `./gradlew :codex-plugin:check`
+4. `./gradlew check` (working-directory `codex-plugin`)
 
 There is **no** publish-on-tag job in this workflow; Maven Central publication
 is driven by the `publishAggregationToCentralPortal` task invoked manually /
@@ -140,7 +143,7 @@ in a separate publication flow (see NMCP section in `AGENTS.adoc`).
 
 Configured in `codex-plugin/build.gradle.kts`:
 
-- `group = "education.cccp"`, `version = libs.versions.codex.plugin` (`0.0.1`)
+- `group = "education.cccp"`, `version = ws.versions.codex.plugin` (`0.0.12`)
 - `mavenCentral()` repository (not legacy Sonatype staging)
 - `signing { useGpgCmd() }` — skipped when `CI == "true"` or version ends `-SNAPSHOT`
 - POM declared on **all** `withType<MavenPublication>` (not just `pluginMaven`):
@@ -161,7 +164,7 @@ Authorized models: `gpt-oss:120b-cloud`, `gemma4:31b-cloud`.
 ## Contributing
 
 1. Build compiles: `./gradlew build -x test`
-2. Tests green: `./gradlew :codex-plugin:check`
+2. Tests green: `./gradlew check`
 3. No CVE regression: keep `org.jetbrains:annotations` force pinned to `26.0.2-1`
 4. Follow DDD conventions (value objects, ports/adapters, no leaks)
 5. Respect the boundary: codex = **READ + RAG**; do not add WRITE/PUBLISH logic
@@ -169,8 +172,8 @@ Authorized models: `gpt-oss:120b-cloud`, `gemma4:31b-cloud`.
 
 ## Architecture docs
 
-- [AGENT.adoc](../AGENT.adoc) — Absolute rules (commits, secrets, classification)
-- [BACKLOG.adoc](../BACKLOG.adoc) — EPIC PUB publication backlog
+- [AGENT.adoc](.agents/AGENT.adoc) — Absolute rules (commits, secrets, classification)
+- [BACKLOG.adoc](.agents/BACKLOG.adoc) — EPIC publication backlog
 - `.agents/ARCHITECTURE_BOUNDARY.adoc` — Codex↔Document boundary
 - [TAXONOMIE_WORKSPACE.adoc](../../../../configuration/TAXONOMIE_WORKSPACE.adoc) — Unified task taxonomy
 - `gradle/libs.versions.toml` (module catalog) — canonical dependency versions

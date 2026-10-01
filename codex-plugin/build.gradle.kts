@@ -90,6 +90,17 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+// C-3 (S-232) — publication hygiene guard: inject the *published* workspace catalog
+// versions resolved by Gradle. `CodexPluginPublicationTest` must never read a
+// neighbour repository's working tree (`../workspace-bom/...`) — that is racy
+// between parallel sessions and absent from an isolated CI checkout — pattern
+// graphify-gradle D5-RACE (S-029) / bakery BKY-CI-ISOLATION (S-243). A missing
+// property is an explicit error in the guard, never a silent green.
+tasks.test {
+    systemProperty("codex.publishedCatalog.codexVersion", ws.versions.codex.plugin.get())
+    systemProperty("codex.publishedCatalog.bomVersion", ws.versions.workspace.bom.get())
+}
+
 // EPIC CDX-RAG-3: adding `codebase-plugin` as implementation triggers
 // `pluginUnderTestMetadata` and `validatePlugins` validation errors
 // (java-gradle-plugin complains about the implicit dependency on the jar

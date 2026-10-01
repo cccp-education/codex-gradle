@@ -2,7 +2,7 @@
 
 == Procedure de Fin de Session — 6 Etapes Obligatoires
 
-. *Rapport de session* — Creer `foundry/codex-gradle/.agents/sessions/NNN-sujet.adoc`
+. *Rapport de session* — Creer `codex-plugin/.agents/sessions/NNN-sujet.adoc`
 . *Mise a jour PROMPT_REPRISE.adoc* — Contexte de reprise pour la session suivante
 . *Mise a jour INDEX.adoc* — Mettre a jour le numero de session, roadmap, etat des EPICs
 . *Mise a jour SESSIONS_HISTORY.adoc* — Ajouter l'entree dans l'historique
@@ -58,14 +58,14 @@ legitime et ne doit pas etre supprime.
 git status
 
 # Verifier l'absence de secrets
-grep -r "TOKEN\|SECRET\|PASSWORD\|API_KEY" foundry/codex-gradle/ --include="*.kts" --include="*.properties"
+grep -r "TOKEN\|SECRET\|PASSWORD\|API_KEY" codex-plugin/ --include="*.kts" --include="*.properties"
 
-# Verifier que le build compile
-./gradlew :codex-plugin:compileKotlin
+# Verifier que le build compile (le projet racine EST codex-plugin)
+./gradlew compileKotlin
 ----
 
 == Rappels
 
-* Codex est le contrat — les types partagés vivent dans `codex/src/main/kotlin/`
-* Version unique dans `gradle.properties` — `codex.version=1.0.0`
+* Codex est le contrat — les types partagés vivent dans `codex-plugin/src/main/kotlin/codex/`
+* Version derivee du catalog workspace publie : `ws.versions.codex.plugin` (toml local `codex-plugin` = 0.0.12)
 * DAG N2 — importable par N3 engine, jamais importe N3

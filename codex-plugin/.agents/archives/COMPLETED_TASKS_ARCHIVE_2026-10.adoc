@@ -1,0 +1,33 @@
+= COMPLETED_TASKS_ARCHIVE_2026-10 — codex-gradle
+
+== S-231 (2026-10-02) — Bloc B (publication N1→N2) ✅ — codex-plugin 0.0.12 Central
+
+- *Mission* : prérequis dur de la preuve CI de l'US-2 (S-230) — le
+  `codebase-plugin:0.0.16` Central était stale (publié S-264, avant l'US-1
+  `pages`). Accord pilote explicite (Règle 2).
+- *Ordre DAG N0 → N2* : MEMPHIS BOM/catalog `0.0.61` → `0.0.62`
+  (`codebase-plugin 0.0.17` + `codex-plugin 0.0.12`, bundle `7baf6567`) ;
+  B-2 codex pins catalog/platform `0.0.50` → `0.0.62` + toml local
+  `codebase-plugin 0.0.17` / `codex-plugin 0.0.12` (bundle `79d0ad3d`,
+  AUTOMATIC). Propagation repo1 HTTP 200 ×4.
+- *Valeur* : la CI codex peut compiler à nouveau → preuve CI de l'US-2
+  débloquée. Contenu 0.0.12 : CB-PAGE-PROVENANCE US-2 + US-3/US-4 N1.
+- *Rapport* : `.agents/sessions/231-bloc-b-publication-n1-n2.adoc`.
+
+== S-232 (2026-10-02) — C-3 désync gouvernance + dette de tests CI ✅ — CI codex verte
+
+- *Contexte* : le bloc B a ressuscité la CI ; `test` s'exécute pour la première
+  fois (run `36935391742`) et échoue sur **6 tests préexistants masqués**.
+- *Test-only* : `CodexPluginPublicationTest` ×2 (version publiée **injectée par
+  Gradle**, plus de lecture du repo voisin `../workspace-bom` — pattern graphify
+  D5-RACE / bakery S-243) ; `TesseractOcrEngineTest` (`assumeTesseractAvailable()`
+  ×5, binaire absent du runner) ; fixtures provenance S-270 réalignées
+  (`PageProvenanceResolverTest.kt:54` + `CollectPageProvenanceTaskTest.kt:46`).
+- *Gouvernance* : 8 désync codex corrigées (`SESSION_PROCEDURE.adoc`,
+  `SESSION_CHECKLIST.adoc:8`, `INDEX.adoc:22` COMMITS/GIT autorisés,
+  `AGENT.adoc` § Fichiers, `README.md` badges/JDK/commands).
+- *Dead code N1 (Queens)* : déjà supprimé S-268 (`58dd6bc`) — volonté A du
+  cadrage C-3 déjà soldée, zéro code N1 modifié.
+- *Gates* : `compileKotlin`/`compileTestKotlin --rerun-tasks` VERT. Preuve = CI
+  verte. Zéro publication, zéro bump, zéro secret.
+- *Rapport* : `.agents/sessions/232-c3-gouvernance-ci-verte.adoc`.
