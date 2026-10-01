@@ -111,9 +111,10 @@ construction* que des titres réellement divergents ne joignent **pas**).
 
 * `./gradlew compileKotlin compileTestKotlin --rerun-tasks` : BUILD SUCCESSFUL.
 * Aucun `test`/`check`/`cucumberTest` lancé en local (règle EAGER).
-* **Preuve de validité = CI verte** après push : `test` doit passer de
-  `1303 tests, 6 failed, 678 skipped` à **0 failed** (les 6 échecs ci-dessus),
-  puis `check` BUILD SUCCESSFUL.
+* **Preuve de validité = CI verte** : run **`36937520884`** (commit `7bdfd52`,
+  job Build & Test ✓ 4m49s) — `test` passe de `1303 tests, 6 failed, 678 skipped`
+  (run `36935391742`) à **0 failed**, puis `:check` **BUILD SUCCESSFUL** en
+  2m23s. Les 6 échecs préexistants sont tous soldés.
 
 == Fichiers
 

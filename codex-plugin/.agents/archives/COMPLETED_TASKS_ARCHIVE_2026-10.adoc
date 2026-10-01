@@ -29,5 +29,6 @@
 - *Dead code N1 (Queens)* : déjà supprimé S-268 (`58dd6bc`) — volonté A du
   cadrage C-3 déjà soldée, zéro code N1 modifié.
 - *Gates* : `compileKotlin`/`compileTestKotlin --rerun-tasks` VERT. Preuve = CI
-  verte. Zéro publication, zéro bump, zéro secret.
+  verte (run `36937520884`, commit `7bdfd52` : `:test` 0 failed, `:check`
+  BUILD SUCCESSFUL 2m23s). Zéro publication, zéro bump, zéro secret.
 - *Rapport* : `.agents/sessions/232-c3-gouvernance-ci-verte.adoc`.
