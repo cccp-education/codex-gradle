@@ -27,8 +27,28 @@ Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
 
 - *C-1 (S-228)* ✅, *C-2 (S-229)* ✅, *A (CB-PAGE-PROVENANCE)* ✅ 5/5,
   *B (publication)* ✅ (S-231 codex + S-272 Queens).
-- *C-3 (S-232)* — dead code N1 (Queens) + 8 désync gouvernance codex.
+- *C-3 (S-232)* — dead code N1 (Queens) + 8 désync gouvernance codex
+  + **dette de tests CI masquée** (voir ci-dessous).
 - *C-4 (S-233)* — pollution TOC chunking + clôture C.
+
+== ⚠ Dette de tests CI révélée par le bloc B (à traiter C-3)
+
+La CI codex échouait **en configuration** à `:compileKotlin` (stale N1). Après
+le bloc B, `:compileKotlin` passe, `test` s'exécute pour la **première fois**
+et échoue sur **6 tests préexistants masqués** (run `36934441608`, aucun causé
+par les bumps) :
+
+[cols="3,2", options="header"]
+|===
+| Test | Nature
+
+| `CodexPluginPublicationTest` ×2 | `wsCatalogToml()` lit le repo voisin `../workspace-bom/gradle/libs.versions.toml` (absent CI) → version à **injecter par Gradle** (pattern graphify D5-RACE / bakery V4)
+| `TesseractOcrEngineTest` confidence | binaire `tesseract` absent du runner → `assumeTrue`
+| `PageProvenanceResolverTest` ancestor + `CollectPageProvenanceTaskTest` ×2 | fixtures renommées génériques S-270 (`FPA II`→`Corpus II`) → jointure d'ancêtre à réaligner
+|===
+
+Même leçon que codebase S-269 / bakery S-243 : **une CI morte en
+configuration masque toute la dette de tests aval**.
 
 == Mission S-232 — C-3 (maintenance, zéro publication)
 

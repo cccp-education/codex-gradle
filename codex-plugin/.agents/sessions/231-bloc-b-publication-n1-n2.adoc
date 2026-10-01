@@ -32,24 +32,47 @@ catalog (satisfaite), platform pin == BOM catalog 0.0.62 (satisfaite).
 == Valeur
 
 * **La CI codex peut compiler à nouveau** : `codebase-plugin:0.0.17` Central
-  porte `DocumentChunk.pages`. La preuve CI de l'US-2 (S-230) est débloquée.
+  porte `DocumentChunk.pages`. Le blocage de l'US-2 (S-230) est levé —
+  `:compileKotlin` VERT en CI.
 * Contenu 0.0.12 depuis 0.0.11 : CB-PAGE-PROVENANCE US-2 (transport
   `PageProvenanceAttacher` + `CodexIngestTask.pageProvenanceFile` + BDD
   `@provenance` ×2) + US-3/US-4 côté N1 (S-267/S-269).
+
+== ⚠ Découverte — dette de tests CI masquée (bloc C)
+
+La CI codex ressuscitée (S-230) échouait **en configuration** à `:compileKotlin`
+(stale N1). Une fois le bloc B publié, `:compileKotlin` passe — mais `test`
+s'exécute pour la **première fois** et échoue pour **6 tests préexistants
+masqués** (run `36934441608`, aucun causé par les bumps de version) :
+
+[cols="3,2"]
+|===
+| Test | Nature
+
+| `CodexPluginPublicationTest > plugin version matches root consumer catalog version` + `workspace bom platform pin matches ws catalog bom version` | `wsCatalogToml()` lit le **repo voisin** `../workspace-bom/gradle/libs.versions.toml` (absent en CI) → `IllegalStateException`. Même famille que bakery V4 (BKY-CI-ISOLATION) / graphify D5-RACE : la version doit être **injectée par Gradle**, pas lue dans un working tree voisin.
+| `TesseractOcrEngineTest > reports real confidence from TSV word scores` | binaire `tesseract` absent du runner CI → `assumeTrue` manquant (environnement).
+| `PageProvenanceResolverTest > joins a section whose leaf is OCR-polluted` | fixture renommée générique S-270 (`FPA II` → `Corpus II`) — assertion de jointure d'ancêtre à réaligner.
+| `CollectPageProvenanceTaskTest` ×2 | même famille fixtures (S-270).
+|===
+
+*Portée* : hors mission bloc B (publication). À traiter en **session C-3/C-4**
+(dette de tests révélée par la CI ressuscitée — exactement le pattern
+codebase S-269 / bakery S-243 : *une CI morte masque toute la dette aval*).
 
 == États locaux (Local = Build)
 
 * `compileKotlin`/`compileTestKotlin` VERT.
 * `publishToMavenLocal` VERT (0.0.12).
-* Tests = CI (règle EAGER) — la CI du commit poussé est l'unique preuve.
+* Tests = CI (règle EAGER).
 
 == Gouvernance mise à jour (codex)
 
 * `INDEX.adoc` (session 231, bloc B ✅).
-* `PROMPT_REPRISE.adoc` (S-232).
+* `PROMPT_REPRISE.adoc` (S-232 — C-3 + dette de tests CI).
 * `SESSIONS_HISTORY.adoc`, `BACKLOG.adoc`, archive.
 
 == Reste (bloc C)
 
-* C-3 (S-232) — dead code N1 + 8 désync gouvernance codex.
+* C-3 (S-232) — dead code N1 + 8 désync gouvernance codex **+ dette tests CI
+  masquée** (6 échecs ci-dessus).
 * C-4 (S-233) — pollution TOC chunking + clôture C.
