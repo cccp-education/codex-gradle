@@ -3772,3 +3772,36 @@ VERT local ; CI codebase (Queens) VERTE Fast 1m48s + Full 21m12s ; zéro bump,
 zéro publication Central, zéro secret.
 
 *Rapport* : `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`.
+
+== Session 231 — 2026-10-02 — Bloc B (publication N1→N2) ✅ TERMINÉ — codex-plugin 0.0.12 Central
+
+*Type* : publication (B-2 codex, ordre DAG MEMPHIS-first) + preuve CI débloquée.
+*Mission* : prérequis dur de la preuve CI de l'US-2 (S-230) — le
+`codebase-plugin:0.0.16` Central était stale (publié S-264, avant l'US-1
+`pages`). Accord pilote explicite (Règle 2).
+
+*Travail* (ordre DAG N0 → N2) :
+* **N0 MEMPHIS** — BOM/catalog `0.0.61` → `0.0.62` (`codebase-plugin 0.0.17` +
+  `codex-plugin 0.0.12`, piloté depuis Queens), bundle
+  `7baf6567-e27d-40d0-8ad5-3ec1c66fcdae` (AUTOMATIC).
+* **B-2 codex** — `settings.gradle.kts` pin catalog `0.0.50` → `0.0.62` ;
+  `build.gradle.kts:31` platform `workspace-bom:0.0.50` → `0.0.62` ; toml
+  local `codebase-plugin` `0.0.12` → `0.0.17` + `codex-plugin` `0.0.11` →
+  `0.0.12` (version dérivée `ws.versions.codex.plugin`). `compileKotlin`/
+  `compileTestKotlin` VERT contre `codebase-plugin:0.0.17` (avec `pages`) ;
+  `publishToMavenLocal` → `codex-plugin:0.0.12`.
+* **Central** — bundle `79d0ad3d-d4dc-44c3-9055-6747a03f44b5` (AUTOMATIC).
+
+*Propagation* : repo1 HTTP 200 ×4 (BOM · catalog · codebase · codex) ;
+catalog Central 0.0.62 liste `codebase-plugin = "0.0.17"` et
+`codex-plugin = "0.0.12"`.
+
+*Valeur* : la CI codex peut compiler à nouveau → **preuve CI de l'US-2
+débloquée**. Contenu 0.0.12 depuis 0.0.11 : CB-PAGE-PROVENANCE US-2 (transport
+`PageProvenanceAttacher` + `CodexIngestTask.pageProvenanceFile` + BDD
+`@provenance` ×2) + US-3/US-4 N1 (S-267/S-269).
+
+*Gates* : `compileKotlin`/`compileTestKotlin` VERT, `publishToMavenLocal` VERT,
+propagation repo1 200 ×4, zéro secret. Tests = CI.
+
+*Rapport* : `.agents/sessions/231-bloc-b-publication-n1-n2.adoc`.

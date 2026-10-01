@@ -1,8 +1,8 @@
-= PROMPT_REPRISE — Codex — Session 231
-:session: 231
-:date: 2026-09-29
+= PROMPT_REPRISE — Codex — Session 232
+:session: 232
+:date: 2026-10-02
 :status: PRET
-:mission: Bloc B (publication N1→N2) — prérequis dur de la preuve CI de US-2
+:mission: C-3 (maintenance) — dead code N1 + 8 désynchronisations gouvernance codex (bloc C, séquence C → A → B)
 
 == Quick Start
 ----
@@ -11,64 +11,34 @@ git status --porcelain -- src/    # vide ? → règle EAGER
 ./gradlew compileKotlin compileTestKotlin   # environnement
 ----
 
-== ⚠ Blocage CI à résoudre en priorité (découvert S-230)
+== ✅ Bloc B TERMINÉ (S-231)
 
-La CI codex a été **ressuscitée** en S-230 (3 verrous de configuration levés :
-JDK 25, `working-directory: codex-plugin`, fallback nmcp `?: ""` — miroir
-codebase S-269). Elle révèle un **blocage réel masqué** :
+`codex-plugin 0.0.12` publié Central (bundle `79d0ad3d`), MEMPHIS BOM/catalog
+`0.0.62` (bundle `7baf6567`), `codebase-plugin 0.0.17` (bundle `7d5a340d`).
+Propagation repo1 HTTP 200 ×4. **La CI codex peut compiler à nouveau**
+(`codebase-plugin:0.0.17` porte `DocumentChunk.pages`) → la preuve CI de
+l'US-2 (S-230) est débloquée. Pins locaux : catalog/BOM `0.0.62`, toml
+`codebase-plugin 0.0.17` + `codex-plugin 0.0.12`.
 
-* **Symptôme** : `PageProvenanceAttacher.kt:45 Unresolved reference 'pages'`
-  à `:compileKotlin` (run `36492115436`).
-* **Cause** : le `codebase-plugin:0.0.16` de **Maven Central** a été publié
-  **S-264 (2026-09-17) — avant** l'US-1 `DocumentChunk.pages` (S-265). Le jar
-  Central n'a pas `pages`. En local seul mavenLocal (0.0.16 republié S-265/
-  S-267) compile.
-* **Résolution (accord pilote requis, Règle 2)** : **bloc B** —
-  `codebase-plugin` 0.0.16 → **0.0.17** (Central d'abord) puis
-  `codex-plugin` 0.0.11 → **0.0.12**. Zéro bump MEMPHIS (D9).
-* Sans cette publication, la preuve CI de US-2 est impossible (le N1 `pages`
-  doit être résolvable depuis Central).
-
-== Contexte — bloc C (maintenance), séquence C → A → B
+== Contexte — séquence C → A → B
 
 Séquence pilote S-227 (`.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc`) :
 **C** (maintenance) → **A** (EPIC CB-PAGE-PROVENANCE) → **B** (publication).
 
-- *C-1 (S-228)* ✅ TERMINÉ — drift MEMPHIS pins `0.0.49` → `0.0.50`, garde
-  `CodexPluginPublicationTest` 3/3 VERTE, `check` VERT 1393 tests 0 FAIL.
-- *C-2 (S-229)* ✅ TERMINÉ — split-brain `DocumentChunk` soldé (type N1 unique).
-- *A — CB-PAGE-PROVENANCE* ✅ **TERMINÉ 5/5 US** — **US-2 (N2 transport codex)
-  livrée S-230** : `PageProvenanceAttacher` (jointure exacte SHA-256) +
-  `CodexIngestTask.pageProvenanceFile` (`@InputFiles` tolérante) + wiring
-  `CodexPlugin` + BDD `@provenance` ×2. Code-complete ; preuve CI bloquée par
-  le stale N1 Central (bloc B).
-- *C-3 (S-231)* — dead code N1 + 8 désync gouvernance (si le pilote préfère
-   la maintenance avant la publication).
-- *C-4 (S-232)* : pollution TOC chunking + clôture C.
+- *C-1 (S-228)* ✅, *C-2 (S-229)* ✅, *A (CB-PAGE-PROVENANCE)* ✅ 5/5,
+  *B (publication)* ✅ (S-231 codex + S-272 Queens).
+- *C-3 (S-232)* — dead code N1 (Queens) + 8 désync gouvernance codex.
+- *C-4 (S-233)* — pollution TOC chunking + clôture C.
 
-== Mission S-231 (au choix du pilote)
-
-. **Bloc B (prioritaire)** — publication N1→N2 (voir ⚠ ci-dessus), accord
-   pilote requis.
-. Sinon **C-3** — dead code N1 (Queens) + 8 désynchronisations gouvernance
-   codex (détail ci-dessous).
+== Mission S-232 — C-3 (maintenance, zéro publication)
 
 === Volonté A — dead code N1 (Queens / codebase-gradle)
 
-*Constat S-225 #4* : côté N1, `StoreStatements.insertChunk()` (5 binds) et
-`IngestIndexing.assignLocalIndices` n'ont **aucun appelant de production**
-(seuls les tests les référencent). `initSchema()` les provisionne encore.
-
-*Travail* : audit de production (`grep` sur tout le workspace, hors `build/`)
-puis décision **documentée** :
-- *suppression* (code mort avéré, zéro appelant prod) — privilégiée si
-  confirmée ; ou
-- *conservation* argumentée (API publique d'un artefact publié N1, rétro-compat
-  consommateurs externes — `codebase-plugin` est sur Central).
-
-Si suppression : baby-step TDD strict côté Queens (characterization avant,
-retrait, `test` + `check` VERT), ordre DAG respecté (N1 d'abord). Sinon,
-consigner la décision dans le BACKLOG Queens et clore le constat.
+`StoreStatements.insertChunk()` (5 binds) et `IngestIndexing.assignLocalIndices`
+n'ont **aucun appelant de production** (constat S-225 #4). Décision Queens :
+suppression (privilégiée si confirmée) vs conservation (API publique d'un
+artefact Central). Baby-step TDD strict (characterization avant, retrait,
+compile VERT).
 
 === Volonté B — désynchronisation gouvernance (codex, 8 points)
 
@@ -77,65 +47,51 @@ consigner la décision dans le BACKLOG Queens et clore le constat.
 | Fichier | Désynchronisation à corriger
 
 | `.agents/SESSION_PROCEDURE.adoc:64`
-| `./gradlew :codex-plugin:compileKotlin` — chemin inexistant (le projet
-  racine **est** `codex-plugin`) → `./gradlew compileKotlin`
+| `./gradlew :codex-plugin:compileKotlin` → `./gradlew compileKotlin`
 
 | `.agents/SESSION_PROCEDURE.adoc:5,61`
-| `foundry/codex-gradle/.agents/sessions/…` — chemin pré-S-105 → `codex-plugin/.agents/sessions/…`
+| `foundry/codex-gradle/.agents/sessions/…` → `codex-plugin/.agents/sessions/…`
 
 | `.agents/SESSION_PROCEDURE.adoc:69`
-| « les types partagés vivent dans `codex/src/main/kotlin/` » — faux →
-  `codex-plugin/src/main/kotlin/codex/`
+| « types partagés dans `codex/src/main/kotlin/` » → `codex-plugin/src/main/kotlin/codex/`
 
 | `.agents/SESSION_PROCEDURE.adoc:70`
-| « Version unique dans `gradle.properties` — `codex.version=1.0.0` » — faux
-  (version dérivée `ws.versions.codex.plugin`, toml local `0.0.11`)
+| Version `gradle.properties` `1.0.0` faux → `ws.versions.codex.plugin` (toml 0.0.12)
 
 | `.agents/SESSION_CHECKLIST.adoc:8`
 | Même chemin de build erroné (`:codex-plugin:compileKotlin`)
 
 | `.agents/INDEX.adoc:18`
-| « 1. COMMITS/GIT — INTERDICTION FORMELLE sans permission » — contredit la
-  décision pilote 2026-09-17 (commit/push **autorisés**), déjà dans `AGENT.adoc:11`
+| Règle « INTERDICTION FORMELLE sans permission » → commit/push **autorisés** (2026-09-17)
 
 | `AGENT.adoc` § Fichiers du Projet
-| Chemins `codex/src/main/kotlin/`, `codex-plugin/src/` (pré-aplatissement),
-  `buildSrc/` (supprimé)
+| Chemins `codex/src/main/kotlin/`, `codex-plugin/src/`, `buildSrc/` (pré-aplatissement)
 
 | `README.md:11,52,143`
 | Badges `0.0.1`, `workspace-bom:0.0.1`, `codebase-contracts:0.0.1` — drift
-  depuis ≥ 10 releases
 |===
 
-*Travail* : corriger chaque point, puis **vérification post-fix par `grep`**
+*Travail* : corriger chaque point, **vérification post-fix par `grep`**
 (`:codex-plugin:`, `buildSrc/`, `codex/src/`, `0.0.1`, « INTERDICTION
-FORMELLE »). Gate : `check` VERT (zéro code prod touché côté codex).
+FORMELLE »). Gate : `compileKotlin`/`compileTestKotlin` VERT (Local = Build).
 
 == Pièges connus
 
-- *mavenLocal partagé entre boroughs* : une session parallèle peut réécrire
-  un jar pendant `check` (course S-226). Vérifier par stash avant d'accuser
-  le diff.
-- *Le projet racine **est** `codex-plugin`* — `./gradlew check` (PAS
-  `:codex-plugin:check`).
-- *C-3 est majoritairement de la gouvernance* — zéro publication, zéro bump.
-- *Côté Queens (dead code)* : la décision appartient à la propriétaire N1.
-  Ne pas supprimer à l'aveugle une API de `codebase-plugin` publié Central
-  sans vérifier les consommateurs externes.
+- Le projet racine **est** `codex-plugin` — `./gradlew check` (PAS `:codex-plugin:check`).
+- mavenLocal partagé entre boroughs (course S-226) — vérifier par stash.
+- C-3 est majoritairement de la gouvernance — zéro publication, zéro bump.
+- Côté Queens (dead code) : ne pas supprimer à l'aveugle une API de
+  `codebase-plugin` publié Central sans vérifier les consommateurs externes.
 
 == Méthode / Règles
-Baby-step DDD/TDD/BDD strict RED → GREEN → REFACTOR, 3 niveaux (unit →
-fonctionnel TestKit/ProjectBuilder/testcontainers → Cucumber), English only.
-COMMITS/PUSH autorisés (décision pilote 2026-09-17). PAS de publication sans
-permission. SECRETS via configuration/. Local = BUILD, Tests = CI (règle EAGER) :
-en local, compiler/builder seulement (`compileKotlin`, `compileTestKotlin`,
-`build -x test`) ; jamais de `test`/`functionalTest`/`cucumberTest`/`check` sur
-le poste ; la CI (GitHub Actions) exécute les suites après push et son vert est
-la preuve de validité.
+
+Baby-step DDD/TDD/BDD strict, 3 niveaux, English only. Local = BUILD, Tests = CI.
+COMMITS/PUSH autorisés. PAS de publication sans permission. SECRETS via
+configuration/.
 
 == References
-- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (plan C → A → B, § C-3)
-- `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc` (rapport S-230)
-- `.agents/sessions/229-c2-split-brain-documentchunk.adoc` (rapport C-2)
-- `.agents/sessions/228-c1-drift-memphis.adoc` (rapport C-1)
+
+- `.agents/sessions/231-bloc-b-publication-n1-n2.adoc` (rapport S-231)
+- `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (§ C-3/C-4)
+- `.agents/sessions/230-cb-page-provenance-us2-n2-transport.adoc`
 - `codebase.store.StoreStatements` · `codebase.store.IngestIndexing` (Queens)
