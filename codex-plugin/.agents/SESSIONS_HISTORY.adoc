@@ -3887,3 +3887,11 @@ VERT, assemble VERT, `check --dry-run` inclut `cucumberTestTocNoise`. Tests = CI
 Blocs A ✅ (S-230) et B ✅ (S-231) terminés → **séquence pilote C → A → B close**.
 
 *Rapport* : `.agents/sessions/233-c4-toc-noise-cloture-bloc-c.adoc`.
+
+== Session 234 — 2026-10-11 — Re-pin catalog 0.0.62 → 0.0.78 (rollout MEMPHIS)
+
+Maintenance build : `settings.gradle.kts` catalog `0.0.62 → 0.0.78` +
+`build.gradle.kts` platform `workspace-bom 0.0.62 → 0.0.78`. Résolution :
+`langchain4j 1.22`, `koog 1.3`, `codebase-plugin 0.0.17`, `plantuml 0.0.9`,
+`jgit 7.8`, `diagram 3.2.1`. `compileKotlin compileTestKotlin` **VERT** (API
+compatible). Zéro bump/publication/secret. Rapport `.agents/sessions/bump-catalog-0.0.78.adoc`.
