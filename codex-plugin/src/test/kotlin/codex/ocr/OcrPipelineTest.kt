@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class OcrPipelineTest {
-
     @Test
     fun `OcrPipeline returns LLM result when LLM succeeds`() {
         val llm = stubEngineReturning("= Title\n\nLLM content", model = "gpt-oss:120b-cloud")
@@ -94,14 +93,16 @@ class OcrPipelineTest {
     private fun stubEngineReturning(
         text: String,
         confidence: Double = if (text.isNotEmpty()) 0.9 else 0.0,
-        model: String = "stub"
-    ): OcrEngine = object : OcrEngine {
-        override fun process(request: OcrRequest): OcrResult = OcrResult.of(
-            text = text,
-            confidence = confidence,
-            language = request.language,
-            model = model,
-            metadata = mapOf("engine" to model)
-        )
-    }
+        model: String = "stub",
+    ): OcrEngine =
+        object : OcrEngine {
+            override fun process(request: OcrRequest): OcrResult =
+                OcrResult.of(
+                    text = text,
+                    confidence = confidence,
+                    language = request.language,
+                    model = model,
+                    metadata = mapOf("engine" to model),
+                )
+        }
 }

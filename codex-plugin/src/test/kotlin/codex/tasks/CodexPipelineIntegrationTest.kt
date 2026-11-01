@@ -1,7 +1,6 @@
 package codex.tasks
 
 import codebase.store.DocumentChunk
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -37,7 +36,6 @@ import java.io.File
  */
 @Tag("integration")
 class CodexPipelineIntegrationTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -66,38 +64,63 @@ class CodexPipelineIntegrationTest {
     private fun assumePdfAvailable() {
         assumeTrue(
             canonicalPdf.exists(),
-            "Canonical PDF not found at ${canonicalPdf.absolutePath} — skipping E2E (corpus absent)"
+            "Canonical PDF not found at ${canonicalPdf.absolutePath} — skipping E2E (corpus absent)",
         )
     }
 
-    private fun runFullPipeline(pdfFile: File, chunksFile: File): List<DocumentChunk> {
+    private fun runFullPipeline(
+        pdfFile: File,
+        chunksFile: File,
+    ): List<DocumentChunk> {
         val adocFile = File(tempDir, pdfFile.nameWithoutExtension + ".adoc")
         val mdFile = File(tempDir, pdfFile.nameWithoutExtension + ".md")
 
-        val extractTask = ProjectBuilder.builder().build().tasks.register(
-            "collectBookStructure", ExtractBookStructureTask::class.java
-        ).get()
+        val extractTask =
+            ProjectBuilder
+                .builder()
+                .build()
+                .tasks
+                .register(
+                    "collectBookStructure",
+                    ExtractBookStructureTask::class.java,
+                ).get()
         extractTask.pdfFile.set(pdfFile)
         extractTask.outputFile.set(adocFile)
         extractTask.extract()
 
-        val convertTask = ProjectBuilder.builder().build().tasks.register(
-            "transformToMarkdown", ConvertToMarkdownTask::class.java
-        ).get()
+        val convertTask =
+            ProjectBuilder
+                .builder()
+                .build()
+                .tasks
+                .register(
+                    "transformToMarkdown",
+                    ConvertToMarkdownTask::class.java,
+                ).get()
         convertTask.adocFile.set(adocFile)
         convertTask.markdownFile.set(mdFile)
         convertTask.convert()
 
-        val chunkTask = ProjectBuilder.builder().build().tasks.register(
-            "transformChunk", ChunkDocumentTask::class.java
-        ).get()
+        val chunkTask =
+            ProjectBuilder
+                .builder()
+                .build()
+                .tasks
+                .register(
+                    "transformChunk",
+                    ChunkDocumentTask::class.java,
+                ).get()
         chunkTask.markdownFile.set(mdFile)
         chunkTask.chunksFile.set(chunksFile)
         chunkTask.licenseName.set("UNKNOWN")
         chunkTask.chunk()
 
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
+        val json =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
         return json.decodeFromString(chunksFile.readText())
     }
 
@@ -111,7 +134,7 @@ class CodexPipelineIntegrationTest {
         assertTrue(chunksFile.exists(), "Chunks JSON file should exist after full pipeline")
         assertTrue(
             chunks.isNotEmpty(),
-            "Canonical PDF should yield non-empty chunks — got ${chunks.size}"
+            "Canonical PDF should yield non-empty chunks — got ${chunks.size}",
         )
     }
 
@@ -126,12 +149,12 @@ class CodexPipelineIntegrationTest {
         chunks.forEach { chunk ->
             assertTrue(
                 idPattern.matches(chunk.id),
-                "Chunk id '${chunk.id}' should match SHA-256 pattern chk-xxxxxxxxxxxxxxxx"
+                "Chunk id '${chunk.id}' should match SHA-256 pattern chk-xxxxxxxxxxxxxxxx",
             )
             assertEquals(
                 canonicalPdf.nameWithoutExtension,
                 chunk.sourceDocument,
-                "Chunk sourceDocument should match the canonical PDF stem"
+                "Chunk sourceDocument should match the canonical PDF stem",
             )
         }
     }
@@ -148,13 +171,13 @@ class CodexPipelineIntegrationTest {
             assertTrue(chunk.headingLevel in 1..6, "Heading level should be 1..6")
             assertTrue(
                 chunk.content.isNotBlank(),
-                "Chunk content should be non-blank"
+                "Chunk content should be non-blank",
             )
         }
         val totalLines = chunks.sumOf { it.content.lines().size }
         assertTrue(
             totalLines > 0,
-            "Canonical PDF should produce chunks with content — got 0 total lines across ${chunks.size} chunks"
+            "Canonical PDF should produce chunks with content — got 0 total lines across ${chunks.size} chunks",
         )
     }
 }

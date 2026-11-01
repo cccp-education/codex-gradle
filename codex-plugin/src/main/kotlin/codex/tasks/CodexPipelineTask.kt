@@ -16,7 +16,14 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -31,12 +38,11 @@ data class PipelineResult(
     val license: String,
     val totalDocuments: Int,
     val totalChunks: Int,
-    val output: String
+    val output: String,
 )
 
 @DisableCachingByDefault(because = "PDF/Tika/ONNX extraction pipeline — external processes, non-cacheable")
 abstract class CodexPipelineTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceFile: RegularFileProperty
@@ -104,19 +110,21 @@ abstract class CodexPipelineTask : DefaultTask() {
     @TaskAction
     fun pipeline() {
         val file = sourceFile.asFile.get()
-        val format = when {
-            file.name.lowercase().endsWith(".pdf") -> "PDF"
-            file.name.lowercase().endsWith(".epub") -> "EPUB"
-            else -> "UNKNOWN"
-        }
+        val format =
+            when {
+                file.name.lowercase().endsWith(".pdf") -> "PDF"
+                file.name.lowercase().endsWith(".epub") -> "EPUB"
+                else -> "UNKNOWN"
+            }
 
         logger.lifecycle("[codex] transformCorpusToPdf : ${file.name} (format=$format)")
 
-        val adocContent = when (format) {
-            "PDF" -> extractPdf(file)
-            "EPUB" -> extractEpub(file)
-            else -> throw IllegalArgumentException("Format non supporté: $format")
-        }
+        val adocContent =
+            when (format) {
+                "PDF" -> extractPdf(file)
+                "EPUB" -> extractEpub(file)
+                else -> throw IllegalArgumentException("Format non supporté: $format")
+            }
         val mdContent = convertToMd(adocContent)
         val license = licenseName.orNull ?: LicenseZoneDetector.detect(file.absolutePath).name
         val chunks = SemanticChunker.chunk(mdContent, file.name, license)
@@ -126,12 +134,13 @@ abstract class CodexPipelineTask : DefaultTask() {
 
         logger.lifecycle("[codex] ✓ transformCorpusToPdf termine — ${chunks.size} chunks, format=$format → ${output.absolutePath}")
 
-        val codexMetadata = CodexMetadata.forBrooklyn(
-            type = "pipeline",
-            model = "onnx-local",
-            sessions = 1,
-            dependencies = listOf("queens")
-        )
+        val codexMetadata =
+            CodexMetadata.forBrooklyn(
+                type = "pipeline",
+                model = "onnx-local",
+                sessions = 1,
+                dependencies = listOf("queens"),
+            )
         CodexMetadata.writeTo(output.parentFile, codexMetadata)
     }
 
@@ -144,21 +153,26 @@ abstract class CodexPipelineTask : DefaultTask() {
      * [baseDir], and the output file name is derived from the source
      * file name (stem + `.adoc`).
      */
-    private fun resolveOutput(source: java.io.File, format: String): File {
+    private fun resolveOutput(
+        source: java.io.File,
+        format: String,
+    ): File {
         if (!licenceRouting.getOrElse(false)) {
             return outputFile.asFile.get()
         }
         val base = baseDir.asFile.get()
-        val detected = if (format == "PDF") {
-            PdfLicenseDetector.detect(source)
-        } else {
-            LicenseZone.UNKNOWN
-        }
-        val effective = if (detected == LicenseZone.UNKNOWN) {
-            fallbackZone.getOrElse(LicenseZone.UNKNOWN)
-        } else {
-            detected
-        }
+        val detected =
+            if (format == "PDF") {
+                PdfLicenseDetector.detect(source)
+            } else {
+                LicenseZone.UNKNOWN
+            }
+        val effective =
+            if (detected == LicenseZone.UNKNOWN) {
+                fallbackZone.getOrElse(LicenseZone.UNKNOWN)
+            } else {
+                detected
+            }
         val routed = LicenseRouter.route(effective, base)
         routed.mkdirs()
         val stem = source.nameWithoutExtension
@@ -169,21 +183,36 @@ abstract class CodexPipelineTask : DefaultTask() {
         Loader.loadPDF(pdfFile).use { document ->
             val allLines = mutableListOf<ExtractBookStructureTask.PositionedLine>()
             for (pageIndex in 0 until document.numberOfPages) {
-                val stripper = object : PDFTextStripper() {
-                    val linesForPage = mutableListOf<ExtractBookStructureTask.PositionedLine>()
-                    init { sortByPosition = true; lineSeparator = "\n"; startPage = pageIndex + 1; endPage = pageIndex + 1 }
-                    override fun writeString(text: String, textPositions: List<TextPosition>) {
-                        if (text.isBlank()) return
-                        val y = textPositions.firstOrNull()?.yDirAdj?.toDouble() ?: 0.0
-                        val x = textPositions.firstOrNull()?.xDirAdj?.toDouble() ?: 0.0
-                        val fs = textPositions.maxOfOrNull { it.fontSizeInPt.toDouble() } ?: 0.0
-                        val fn = textPositions.firstOrNull()?.font?.name
-                        linesForPage.add(ExtractBookStructureTask.PositionedLine(
-                            text.replace("\\s+".toRegex(), " ").trim(), fs.toFloat(),
-                            FontStyleDetector.detect(fn ?: ""), y.toFloat()
-                        ))
+                val stripper =
+                    object : PDFTextStripper() {
+                        val linesForPage = mutableListOf<ExtractBookStructureTask.PositionedLine>()
+
+                        init {
+                            sortByPosition = true
+                            lineSeparator = "\n"
+                            startPage = pageIndex + 1
+                            endPage = pageIndex + 1
+                        }
+
+                        override fun writeString(
+                            text: String,
+                            textPositions: List<TextPosition>,
+                        ) {
+                            if (text.isBlank()) return
+                            val y = textPositions.firstOrNull()?.yDirAdj?.toDouble() ?: 0.0
+                            val x = textPositions.firstOrNull()?.xDirAdj?.toDouble() ?: 0.0
+                            val fs = textPositions.maxOfOrNull { it.fontSizeInPt.toDouble() } ?: 0.0
+                            val fn = textPositions.firstOrNull()?.font?.name
+                            linesForPage.add(
+                                ExtractBookStructureTask.PositionedLine(
+                                    text.replace("\\s+".toRegex(), " ").trim(),
+                                    fs.toFloat(),
+                                    FontStyleDetector.detect(fn ?: ""),
+                                    y.toFloat(),
+                                ),
+                            )
+                        }
                     }
-                }
                 stripper.getText(document)
                 allLines.addAll(stripper.linesForPage)
             }
@@ -211,7 +240,9 @@ abstract class CodexPipelineTask : DefaultTask() {
         sb.appendLine("====")
         sb.appendLine()
 
-        var pending = 0; val codeLines = mutableListOf<String>(); var inCode = false
+        var pending = 0
+        val codeLines = mutableListOf<String>()
+        var inCode = false
 
         fun flush() {
             if (codeLines.isNotEmpty()) {
@@ -221,18 +252,62 @@ abstract class CodexPipelineTask : DefaultTask() {
                 sb.appendLine("----")
                 sb.appendLine()
             }
-            codeLines.clear(); inCode = false
+            codeLines.clear()
+            inCode = false
         }
 
         for (line in lines) {
             val isMono = line.fontStyle.isMonospace()
             val isBold = line.fontStyle.isBold() && !isMono
-            if (isMono) { if (!inCode) { flush(); inCode = true }; codeLines.add(line.text); continue }
+            if (isMono) {
+                if (!inCode) {
+                    flush()
+                    inCode = true
+                }
+                codeLines.add(line.text)
+                continue
+            }
             if (inCode) flush()
-            if (line.text.isBlank()) { pending++; continue }
-            val lvl = when { line.fontSize.toDouble() >= h1 && isBold -> 1; line.fontSize.toDouble() >= h1 -> 2; line.fontSize.toDouble() >= h2 && isBold -> 2; line.fontSize.toDouble() >= h2 -> 3; line.fontSize.toDouble() >= h3 && isBold -> 3; else -> 0 }
-            if (pending > 0) { sb.appendLine(); pending = 0 }
-            when (lvl) { 1 -> { sb.appendLine(); sb.appendLine("= ${line.text}"); sb.appendLine(); pending = 0 }; 2 -> { sb.appendLine(); sb.appendLine("== ${line.text}"); sb.appendLine(); pending = 0 }; 3 -> { sb.appendLine(); sb.appendLine("=== ${line.text}"); sb.appendLine(); pending = 0 }; else -> sb.appendLine(line.text) }
+            if (line.text.isBlank()) {
+                pending++
+                continue
+            }
+            val lvl =
+                when {
+                    line.fontSize.toDouble() >= h1 && isBold -> 1
+                    line.fontSize.toDouble() >= h1 -> 2
+                    line.fontSize.toDouble() >= h2 && isBold -> 2
+                    line.fontSize.toDouble() >=
+                        h2 -> 3
+                    line.fontSize.toDouble() >= h3 && isBold -> 3
+                    else -> 0
+                }
+            if (pending > 0) {
+                sb.appendLine()
+                pending = 0
+            }
+            when (lvl) {
+                1 -> {
+                    sb.appendLine()
+                    sb.appendLine("= ${line.text}")
+                    sb.appendLine()
+                    pending = 0
+                }
+                2 -> {
+                    sb.appendLine()
+                    sb.appendLine("== ${line.text}")
+                    sb.appendLine()
+                    pending =
+                        0
+                }
+                3 -> {
+                    sb.appendLine()
+                    sb.appendLine("=== ${line.text}")
+                    sb.appendLine()
+                    pending = 0
+                }
+                else -> sb.appendLine(line.text)
+            }
         }
         if (inCode) flush()
         return sb.toString().trimEnd() + "\n"
@@ -261,7 +336,10 @@ abstract class CodexPipelineTask : DefaultTask() {
         return sb.toString().trimEnd() + "\n"
     }
 
-    private fun findElement(node: Node, tagName: String): Element? {
+    private fun findElement(
+        node: Node,
+        tagName: String,
+    ): Element? {
         if (node.nodeType == Node.ELEMENT_NODE) {
             val el = node as Element
             if (el.localName.equals(tagName, ignoreCase = true)) return el
@@ -272,24 +350,60 @@ abstract class CodexPipelineTask : DefaultTask() {
         return null
     }
 
-    private fun traverse(element: Element, sb: StringBuilder) {
+    private fun traverse(
+        element: Element,
+        sb: StringBuilder,
+    ) {
         for (i in 0 until element.childNodes.length) traverseNode(element.childNodes.item(i), sb)
     }
 
-    private fun traverseNode(node: Node, sb: StringBuilder) {
+    private fun traverseNode(
+        node: Node,
+        sb: StringBuilder,
+    ) {
         when (node.nodeType) {
             Node.ELEMENT_NODE -> {
                 val el = node as Element
                 when (el.localName.lowercase()) {
-                    "h1" -> { sb.appendLine(); sb.appendLine("= ${el.textContent.trim()}"); sb.appendLine() }
-                    "h2" -> { sb.appendLine(); sb.appendLine("== ${el.textContent.trim()}"); sb.appendLine() }
-                    "h3" -> { sb.appendLine(); sb.appendLine("=== ${el.textContent.trim()}"); sb.appendLine() }
-                    "h4" -> { sb.appendLine(); sb.appendLine("==== ${el.textContent.trim()}"); sb.appendLine() }
-                    "h5" -> { sb.appendLine(); sb.appendLine("===== ${el.textContent.trim()}"); sb.appendLine() }
-                    "h6" -> { sb.appendLine(); sb.appendLine("====== ${el.textContent.trim()}"); sb.appendLine() }
+                    "h1" -> {
+                        sb.appendLine()
+                        sb.appendLine("= ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
+                    "h2" -> {
+                        sb.appendLine()
+                        sb.appendLine("== ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
+                    "h3" -> {
+                        sb.appendLine()
+                        sb.appendLine("=== ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
+                    "h4" -> {
+                        sb.appendLine()
+                        sb.appendLine("==== ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
+                    "h5" -> {
+                        sb.appendLine()
+                        sb.appendLine("===== ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
+                    "h6" -> {
+                        sb.appendLine()
+                        sb.appendLine("====== ${el.textContent.trim()}")
+                        sb.appendLine()
+                    }
                     "pre" -> {
                         val code = el.textContent.trimEnd()
-                        if (code.isNotBlank()) { sb.appendLine("[source,text]"); sb.appendLine("----"); code.lines().forEach { sb.appendLine(it) }; sb.appendLine("----"); sb.appendLine() }
+                        if (code.isNotBlank()) {
+                            sb.appendLine("[source,text]")
+                            sb.appendLine("----")
+                            code.lines().forEach { sb.appendLine(it) }
+                            sb.appendLine("----")
+                            sb.appendLine()
+                        }
                     }
                     "p", "div" -> sb.appendLine(el.textContent.trim())
                     else -> traverse(el, sb)
@@ -317,7 +431,8 @@ abstract class CodexPipelineTask : DefaultTask() {
                 sb.appendLine()
                 codeBlockCollector.clear()
             }
-            inCodeBlock = false; codeLanguage = "text"
+            inCodeBlock = false
+            codeLanguage = "text"
         }
 
         var pendingBlank = 0
@@ -326,21 +441,33 @@ abstract class CodexPipelineTask : DefaultTask() {
             val trimmed = line.trim()
             if (trimmed.startsWith("//")) continue
             if (inCodeBlock) {
-                if (trimmed == "----") { flushCodeBlock(); pendingBlank = 0 } else codeBlockCollector.add(line)
+                if (trimmed == "----") {
+                    flushCodeBlock()
+                    pendingBlank = 0
+                } else {
+                    codeBlockCollector.add(line)
+                }
                 continue
             }
             if (trimmed == "----") continue
             if (trimmed.startsWith("[source,")) {
                 flushCodeBlock()
                 codeLanguage = Regex("""\[source,(\w+)]""").find(trimmed)?.groupValues?.get(1) ?: "text"
-                inCodeBlock = true; codeBlockCollector.clear()
+                inCodeBlock = true
+                codeBlockCollector.clear()
                 continue
             }
             if (trimmed.startsWith("[") && trimmed.endsWith("]") && trimmed.getOrNull(1) != null && trimmed[1].isUpperCase()) {
                 val label = trimmed.removeSurrounding("[", "]").lowercase()
-                sb.appendLine("> **${label.replaceFirstChar { it.uppercase() }}**"); pendingBlank = 0; continue
+                sb.appendLine("> **${label.replaceFirstChar { it.uppercase() }}**")
+                pendingBlank = 0
+                continue
             }
-            if (trimmed == "====") { sb.appendLine(); pendingBlank = 0; continue }
+            if (trimmed == "====") {
+                sb.appendLine()
+                pendingBlank = 0
+                continue
+            }
 
             val headingRegex = Regex("""^(=+)\s+(.+)$""")
             val headingMatch = headingRegex.find(trimmed)
@@ -349,12 +476,19 @@ abstract class CodexPipelineTask : DefaultTask() {
                 val title = headingMatch.groupValues[2]
                 val prefix = "#".repeat(level.coerceAtMost(6))
                 if (pendingBlank > 0) sb.appendLine()
-                sb.appendLine("$prefix $title"); sb.appendLine(); pendingBlank = 0; continue
+                sb.appendLine("$prefix $title")
+                sb.appendLine()
+                pendingBlank = 0
+                continue
             }
 
-            if (trimmed.isBlank()) { pendingBlank++; continue }
+            if (trimmed.isBlank()) {
+                pendingBlank++
+                continue
+            }
             if (pendingBlank >= 2) sb.appendLine()
-            sb.appendLine(trimmed); pendingBlank = 0
+            sb.appendLine(trimmed)
+            pendingBlank = 0
         }
         flushCodeBlock()
         return sb.toString().trimEnd() + "\n"

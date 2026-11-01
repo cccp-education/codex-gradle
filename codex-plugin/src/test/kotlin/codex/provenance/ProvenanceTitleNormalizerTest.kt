@@ -18,12 +18,11 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict RED (type inexistant) → GREEN → REFACTOR.
  */
 class ProvenanceTitleNormalizerTest {
-
     @Test
     fun `composes the base canon (entities, dot leaders, lowercase)`() {
         assertEquals(
             "organiser le contenu du scénario",
-            ProvenanceTitleNormalizer.normalize("Organiser le contenu du scénario .............")
+            ProvenanceTitleNormalizer.normalize("Organiser le contenu du scénario ............."),
         )
     }
 
@@ -32,8 +31,8 @@ class ProvenanceTitleNormalizerTest {
         assertEquals(
             "identifier les différents formats des documents techniques",
             ProvenanceTitleNormalizer.normalize(
-                "1-1.1 Identifier les différents formats des documents techniques :"
-            )
+                "1-1.1 Identifier les différents formats des documents techniques :",
+            ),
         )
     }
 
@@ -41,7 +40,7 @@ class ProvenanceTitleNormalizerTest {
     fun `strips a leading dotted numeric reference with a space`() {
         assertEquals(
             "identifier et choisir une technique d'animation",
-            ProvenanceTitleNormalizer.normalize("2.1.2 Identifier et choisir une technique d'animation")
+            ProvenanceTitleNormalizer.normalize("2.1.2 Identifier et choisir une technique d'animation"),
         )
     }
 
@@ -49,7 +48,7 @@ class ProvenanceTitleNormalizerTest {
     fun `strips a leading multi-part reference glued to the title`() {
         assertEquals(
             "rédiger un document technique, le doc",
-            ProvenanceTitleNormalizer.normalize("1-2.1rédiger un document technique, le DOC.")
+            ProvenanceTitleNormalizer.normalize("1-2.1rédiger un document technique, le DOC."),
         )
     }
 
@@ -57,7 +56,7 @@ class ProvenanceTitleNormalizerTest {
     fun `preserves an in-title abbreviation not followed by a space`() {
         assertEquals(
             "utiliser l'outil les 3c pour élaborer une séance",
-            ProvenanceTitleNormalizer.normalize("utiliser l'outil les 3C pour élaborer une séance")
+            ProvenanceTitleNormalizer.normalize("utiliser l'outil les 3C pour élaborer une séance"),
         )
     }
 
@@ -66,7 +65,7 @@ class ProvenanceTitleNormalizerTest {
         // `3C` glued, no space after the digit run → not a reference
         assertNotEquals(
             "",
-            ProvenanceTitleNormalizer.normalize("3c modele")
+            ProvenanceTitleNormalizer.normalize("3c modele"),
         )
     }
 
@@ -74,7 +73,7 @@ class ProvenanceTitleNormalizerTest {
     fun `strips trailing colon from an OCR heading`() {
         assertEquals(
             "historique de l'architecture logicielle",
-            ProvenanceTitleNormalizer.normalize("Historique de l'architecture logicielle :")
+            ProvenanceTitleNormalizer.normalize("Historique de l'architecture logicielle :"),
         )
     }
 
@@ -82,7 +81,7 @@ class ProvenanceTitleNormalizerTest {
     fun `strips trailing dot from an OCR heading`() {
         assertEquals(
             "les compétences",
-            ProvenanceTitleNormalizer.normalize("Les compétences.")
+            ProvenanceTitleNormalizer.normalize("Les compétences."),
         )
     }
 
@@ -105,7 +104,7 @@ class ProvenanceTitleNormalizerTest {
         val chunkSegment = "2.1.2 identifier et choisir une technique d'animation"
         assertEquals(
             ProvenanceTitleNormalizer.normalize(tocTitle),
-            ProvenanceTitleNormalizer.normalize(chunkSegment)
+            ProvenanceTitleNormalizer.normalize(chunkSegment),
         )
     }
 }

@@ -28,16 +28,19 @@ import java.io.File
  * Baby-step TDD strict RED → GREEN → REFACTOR.
  */
 class CollectPageProvenanceTaskTest {
-
     private fun chunkJson(vararg chunks: Pair<String, String>): String =
         Json { prettyPrint = true }.encodeToString(
             ListSerializer(DocumentChunk.serializer()),
             chunks.map { (id, path) ->
                 DocumentChunk(
-                    id = id, sourceDocument = "livre", sectionPath = path,
-                    headingLevel = 2, content = "body", license = "PROPRIETARY",
+                    id = id,
+                    sourceDocument = "livre",
+                    sectionPath = path,
+                    headingLevel = 2,
+                    content = "body",
+                    license = "PROPRIETARY",
                 )
-            }
+            },
         )
 
     private fun tocText(): String =
@@ -48,14 +51,21 @@ class CollectPageProvenanceTaskTest {
         """.trimIndent()
 
     private fun task() =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectPageProvenance", CollectPageProvenanceTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectPageProvenance", CollectPageProvenanceTask::class.java)
+            .get()
 
     @Test
-    fun `writes the page provenance sidecar for a resolved chunk`(@TempDir dir: File) {
-        val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
-        }
+    fun `writes the page provenance sidecar for a resolved chunk`(
+        @TempDir dir: File,
+    ) {
+        val chunks =
+            File(dir, "chunks.json").apply {
+                writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
+            }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
         val out = File(dir, "page-provenance.json")
 
@@ -66,18 +76,22 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         assertTrue(out.exists(), "the sidecar must be written")
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(1, report.chunkCount)
         assertEquals(1, report.resolvedCount)
         assertEquals(listOf(40), report.chunks[0].pages)
     }
 
     @Test
-    fun `resolves a multi-page section to all its pages`(@TempDir dir: File) {
-        val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Maîtriser l'architecture logicielle"))
-        }
+    fun `resolves a multi-page section to all its pages`(
+        @TempDir dir: File,
+    ) {
+        val chunks =
+            File(dir, "chunks.json").apply {
+                writeText(chunkJson("chk-1" to "Maîtriser l'architecture logicielle"))
+            }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
         val out = File(dir, "page-provenance.json")
 
@@ -87,28 +101,33 @@ class CollectPageProvenanceTaskTest {
         t.pageProvenanceFile.set(out)
         t.collectPageProvenance()
 
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(listOf(5, 6, 7, 8), report.chunks[0].pages)
     }
 
     @Test
-    fun `attaches the acquisition doubt when the optional report is provided`(@TempDir dir: File) {
-        val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
-        }
+    fun `attaches the acquisition doubt when the optional report is provided`(
+        @TempDir dir: File,
+    ) {
+        val chunks =
+            File(dir, "chunks.json").apply {
+                writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
+            }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
-        val quality = File(dir, "ocr-quality-report.json").apply {
-            writeText(
-                Json.encodeToString(
-                    OcrQualityReport.serializer(),
-                    OcrQualityReport(
-                        imagesScanned = 10,
-                        issues = listOf(OcrQualityIssue("040", "040.pdf", OcrQualityReason.ILLISIBLE)),
-                    )
+        val quality =
+            File(dir, "ocr-quality-report.json").apply {
+                writeText(
+                    Json.encodeToString(
+                        OcrQualityReport.serializer(),
+                        OcrQualityReport(
+                            imagesScanned = 10,
+                            issues = listOf(OcrQualityIssue("040", "040.pdf", OcrQualityReason.ILLISIBLE)),
+                        ),
+                    ),
                 )
-            )
-        }
+            }
         val out = File(dir, "page-provenance.json")
 
         val t = task()
@@ -118,17 +137,21 @@ class CollectPageProvenanceTaskTest {
         t.pageProvenanceFile.set(out)
         t.collectPageProvenance()
 
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertTrue(report.chunks[0].doubtful)
         assertEquals(OcrQualityReason.ILLISIBLE, report.chunks[0].doubts[0].reason)
     }
 
     @Test
-    fun `degrades silently when the optional report is absent`(@TempDir dir: File) {
-        val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
-        }
+    fun `degrades silently when the optional report is absent`(
+        @TempDir dir: File,
+    ) {
+        val chunks =
+            File(dir, "chunks.json").apply {
+                writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
+            }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
         val out = File(dir, "page-provenance.json")
 
@@ -138,17 +161,21 @@ class CollectPageProvenanceTaskTest {
         t.pageProvenanceFile.set(out)
         t.collectPageProvenance()
 
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertFalse(report.chunks[0].doubtful)
         assertTrue(report.chunks[0].doubts.isEmpty())
     }
 
     @Test
-    fun `missing toc degrades every chunk to empty pages but writes the sidecar`(@TempDir dir: File) {
-        val chunks = File(dir, "chunks.json").apply {
-            writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
-        }
+    fun `missing toc degrades every chunk to empty pages but writes the sidecar`(
+        @TempDir dir: File,
+    ) {
+        val chunks =
+            File(dir, "chunks.json").apply {
+                writeText(chunkJson("chk-1" to "Chapitre 1 > Organiser le contenu du scénario"))
+            }
         val out = File(dir, "page-provenance.json")
 
         val t = task()
@@ -157,15 +184,18 @@ class CollectPageProvenanceTaskTest {
         t.pageProvenanceFile.set(out)
         t.collectPageProvenance()
 
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(1, report.chunkCount)
         assertEquals(0, report.resolvedCount)
         assertTrue(report.chunks[0].pages.isEmpty())
     }
 
     @Test
-    fun `empty chunk list produces an empty report`(@TempDir dir: File) {
+    fun `empty chunk list produces an empty report`(
+        @TempDir dir: File,
+    ) {
         val chunks = File(dir, "chunks.json").apply { writeText("[]") }
         val toc = File(dir, "toc.adoc").apply { writeText(tocText()) }
         val out = File(dir, "page-provenance.json")
@@ -176,14 +206,17 @@ class CollectPageProvenanceTaskTest {
         t.pageProvenanceFile.set(out)
         t.collectPageProvenance()
 
-        val report = Json { ignoreUnknownKeys = true }
-            .decodeFromString(PageProvenanceReport.serializer(), out.readText())
+        val report =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(0, report.chunkCount)
         assertEquals(0.0, report.joinRate)
     }
 
     @Test
-    fun `plugin wires collectPageProvenance with an explicit toc file default`(@TempDir dir: File) {
+    fun `plugin wires collectPageProvenance with an explicit toc file default`(
+        @TempDir dir: File,
+    ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 

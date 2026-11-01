@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 data class OntologyMapping(
     val boundedContexts: List<BoundedContext>,
     val aggregates: List<Aggregate>,
-    val valueObjects: List<ValueObject>
+    val valueObjects: List<ValueObject>,
 )
 
 /**
@@ -33,7 +33,7 @@ data class OntologyMapping(
 @Serializable
 data class BoundedContext(
     val name: String,
-    val tables: List<String>
+    val tables: List<String>,
 )
 
 /**
@@ -48,7 +48,7 @@ data class BoundedContext(
 @Serializable
 data class Aggregate(
     val rootTable: String,
-    val dependentTables: List<String>
+    val dependentTables: List<String>,
 )
 
 /**
@@ -61,5 +61,5 @@ data class Aggregate(
 @Serializable
 data class ValueObject(
     val table: String,
-    val columns: List<String>
+    val columns: List<String>,
 )

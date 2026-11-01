@@ -28,7 +28,6 @@ import java.io.File
  */
 @Tag("integration")
 class PageProvenanceJoinRateTest {
-
     private val chunksFile: File? = locate(System.getProperty("codex.pageProvenance.chunks"))
     private val tocFile: File? = locate(System.getProperty("codex.pageProvenance.toc"))
 
@@ -49,25 +48,28 @@ class PageProvenanceJoinRateTest {
     fun `real corpus join rate holds above the cadrage floor`() {
         assumeTrue(
             chunksFile != null && tocFile != null,
-            "corpus absent (set codex.pageProvenance.chunks/toc) — skipping real join rate measurement"
+            "corpus absent (set codex.pageProvenance.chunks/toc) — skipping real join rate measurement",
         )
 
-        val chunks = Json { ignoreUnknownKeys = true }
-            .decodeFromString(ListSerializer(DocumentChunk.serializer()), chunksFile!!.readText())
+        val chunks =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(ListSerializer(DocumentChunk.serializer()), chunksFile!!.readText())
         val sections = TocPageIndex.parse(tocFile!!)
 
         val provenance = PageProvenanceResolver.resolve(chunks, sections, qualityReport = null)
         val rate = PageProvenanceResolver.joinRate(provenance)
 
-        println("[codex] page-provenance join rate: ${"%.3f".format(rate)} " +
-            "(${provenance.count { it.pages.isNotEmpty() }}/${provenance.size} chunks, " +
-            "${sections.size} TOC sections)")
+        println(
+            "[codex] page-provenance join rate: ${"%.3f".format(rate)} " +
+                "(${provenance.count { it.pages.isNotEmpty() }}/${provenance.size} chunks, " +
+                "${sections.size} TOC sections)",
+        )
 
         assertTrue(chunks.isNotEmpty(), "the real corpus must yield chunks")
         assertTrue(sections.isNotEmpty(), "the real TOC must yield sections")
         assertTrue(
             rate >= 0.5,
-            "join rate must hold above the cadrage floor 0.5 — got ${"%.3f".format(rate)}"
+            "join rate must hold above the cadrage floor 0.5 — got ${"%.3f".format(rate)}",
         )
     }
 }

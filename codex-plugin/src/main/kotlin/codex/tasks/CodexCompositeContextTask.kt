@@ -1,9 +1,5 @@
 package codex.tasks
 
-import contracts.context.ChannelBudget
-import contracts.context.CompositeContext
-import contracts.context.CompositeContextConfig
-import contracts.context.ContextChannel
 import codebase.store.DoubtExposure
 import codebase.store.RagVectorStore
 import codebase.store.RetrieveResult
@@ -11,6 +7,10 @@ import codex.Metadata
 import codex.enrichment.EnrichedLddNode
 import codex.enrichment.GraphifySectionBuilder
 import codex.provenance.PageProvenanceReport
+import contracts.context.ChannelBudget
+import contracts.context.CompositeContext
+import contracts.context.CompositeContextConfig
+import contracts.context.ContextChannel
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -33,7 +33,6 @@ import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "pgvector RAG + LLM call — external dependencies, non-cacheable")
 abstract class CodexCompositeContextTask : DefaultTask() {
-
     @get:Input
     @get:Optional
     abstract val query: Property<String>
@@ -47,9 +46,13 @@ abstract class CodexCompositeContextTask : DefaultTask() {
     // EPIC CDX-RAG-3: delegates to the codebase.store.RagVectorStore socle
     // (single N2->N1 edge, zero cycle).
     @get:Input abstract val pgHost: Property<String>
+
     @get:Input abstract val pgPort: Property<String>
+
     @get:Input abstract val pgDatabase: Property<String>
+
     @get:Input abstract val pgUser: Property<String>
+
     @get:Input abstract val pgPassword: Property<String>
 
     init {
@@ -141,10 +144,11 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         if (!file.exists()) return ""
         return try {
             val json = Json { ignoreUnknownKeys = true }
-            val nodes = json.decodeFromString(
-                ListSerializer(EnrichedLddNode.serializer()),
-                file.readText()
-            )
+            val nodes =
+                json.decodeFromString(
+                    ListSerializer(EnrichedLddNode.serializer()),
+                    file.readText(),
+                )
             GraphifySectionBuilder.build(nodes)
         } catch (e: Exception) {
             logger.warn("[codex] graphifySection : enriched JSON unreadable ({}), fallback to empty", e.message)
@@ -176,7 +180,10 @@ abstract class CodexCompositeContextTask : DefaultTask() {
      * of the socle-rendered line so the N3 consumer keeps its citation
      * context while the doubt policy stays owned by N1.
      */
-    internal fun buildDocsContent(results: List<RetrieveResult>, excludeDoubtful: Boolean): String {
+    internal fun buildDocsContent(
+        results: List<RetrieveResult>,
+        excludeDoubtful: Boolean,
+    ): String {
         val lines = DoubtExposure.expose(results, excludeDoubtful = excludeDoubtful)
         val retained = if (excludeDoubtful) results.filterNot { it.doubtful } else results
         return retained.zip(lines).joinToString("\n\n") { (r, line) ->
@@ -200,31 +207,33 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         topK: Int,
         pageIndex: Map<String, List<Int>> = emptyMap(),
     ): String {
-        val entries = results.map { r ->
-            buildJsonObject {
-                put("source", JsonPrimitive("codex"))
-                put("chunkId", JsonPrimitive(r.chunkId))
-                put("chunkText", JsonPrimitive(r.chunkText.take(500)))
-                put("sectionPath", JsonPrimitive(r.sectionPath))
-                put("headingLevel", JsonPrimitive(r.headingLevel))
-                put("sourceDocument", JsonPrimitive(r.sourceDocument))
-                put("similarity", JsonPrimitive(r.similarity))
-                put("confidence", JsonPrimitive(r.confidence))
-                put("doubtful", JsonPrimitive(r.doubtful))
-                // CDX-PAGE-PROVENANCE-3 : additive page localisation, omitted
-                // when the section does not resolve (backward compat).
-                pageIndex[r.sectionPath]?.let { pages ->
-                    put("pages", JsonArray(pages.map { JsonPrimitive(it) }))
+        val entries =
+            results.map { r ->
+                buildJsonObject {
+                    put("source", JsonPrimitive("codex"))
+                    put("chunkId", JsonPrimitive(r.chunkId))
+                    put("chunkText", JsonPrimitive(r.chunkText.take(500)))
+                    put("sectionPath", JsonPrimitive(r.sectionPath))
+                    put("headingLevel", JsonPrimitive(r.headingLevel))
+                    put("sourceDocument", JsonPrimitive(r.sourceDocument))
+                    put("similarity", JsonPrimitive(r.similarity))
+                    put("confidence", JsonPrimitive(r.confidence))
+                    put("doubtful", JsonPrimitive(r.doubtful))
+                    // CDX-PAGE-PROVENANCE-3 : additive page localisation, omitted
+                    // when the section does not resolve (backward compat).
+                    pageIndex[r.sectionPath]?.let { pages ->
+                        put("pages", JsonArray(pages.map { JsonPrimitive(it) }))
+                    }
                 }
             }
-        }
-        val composite = buildJsonObject {
-            put("source", JsonPrimitive("brooklyn"))
-            put("query", JsonPrimitive(query))
-            put("topK", JsonPrimitive(topK))
-            put("entries", JsonArray(entries))
-            put("count", JsonPrimitive(entries.size))
-        }
+        val composite =
+            buildJsonObject {
+                put("source", JsonPrimitive("brooklyn"))
+                put("query", JsonPrimitive(query))
+                put("topK", JsonPrimitive(topK))
+                put("entries", JsonArray(entries))
+                put("count", JsonPrimitive(entries.size))
+            }
         return Json { prettyPrint = true }.encodeToString(composite)
     }
 
@@ -232,22 +241,29 @@ abstract class CodexCompositeContextTask : DefaultTask() {
      * Serialization seam for the typed vibecoding context
      * (`composite-context-vibecoding.json`) — mirrors [buildCompositeJson].
      */
-    internal fun buildVibecodingJson(docsSection: String, query: String, topK: Int, count: Int): String {
-        val budget = buildJsonObject {
-            put("totalTokenBudget", JsonPrimitive(8000))
-            put("eager", JsonPrimitive(0.40))
-            put("rag", JsonPrimitive(0.30))
-            put("graphify", JsonPrimitive(0.20))
-            put("docs", JsonPrimitive(0.10))
-        }
-        val vibecodingJson = buildJsonObject {
-            put("source", JsonPrimitive("brooklyn"))
-            put("query", JsonPrimitive(query))
-            put("topK", JsonPrimitive(topK))
-            put("docsSection", JsonPrimitive(docsSection))
-            put("budget", budget)
-            put("count", JsonPrimitive(count))
-        }
+    internal fun buildVibecodingJson(
+        docsSection: String,
+        query: String,
+        topK: Int,
+        count: Int,
+    ): String {
+        val budget =
+            buildJsonObject {
+                put("totalTokenBudget", JsonPrimitive(8000))
+                put("eager", JsonPrimitive(0.40))
+                put("rag", JsonPrimitive(0.30))
+                put("graphify", JsonPrimitive(0.20))
+                put("docs", JsonPrimitive(0.10))
+            }
+        val vibecodingJson =
+            buildJsonObject {
+                put("source", JsonPrimitive("brooklyn"))
+                put("query", JsonPrimitive(query))
+                put("topK", JsonPrimitive(topK))
+                put("docsSection", JsonPrimitive(docsSection))
+                put("budget", budget)
+                put("count", JsonPrimitive(count))
+            }
         return Json { prettyPrint = true }.encodeToString(vibecodingJson)
     }
 
@@ -256,16 +272,18 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val q = query.orNull ?: "architecture du workspace"
         val k = topK.orNull?.toIntOrNull() ?: 10
 
-        val store = storeOverride.orNull ?: RagVectorStore(
-            host = pgHost.get(),
-            port = pgPort.get().toInt(),
-            database = pgDatabase.get(),
-            username = pgUser.get(),
-            password = pgPassword.get()
-        )
-        val results: List<RetrieveResult> = kotlinx.coroutines.runBlocking {
-            searchDoubtAware(store, q, k)
-        }
+        val store =
+            storeOverride.orNull ?: RagVectorStore(
+                host = pgHost.get(),
+                port = pgPort.get().toInt(),
+                database = pgDatabase.get(),
+                username = pgUser.get(),
+                password = pgPassword.get(),
+            )
+        val results: List<RetrieveResult> =
+            kotlinx.coroutines.runBlocking {
+                searchDoubtAware(store, q, k)
+            }
 
         // ── JSON compatible N3/N4 — champs de doute additifs (backward compat) ──
         val entries = results
@@ -275,23 +293,25 @@ abstract class CodexCompositeContextTask : DefaultTask() {
         val docsContent = buildDocsContent(results, excludeDoubtfulDocs.getOrElse(false))
         val docsChannel = ContextChannel.Docs(docsContent)
 
-        val config = CompositeContextConfig(
-            totalTokenBudget = 8000,
-            budgetEagerLazy = 0.40,
-            budgetRag = 0.30,
-            budgetGraphify = 0.20,
-            budgetDocs = 0.10,
-            budgetOverhead = 0.0
-        )
+        val config =
+            CompositeContextConfig(
+                totalTokenBudget = 8000,
+                budgetEagerLazy = 0.40,
+                budgetRag = 0.30,
+                budgetGraphify = 0.20,
+                budgetDocs = 0.10,
+                budgetOverhead = 0.0,
+            )
         val budget = ChannelBudget.fromConfig(config)
 
-        val typedCompositeContext = CompositeContext(
-            eagerSection = "",
-            ragSection = "",
-            graphifySection = buildGraphifySection(),
-            docsSection = budget.applyBudget(listOf(docsChannel)).first().content,
-            config = config
-        )
+        val typedCompositeContext =
+            CompositeContext(
+                eagerSection = "",
+                ragSection = "",
+                graphifySection = buildGraphifySection(),
+                docsSection = budget.applyBudget(listOf(docsChannel)).first().content,
+                config = config,
+            )
 
         // ── Écriture JSON compatible (N3/N4 existant) ──
         val output = outputFile.asFile.get()
@@ -306,19 +326,19 @@ abstract class CodexCompositeContextTask : DefaultTask() {
                 query = q,
                 topK = k,
                 count = entries.size,
-            )
+            ),
         )
 
         Metadata.writeTo(
             output.parentFile,
-            Metadata.forBrooklyn(type = "composite-context", sessions = entries.size)
+            Metadata.forBrooklyn(type = "composite-context", sessions = entries.size),
         )
 
         logger.lifecycle(
             "[codex] generateCompositeContext — {} entries, docsSection={} tokens → {}",
             entries.size,
             ContextChannel.estimateTokens(typedCompositeContext.docsSection),
-            output.absolutePath
+            output.absolutePath,
         )
     }
 }

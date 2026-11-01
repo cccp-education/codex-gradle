@@ -2,9 +2,9 @@ package codex
 
 import codex.tasks.AsciiDocToJsonLddTask
 import codex.tasks.ChunkDocumentTask
+import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexIngestTask
 import codex.tasks.CodexPipelineTask
-import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexRetrieveTask
 import codex.tasks.CollectOcrTask
 import codex.tasks.CollectPageProvenanceTask
@@ -57,7 +57,6 @@ import org.gradle.api.Project
  * Automatically detects the license zone ([LicenseZoneDetector]) at load time.
  */
 class CodexPlugin : Plugin<Project> {
-
     override fun apply(project: Project) {
         val zone = LicenseZoneDetector.detect(project.projectDir.absolutePath)
         val license = LicenseZoneDetector.toLicenseName(zone)
@@ -78,7 +77,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectText",
-            ExtractTextTask::class.java
+            ExtractTextTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Extrait le texte brut structuré d'un PDF avec métadonnées typographiques"
@@ -86,7 +85,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectBookStructure",
-            ExtractBookStructureTask::class.java
+            ExtractBookStructureTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Extrait la structure d'un PDF (titres, sections) et produit un .adoc hiérarchique"
@@ -94,7 +93,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectEpubStructure",
-            ExtractEpubStructureTask::class.java
+            ExtractEpubStructureTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Extrait la structure d'un EPUB (XHTML → .adoc avec hiérarchie et blocs de code)"
@@ -102,7 +101,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "transformToJsonLdd",
-            AsciiDocToJsonLddTask::class.java
+            AsciiDocToJsonLddTask::class.java,
         ) {
             it.group = "transform"
             it.description = "Parse un .adoc via AsciidoctorJ → JSON LDD structuré"
@@ -110,7 +109,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectBookSql",
-            ImportBookSqlTask::class.java
+            ImportBookSqlTask::class.java,
         ) {
             it.group = "collect"
             it.description = "JSON LDD → DDL + INSERT PostgreSQL"
@@ -118,7 +117,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "transformToMarkdown",
-            ConvertToMarkdownTask::class.java
+            ConvertToMarkdownTask::class.java,
         ) {
             it.group = "transform"
             it.description = "Convertit un .adoc structure en Markdown avec hierarchie et blocs de code preserves"
@@ -126,7 +125,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "transformChunk",
-            ChunkDocumentTask::class.java
+            ChunkDocumentTask::class.java,
         ) {
             it.group = "transform"
             it.description = "Decoupe un document Markdown en chunks semantiques par section (1 chunk par heading)"
@@ -135,7 +134,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "deployKnowledgeBase",
-            ExportKnowledgeBaseTask::class.java
+            ExportKnowledgeBaseTask::class.java,
         ) {
             it.group = "deploy"
             it.description = "Agrege les chunks en base de connaissance multi-format (JSON-L, Markdown, AsciiDoc)"
@@ -143,7 +142,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "deployKnowledgeBaseRouted",
-            DeployKnowledgeBaseRoutedTask::class.java
+            DeployKnowledgeBaseRoutedTask::class.java,
         ) {
             it.group = "deploy"
             it.description = "Route la base de connaissance vers OSS/ ou office/ selon la licence detectee dans le PDF source"
@@ -152,7 +151,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectIngest",
-            CodexIngestTask::class.java
+            CodexIngestTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Vectorise les chunks avec ONNX AllMiniLmL6V2 et les stocke dans pgvector via R2DBC"
@@ -170,7 +169,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectRetrieve",
-            CodexRetrieveTask::class.java
+            CodexRetrieveTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Recherche semantique cosine similarity dans pgvector — corpus documentaire requetable"
@@ -184,7 +183,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "transformCorpusToPdf",
-            CodexPipelineTask::class.java
+            CodexPipelineTask::class.java,
         ) {
             it.group = "transform"
             it.description = "Pipeline composite auto-detection PDF/EPUB : extraction → Markdown → chunking → resultat JSON"
@@ -202,7 +201,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "generateCompositeContext",
-            CodexCompositeContextTask::class.java
+            CodexCompositeContextTask::class.java,
         ) {
             it.group = "generate"
             it.description = "Semantic search via RagVectorStore (codebase.store) → composite-context.json (runner-compatible)"
@@ -231,7 +230,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "collectOcr",
-            CollectOcrTask::class.java
+            CollectOcrTask::class.java,
         ) {
             it.group = "collect"
             it.description = "OCR pipeline (AI engine → Tesseract fallback) sur un dossier d'images → AsciiDoc pages (consumed by document-gradle DOC-11)"
@@ -248,7 +247,7 @@ class CodexPlugin : Plugin<Project> {
         // private business content. The acquisition report is optional (degraded).
         project.tasks.register(
             "collectPageProvenance",
-            CollectPageProvenanceTask::class.java
+            CollectPageProvenanceTask::class.java,
         ) {
             it.group = "collect"
             it.description = "Jointure dérivée TOC × chunks × rapport d'acquisition → page-provenance.json (localise le doute OCR jusqu'à la page source)"
@@ -257,7 +256,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "deriveOntology",
-            DeriveOntologyTask::class.java
+            DeriveOntologyTask::class.java,
         ) {
             it.group = "transform"
             it.description = "SQL LMD + LDD → ontology mapping JSON (bounded contexts, aggregates, value objects) — computed from DDL"
@@ -266,7 +265,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "enrichJsonLdd",
-            EnrichJsonLddTask::class.java
+            EnrichJsonLddTask::class.java,
         ) {
             it.group = "transform"
             it.description = "JSON LDD + RAG chunks + Graphify graph.json → enriched LDD nodes JSON (cross-source annotation)"
@@ -275,7 +274,7 @@ class CodexPlugin : Plugin<Project> {
 
         project.tasks.register(
             "persistLearnerProfile",
-            PersistLearnerProfileTask::class.java
+            PersistLearnerProfileTask::class.java,
         ) {
             it.group = "codex-memory"
             it.description = "Persists a learner profile JSON into pgvector via the SessionMemoryContract RAG bridge (session memory)"

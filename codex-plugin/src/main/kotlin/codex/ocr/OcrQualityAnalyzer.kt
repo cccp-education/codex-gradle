@@ -55,8 +55,7 @@ data class OcrQualityReport(
     val issues: List<OcrQualityIssue>,
 ) {
     /** Counts issues per reason (reasons with zero issues are absent). */
-    fun issueCountByReason(): Map<OcrQualityReason, Int> =
-        issues.groupingBy { it.reason }.eachCount()
+    fun issueCountByReason(): Map<OcrQualityReason, Int> = issues.groupingBy { it.reason }.eachCount()
 }
 
 /**
@@ -75,11 +74,11 @@ data class OcrQualityReport(
  * Unit-testable without Gradle or I/O beyond an optional filesystem probe.
  */
 object OcrQualityAnalyzer {
-
     const val SHORT_THRESHOLD = 40
     const val DEFAULT_LOW_CONFIDENCE = 0.5
 
     private val ILLISIBLE_MARKERS = listOf("[ILLISIBLE]", "[ILLISIBL")
+
     // Covers the block macro `image::target[]` and the inline macro
     // `image:target[]` — the real corpus uses the inline form (ghost images
     // that a block-only regex would silently skip).
@@ -102,29 +101,29 @@ object OcrQualityAnalyzer {
 
         val issues = mutableListOf<OcrQualityIssue>()
         if (confidence < lowConfidenceThreshold) {
-            issues += OcrQualityIssue(
-                pageId = pageId,
-                imageFile = imageFile,
-                reason = OcrQualityReason.LOW_CONFIDENCE,
-                detail = formatConfidence(confidence),
-            )
+            issues +=
+                OcrQualityIssue(
+                    pageId = pageId,
+                    imageFile = imageFile,
+                    reason = OcrQualityReason.LOW_CONFIDENCE,
+                    detail = formatConfidence(confidence),
+                )
         }
         missingImageTargets(text)
             .filter { target -> !File(pageDir, target).isFile }
             .forEach { target ->
-                issues += OcrQualityIssue(
-                    pageId = pageId,
-                    imageFile = imageFile,
-                    reason = OcrQualityReason.IMAGE_MISSING,
-                    detail = target,
-                )
+                issues +=
+                    OcrQualityIssue(
+                        pageId = pageId,
+                        imageFile = imageFile,
+                        reason = OcrQualityReason.IMAGE_MISSING,
+                        detail = target,
+                    )
             }
         return issues
     }
 
-    private fun missingImageTargets(text: String): List<String> =
-        text.lines().mapNotNull { IMAGE_DIRECTIVE.find(it)?.groupValues?.getOrNull(1) }
+    private fun missingImageTargets(text: String): List<String> = text.lines().mapNotNull { IMAGE_DIRECTIVE.find(it)?.groupValues?.getOrNull(1) }
 
-    private fun formatConfidence(confidence: Double): String =
-        "%.2f".format(java.util.Locale.ROOT, confidence)
+    private fun formatConfidence(confidence: Double): String = "%.2f".format(java.util.Locale.ROOT, confidence)
 }

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
  * for all five values.
  */
 class FontStyleDetectorTest {
-
     // ── Monospace detection — each keyword triggers MONOSPACE ──────────────────
 
     @Test

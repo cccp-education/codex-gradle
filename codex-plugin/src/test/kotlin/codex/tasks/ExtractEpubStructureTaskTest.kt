@@ -9,7 +9,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class ExtractEpubStructureTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -35,7 +34,7 @@ class ExtractEpubStructureTaskTest {
                     <p>The function keyword declares a new function.</p>
                 </body>
                 </html>
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -61,18 +60,18 @@ class ExtractEpubStructureTaskTest {
         createSyntheticEpub(
             epubFile,
             """
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                <body>
-                    <h1>Part One</h1>
-                    <h2>Chapter A</h2>
-                    <h3>Section A.1</h3>
-                    <h4>Subsection A.1.a</h4>
-                    <h5>Detail A.1.a.i</h5>
-                    <h6>Note A.1.a.i.alpha</h6>
-                    <p>Deeply nested content.</p>
-                </body>
-                </html>
-            """.trimIndent()
+            <html xmlns="http://www.w3.org/1999/xhtml">
+            <body>
+                <h1>Part One</h1>
+                <h2>Chapter A</h2>
+                <h3>Section A.1</h3>
+                <h4>Subsection A.1.a</h4>
+                <h5>Detail A.1.a.i</h5>
+                <h6>Note A.1.a.i.alpha</h6>
+                <p>Deeply nested content.</p>
+            </body>
+            </html>
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -96,11 +95,11 @@ class ExtractEpubStructureTaskTest {
         createSyntheticEpub(
             epubFile,
             """
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                <body>
-                </body>
-                </html>
-            """.trimIndent()
+            <html xmlns="http://www.w3.org/1999/xhtml">
+            <body>
+            </body>
+            </html>
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -108,8 +107,12 @@ class ExtractEpubStructureTaskTest {
 
         assertTrue(outputFile.exists())
         val content = outputFile.readText()
-        assertTrue(content.contains("Structure extraite de l'EPUB") || content.contains("EPUB vide") ||
-            content.contains("Extracted EPUB structure") || content.contains("Empty EPUB"))
+        assertTrue(
+            content.contains("Structure extraite de l'EPUB") ||
+                content.contains("EPUB vide") ||
+                content.contains("Extracted EPUB structure") ||
+                content.contains("Empty EPUB"),
+        )
     }
 
     @Test
@@ -120,12 +123,12 @@ class ExtractEpubStructureTaskTest {
         createSyntheticEpub(
             epubFile,
             """
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                <body>
-                    <p>Use the <code>println</code> function to output text.</p>
-                </body>
-                </html>
-            """.trimIndent()
+            <html xmlns="http://www.w3.org/1999/xhtml">
+            <body>
+                <p>Use the <code>println</code> function to output text.</p>
+            </body>
+            </html>
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -149,7 +152,7 @@ class ExtractEpubStructureTaskTest {
 println(x)</pre>
                 </body>
                 </html>
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -169,13 +172,13 @@ println(x)</pre>
         createSyntheticEpub(
             epubFile,
             """
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                <body>
-                    <h1>Title</h1>
-                    <p>Some text.</p>
-                </body>
-                </html>
-            """.trimIndent()
+            <html xmlns="http://www.w3.org/1999/xhtml">
+            <body>
+                <h1>Title</h1>
+                <p>Some text.</p>
+            </body>
+            </html>
+            """.trimIndent(),
         )
 
         val task = createTask(epubFile, outputFile)
@@ -186,18 +189,26 @@ println(x)</pre>
         assertTrue(content.contains("Some text."))
     }
 
-    private fun createTask(epubFile: File, outputFile: File): ExtractEpubStructureTask {
+    private fun createTask(
+        epubFile: File,
+        outputFile: File,
+    ): ExtractEpubStructureTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "collectEpubStructure",
-            ExtractEpubStructureTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "collectEpubStructure",
+                    ExtractEpubStructureTask::class.java,
+                ).get()
         task.epubFile.set(epubFile)
         task.outputFile.set(outputFile)
         return task
     }
 
-    private fun createSyntheticEpub(file: File, xhtmlContent: String) {
+    private fun createSyntheticEpub(
+        file: File,
+        xhtmlContent: String,
+    ) {
         val mimetype = "application/epub+zip"
         val container =
             """

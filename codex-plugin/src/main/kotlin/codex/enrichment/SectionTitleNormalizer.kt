@@ -26,7 +26,6 @@ package codex.enrichment
  * The normalizer is deterministic, side-effect free and idempotent.
  */
 object SectionTitleNormalizer {
-
     private val htmlEntity = Regex("""&(#[0-9]+|#x[0-9a-fA-F]+|[a-zA-Z]+[0-9]*);""")
     private val footnoteMacro = Regex("""footnote:\[\d+]""")
     private val htmlTag = Regex("""<[^>]*>""")
@@ -46,7 +45,9 @@ object SectionTitleNormalizer {
         s = s.replace(footnoteMarker, "")
         s = s.replace(trailingDotLeaders, "")
         s = s.replace(whitespaceRun, " ")
-        return s.trim().lowercase()
+        return s
+            .trim()
+            .lowercase()
             .replace('\u2019', '\'')
             .replace('\u2018', '\'')
             .replace('\u02bc', '\'')
@@ -61,26 +62,27 @@ object SectionTitleNormalizer {
         if (!raw.contains('&')) return raw
         return htmlEntity.replace(raw) { match ->
             val entity = match.groupValues[1]
-            val decoded: String? = when {
-                entity.startsWith("#x") || entity.startsWith("#X") ->
-                    entity.substring(2).toIntOrNull(16)?.let { it.toCodePointOrNull() }
-                entity.startsWith("#") ->
-                    entity.substring(1).toIntOrNull()?.let { it.toCodePointOrNull() }
-                else -> namedEntities[entity]
-            }
+            val decoded: String? =
+                when {
+                    entity.startsWith("#x") || entity.startsWith("#X") ->
+                        entity.substring(2).toIntOrNull(16)?.let { it.toCodePointOrNull() }
+                    entity.startsWith("#") ->
+                        entity.substring(1).toIntOrNull()?.let { it.toCodePointOrNull() }
+                    else -> namedEntities[entity]
+                }
             decoded ?: match.value
         }
     }
 
-    private fun Int.toCodePointOrNull(): String? =
-        if (this in 0..0x10FFFF) String(Character.toChars(this)) else null
+    private fun Int.toCodePointOrNull(): String? = if (this in 0..0x10FFFF) String(Character.toChars(this)) else null
 
-    private val namedEntities = mapOf(
-        "amp" to "&",
-        "lt" to "<",
-        "gt" to ">",
-        "quot" to "\"",
-        "apos" to "'",
-        "nbsp" to " ",
-    )
+    private val namedEntities =
+        mapOf(
+            "amp" to "&",
+            "lt" to "<",
+            "gt" to ">",
+            "quot" to "\"",
+            "apos" to "'",
+            "nbsp" to " ",
+        )
 }

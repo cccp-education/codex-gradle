@@ -31,7 +31,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "Markdown chunking — pure computation, non-cacheable")
 abstract class ChunkDocumentTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val markdownFile: RegularFileProperty
@@ -56,15 +55,16 @@ abstract class ChunkDocumentTask : DefaultTask() {
         val chunks = SemanticChunker.chunk(text, sourceDocument, license)
 
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val json = Json {
-            prettyPrint = true
-            prettyPrintIndent = "  "
-        }
+        val json =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
         output.writeText(json.encodeToString(chunks))
 
         logger.lifecycle(
             "[codex] ✓ Chunking done — ${chunks.size} chunks produced " +
-                "(${chunks.map { it.content.lines().size }.sum()} total lines)"
+                "(${chunks.map { it.content.lines().size }.sum()} total lines)",
         )
     }
 }

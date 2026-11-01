@@ -60,19 +60,18 @@ import java.security.MessageDigest
  */
 @DisableCachingByDefault(because = "LLM OCR call — external metered API, non-cacheable (Loi de l'Économie d'Encre)")
 abstract class CollectOcrTask : DefaultTask() {
-
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDir: DirectoryProperty
 
     /**
      * Primary output directory for OCR results.
-     * 
+     *
      * Contains one `.adoc` file per processed image, named using the contract:
      * `%03d-%s.adoc` where:
      * - `%03d` is the zero-padded 3-digit page number (starting from 001)
      * - `%s` is the original image filename without extension
-     * 
+     *
      * This naming convention is consumed by document-gradle's [BookAssembler]
      * to preserve the original page order when assembling the final book.
      * The files contain only the structured OCR text (no AsciiDoc headers).
@@ -135,18 +134,20 @@ abstract class CollectOcrTask : DefaultTask() {
 
         logger.lifecycle("[codex] collectOcr : ${images.size} images in ${input.name}")
 
-        val pipeline = aiEngine.orNull?.let { ai ->
-            logger.lifecycle("[codex]           chain=AI(${ai.javaClass.simpleName}) → tesseract")
-            OcrPipeline(listOf(ai, TesseractOcrEngine()))
-        } ?: run {
-            logger.lifecycle("[codex]           chain=tesseract-only (no AI engine injected)")
-            OcrPipeline(listOf(TesseractOcrEngine()))
-        }
+        val pipeline =
+            aiEngine.orNull?.let { ai ->
+                logger.lifecycle("[codex]           chain=AI(${ai.javaClass.simpleName}) → tesseract")
+                OcrPipeline(listOf(ai, TesseractOcrEngine()))
+            } ?: run {
+                logger.lifecycle("[codex]           chain=tesseract-only (no AI engine injected)")
+                OcrPipeline(listOf(TesseractOcrEngine()))
+            }
 
         // US-CDX-13-1 : cache OCR par hash d'image (économise les tokens LLM).
-        val cache = cacheDir.orNull?.let {
-            OcrResultCache(DiskCacheStorage(it.asFile))
-        }
+        val cache =
+            cacheDir.orNull?.let {
+                OcrResultCache(DiskCacheStorage(it.asFile))
+            }
 
         val pagesOut = outputDir.orNull?.asFile
         pagesOut?.mkdirs()
@@ -171,32 +172,35 @@ abstract class CollectOcrTask : DefaultTask() {
 
             // Cache hit → réutilisation sans appel LLM (Économie d'Encre)
             val cached = cache?.lookup(pageId, imageHash)
-            val result: OcrResult = if (cached != null) {
-                logger.lifecycle("[codex]             ✓ cache hit (hash=$imageHash) — skip LLM")
-                cached
-            } else {
-                // Cache miss → appel pipeline LLM → Tesseract fallback
-                val request = OcrRequest(
-                    imageData = imageFile.readBytes(),
-                    format = detectMime(imageFile),
-                    language = lang
-                )
-                pipeline.process(request).also { fresh ->
-                    cache?.store(pageId, imageHash, fresh)
+            val result: OcrResult =
+                if (cached != null) {
+                    logger.lifecycle("[codex]             ✓ cache hit (hash=$imageHash) — skip LLM")
+                    cached
+                } else {
+                    // Cache miss → appel pipeline LLM → Tesseract fallback
+                    val request =
+                        OcrRequest(
+                            imageData = imageFile.readBytes(),
+                            format = detectMime(imageFile),
+                            language = lang,
+                        )
+                    pipeline.process(request).also { fresh ->
+                        cache?.store(pageId, imageHash, fresh)
+                    }
                 }
-            }
 
             val structured = result.structuredText.ifBlank { "[page vide ou OCR échec]" }
 
             // OCR-QUALITY-2 : analyse the real signals (confidence + text) for doubt.
-            qualityIssues += OcrQualityAnalyzer.analyze(
-                pageId = pageId,
-                imageFile = imageFile.name,
-                text = result.structuredText,
-                confidence = result.confidence,
-                pageDir = input,
-                lowConfidenceThreshold = qualityThreshold,
-            )
+            qualityIssues +=
+                OcrQualityAnalyzer.analyze(
+                    pageId = pageId,
+                    imageFile = imageFile.name,
+                    text = result.structuredText,
+                    confidence = result.confidence,
+                    pageDir = input,
+                    lowConfidenceThreshold = qualityThreshold,
+                )
 
             // Primary output: one .adoc file per page in outputDir
             // Named NNN-<pageId>.adoc (zero-padded 3-digit prefix for PageOrder contract)
@@ -219,19 +223,24 @@ abstract class CollectOcrTask : DefaultTask() {
         // OCR-QUALITY-2 : write the JSON quality report when requested.
         qualityReportFile.orNull?.asFile?.let { reportFile ->
             val report = OcrQualityReport(imagesScanned = images.size, issues = qualityIssues)
-            val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
+            val json =
+                Json {
+                    prettyPrint = true
+                    prettyPrintIndent = "  "
+                }
             reportFile.parentFile?.mkdirs()
             reportFile.writeText(json.encodeToString(OcrQualityReport.serializer(), report))
             logger.lifecycle(
                 "[codex] quality report : ${qualityIssues.size} issue(s) over ${images.size} page(s)" +
-                    " → ${reportFile.name}"
+                    " → ${reportFile.name}",
             )
         }
 
-        val targets = buildString {
-            if (pagesOut != null) append(" → dir ${pagesOut.name}")
-            if (legacyOut != null) append(" → file ${legacyOut.name}")
-        }
+        val targets =
+            buildString {
+                if (pagesOut != null) append(" → dir ${pagesOut.name}")
+                if (legacyOut != null) append(" → file ${legacyOut.name}")
+            }
         logger.lifecycle("[codex] ✓ collectOcr done — ${images.size} pages$targets")
     }
 
@@ -240,14 +249,15 @@ abstract class CollectOcrTask : DefaultTask() {
         return dir.listFiles()?.filter { it.isFile && it.extension.lowercase() in extensions } ?: emptyList()
     }
 
-    private fun detectMime(file: File): String = when (file.extension.lowercase()) {
-        "png" -> "image/png"
-        "jpg", "jpeg" -> "image/jpeg"
-        "gif" -> "image/gif"
-        "bmp" -> "image/bmp"
-        "tif", "tiff" -> "image/tiff"
-        else -> "image/png"
-    }
+    private fun detectMime(file: File): String =
+        when (file.extension.lowercase()) {
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            "gif" -> "image/gif"
+            "bmp" -> "image/bmp"
+            "tif", "tiff" -> "image/tiff"
+            else -> "image/png"
+        }
 
     private fun sha256(bytes: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")

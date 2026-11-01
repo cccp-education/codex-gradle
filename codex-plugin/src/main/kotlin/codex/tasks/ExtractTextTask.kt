@@ -22,7 +22,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "PDFBox text extraction — external process, non-cacheable")
 abstract class ExtractTextTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val pdfFile: RegularFileProperty
@@ -38,10 +37,11 @@ abstract class ExtractTextTask : DefaultTask() {
         logger.lifecycle("[codex] collectText : ${input.name} → ${output.name}")
 
         Loader.loadPDF(input).use { document ->
-            val stripper = PDFTextStripper().apply {
-                sortByPosition = true
-                lineSeparator = "\n"
-            }
+            val stripper =
+                PDFTextStripper().apply {
+                    sortByPosition = true
+                    lineSeparator = "\n"
+                }
             val rawText = stripper.getText(document)
             output.writeText(rawText)
         }

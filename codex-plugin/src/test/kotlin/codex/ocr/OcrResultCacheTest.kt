@@ -22,7 +22,6 @@ import java.nio.file.Path
  * [CacheStorage] (port injectable) — unit-testable sans disque.
  */
 class OcrResultCacheTest {
-
     @Test
     fun `cache miss returns null when no entry exists`() {
         val storage = InMemoryCacheStorage()
@@ -143,7 +142,9 @@ class OcrResultCacheTest {
     }
 
     @Test
-    fun `cache store does not throw when storage fails`(@TempDir tempDir: Path) {
+    fun `cache store does not throw when storage fails`(
+        @TempDir tempDir: Path,
+    ) {
         val storage = ThrowingCacheStorage()
         val cache = OcrResultCache(storage)
 
@@ -160,7 +161,10 @@ class OcrResultCacheTest {
 
         override fun read(pageId: String): CacheEntry? = map[pageId]
 
-        override fun write(pageId: String, entry: CacheEntry) {
+        override fun write(
+            pageId: String,
+            entry: CacheEntry,
+        ) {
             map[pageId] = entry
         }
     }
@@ -168,6 +172,9 @@ class OcrResultCacheTest {
     private class ThrowingCacheStorage : CacheStorage {
         override fun read(pageId: String): CacheEntry? = throw RuntimeException("disk error")
 
-        override fun write(pageId: String, entry: CacheEntry) = throw RuntimeException("disk error")
+        override fun write(
+            pageId: String,
+            entry: CacheEntry,
+        ) = throw RuntimeException("disk error")
     }
 }

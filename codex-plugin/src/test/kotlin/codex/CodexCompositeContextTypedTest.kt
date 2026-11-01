@@ -15,25 +15,26 @@ import org.junit.jupiter.api.Test
  * et un [CompositeContext] conforme au contrat vibecoding.
  */
 class CodexCompositeContextTypedTest {
-
-    private val config = CompositeContextConfig(
-        totalTokenBudget = 8000,
-        budgetEagerLazy = 0.40,
-        budgetRag = 0.30,
-        budgetGraphify = 0.20,
-        budgetDocs = 0.10,
-        budgetOverhead = 0.0
-    )
+    private val config =
+        CompositeContextConfig(
+            totalTokenBudget = 8000,
+            budgetEagerLazy = 0.40,
+            budgetRag = 0.30,
+            budgetGraphify = 0.20,
+            budgetDocs = 0.10,
+            budgetOverhead = 0.0,
+        )
 
     @Test
     fun `empty codex results produce empty CompositeContext with Docs channel`() {
-        val ctx = CompositeContext(
-            eagerSection = "",
-            ragSection = "",
-            graphifySection = "",
-            docsSection = "",
-            config = config
-        )
+        val ctx =
+            CompositeContext(
+                eagerSection = "",
+                ragSection = "",
+                graphifySection = "",
+                docsSection = "",
+                config = config,
+            )
         val channels = ctx.toChannels()
 
         assertEquals(5, channels.size)
@@ -45,7 +46,8 @@ class CodexCompositeContextTypedTest {
 
     @Test
     fun `codex results populate docsSection in CompositeContext`() {
-        val docsContent = """
+        val docsContent =
+            """
             [Document: ARCHITECTURE_Reference.adoc]
             Chapitre 2: Competences techniques
             Sous-section: Evaluation des acquis
@@ -53,15 +55,16 @@ class CodexCompositeContextTypedTest {
             [Document: DOC_GuideLogiciel.adoc]
             Module 3: Methodes logicielles
             Approche par competences recommandee pour les projets logiciels
-        """.trimIndent()
+            """.trimIndent()
 
-        val ctx = CompositeContext(
-            eagerSection = "EAGER context",
-            ragSection = "RAG context",
-            graphifySection = "Graphify context",
-            docsSection = docsContent,
-            config = config
-        )
+        val ctx =
+            CompositeContext(
+                eagerSection = "EAGER context",
+                ragSection = "RAG context",
+                graphifySection = "Graphify context",
+                docsSection = docsContent,
+                config = config,
+            )
 
         assertEquals(docsContent, ctx.docsSection)
         val channels = ctx.toChannels()
@@ -73,14 +76,15 @@ class CodexCompositeContextTypedTest {
 
     @Test
     fun `ChannelBudget allocates 10% to Docs`() {
-        val budget = ChannelBudget(
-            totalTokenBudget = 10_000,
-            budgetEager = 0.40,
-            budgetRag = 0.30,
-            budgetGraphify = 0.20,
-            budgetDocs = 0.10,
-            budgetResource = 0.0
-        )
+        val budget =
+            ChannelBudget(
+                totalTokenBudget = 10_000,
+                budgetEager = 0.40,
+                budgetRag = 0.30,
+                budgetGraphify = 0.20,
+                budgetDocs = 0.10,
+                budgetResource = 0.0,
+            )
         assertEquals(1000, budget.docsTokens)
         assertEquals(4000, budget.eagerTokens)
         assertEquals(3000, budget.ragTokens)
@@ -90,14 +94,15 @@ class CodexCompositeContextTypedTest {
 
     @Test
     fun `applyBudget truncates Docs channel to 10%`() {
-        val longDocs = "doc ".repeat(5000)  // ~10k chars
-        val channels = listOf(
-            ContextChannel.Eager("eager"),
-            ContextChannel.Rag("rag"),
-            ContextChannel.Graphify("graph"),
-            ContextChannel.Docs(longDocs),
-            ContextChannel.Resource("res")
-        )
+        val longDocs = "doc ".repeat(5000) // ~10k chars
+        val channels =
+            listOf(
+                ContextChannel.Eager("eager"),
+                ContextChannel.Rag("rag"),
+                ContextChannel.Graphify("graph"),
+                ContextChannel.Docs(longDocs),
+                ContextChannel.Resource("res"),
+            )
         val budget = ChannelBudget(totalTokenBudget = 8000)
         val truncated = budget.applyBudget(channels)
 
@@ -123,13 +128,14 @@ class CodexCompositeContextTypedTest {
 
     @Test
     fun `channelsWithBudget returns truncated channels from CompositeContext`() {
-        val ctx = CompositeContext(
-            eagerSection = "eager ".repeat(5000),
-            ragSection = "rag ".repeat(5000),
-            graphifySection = "graph ".repeat(5000),
-            docsSection = "docs ".repeat(5000),
-            config = config
-        )
+        val ctx =
+            CompositeContext(
+                eagerSection = "eager ".repeat(5000),
+                ragSection = "rag ".repeat(5000),
+                graphifySection = "graph ".repeat(5000),
+                docsSection = "docs ".repeat(5000),
+                config = config,
+            )
         val budget = ChannelBudget.fromConfig(config)
         val channels = ctx.channelsWithBudget(budget)
 

@@ -41,7 +41,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "derived join over acquisition artefacts — cheap, non-cacheable")
 abstract class CollectPageProvenanceTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val chunksFile: RegularFileProperty
@@ -74,10 +73,11 @@ abstract class CollectPageProvenanceTask : DefaultTask() {
         logger.lifecycle("[codex] collectPageProvenance : ${chunksInput.name} + ${tocInput.name} → ${output.name}")
 
         val sourceDocument = chunksInput.nameWithoutExtension
-        val chunks = json.decodeFromString(
-            ListSerializer(DocumentChunk.serializer()),
-            chunksInput.readText()
-        )
+        val chunks =
+            json.decodeFromString(
+                ListSerializer(DocumentChunk.serializer()),
+                chunksInput.readText(),
+            )
         val tocSections = TocPageIndex.parse(tocInput)
         val qualityReport = readQualityReport()
 
@@ -85,16 +85,17 @@ abstract class CollectPageProvenanceTask : DefaultTask() {
         val report = PageProvenanceReport.of(sourceDocument, provenance)
 
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val prettyJson = Json {
-            prettyPrint = true
-            prettyPrintIndent = "  "
-        }
+        val prettyJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
         output.parentFile?.mkdirs()
         output.writeText(prettyJson.encodeToString(PageProvenanceReport.serializer(), report))
 
         logger.lifecycle(
             "[codex] ✓ collectPageProvenance — ${report.resolvedCount}/${report.chunkCount} chunks resolved " +
-                "(join rate ${"%.3f".format(report.joinRate)}) → ${output.name}"
+                "(join rate ${"%.3f".format(report.joinRate)}) → ${output.name}",
         )
     }
 

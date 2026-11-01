@@ -33,15 +33,14 @@ class CodexPluginPublicationTest {
     @Test
     fun `plugin version matches root consumer catalog version`() {
         val buildScript = pluginDir.resolve("build.gradle.kts").readText(UTF_8)
-        val versionLine =
-            buildScript
-                .lineSequence()
-                .first { it.trimStart().startsWith("version =") }
 
         // MEM-CAT-ROLLOUT-2 (D3) — self version derived from the published workspace catalog.
-        assertThat(versionLine)
+        // MEM-LINT-ADOPTION (S-327) — ktlint reflows the assignment (`version =` alone,
+        // then the broken method chain), so the guard is whitespace-insensitive and
+        // asserts the compact form instead of a single physical line (F34 trap).
+        assertThat(buildScript.replace(Regex("""\s+"""), ""))
             .withFailMessage("build.gradle.kts version must derive from the published workspace catalog (ws.versions.codex.plugin)")
-            .contains("ws.versions.codex.plugin.get()")
+            .contains("version=ws.versions.codex.plugin.get()")
 
         // Hygiene (D5): local toml self version must match the published ws catalog version.
         val pluginCatalogVersion = codexVersionFrom(pluginDir.resolve("gradle/libs.versions.toml").readText(UTF_8))

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.codebase)
     id("education.cccp.build.gradle-plugin") version "0.0.7"
     id("education.cccp.build.publishing") version "0.0.7"
+    id("education.cccp.build.lint") version "0.0.7"
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
@@ -24,7 +25,9 @@ buildscript {
 
 group = "education.cccp"
 // MEM-CAT-ROLLOUT-2 (D3) — self version derived from the published workspace catalog.
-version = ws.versions.codex.plugin.get()
+version =
+    ws.versions.codex.plugin
+        .get()
 
 dependencies {
     // Import BOM
@@ -97,8 +100,16 @@ dependencies {
 // graphify-gradle D5-RACE (S-029) / bakery BKY-CI-ISOLATION (S-243). A missing
 // property is an explicit error in the guard, never a silent green.
 tasks.test {
-    systemProperty("codex.publishedCatalog.codexVersion", ws.versions.codex.plugin.get())
-    systemProperty("codex.publishedCatalog.bomVersion", ws.versions.workspace.bom.get())
+    systemProperty(
+        "codex.publishedCatalog.codexVersion",
+        ws.versions.codex.plugin
+            .get(),
+    )
+    systemProperty(
+        "codex.publishedCatalog.bomVersion",
+        ws.versions.workspace.bom
+            .get(),
+    )
 }
 
 // EPIC CDX-RAG-3: adding `codebase-plugin` as implementation triggers
@@ -114,23 +125,31 @@ tasks.named("validatePlugins") {
 
 gradlePlugin {
     website = "https://cccp.education/"
-    vcsUrl  = "https://github.com/cccp-education/codex"
+    vcsUrl = "https://github.com/cccp-education/codex"
     plugins {
         create("codexDocPipeline") {
-            id                  = "education.cccp.codex"
+            id = "education.cccp.codex"
             implementationClass = "codex.CodexPlugin"
-            displayName         = "Codex — Pipeline d'acquisition de documents"
-            description         = """
+            displayName = "Codex — Pipeline d'acquisition de documents"
+            description =
+                """
                 Pipeline Gradle d'acquisition de documents PDF/EPUB pour
                 alimenter la base de connaissance RAG + Knowledge Graph.
                 Extraction typographique, conversion Markdown/AsciiDoc,
                 chunking sémantique, export structuré (JSON-L, Markdown, AsciiDoc).
-            """.trimIndent()
-            tags = listOf(
-                "pdf", "epub", "markdown", "asciidoc",
-                "rag", "knowledge-graph", "text-extraction",
-                "chunking", "kotlin"
-            )
+                """.trimIndent()
+            tags =
+                listOf(
+                    "pdf",
+                    "epub",
+                    "markdown",
+                    "asciidoc",
+                    "rag",
+                    "knowledge-graph",
+                    "text-extraction",
+                    "chunking",
+                    "kotlin",
+                )
         }
     }
 }

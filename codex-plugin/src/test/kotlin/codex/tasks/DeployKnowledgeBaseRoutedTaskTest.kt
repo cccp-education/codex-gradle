@@ -14,7 +14,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class DeployKnowledgeBaseRoutedTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -109,13 +108,15 @@ class DeployKnowledgeBaseRoutedTaskTest {
         chunksFile: File,
         pdfFile: File,
         baseDir: File,
-        fallbackZone: LicenseZone
+        fallbackZone: LicenseZone,
     ): DeployKnowledgeBaseRoutedTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "deployKnowledgeBaseRouted",
-            DeployKnowledgeBaseRoutedTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "deployKnowledgeBaseRouted",
+                    DeployKnowledgeBaseRoutedTask::class.java,
+                ).get()
         task.chunksFile.set(chunksFile)
         task.pdfFile.set(pdfFile)
         task.baseDir.set(baseDir)
@@ -123,7 +124,10 @@ class DeployKnowledgeBaseRoutedTaskTest {
         return task
     }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)
@@ -139,8 +143,11 @@ class DeployKnowledgeBaseRoutedTaskTest {
         }
     }
 
-    private fun simpleChunks(source: String, license: String): String {
-        return """
+    private fun simpleChunks(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-1",
@@ -155,5 +162,4 @@ class DeployKnowledgeBaseRoutedTaskTest {
           }
         ]
         """.trimIndent()
-    }
 }

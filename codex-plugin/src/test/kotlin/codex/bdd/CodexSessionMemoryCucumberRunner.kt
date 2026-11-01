@@ -26,10 +26,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-session-memory.html, json:build/reports/cucumber-session-memory.json"
+    value = "pretty, html:build/reports/cucumber-session-memory.html, json:build/reports/cucumber-session-memory.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@session-memory and not @wip and not @integration"
+    value = "@session-memory and not @wip and not @integration",
 )
 class CodexSessionMemoryCucumberRunner

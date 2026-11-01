@@ -63,7 +63,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "ONNX embeddings + pgvector (R2DBC) — external dependencies, non-cacheable")
 abstract class CodexIngestTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val chunksFile: RegularFileProperty
@@ -82,35 +81,46 @@ abstract class CodexIngestTask : DefaultTask() {
     abstract val pageProvenanceFile: ConfigurableFileCollection
 
     @get:Input abstract val pgHost: Property<String>
+
     @get:Input abstract val pgPort: Property<String>
+
     @get:Input abstract val pgDatabase: Property<String>
+
     @get:Input abstract val pgUser: Property<String>
+
     @get:Input abstract val pgPassword: Property<String>
-    @get:Optional @get:Input abstract val batchSize: Property<String>
+
+    @get:Optional @get:Input
+    abstract val batchSize: Property<String>
 
     @TaskAction
-    fun ingest() = runBlocking {
-        val input = chunksFile.asFile.get()
-        val host = pgHost.get(); val port = pgPort.get().toInt()
-        val db = pgDatabase.get(); val user = pgUser.get(); val pass = pgPassword.get()
+    fun ingest() =
+        runBlocking {
+            val input = chunksFile.asFile.get()
+            val host = pgHost.get()
+            val port = pgPort.get().toInt()
+            val db = pgDatabase.get()
+            val user = pgUser.get()
+            val pass = pgPassword.get()
 
-        logger.lifecycle("[codex] collectIngest : ${input.name} → pgvector ($host:$port/$db)")
+            logger.lifecycle("[codex] collectIngest : ${input.name} → pgvector ($host:$port/$db)")
 
-        val json = Json { ignoreUnknownKeys = true }
-        val chunks = json.decodeFromString<List<DocumentChunk>>(input.readText())
-        val pageChunks = attachPages(chunks)
+            val json = Json { ignoreUnknownKeys = true }
+            val chunks = json.decodeFromString<List<DocumentChunk>>(input.readText())
+            val pageChunks = attachPages(chunks)
 
-        val store = RagVectorStore(
-            host = host,
-            port = port,
-            database = db,
-            username = user,
-            password = pass,
-        )
+            val store =
+                RagVectorStore(
+                    host = host,
+                    port = port,
+                    database = db,
+                    username = user,
+                    password = pass,
+                )
 
-        val docCount = ingestInto(store, pageChunks)
-        logger.lifecycle("[codex] ✓ collectIngest — $docCount docs, ${chunks.size} chunks (doubt-aware, page-aware)")
-    }
+            val docCount = ingestInto(store, pageChunks)
+            logger.lifecycle("[codex] ✓ collectIngest — $docCount docs, ${chunks.size} chunks (doubt-aware, page-aware)")
+        }
 
     /**
      * Attaches the page provenance to the ingestion chunks (EPIC
@@ -127,8 +137,7 @@ abstract class CodexIngestTask : DefaultTask() {
      * @param chunks the chunks decoded from `chunks.json`
      * @return the chunks carrying their resolved pages
      */
-    internal fun attachPages(chunks: List<DocumentChunk>): List<DocumentChunk> =
-        PageProvenanceAttacher.attach(chunks, readPageProvenance())
+    internal fun attachPages(chunks: List<DocumentChunk>): List<DocumentChunk> = PageProvenanceAttacher.attach(chunks, readPageProvenance())
 
     /**
      * Reads the optional page provenance sidecar, degrading silently (null)
@@ -158,7 +167,10 @@ abstract class CodexIngestTask : DefaultTask() {
      * @param chunks the chunks to ingest
      * @return the number of documents ingested (socle count)
      */
-    internal suspend fun ingestInto(store: RagVectorStore, chunks: List<DocumentChunk>): Int {
+    internal suspend fun ingestInto(
+        store: RagVectorStore,
+        chunks: List<DocumentChunk>,
+    ): Int {
         val effectiveBatchSize = batchSize.orNull?.toIntOrNull() ?: 32
         return store.ingestWithDoubt(TocNoiseDetector.markDoubt(chunks)) { doc ->
             logger.lifecycle("[codex]   $doc (markers=doubt-aware, batch=$effectiveBatchSize)")

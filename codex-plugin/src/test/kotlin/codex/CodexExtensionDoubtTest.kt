@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict : RED -> GREEN -> REFACTOR.
  */
 class CodexExtensionDoubtTest {
-
     @Test
     fun `extension exposes excludeDoubtfulDocs property`() {
         val project = ProjectBuilder.builder().build()

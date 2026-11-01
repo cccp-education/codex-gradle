@@ -21,7 +21,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "AsciiDoc → Markdown conversion — pure computation, non-cacheable")
 abstract class ConvertToMarkdownTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val adocFile: RegularFileProperty
@@ -39,7 +38,7 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
         val markdown = buildMarkdown(input)
         output.writeText(markdown)
         logger.lifecycle(
-            "[codex] ✓ Markdown done — ${markdown.lines().size} lines, ${markdown.length} bytes"
+            "[codex] ✓ Markdown done — ${markdown.lines().size} lines, ${markdown.length} bytes",
         )
     }
 
@@ -89,8 +88,10 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
                 continue
             }
 
-            if (trimmed.startsWith("[NOTE]") || trimmed.startsWith("[CAUTION]") ||
-                trimmed.startsWith("[WARNING]") || trimmed.startsWith("[TIP]") ||
+            if (trimmed.startsWith("[NOTE]") ||
+                trimmed.startsWith("[CAUTION]") ||
+                trimmed.startsWith("[WARNING]") ||
+                trimmed.startsWith("[TIP]") ||
                 trimmed.startsWith("[IMPORTANT]")
             ) {
                 val label = trimmed.removeSurrounding("[", "]").lowercase()
@@ -142,10 +143,12 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
             }
 
             if (trimmed.startsWith("|")) {
-                val cells = trimmed.split("|")
-                    .drop(1)
-                    .dropLastWhile { it.isBlank() }
-                    .map { it.trim() }
+                val cells =
+                    trimmed
+                        .split("|")
+                        .drop(1)
+                        .dropLastWhile { it.isBlank() }
+                        .map { it.trim() }
                 sb.appendLine("| " + cells.joinToString(" | ") + " |")
                 pendingBlank = 0
                 continue
@@ -167,9 +170,11 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
 
             if (trimmed.startsWith("link:") || trimmed.startsWith("http")) {
                 val linkText = trimmed.substringAfter("link:").substringBefore("[")
-                val url = trimmed.substringAfter("[")
-                    .substringBefore("]")
-                    .ifEmpty { linkText.ifEmpty { trimmed } }
+                val url =
+                    trimmed
+                        .substringAfter("[")
+                        .substringBefore("]")
+                        .ifEmpty { linkText.ifEmpty { trimmed } }
                 val display = linkText.ifEmpty { url }
                 sb.appendLine("[$display]($url)")
                 pendingBlank = 0
@@ -209,7 +214,10 @@ abstract class ConvertToMarkdownTask : DefaultTask() {
         return match?.groupValues?.get(1) ?: "text"
     }
 
-    private fun nextLineLooksLikeTable(lines: List<String>, idx: Int): Boolean {
+    private fun nextLineLooksLikeTable(
+        lines: List<String>,
+        idx: Int,
+    ): Boolean {
         val nextIdx = idx + 1
         if (nextIdx >= lines.size) return false
         val next = lines[nextIdx].trim()

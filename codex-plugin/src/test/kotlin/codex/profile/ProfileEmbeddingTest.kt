@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test
  * Pure object — unit-testable without ONNX or a database.
  */
 class ProfileEmbeddingTest {
-
     @Test
     fun `empty profile produces empty embedding text`() {
         val profile = LearnerProfile("learner-1", "formation-A")
@@ -29,10 +28,12 @@ class ProfileEmbeddingTest {
 
     @Test
     fun `weakPoints are joined into embedding text`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            weakPoints = listOf("gradients", "backprop")
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                weakPoints = listOf("gradients", "backprop"),
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertTrue(text.contains("gradients"), "weakPoints in embedding: $text")
         assertTrue(text.contains("backprop"), "weakPoints in embedding: $text")
@@ -40,10 +41,12 @@ class ProfileEmbeddingTest {
 
     @Test
     fun `annotations values are joined into embedding text`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            annotations = mapOf("module-3" to "struggled with regularization", "module-5" to "good intuition")
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                annotations = mapOf("module-3" to "struggled with regularization", "module-5" to "good intuition"),
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertTrue(text.contains("struggled with regularization"), "annotations in embedding: $text")
         assertTrue(text.contains("good intuition"), "annotations in embedding: $text")
@@ -51,11 +54,13 @@ class ProfileEmbeddingTest {
 
     @Test
     fun `weakPoints and annotations are concatenated`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            weakPoints = listOf("gradients"),
-            annotations = mapOf("m3" to "struggled")
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                weakPoints = listOf("gradients"),
+                annotations = mapOf("m3" to "struggled"),
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertTrue(text.contains("gradients"), "weakPoints: $text")
         assertTrue(text.contains("struggled"), "annotations: $text")
@@ -63,42 +68,50 @@ class ProfileEmbeddingTest {
 
     @Test
     fun `completedModules are NOT embedded`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            completedModules = listOf("mod-1", "mod-2", "mod-3")
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                completedModules = listOf("mod-1", "mod-2", "mod-3"),
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertEquals("", text, "completedModules must not be embedded: $text")
     }
 
     @Test
     fun `progressionPct and comprehensionScore are NOT embedded`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            progressionPct = 75.0,
-            comprehensionScore = 42.0
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                progressionPct = 75.0,
+                comprehensionScore = 42.0,
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertEquals("", text, "numerics must not be embedded: $text")
     }
 
     @Test
     fun `currentModule is NOT embedded`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            currentModule = "module-7"
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                currentModule = "module-7",
+            )
         val text = ProfileEmbedding.textToEmbed(profile)
         assertEquals("", text, "currentModule (ID) must not be embedded: $text")
     }
 
     @Test
     fun `embedding text is deterministic for same profile`() {
-        val profile = LearnerProfile(
-            "learner-1", "formation-A",
-            weakPoints = listOf("gradients", "backprop"),
-            annotations = mapOf("m3" to "struggled")
-        )
+        val profile =
+            LearnerProfile(
+                "learner-1",
+                "formation-A",
+                weakPoints = listOf("gradients", "backprop"),
+                annotations = mapOf("m3" to "struggled"),
+            )
         val text1 = ProfileEmbedding.textToEmbed(profile)
         val text2 = ProfileEmbedding.textToEmbed(profile)
         assertEquals(text1, text2, "deterministic embedding text")

@@ -1,6 +1,5 @@
 package codex.tasks
 
-import codex.CodexExtension
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -8,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.nio.file.Files
 
 /**
  * US-CDX-13-3 — Contrat N2↔N2 : collectOcr produit des pages individuelles.
@@ -29,7 +27,6 @@ import java.nio.file.Files
  *   (sans header `== Page N` — le header est porté par le nom de fichier)
  */
 class CollectOcrPagesContractTest {
-
     @Test
     fun `task exposes an outputDir directory property`() {
         val project = ProjectBuilder.builder().build()
@@ -37,13 +34,15 @@ class CollectOcrPagesContractTest {
 
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         assertNotNull(task.outputDir, "outputDir property must exist")
-        assertTrue(task.outputDir is org.gradle.api.file.DirectoryProperty,
-            "outputDir must be a DirectoryProperty")
+        assertTrue(
+            task.outputDir is org.gradle.api.file.DirectoryProperty,
+            "outputDir must be a DirectoryProperty",
+        )
     }
 
     @Test
     fun `collectOcr writes one adoc file per page in outputDir with zero-padded numeric prefix`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -65,8 +64,10 @@ class CollectOcrPagesContractTest {
 
         task.collectOcr()
 
-        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" }
-            ?.sortedBy { it.name } ?: emptyList()
+        val adocFiles =
+            outputDir
+                .listFiles { f -> f.isFile && f.extension == "adoc" }
+                ?.sortedBy { it.name } ?: emptyList()
         assertEquals(3, adocFiles.size, "exactly one .adoc file per image must be written")
 
         // Zero-padded 3-digit prefix → lexicographic order matches page order
@@ -79,14 +80,16 @@ class CollectOcrPagesContractTest {
         adocFiles.forEach { pageFile ->
             val content = pageFile.readText()
             assertTrue(content.isNotBlank(), "page file ${pageFile.name} must not be blank")
-            assertTrue(!content.startsWith("== Page"),
-                "page file must not contain the legacy '== Page N' header (now carried by file name)")
+            assertTrue(
+                !content.startsWith("== Page"),
+                "page file must not contain the legacy '== Page N' header (now carried by file name)",
+            )
         }
     }
 
     @Test
     fun `collectOcr outputDir pages are consumable by document BookPage contract`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         // This test asserts the N2↔N2 bridge is aligned: the file names produced
         // by codex `collectOcr` must be parseable by document-gradle `PageOrder.fromFileName`.
@@ -108,8 +111,10 @@ class CollectOcrPagesContractTest {
 
         task.collectOcr()
 
-        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" }
-            ?.sortedBy { it.name } ?: emptyList()
+        val adocFiles =
+            outputDir
+                .listFiles { f -> f.isFile && f.extension == "adoc" }
+                ?.sortedBy { it.name } ?: emptyList()
         assertEquals(2, adocFiles.size)
 
         // Leading digits prefix → PageOrder-compatible
@@ -124,7 +129,7 @@ class CollectOcrPagesContractTest {
 
     @Test
     fun `collectOcr writes no files in outputDir when no images found`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -143,11 +148,40 @@ class CollectOcrPagesContractTest {
         assertEquals(0, adocFiles.size, "no .adoc files must be written when no images are present")
     }
 
-    private fun minimalPng(): ByteArray = byteArrayOf(
-        0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk header
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 pixel
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15.toByte(), 0xC4.toByte(), // RGBA, CRC
-        0x89.toByte(), // IDAT start
-    )
+    private fun minimalPng(): ByteArray =
+        byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A, // PNG signature
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52, // IHDR chunk header
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01, // 1x1 pixel
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15.toByte(),
+            0xC4.toByte(), // RGBA, CRC
+            0x89.toByte(), // IDAT start
+        )
 }

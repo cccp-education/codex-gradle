@@ -1,7 +1,6 @@
 package codex.tasks
 
 import codebase.store.DocumentChunk
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -30,7 +29,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "Knowledge base JSON-LD/Markdown/AsciiDoc export — non-cacheable")
 abstract class ExportKnowledgeBaseTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val chunksFile: RegularFileProperty
@@ -45,10 +43,11 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
 
         logger.lifecycle("[codex] deployKnowledgeBase : ${input.name} → ${output.absolutePath}")
 
-        val json = Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
+        val json =
+            Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
         val raw = input.readText()
         val chunks = json.decodeFromString<List<DocumentChunk>>(raw)
 
@@ -71,59 +70,71 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
         logger.lifecycle("[codex]   ✓ AsciiDoc — ${docDir.resolve("knowledge-base.adoc").length()} bytes")
 
         logger.lifecycle(
-            "[codex] ✓ Export done — ${chunks.size} chunks in build/codex/knowledge-base/$sourceDocument/"
+            "[codex] ✓ Export done — ${chunks.size} chunks in build/codex/knowledge-base/$sourceDocument/",
         )
     }
 
-    private fun buildJsonLd(chunks: List<DocumentChunk>, sourceDocument: String): String {
+    private fun buildJsonLd(
+        chunks: List<DocumentChunk>,
+        sourceDocument: String,
+    ): String {
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val json = Json {
-            prettyPrint = true
-            prettyPrintIndent = "  "
-        }
+        val json =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
 
         @Suppress("OPT_IN_USAGE")
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val graph = chunks.map { chunk ->
+        val graph =
+            chunks.map { chunk ->
+                JsonObject(
+                    mapOf(
+                        "@id" to JsonPrimitive("urn:codex:${chunk.id}"),
+                        "@type" to JsonPrimitive("DocumentChunk"),
+                        "identifier" to JsonPrimitive(chunk.id),
+                        "isPartOf" to JsonPrimitive("urn:codex:doc:$sourceDocument"),
+                        "sectionPath" to JsonPrimitive(chunk.sectionPath),
+                        "headingLevel" to JsonPrimitive(chunk.headingLevel),
+                        "text" to JsonPrimitive(chunk.content),
+                        "codeBlocks" to
+                            JsonArray(
+                                chunk.codeBlocks.map { JsonPrimitive(it) },
+                            ),
+                        "entities" to
+                            JsonArray(
+                                chunk.entities.map { JsonPrimitive(it) },
+                            ),
+                        "overlapNext" to (
+                            chunk.overlapNext?.let { JsonPrimitive(it) }
+                                ?: JsonPrimitive("null")
+                        ),
+                        "license" to JsonPrimitive(chunk.license),
+                    ),
+                )
+            }
+
+        val root =
             JsonObject(
                 mapOf(
-                    "@id" to JsonPrimitive("urn:codex:${chunk.id}"),
-                    "@type" to JsonPrimitive("DocumentChunk"),
-                    "identifier" to JsonPrimitive(chunk.id),
-                    "isPartOf" to JsonPrimitive("urn:codex:doc:$sourceDocument"),
-                    "sectionPath" to JsonPrimitive(chunk.sectionPath),
-                    "headingLevel" to JsonPrimitive(chunk.headingLevel),
-                    "text" to JsonPrimitive(chunk.content),
-                    "codeBlocks" to JsonArray(
-                        chunk.codeBlocks.map { JsonPrimitive(it) }
-                    ),
-                    "entities" to JsonArray(
-                        chunk.entities.map { JsonPrimitive(it) }
-                    ),
-                    "overlapNext" to (chunk.overlapNext?.let { JsonPrimitive(it) }
-                        ?: JsonPrimitive("null")),
-                    "license" to JsonPrimitive(chunk.license)
-                )
-            )
-        }
-
-        val root = JsonObject(
-            mapOf(
-                "@context" to JsonObject(
-                    mapOf(
-                        "schema" to JsonPrimitive("https://schema.org/"),
-                        "codex" to JsonPrimitive("https://cheroliv.github.io/codex/"),
-                        "isPartOf" to JsonObject(
+                    "@context" to
+                        JsonObject(
                             mapOf(
-                                "@id" to JsonPrimitive("schema:isPartOf"),
-                                "@type" to JsonPrimitive("@id")
-                            )
-                        )
-                    )
+                                "schema" to JsonPrimitive("https://schema.org/"),
+                                "codex" to JsonPrimitive("https://cheroliv.github.io/codex/"),
+                                "isPartOf" to
+                                    JsonObject(
+                                        mapOf(
+                                            "@id" to JsonPrimitive("schema:isPartOf"),
+                                            "@type" to JsonPrimitive("@id"),
+                                        ),
+                                    ),
+                            ),
+                        ),
+                    "@graph" to JsonArray(graph),
                 ),
-                "@graph" to JsonArray(graph)
             )
-        )
 
         return json.encodeToString(root)
     }
@@ -150,11 +161,16 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
                 sb.appendLine()
             }
 
-            val contentWithoutHeading = if (chunk.headingLevel > 0) {
-                chunk.content.lines().drop(1).joinToString("\n").trim()
-            } else {
-                chunk.content.trim()
-            }
+            val contentWithoutHeading =
+                if (chunk.headingLevel > 0) {
+                    chunk.content
+                        .lines()
+                        .drop(1)
+                        .joinToString("\n")
+                        .trim()
+                } else {
+                    chunk.content.trim()
+                }
 
             if (contentWithoutHeading.isNotBlank()) {
                 sb.appendLine(contentWithoutHeading)
@@ -196,7 +212,7 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
         sb.appendLine("====")
         sb.appendLine(
             "Auto-generated by deployKnowledgeBase. " +
-                "Aggregated knowledge base from ${sorted.size} chunks."
+                "Aggregated knowledge base from ${sorted.size} chunks.",
         )
         sb.appendLine("====")
         sb.appendLine()
@@ -210,11 +226,16 @@ abstract class ExportKnowledgeBaseTask : DefaultTask() {
                 sb.appendLine()
             }
 
-            val contentWithoutHeading = if (chunk.headingLevel > 0) {
-                chunk.content.lines().drop(1).joinToString("\n").trim()
-            } else {
-                chunk.content.trim()
-            }
+            val contentWithoutHeading =
+                if (chunk.headingLevel > 0) {
+                    chunk.content
+                        .lines()
+                        .drop(1)
+                        .joinToString("\n")
+                        .trim()
+                } else {
+                    chunk.content.trim()
+                }
 
             if (contentWithoutHeading.isNotBlank()) {
                 sb.appendLine(contentWithoutHeading)

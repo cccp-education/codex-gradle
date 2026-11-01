@@ -14,16 +14,16 @@ import java.io.File
 import java.nio.file.Files
 
 class OcrPipelineSteps {
-
     private val state = mutableMapOf<String, Any>()
 
     @Given("an image request with language {string}")
     fun anImageRequestWithLanguage(language: String) {
-        state["request"] = OcrRequest(
-            imageData = ByteArray(16) { 0x42 },
-            format = "image/png",
-            language = language
-        )
+        state["request"] =
+            OcrRequest(
+                imageData = ByteArray(16) { 0x42 },
+                format = "image/png",
+                language = language,
+            )
     }
 
     @Given("a primary engine that returns empty text")
@@ -39,10 +39,11 @@ class OcrPipelineSteps {
 
     @When("the OcrPipeline processes the image")
     fun theOcrPipelineProcessesTheImage() {
-        val engines = listOfNotNull(
-            state["primaryEngine"] as? OcrEngine,
-            state["tesseractEngine"] as? OcrEngine
-        )
+        val engines =
+            listOfNotNull(
+                state["primaryEngine"] as? OcrEngine,
+                state["tesseractEngine"] as? OcrEngine,
+            )
         val pipeline = OcrPipeline(engines)
         state["result"] = pipeline.process(OcrRequest(ByteArray(8), "image/png", "fr"))
     }
@@ -81,10 +82,25 @@ class OcrPipelineSteps {
     fun anImageDirectoryWithPageImages(count: Int) {
         val tempDir = Files.createTempDirectory("ocr-bdd-images").toFile()
         repeat(count) { i ->
-            val png = byteArrayOf(
-                0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-                0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52
-            )
+            val png =
+                byteArrayOf(
+                    0x89.toByte(),
+                    0x50,
+                    0x4E,
+                    0x47,
+                    0x0D,
+                    0x0A,
+                    0x1A,
+                    0x0A,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x0D,
+                    0x49,
+                    0x48,
+                    0x44,
+                    0x52,
+                )
             File(tempDir, "page-${i + 1}.png").writeBytes(png)
         }
         state["imageDir"] = tempDir
@@ -96,14 +112,16 @@ class OcrPipelineSteps {
         val dir = state["imageDir"] as File
         val output = File(dir.parentFile, "ocr-output.adoc")
         val pageCount = state["pageCount"] as? Int ?: 0
-        val content = if (pageCount == 0) {
-            "= OCR Book\n\nNo images found in ${dir.name}.\n"
-        } else {
-            val pageSections = (1..pageCount).joinToString("\n\n") { i ->
-                "== Page $i\n\n[page vide ou OCR échec]"
+        val content =
+            if (pageCount == 0) {
+                "= OCR Book\n\nNo images found in ${dir.name}.\n"
+            } else {
+                val pageSections =
+                    (1..pageCount).joinToString("\n\n") { i ->
+                        "== Page $i\n\n[page vide ou OCR échec]"
+                    }
+                "= OCR Book\n\n$pageSections\n"
             }
-            "= OCR Book\n\n$pageSections\n"
-        }
         output.writeText(content)
         state["outputFile"] = output
         state["content"] = content
@@ -179,8 +197,10 @@ class OcrPipelineSteps {
         val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" } ?: emptyArray()
         val pattern = Regex("""^\d{3}-.*\.adoc$""")
         adocFiles.forEach { file ->
-            assertTrue(pattern.matches(file.name),
-                "file ${file.name} must start with a 3-digit zero-padded prefix (e.g. 001-<id>.adoc)")
+            assertTrue(
+                pattern.matches(file.name),
+                "file ${file.name} must start with a 3-digit zero-padded prefix (e.g. 001-<id>.adoc)",
+            )
         }
     }
 
@@ -191,8 +211,10 @@ class OcrPipelineSteps {
         adocFiles.forEach { file ->
             val content = file.readText()
             assertTrue(content.isNotBlank(), "page file ${file.name} must not be blank")
-            assertTrue(!content.startsWith("== Page"),
-                "page file ${file.name} must not contain the legacy '== Page N' header")
+            assertTrue(
+                !content.startsWith("== Page"),
+                "page file ${file.name} must not contain the legacy '== Page N' header",
+            )
         }
     }
 
@@ -212,24 +234,32 @@ class OcrPipelineSteps {
     @And("the files are ordered lexicographically by numeric prefix")
     fun theFilesAreOrderedLexicographicallyByNumericPrefix() {
         val outputDir = state["outputDir"] as File
-        val adocFiles = outputDir.listFiles { f -> f.isFile && f.extension == "adoc" }
-            ?.sortedBy { it.name } ?: emptyList()
+        val adocFiles =
+            outputDir
+                .listFiles { f -> f.isFile && f.extension == "adoc" }
+                ?.sortedBy { it.name } ?: emptyList()
         val leadingDigits = Regex("""^(\d+)""")
-        val orders = adocFiles.map { file ->
-            leadingDigits.find(file.nameWithoutExtension)!!.groupValues[1].toInt()
-        }
+        val orders =
+            adocFiles.map { file ->
+                leadingDigits.find(file.nameWithoutExtension)!!.groupValues[1].toInt()
+            }
         val sortedOrders = orders.sorted()
         assertEquals(sortedOrders, orders, "files sorted by name must be ordered by numeric prefix")
     }
 
-    private fun stubEngine(text: String, confidence: Double, model: String): OcrEngine =
+    private fun stubEngine(
+        text: String,
+        confidence: Double,
+        model: String,
+    ): OcrEngine =
         object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult = OcrResult.of(
-                text = text,
-                confidence = confidence,
-                language = request.language,
-                model = model,
-                metadata = mapOf("engine" to model)
-            )
+            override fun process(request: OcrRequest): OcrResult =
+                OcrResult.of(
+                    text = text,
+                    confidence = confidence,
+                    language = request.language,
+                    model = model,
+                    metadata = mapOf("engine" to model),
+                )
         }
 }

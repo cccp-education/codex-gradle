@@ -28,10 +28,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-doubt-bridge.html, json:build/reports/cucumber-doubt-bridge.json"
+    value = "pretty, html:build/reports/cucumber-doubt-bridge.html, json:build/reports/cucumber-doubt-bridge.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@doubt-bridge and not @wip and not @integration"
+    value = "@doubt-bridge and not @wip and not @integration",
 )
 class CodexDoubtBridgeCucumberRunner

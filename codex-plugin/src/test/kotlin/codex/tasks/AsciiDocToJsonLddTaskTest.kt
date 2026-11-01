@@ -8,7 +8,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class AsciiDocToJsonLddTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -31,7 +30,7 @@ class AsciiDocToJsonLddTaskTest {
             == Chapter Two
             
             Second chapter text.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, jsonFile)
@@ -57,7 +56,7 @@ class AsciiDocToJsonLddTaskTest {
             This is a paragraph of text.
             
             Another paragraph here.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, jsonFile)
@@ -97,7 +96,7 @@ class AsciiDocToJsonLddTaskTest {
             === A.2
             
             == B
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, jsonFile)
@@ -112,12 +111,17 @@ class AsciiDocToJsonLddTaskTest {
         assertTrue(json.contains("\"children\""), "Should contain nested children, got: $json")
     }
 
-    private fun createTask(adocFile: File, jsonFile: File): AsciiDocToJsonLddTask {
+    private fun createTask(
+        adocFile: File,
+        jsonFile: File,
+    ): AsciiDocToJsonLddTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformToJsonLdd",
-            AsciiDocToJsonLddTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformToJsonLdd",
+                    AsciiDocToJsonLddTask::class.java,
+                ).get()
         task.adocFile.set(adocFile)
         task.jsonFile.set(jsonFile)
         return task

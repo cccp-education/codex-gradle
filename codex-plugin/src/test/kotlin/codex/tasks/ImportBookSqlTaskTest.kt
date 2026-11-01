@@ -7,7 +7,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ImportBookSqlTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -39,7 +38,7 @@ class ImportBookSqlTaskTest {
                 ]
               }
             ]
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(jsonFile, sqlFile)
@@ -69,7 +68,7 @@ class ImportBookSqlTaskTest {
                 "level": 1
               }
             ]
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(jsonFile, sqlFile)
@@ -103,7 +102,7 @@ class ImportBookSqlTaskTest {
                 ]
               }
             ]
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(jsonFile, sqlFile)
@@ -130,12 +129,17 @@ class ImportBookSqlTaskTest {
         assertTrue(sql.contains("COMMIT;"))
     }
 
-    private fun createTask(jsonFile: File, sqlFile: File): ImportBookSqlTask {
+    private fun createTask(
+        jsonFile: File,
+        sqlFile: File,
+    ): ImportBookSqlTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "collectBookSql",
-            ImportBookSqlTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "collectBookSql",
+                    ImportBookSqlTask::class.java,
+                ).get()
         task.jsonFile.set(jsonFile)
         task.sqlFile.set(sqlFile)
         return task

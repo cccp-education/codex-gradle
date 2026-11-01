@@ -18,10 +18,16 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict RED -> GREEN -> REFACTOR.
  */
 class TocNoiseDetectorTest {
-
-    private fun chunk(content: String, path: String = "Book > Chapter") = DocumentChunk(
-        id = "chk-1", sourceDocument = "livre", sectionPath = path,
-        headingLevel = 2, content = content, license = "PROPRIETARY",
+    private fun chunk(
+        content: String,
+        path: String = "Book > Chapter",
+    ) = DocumentChunk(
+        id = "chk-1",
+        sourceDocument = "livre",
+        sectionPath = path,
+        headingLevel = 2,
+        content = content,
+        license = "PROPRIETARY",
     )
 
     @Test

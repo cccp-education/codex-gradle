@@ -9,9 +9,13 @@ package codex.tasks
  * threshold, otherwise falls back to a fraction of the max size.
  */
 object TypographicAnalyzer {
-
     /** Computes header thresholds from font-size statistics. */
-    fun computeThresholds(avg: Double, max: Double, min: Double, range: Double): HeaderThresholds {
+    fun computeThresholds(
+        avg: Double,
+        max: Double,
+        min: Double,
+        range: Double,
+    ): HeaderThresholds {
         val dynamicH1 = if (range > 1.0) max - range * 0.05 else max * 0.95
         val dynamicH2 = if (range > 2.0) max - range * 0.25 else max * 0.75
         val dynamicH3 = if (range > 3.0) max - range * 0.50 else max * 0.50
@@ -29,5 +33,8 @@ object TypographicAnalyzer {
  * @property h4 threshold for level-4 headings (smallest recognized)
  */
 data class HeaderThresholds(
-    val h1: Double, val h2: Double, val h3: Double, val h4: Double
+    val h1: Double,
+    val h2: Double,
+    val h3: Double,
+    val h4: Double,
 )

@@ -17,7 +17,6 @@ import java.nio.file.Path
  * Baby-step TDD strict RED (type inexistant) → GREEN → REFACTOR.
  */
 class GraphifyFileResolverTest {
-
     @TempDir
     lateinit var tmp: Path
 
@@ -38,7 +37,7 @@ class GraphifyFileResolverTest {
               {"id":"n1","label":"Architecture","type":"concept"},
               {"id":"n2","label":"Testing","type":"concept"}
             ],"edges":[],"communities":[]}
-            """.trimIndent()
+            """.trimIndent(),
         )
         val resolver = GraphifyFileResolver(file)
         assertEquals(listOf("n1"), resolver.resolve("Architecture"))
@@ -52,7 +51,7 @@ class GraphifyFileResolverTest {
             {"nodes":[
               {"id":"n1","label":"Architecture","type":"concept"}
             ],"edges":[],"communities":[]}
-            """.trimIndent()
+            """.trimIndent(),
         )
         val resolver = GraphifyFileResolver(file)
         assertEquals(listOf("n1"), resolver.resolve("architecture"))
@@ -66,7 +65,7 @@ class GraphifyFileResolverTest {
             {"nodes":[
               {"id":"n1","label":"Architecture","type":"concept"}
             ],"edges":[],"communities":[]}
-            """.trimIndent()
+            """.trimIndent(),
         )
         val resolver = GraphifyFileResolver(file)
         assertTrue(resolver.resolve("Nonexistent").isEmpty())
@@ -90,7 +89,7 @@ class GraphifyFileResolverTest {
               {"id":"n2","label":"architecture","type":"module"},
               {"id":"n3","label":"Testing","type":"concept"}
             ],"edges":[],"communities":[]}
-            """.trimIndent()
+            """.trimIndent(),
         )
         val resolver = GraphifyFileResolver(file)
         assertEquals(listOf("n1", "n2"), resolver.resolve("Architecture"))

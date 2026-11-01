@@ -24,18 +24,19 @@ import java.io.File
  * Baby-step TDD strict RED (tâche inexistante) → GREEN → REFACTOR.
  */
 class EnrichJsonLddTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
-    private val lddJson = """
+    private val lddJson =
+        """
         [
           {"title":"Architecture","level":1,"type":null,"text":null,"children":[]},
           {"title":"Testing","level":1,"type":null,"text":null,"children":[]}
         ]
-    """.trimIndent()
+        """.trimIndent()
 
-    private val chunksJson = """
+    private val chunksJson =
+        """
         [
           {"id":"chk-1","sourceDocument":"book","sectionPath":"Chapter 1 > Architecture",
            "headingLevel":2,"content":"Some content","codeBlocks":[],"entities":[],
@@ -44,9 +45,10 @@ class EnrichJsonLddTaskTest {
            "headingLevel":2,"content":"Other content","codeBlocks":[],"entities":[],
            "overlapNext":null,"license":"UNKNOWN"}
         ]
-    """.trimIndent()
+        """.trimIndent()
 
-    private val graphJson = """
+    private val graphJson =
+        """
         {
           "nodes":[
             {"id":"node-arch","label":"Architecture","type":"section"},
@@ -55,7 +57,7 @@ class EnrichJsonLddTaskTest {
           "edges":[],
           "communities":[]
         }
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun `enrichJsonLdd task is registered with transform group`() {
@@ -110,8 +112,10 @@ class EnrichJsonLddTaskTest {
 
         val enriched = parseEnriched(outputFile)
         val arch = enriched.first { it.ldd.title == "Architecture" }
-        assertTrue(arch.graphifyNodes.contains("node-arch"),
-            "graphify node 'node-arch' should be resolved for Architecture section")
+        assertTrue(
+            arch.graphifyNodes.contains("node-arch"),
+            "graphify node 'node-arch' should be resolved for Architecture section",
+        )
     }
 
     @Test
@@ -125,8 +129,10 @@ class EnrichJsonLddTaskTest {
         task.enrich()
 
         val enriched = parseEnriched(outputFile)
-        assertTrue(enriched.all { it.graphifyNodes.isEmpty() },
-            "missing graph.json → no graphify nodes (degraded silent)")
+        assertTrue(
+            enriched.all { it.graphifyNodes.isEmpty() },
+            "missing graph.json → no graphify nodes (degraded silent)",
+        )
     }
 
     @Test
@@ -141,21 +147,27 @@ class EnrichJsonLddTaskTest {
 
         val enriched = parseEnriched(outputFile)
         val arch = enriched.first { it.ldd.title == "Architecture" }
-        assertEquals(0.5, arch.semanticDensity, 0.0001,
-            "1 matching chunk out of 2 total → density 0.5")
+        assertEquals(
+            0.5,
+            arch.semanticDensity,
+            0.0001,
+            "1 matching chunk out of 2 total → density 0.5",
+        )
     }
 
     private fun createTask(
         lddFile: File,
         chunksFile: File,
         graphifyFile: File,
-        outputFile: File
+        outputFile: File,
     ): EnrichJsonLddTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "enrichJsonLdd",
-            EnrichJsonLddTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "enrichJsonLdd",
+                    EnrichJsonLddTask::class.java,
+                ).get()
         task.jsonFile.set(lddFile)
         task.chunksFile.set(chunksFile)
         task.graphifyFile.set(graphifyFile)
@@ -167,7 +179,7 @@ class EnrichJsonLddTaskTest {
         val json = Json { ignoreUnknownKeys = true }
         return json.decodeFromString(
             ListSerializer(EnrichedLddNode.serializer()),
-            file.readText()
+            file.readText(),
         )
     }
 }

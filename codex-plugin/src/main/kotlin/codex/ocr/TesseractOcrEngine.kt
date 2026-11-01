@@ -26,9 +26,8 @@ import java.time.Instant
  * @param tesseractPath chemin du binaire tesseract (défaut : "tesseract" dans le PATH)
  */
 class TesseractOcrEngine(
-    private val tesseractPath: String = "tesseract"
+    private val tesseractPath: String = "tesseract",
 ) : OcrEngine {
-
     private val log = LoggerFactory.getLogger(TesseractOcrEngine::class.java)
 
     override fun process(request: OcrRequest): OcrResult {
@@ -36,30 +35,39 @@ class TesseractOcrEngine(
             return emptyResult(request)
         }
 
-        val tmpDir: Path? = try {
-            Files.createTempDirectory("tesseract-ocr")
-        } catch (e: Exception) {
-            log.warn("[Tesseract] Cannot create temp dir: {}", e.message)
-            return emptyResult(request)
-        }
+        val tmpDir: Path? =
+            try {
+                Files.createTempDirectory("tesseract-ocr")
+            } catch (e: Exception) {
+                log.warn("[Tesseract] Cannot create temp dir: {}", e.message)
+                return emptyResult(request)
+            }
 
-        val ext = when (request.format) {
-            "image/png" -> ".png"
-            "image/jpeg" -> ".jpg"
-            "image/gif" -> ".gif"
-            "image/bmp" -> ".bmp"
-            "image/tiff" -> ".tiff"
-            else -> ".png"
-        }
+        val ext =
+            when (request.format) {
+                "image/png" -> ".png"
+                "image/jpeg" -> ".jpg"
+                "image/gif" -> ".gif"
+                "image/bmp" -> ".bmp"
+                "image/tiff" -> ".tiff"
+                else -> ".png"
+            }
         val inputFile = tmpDir!!.resolve("input$ext")
         val outputFileBase = tmpDir.resolve("output").toString()
         val langCode = mapLanguage(request.language)
 
         return try {
             Files.write(inputFile, request.imageData)
-            val process = ProcessBuilder(
-                tesseractPath, inputFile.toString(), outputFileBase, "-l", langCode, "txt", "tsv"
-            ).redirectErrorStream(true)
+            val process =
+                ProcessBuilder(
+                    tesseractPath,
+                    inputFile.toString(),
+                    outputFileBase,
+                    "-l",
+                    langCode,
+                    "txt",
+                    "tsv",
+                ).redirectErrorStream(true)
 
             val proc = process.start()
             val exitCode = proc.waitFor()
@@ -98,11 +106,12 @@ class TesseractOcrEngine(
                 sourceFormat = request.format,
                 generatedAt = Instant.now().toString(),
                 model = "tesseract",
-                metadata = mapOf(
-                    "engine" to "tesseract",
-                    "langCode" to langCode,
-                    "confidenceSource" to confidenceSource
-                )
+                metadata =
+                    mapOf(
+                        "engine" to "tesseract",
+                        "langCode" to langCode,
+                        "confidenceSource" to confidenceSource,
+                    ),
             )
         } catch (e: Exception) {
             log.warn("[Tesseract] OCR failed: {}", e.message)
@@ -112,23 +121,25 @@ class TesseractOcrEngine(
         }
     }
 
-    private fun emptyResult(request: OcrRequest): OcrResult = OcrResult(
-        structuredText = "",
-        confidence = 0.0,
-        language = request.language,
-        sourceFormat = request.format,
-        generatedAt = Instant.now().toString(),
-        model = "tesseract",
-        metadata = mapOf("engine" to "tesseract", "status" to "failed")
-    )
+    private fun emptyResult(request: OcrRequest): OcrResult =
+        OcrResult(
+            structuredText = "",
+            confidence = 0.0,
+            language = request.language,
+            sourceFormat = request.format,
+            generatedAt = Instant.now().toString(),
+            model = "tesseract",
+            metadata = mapOf("engine" to "tesseract", "status" to "failed"),
+        )
 
-    private fun mapLanguage(language: String): String = when (language.lowercase()) {
-        "fr", "fra", "french" -> "fra"
-        "en", "eng", "english" -> "eng"
-        "de", "deu", "german" -> "deu"
-        "es", "spa", "spanish" -> "spa"
-        "it", "ita", "italian" -> "ita"
-        "auto" -> "eng"
-        else -> language.lowercase().take(3)
-    }
+    private fun mapLanguage(language: String): String =
+        when (language.lowercase()) {
+            "fr", "fra", "french" -> "fra"
+            "en", "eng", "english" -> "eng"
+            "de", "deu", "german" -> "deu"
+            "es", "spa", "spanish" -> "spa"
+            "it", "ita", "italian" -> "ita"
+            "auto" -> "eng"
+            else -> language.lowercase().take(3)
+        }
 }

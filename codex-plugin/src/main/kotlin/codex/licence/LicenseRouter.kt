@@ -15,7 +15,6 @@ import java.io.File
  * resolved directory.
  */
 object LicenseRouter {
-
     /**
      * Resolves the output directory for the given license zone.
      *
@@ -23,8 +22,12 @@ object LicenseRouter {
      * @param baseDir the base directory under which zone subdirectories live.
      * @return the resolved target directory (not created on disk).
      */
-    fun route(zone: LicenseZone, baseDir: File): File = when (zone) {
-        LicenseZone.OSS -> File(baseDir, "OSS")
-        LicenseZone.CSS, LicenseZone.UNKNOWN -> File(baseDir, "office")
-    }
+    fun route(
+        zone: LicenseZone,
+        baseDir: File,
+    ): File =
+        when (zone) {
+            LicenseZone.OSS -> File(baseDir, "OSS")
+            LicenseZone.CSS, LicenseZone.UNKNOWN -> File(baseDir, "office")
+        }
 }

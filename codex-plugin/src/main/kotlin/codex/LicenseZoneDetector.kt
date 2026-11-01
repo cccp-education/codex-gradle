@@ -18,7 +18,6 @@ enum class LicenseZone { OSS, CSS, UNKNOWN }
  * CSS zones are tagged PROPRIETARY.
  */
 object LicenseZoneDetector {
-
     /**
      * Detects the license zone from a project directory path.
      *
@@ -42,9 +41,10 @@ object LicenseZoneDetector {
      * @param zone the license zone to convert
      * @return "Apache-2.0" for OSS, "PROPRIETARY" for CSS, "UNKNOWN" otherwise
      */
-    fun toLicenseName(zone: LicenseZone): String = when (zone) {
-        LicenseZone.OSS -> "Apache-2.0"
-        LicenseZone.CSS -> "PROPRIETARY"
-        LicenseZone.UNKNOWN -> "UNKNOWN"
-    }
+    fun toLicenseName(zone: LicenseZone): String =
+        when (zone) {
+            LicenseZone.OSS -> "Apache-2.0"
+            LicenseZone.CSS -> "PROPRIETARY"
+            LicenseZone.UNKNOWN -> "UNKNOWN"
+        }
 }

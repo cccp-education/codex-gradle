@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict RED (types absent) -> GREEN -> REFACTOR.
  */
 class PdfLicenseDetectorTest {
-
     @Test
     fun `apache license 2_0 full phrase yields OSS`() {
         val text = "This work is licensed under the Apache License 2.0 (the \"License\")."

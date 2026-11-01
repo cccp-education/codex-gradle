@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
  * no I/O, no Gradle, no PDF dependency — unit-testable in isolation.
  */
 class TypographicAnalyzerTest {
-
     // ── computeHeaderThresholds — dynamic mode (range > thresholds) ────────────
 
     @Test

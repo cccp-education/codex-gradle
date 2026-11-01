@@ -40,7 +40,7 @@ data class EnrichedLddNode(
     val graphifyNodes: List<String>,
     val semanticDensity: Double,
     val entities: List<String>,
-    val children: List<EnrichedLddNode> = emptyList()
+    val children: List<EnrichedLddNode> = emptyList(),
 )
 
 /**
@@ -55,7 +55,6 @@ data class EnrichedLddNode(
  * always yield the same output.
  */
 object JsonLddEnricher {
-
     private val entityRegex = Regex("""\b[A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+)*\b""")
 
     /**
@@ -69,7 +68,7 @@ object JsonLddEnricher {
     fun enrich(
         lddNodes: List<LddNode>,
         ragChunks: List<DocumentChunk>,
-        graphifyResolver: GraphifyResolver
+        graphifyResolver: GraphifyResolver,
     ): List<EnrichedLddNode> {
         if (lddNodes.isEmpty()) return emptyList()
         val total = ragChunks.size
@@ -80,27 +79,42 @@ object JsonLddEnricher {
         node: LddNode,
         ragChunks: List<DocumentChunk>,
         graphifyResolver: GraphifyResolver,
-        totalChunks: Int
+        totalChunks: Int,
     ): EnrichedLddNode {
-        val joined = if (node.title.isBlank()) emptyList()
-        else ragChunks.filter { matchesSection(it.sectionPath, node.title) }
-        val graphifyNodes = if (node.title.isBlank()) emptyList()
-        else graphifyResolver.resolve(node.title)
+        val joined =
+            if (node.title.isBlank()) {
+                emptyList()
+            } else {
+                ragChunks.filter { matchesSection(it.sectionPath, node.title) }
+            }
+        val graphifyNodes =
+            if (node.title.isBlank()) {
+                emptyList()
+            } else {
+                graphifyResolver.resolve(node.title)
+            }
         val density = if (totalChunks == 0) 0.0 else joined.size.toDouble() / totalChunks.toDouble()
         val entities = extractEntities(node)
-        val enrichedChildren = if (node.children.isEmpty()) emptyList()
-        else node.children.map { child -> enrichNode(child, ragChunks, graphifyResolver, totalChunks) }
+        val enrichedChildren =
+            if (node.children.isEmpty()) {
+                emptyList()
+            } else {
+                node.children.map { child -> enrichNode(child, ragChunks, graphifyResolver, totalChunks) }
+            }
         return EnrichedLddNode(
             ldd = node,
             ragChunks = joined,
             graphifyNodes = graphifyNodes,
             semanticDensity = density,
             entities = entities,
-            children = enrichedChildren
+            children = enrichedChildren,
         )
     }
 
-    private fun matchesSection(sectionPath: String, title: String): Boolean {
+    private fun matchesSection(
+        sectionPath: String,
+        title: String,
+    ): Boolean {
         val trimmed = sectionPath.trim()
         if (trimmed.isEmpty()) return false
         val last = trimmed.substringAfterLast('>').trim()
@@ -112,11 +126,13 @@ object JsonLddEnricher {
     }
 
     private fun extractEntities(node: LddNode): List<String> {
-        val source = buildString {
-            if (node.title.isNotBlank()) append(node.title).append(' ')
-            if (!node.text.isNullOrBlank()) append(node.text)
-        }
-        return entityRegex.findAll(source)
+        val source =
+            buildString {
+                if (node.title.isNotBlank()) append(node.title).append(' ')
+                if (!node.text.isNullOrBlank()) append(node.text)
+            }
+        return entityRegex
+            .findAll(source)
             .map { it.value }
             .distinct()
             .toList()

@@ -1,8 +1,9 @@
 package codex.bdd
 
-import codebase.store.RetrieveResult
+import codebase.store.DocumentChunk
 import codebase.store.DoubtfulChunk
 import codebase.store.RagVectorStore
+import codebase.store.RetrieveResult
 import codex.ocr.OcrQualityIssue
 import codex.ocr.OcrQualityReason
 import codex.ocr.OcrQualityReport
@@ -12,7 +13,6 @@ import codex.provenance.PageProvenanceResolver
 import codex.provenance.TocSection
 import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexIngestTask
-import codebase.store.DocumentChunk
 import io.cucumber.java8.En
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
@@ -39,7 +39,6 @@ import java.io.File
  * suites (bug S-088).
  */
 class PageProvenanceSteps : En {
-
     private val chunks = mutableListOf<DocumentChunk>()
     private val tocSections = mutableListOf<TocSection>()
     private val issues = mutableListOf<OcrQualityIssue>()
@@ -52,12 +51,20 @@ class PageProvenanceSteps : En {
     private var ingestedChunks: List<DocumentChunk> = emptyList()
 
     private fun task(): CodexCompositeContextTask =
-        ProjectBuilder.builder().build()
-            .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+            .get()
 
     private fun ingestTask(): CodexIngestTask =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectIngest", CodexIngestTask::class.java)
+            .get()
 
     init {
 
@@ -73,34 +80,47 @@ class PageProvenanceSteps : En {
         }
 
         Given("a chunk {string} in section {string}") { id: String, sectionPath: String ->
-            chunks += DocumentChunk(
-                id = id, sourceDocument = "livre", sectionPath = sectionPath,
-                headingLevel = 2, content = "body", license = "PROPRIETARY",
-            )
+            chunks +=
+                DocumentChunk(
+                    id = id,
+                    sourceDocument = "livre",
+                    sectionPath = sectionPath,
+                    headingLevel = 2,
+                    content = "body",
+                    license = "PROPRIETARY",
+                )
         }
 
         Given("a toc section {string} titled {string} on page {int}") { ref: String, title: String, page: Int ->
             tocSections += TocSection(ref, title, listOf(page))
         }
 
-        Given("a toc section {string} titled {string} on pages {int}, {int}, {int}, {int}") {
-                ref: String, title: String, a: Int, b: Int, c: Int, d: Int ->
+        Given("a toc section {string} titled {string} on pages {int}, {int}, {int}, {int}") { ref: String, title: String, a: Int, b: Int, c: Int, d: Int ->
             tocSections += TocSection(ref, title, listOf(a, b, c, d))
         }
 
         Given("an acquisition doubt on page {int} with reason {string}") { page: Int, reason: String ->
-            issues += OcrQualityIssue(
-                pageId = page.toString(), imageFile = "image.png",
-                reason = OcrQualityReason.valueOf(reason),
-            )
+            issues +=
+                OcrQualityIssue(
+                    pageId = page.toString(),
+                    imageFile = "image.png",
+                    reason = OcrQualityReason.valueOf(reason),
+                )
         }
 
         Given("a retrieval result in section {string}") { sectionPath: String ->
-            retrieval = RetrieveResult(
-                chunkId = 1L, chunkIndex = 0, chunkText = "body", sectionPath = sectionPath,
-                headingLevel = 2, sourceDocument = "livre", similarity = 0.8,
-                confidence = 1.0, doubtful = false,
-            )
+            retrieval =
+                RetrieveResult(
+                    chunkId = 1L,
+                    chunkIndex = 0,
+                    chunkText = "body",
+                    sectionPath = sectionPath,
+                    headingLevel = 2,
+                    sourceDocument = "livre",
+                    similarity = 0.8,
+                    confidence = 1.0,
+                    doubtful = false,
+                )
         }
 
         When("the page provenance is resolved") {
@@ -109,13 +129,15 @@ class PageProvenanceSteps : En {
         }
 
         When("the composite context JSON is built with the page provenance") {
-            val resolverInput = provenance.ifEmpty {
-                PageProvenanceResolver.resolve(chunks, tocSections, null)
-            }
+            val resolverInput =
+                provenance.ifEmpty {
+                    PageProvenanceResolver.resolve(chunks, tocSections, null)
+                }
             val report = PageProvenanceReport.of("livre", resolverInput)
-            val index = report.chunks
-                .filter { it.pages.isNotEmpty() }
-                .associate { it.sectionPath to it.pages }
+            val index =
+                report.chunks
+                    .filter { it.pages.isNotEmpty() }
+                    .associate { it.sectionPath to it.pages }
             compositeJson = task().buildCompositeJson(listOf(retrieval!!), "q", 5, index)
         }
 
@@ -123,8 +145,7 @@ class PageProvenanceSteps : En {
             assertEquals(listOf(page), chunk(id).pages)
         }
 
-        Then("the chunk {string} is localised on pages {int}, {int}, {int}, {int}") {
-                id: String, a: Int, b: Int, c: Int, d: Int ->
+        Then("the chunk {string} is localised on pages {int}, {int}, {int}, {int}") { id: String, a: Int, b: Int, c: Int, d: Int ->
             assertEquals(listOf(a, b, c, d), chunk(id).pages)
         }
 
@@ -150,8 +171,12 @@ class PageProvenanceSteps : En {
         }
 
         Then("the composite entry exposes page {int}") { page: Int ->
-            val entry = Json.parseToJsonElement(compositeJson).jsonObject["entries"]!!
-                .jsonArray[0].jsonObject
+            val entry =
+                Json
+                    .parseToJsonElement(compositeJson)
+                    .jsonObject["entries"]!!
+                    .jsonArray[0]
+                    .jsonObject
             assertEquals(
                 listOf(page.toString()),
                 entry["pages"]!!.jsonArray.map { it.jsonPrimitive.content },
@@ -161,14 +186,16 @@ class PageProvenanceSteps : En {
         // ── CDX-PAGE-PROVENANCE-2 — N2 ingestion transport ───────────────
 
         Given("a page provenance sidecar resolving chunk {string} to page {int}") { id: String, page: Int ->
-            val report = PageProvenanceReport.of(
-                "livre",
-                listOf(ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = listOf(page))),
-            )
-            sidecarFile = File.createTempFile("page-provenance-", ".json").apply {
-                deleteOnExit()
-                writeText(Json.encodeToString(report))
-            }
+            val report =
+                PageProvenanceReport.of(
+                    "livre",
+                    listOf(ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = listOf(page))),
+                )
+            sidecarFile =
+                File.createTempFile("page-provenance-", ".json").apply {
+                    deleteOnExit()
+                    writeText(Json.encodeToString(report))
+                }
         }
 
         When("the chunks are ingested with the page provenance") {
@@ -191,6 +218,7 @@ class PageProvenanceSteps : En {
     /** Recording in-memory store — no pgvector, no Docker (pattern S-102/S-214). */
     private class RecordingIngestStore : RagVectorStore() {
         var received: List<DoubtfulChunk>? = null
+
         override suspend fun ingestWithDoubt(
             chunks: List<DoubtfulChunk>,
             batchLogger: (String) -> Unit,
@@ -200,6 +228,5 @@ class PageProvenanceSteps : En {
         }
     }
 
-    private fun chunk(id: String): ChunkPageProvenance =
-        provenance.first { it.chunkId == id }
+    private fun chunk(id: String): ChunkPageProvenance = provenance.first { it.chunkId == id }
 }

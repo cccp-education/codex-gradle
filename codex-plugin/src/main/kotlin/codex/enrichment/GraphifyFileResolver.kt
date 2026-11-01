@@ -19,16 +19,22 @@ import java.io.File
  * Missing fields are tolerated (degraded to empty results) so that a
  * partial or empty graph does not crash the enrichment pipeline.
  */
-class GraphifyFileResolver(private val graphJsonFile: File) : GraphifyResolver {
-
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+class GraphifyFileResolver(
+    private val graphJsonFile: File,
+) : GraphifyResolver {
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     override fun resolve(sectionTitle: String): List<String> {
         val normalizedTitle = SectionTitleNormalizer.normalize(sectionTitle)
         if (normalizedTitle.isEmpty()) return emptyList()
         if (!graphJsonFile.exists()) return emptyList()
-        val model = runCatching { json.decodeFromString(GraphFileModel.serializer(), graphJsonFile.readText()) }
-            .getOrNull() ?: return emptyList()
+        val model =
+            runCatching { json.decodeFromString(GraphFileModel.serializer(), graphJsonFile.readText()) }
+                .getOrNull() ?: return emptyList()
         return model.nodes
             .filter { SectionTitleNormalizer.normalize(it.label) == normalizedTitle }
             .map { it.id }
@@ -39,7 +45,7 @@ class GraphifyFileResolver(private val graphJsonFile: File) : GraphifyResolver {
 private data class GraphFileModel(
     val nodes: List<GraphFileNode> = emptyList(),
     val edges: List<GraphFileEdge> = emptyList(),
-    val communities: List<GraphFileCommunity> = emptyList()
+    val communities: List<GraphFileCommunity> = emptyList(),
 )
 
 @Serializable
@@ -47,7 +53,7 @@ private data class GraphFileNode(
     val id: String,
     val label: String,
     val type: String = "",
-    val community: String? = null
+    val community: String? = null,
 )
 
 @Serializable
@@ -55,12 +61,12 @@ private data class GraphFileEdge(
     val source: String = "",
     val target: String = "",
     val type: String = "",
-    val label: String? = null
+    val label: String? = null,
 )
 
 @Serializable
 private data class GraphFileCommunity(
     val id: String = "",
     val label: String = "",
-    val size: Int = 0
+    val size: Int = 0,
 )

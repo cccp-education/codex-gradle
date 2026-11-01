@@ -7,14 +7,12 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ExtractTextTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -78,12 +76,17 @@ class ExtractTextTaskTest {
         assertTrue(outputFile.exists())
     }
 
-    private fun createTask(pdfFile: File, outputFile: File): ExtractTextTask {
+    private fun createTask(
+        pdfFile: File,
+        outputFile: File,
+    ): ExtractTextTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "collectText",
-            ExtractTextTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "collectText",
+                    ExtractTextTask::class.java,
+                ).get()
         task.pdfFile.set(pdfFile)
         task.outputFile.set(outputFile)
         return task

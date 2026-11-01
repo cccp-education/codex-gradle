@@ -29,7 +29,6 @@ import java.io.File
  * no longer wires an AI engine itself — only Tesseract remains.
  */
 class CollectOcrAiEngineInjectionTest {
-
     @Test
     fun `task exposes an optional aiEngine property`() {
         val project = ProjectBuilder.builder().build()
@@ -55,7 +54,7 @@ class CollectOcrAiEngineInjectionTest {
 
     @Test
     fun `injected AI engine structured AsciiDoc flows to page adoc file`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -78,13 +77,13 @@ class CollectOcrAiEngineInjectionTest {
         assertEquals(
             "= Chapter One\n\nStructured content from AI engine.",
             pageFile.readText(),
-            "page content must be the injected engine structured AsciiDoc output"
+            "page content must be the injected engine structured AsciiDoc output",
         )
     }
 
     @Test
     fun `AI engine failure falls back to Tesseract degraded marker`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -111,7 +110,7 @@ class CollectOcrAiEngineInjectionTest {
 
     @Test
     fun `injected AI engine also feeds legacy outputFile backward compat`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -140,7 +139,7 @@ class CollectOcrAiEngineInjectionTest {
 
     @Test
     fun `no images short-circuits before any engine runs even when AI engine injected`(
-        @TempDir tempDir: File
+        @TempDir tempDir: File,
     ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
@@ -150,18 +149,19 @@ class CollectOcrAiEngineInjectionTest {
         val outputFile = File(tempDir, "ocr-output.adoc")
 
         var engineCalls = 0
-        val countingEngine = object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult {
-                engineCalls++
-                return OcrResult.of(
-                    text = "should not happen",
-                    confidence = 0.9,
-                    language = request.language,
-                    model = "counting-ai",
-                    metadata = mapOf("engine" to "counting-ai")
-                )
+        val countingEngine =
+            object : OcrEngine {
+                override fun process(request: OcrRequest): OcrResult {
+                    engineCalls++
+                    return OcrResult.of(
+                        text = "should not happen",
+                        confidence = 0.9,
+                        language = request.language,
+                        model = "counting-ai",
+                        metadata = mapOf("engine" to "counting-ai"),
+                    )
+                }
             }
-        }
 
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         task.inputDir.set(emptyDir)
@@ -177,22 +177,55 @@ class CollectOcrAiEngineInjectionTest {
         assertTrue(outputFile.readText().contains("No images found"))
     }
 
-    private fun fakeAiEngine(text: String, confidence: Double = if (text.isNotEmpty()) 0.9 else 0.0): OcrEngine =
+    private fun fakeAiEngine(
+        text: String,
+        confidence: Double = if (text.isNotEmpty()) 0.9 else 0.0,
+    ): OcrEngine =
         object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult = OcrResult.of(
-                text = text,
-                confidence = confidence,
-                language = request.language,
-                model = "fake-ai",
-                metadata = mapOf("engine" to "fake-ai")
-            )
+            override fun process(request: OcrRequest): OcrResult =
+                OcrResult.of(
+                    text = text,
+                    confidence = confidence,
+                    language = request.language,
+                    model = "fake-ai",
+                    metadata = mapOf("engine" to "fake-ai"),
+                )
         }
 
-    private fun minimalPng(): ByteArray = byteArrayOf(
-        0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk header
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 pixel
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15.toByte(), 0xC4.toByte(), // RGBA, CRC
-        0x89.toByte(), // IDAT start
-    )
+    private fun minimalPng(): ByteArray =
+        byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A, // PNG signature
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52, // IHDR chunk header
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01, // 1x1 pixel
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15.toByte(),
+            0xC4.toByte(), // RGBA, CRC
+            0x89.toByte(), // IDAT start
+        )
 }

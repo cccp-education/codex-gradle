@@ -12,14 +12,17 @@ import java.io.File
  * Extracted from the original `OcrRequest.Companion` by EPIC
  * CDX-OCR-CONTRACTS US-2 (the companion went to N0 without Jackson).
  */
-private val ocrRequestMapper: ObjectMapper = ObjectMapper()
-    .registerModule(KotlinModule.Builder().build())
-    .enable(SerializationFeature.INDENT_OUTPUT)
+private val ocrRequestMapper: ObjectMapper =
+    ObjectMapper()
+        .registerModule(KotlinModule.Builder().build())
+        .enable(SerializationFeature.INDENT_OUTPUT)
 
-fun readOcrRequestFromJsonFile(file: File): OcrRequest =
-    ocrRequestMapper.readValue(file, OcrRequest::class.java)
+fun readOcrRequestFromJsonFile(file: File): OcrRequest = ocrRequestMapper.readValue(file, OcrRequest::class.java)
 
-fun writeOcrRequestToJsonFile(dir: File, request: OcrRequest): File {
+fun writeOcrRequestToJsonFile(
+    dir: File,
+    request: OcrRequest,
+): File {
     dir.mkdirs()
     val file = File(dir, "ocr-request.json")
     file.writeText(ocrRequestMapper.writeValueAsString(request))

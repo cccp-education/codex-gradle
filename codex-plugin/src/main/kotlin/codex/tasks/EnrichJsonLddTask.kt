@@ -35,7 +35,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "LDD enrichment — deterministic pure computation, non-cacheable")
 abstract class EnrichJsonLddTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val jsonFile: RegularFileProperty
@@ -67,13 +66,17 @@ abstract class EnrichJsonLddTask : DefaultTask() {
         val resolver = GraphifyFileResolver(graphInput)
         val enriched = JsonLddEnricher.enrich(lddNodes, ragChunks, resolver)
 
-        val outputJson = Json { prettyPrint = true; prettyPrintIndent = "  " }
+        val outputJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
         output.writeText(outputJson.encodeToString(ListSerializer(EnrichedLddNode.serializer()), enriched))
 
         logger.lifecycle(
             "[codex] enrichment : ${enriched.size} sections enriched, " +
                 "${enriched.sumOf { it.ragChunks.size }} rag chunks attached, " +
-                "${enriched.sumOf { it.graphifyNodes.size }} graphify nodes resolved"
+                "${enriched.sumOf { it.graphifyNodes.size }} graphify nodes resolved",
         )
     }
 }

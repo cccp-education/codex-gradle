@@ -6,10 +6,10 @@ import codebase.store.DoubtMetadata
 import codebase.store.DoubtfulChunk
 import codebase.store.RagVectorStore
 import codebase.store.RetrieveResult
+import codex.enrichment.EnrichedLddNode
 import codex.tasks.CodexCompositeContextTask
 import codex.tasks.CodexIngestTask
 import codex.tasks.LddNode
-import codex.enrichment.EnrichedLddNode
 import io.cucumber.java8.En
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.ListSerializer
@@ -35,7 +35,6 @@ import java.io.File
  * to avoid DuplicateStepDefinition with the other codex BDD suites (bug S-088).
  */
 class DoubtBridgeSteps : En {
-
     private val ingestStore = RecordingIngestStore()
     private val retrieveStore = RecordingRetrieveStore()
     private val chunks = mutableListOf<DocumentChunk>()
@@ -52,12 +51,20 @@ class DoubtBridgeSteps : En {
     private val hardenedResults = mutableListOf<RetrieveResult>()
 
     private fun ingestTask(): CodexIngestTask =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectIngest", CodexIngestTask::class.java)
+            .get()
 
     private fun contextTask(): CodexCompositeContextTask =
-        ProjectBuilder.builder().build()
-            .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+            .get()
 
     init {
 
@@ -73,17 +80,27 @@ class DoubtBridgeSteps : En {
         // ── Ingestion scenarios ──────────────────────────────────────────
 
         Given("a chunk with content {string} and marker {string}") { content: String, marker: String ->
-            chunks += DocumentChunk(
-                id = "chk-doubt", sourceDocument = "book", sectionPath = "Ch1",
-                headingLevel = 1, content = "$content\n$marker\nmore", license = "PROPRIETARY",
-            )
+            chunks +=
+                DocumentChunk(
+                    id = "chk-doubt",
+                    sourceDocument = "book",
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    content = "$content\n$marker\nmore",
+                    license = "PROPRIETARY",
+                )
         }
 
         Given("a clean chunk with content {string}") { content: String ->
-            chunks += DocumentChunk(
-                id = "chk-clean", sourceDocument = "book", sectionPath = "Ch1",
-                headingLevel = 1, content = content, license = "PROPRIETARY",
-            )
+            chunks +=
+                DocumentChunk(
+                    id = "chk-clean",
+                    sourceDocument = "book",
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    content = content,
+                    license = "PROPRIETARY",
+                )
         }
 
         When("the chunks are ingested through the doubt bridge") {
@@ -91,19 +108,35 @@ class DoubtBridgeSteps : En {
         }
 
         Then("the ingested doubt marks the chunk doubtful") {
-            assertTrue(ingestStore.received!!.single().doubt.doubtful)
+            assertTrue(
+                ingestStore.received!!
+                    .single()
+                    .doubt.doubtful,
+            )
         }
 
         Then("the ingested doubt does not mark the chunk doubtful") {
-            assertFalse(ingestStore.received!!.single().doubt.doubtful)
+            assertFalse(
+                ingestStore.received!!
+                    .single()
+                    .doubt.doubtful,
+            )
         }
 
         Then("the ingested confidence is zero") {
-            assertTrue(ingestStore.received!!.single().doubt.confidence == 0.0)
+            assertTrue(
+                ingestStore.received!!
+                    .single()
+                    .doubt.confidence == 0.0,
+            )
         }
 
         Then("the ingested confidence is full") {
-            assertTrue(ingestStore.received!!.single().doubt.confidence == DoubtMetadata.MAX_CONFIDENCE)
+            assertTrue(
+                ingestStore.received!!
+                    .single()
+                    .doubt.confidence == DoubtMetadata.MAX_CONFIDENCE,
+            )
         }
 
         // ── Docs channel scenarios ───────────────────────────────────────
@@ -161,9 +194,13 @@ class DoubtBridgeSteps : En {
         }
 
         Then("the composite JSON exposes a doubtful entry") {
-            val doubtful = Json.parseToJsonElement(compositeJson).jsonObject["entries"]!!
-                .jsonArray.map { it.jsonObject }
-                .filter { it["doubtful"]!!.jsonPrimitive.content == "true" }
+            val doubtful =
+                Json
+                    .parseToJsonElement(compositeJson)
+                    .jsonObject["entries"]!!
+                    .jsonArray
+                    .map { it.jsonObject }
+                    .filter { it["doubtful"]!!.jsonPrimitive.content == "true" }
             assertTrue(doubtful.isNotEmpty(), "a doubtful entry must be exposed with doubtful=true")
         }
 
@@ -182,20 +219,31 @@ class DoubtBridgeSteps : En {
         Given("a hardened context task with no enriched JSON artifact") {
             hardenedResults.clear()
             hardenedStore = HardenedRagStore()
-            val dir = kotlin.io.path.createTempDirectory(prefix = "cdx-hardening-bdd-").toFile()
+            val dir =
+                kotlin.io.path
+                    .createTempDirectory(prefix = "cdx-hardening-bdd-")
+                    .toFile()
             hardenedDir = dir
-            hardenedTask = ProjectBuilder.builder().build()
-                .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
-                .also {
-                    it.outputFile.set(File(dir, "composite-context.json"))
-                    it.storeOverride.set(hardenedStore)
-                }
+            hardenedTask =
+                ProjectBuilder
+                    .builder()
+                    .build()
+                    .tasks
+                    .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+                    .get()
+                    .also {
+                        it.outputFile.set(File(dir, "composite-context.json"))
+                        it.storeOverride.set(hardenedStore)
+                    }
         }
 
         Given("a hardened context task with an enriched JSON artifact containing node {string}") { nodeId: String ->
             hardenedResults.clear()
             hardenedStore = HardenedRagStore()
-            val dir = kotlin.io.path.createTempDirectory(prefix = "cdx-hardening-bdd-").toFile()
+            val dir =
+                kotlin.io.path
+                    .createTempDirectory(prefix = "cdx-hardening-bdd-")
+                    .toFile()
             hardenedDir = dir
             val enriched = File(dir, "enriched.json")
             enriched.writeText(
@@ -208,34 +256,53 @@ class DoubtBridgeSteps : En {
                             graphifyNodes = listOf(nodeId),
                             semanticDensity = 0.0,
                             entities = emptyList(),
-                        )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
-            hardenedTask = ProjectBuilder.builder().build()
-                .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
-                .also {
-                    it.outputFile.set(File(dir, "composite-context.json"))
-                    it.storeOverride.set(hardenedStore)
-                    it.enrichedJsonFile.setFrom(enriched)
-                }
+            hardenedTask =
+                ProjectBuilder
+                    .builder()
+                    .build()
+                    .tasks
+                    .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+                    .get()
+                    .also {
+                        it.outputFile.set(File(dir, "composite-context.json"))
+                        it.storeOverride.set(hardenedStore)
+                        it.enrichedJsonFile.setFrom(enriched)
+                    }
         }
 
         Given("a hardened retrieved chunk {string}") { text: String ->
-            hardenedResults += RetrieveResult(
-                chunkId = 1L, chunkIndex = 0, chunkText = text, sectionPath = "Ch1",
-                headingLevel = 1, sourceDocument = "book", similarity = 0.8,
-                confidence = 1.0, doubtful = false,
-            )
+            hardenedResults +=
+                RetrieveResult(
+                    chunkId = 1L,
+                    chunkIndex = 0,
+                    chunkText = text,
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    sourceDocument = "book",
+                    similarity = 0.8,
+                    confidence = 1.0,
+                    doubtful = false,
+                )
             hardenedStore.results = hardenedResults
         }
 
         Given("a hardened doubtful chunk {string}") { text: String ->
-            hardenedResults += RetrieveResult(
-                chunkId = 2L, chunkIndex = 0, chunkText = text, sectionPath = "Ch1",
-                headingLevel = 1, sourceDocument = "book", similarity = 0.8,
-                confidence = 0.0, doubtful = true,
-            )
+            hardenedResults +=
+                RetrieveResult(
+                    chunkId = 2L,
+                    chunkIndex = 0,
+                    chunkText = text,
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    sourceDocument = "book",
+                    similarity = 0.8,
+                    confidence = 0.0,
+                    doubtful = true,
+                )
             hardenedStore.results = hardenedResults
         }
 
@@ -254,9 +321,13 @@ class DoubtBridgeSteps : En {
 
         Then("the hardened composite context JSON exposes a doubtful entry") {
             val out = File(hardenedDir!!, "composite-context.json")
-            val doubtful = Json.parseToJsonElement(out.readText()).jsonObject["entries"]!!
-                .jsonArray.map { it.jsonObject }
-                .filter { it["doubtful"]!!.jsonPrimitive.content == "true" }
+            val doubtful =
+                Json
+                    .parseToJsonElement(out.readText())
+                    .jsonObject["entries"]!!
+                    .jsonArray
+                    .map { it.jsonObject }
+                    .filter { it["doubtful"]!!.jsonPrimitive.content == "true" }
             assertTrue(doubtful.isNotEmpty(), "a doubtful entry must be exposed with doubtful=true")
         }
 
@@ -265,15 +336,25 @@ class DoubtBridgeSteps : En {
         }
     }
 
-    private fun retrieveResult(text: String, doubtful: Boolean, confidence: Double = 1.0) =
-        RetrieveResult(
-            chunkId = 1L, chunkIndex = 0, chunkText = text, sectionPath = "Ch1",
-            headingLevel = 1, sourceDocument = "book", similarity = 0.8,
-            confidence = confidence, doubtful = doubtful,
-        )
+    private fun retrieveResult(
+        text: String,
+        doubtful: Boolean,
+        confidence: Double = 1.0,
+    ) = RetrieveResult(
+        chunkId = 1L,
+        chunkIndex = 0,
+        chunkText = text,
+        sectionPath = "Ch1",
+        headingLevel = 1,
+        sourceDocument = "book",
+        similarity = 0.8,
+        confidence = confidence,
+        doubtful = doubtful,
+    )
 
     private class RecordingIngestStore : RagVectorStore() {
         var received: List<DoubtfulChunk>? = null
+
         override suspend fun ingestWithDoubt(
             chunks: List<DoubtfulChunk>,
             batchLogger: (String) -> Unit,
@@ -285,7 +366,11 @@ class DoubtBridgeSteps : En {
 
     private class RecordingRetrieveStore : RagVectorStore() {
         var called = false
-        override suspend fun searchWithDoubt(query: String, topK: Int): List<RetrieveResult> {
+
+        override suspend fun searchWithDoubt(
+            query: String,
+            topK: Int,
+        ): List<RetrieveResult> {
             called = true
             return emptyList()
         }
@@ -294,6 +379,10 @@ class DoubtBridgeSteps : En {
     /** In-memory store for the execution-level scenarios (no pgvector). */
     private class HardenedRagStore : RagVectorStore() {
         var results: List<RetrieveResult> = emptyList()
-        override suspend fun searchWithDoubt(query: String, topK: Int): List<RetrieveResult> = results
+
+        override suspend fun searchWithDoubt(
+            query: String,
+            topK: Int,
+        ): List<RetrieveResult> = results
     }
 }

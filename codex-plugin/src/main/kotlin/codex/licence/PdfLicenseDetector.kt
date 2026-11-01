@@ -1,9 +1,9 @@
 package codex.licence
 
 import codex.LicenseZone
-import java.io.File
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
+import java.io.File
 
 /**
  * Detects the license zone of a PDF document by scanning its extracted text.
@@ -22,20 +22,21 @@ import org.apache.pdfbox.text.PDFTextStripper
  * The detection is case-insensitive and does not modify its inputs.
  */
 object PdfLicenseDetector {
+    private val ossPatterns: List<Regex> =
+        listOf(
+            Regex("""(?i)apache\s+license\s+2\.0"""),
+            Regex("""(?i)apache-2\.0"""),
+            Regex("""(?i)creative\s+commons"""),
+            Regex("""(?i)cc-by"""),
+            Regex("""(?i)\bcc0\b"""),
+        )
 
-    private val ossPatterns: List<Regex> = listOf(
-        Regex("""(?i)apache\s+license\s+2\.0"""),
-        Regex("""(?i)apache-2\.0"""),
-        Regex("""(?i)creative\s+commons"""),
-        Regex("""(?i)cc-by"""),
-        Regex("""(?i)\bcc0\b""")
-    )
-
-    private val cssPatterns: List<Regex> = listOf(
-        Regex("""(?i)©"""),
-        Regex("""(?i)copyright"""),
-        Regex("""(?i)all\s+rights\s+reserved""")
-    )
+    private val cssPatterns: List<Regex> =
+        listOf(
+            Regex("""(?i)©"""),
+            Regex("""(?i)copyright"""),
+            Regex("""(?i)all\s+rights\s+reserved"""),
+        )
 
     /**
      * Detects the license zone from the text already extracted from a PDF.

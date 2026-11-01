@@ -20,7 +20,7 @@ data class LddNode(
     val level: Int = 0,
     val type: String? = null,
     val text: String? = null,
-    val children: List<LddNode> = emptyList()
+    val children: List<LddNode> = emptyList(),
 )
 
 /**
@@ -36,21 +36,20 @@ data class LddNode(
 data class DocNode(
     val title: String,
     val level: Int,
-    val children: MutableList<DocNode> = mutableListOf()
+    val children: MutableList<DocNode> = mutableListOf(),
 ) {
     /** True if this node represents a paragraph (level == -1). */
     val isParagraph: Boolean get() = level == -1
 }
 
 /** Converts this [LddNode] (serializable) to a mutable [DocNode]. */
-fun LddNode.toDocNode(): DocNode {
-    return if (type == "paragraph" || text != null) {
+fun LddNode.toDocNode(): DocNode =
+    if (type == "paragraph" || text != null) {
         DocNode(title = text ?: "", level = -1)
     } else {
         val docChildren = children.map { it.toDocNode() }.toMutableList()
         DocNode(title = title, level = level, children = docChildren)
     }
-}
 
 /** Converts this [DocNode] (mutable) to a serializable [LddNode]. */
 fun DocNode.toLddNode(): LddNode {
@@ -60,7 +59,11 @@ fun DocNode.toLddNode(): LddNode {
     return LddNode(
         title = title,
         level = level,
-        children = if (children.isEmpty()) emptyList()
-        else children.map { it.toLddNode() }
+        children =
+            if (children.isEmpty()) {
+                emptyList()
+            } else {
+                children.map { it.toLddNode() }
+            },
     )
 }

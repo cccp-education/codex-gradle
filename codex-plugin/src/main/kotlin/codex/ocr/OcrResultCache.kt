@@ -7,12 +7,14 @@ package codex.ocr
  * sur disque (JSON). En test, une implémentation in-memory suffit.
  */
 interface CacheStorage {
-
     /** Lit l'entrée de cache pour une page, ou null si absente. */
     fun read(pageId: String): CacheEntry?
 
     /** Écrit (ou écrase) l'entrée de cache pour une page. */
-    fun write(pageId: String, entry: CacheEntry)
+    fun write(
+        pageId: String,
+        entry: CacheEntry,
+    )
 }
 
 /**
@@ -24,7 +26,7 @@ interface CacheStorage {
  */
 data class CacheEntry(
     val sourceHash: String,
-    val result: OcrResult
+    val result: OcrResult,
 )
 
 /**
@@ -44,20 +46,25 @@ data class CacheEntry(
  * d'erreur de stockage (disque plein, permissions), le cache
  * dégrade silencieusement en miss (pas de crash du pipeline).
  */
-class OcrResultCache(private val storage: CacheStorage) {
-
+class OcrResultCache(
+    private val storage: CacheStorage,
+) {
     /**
      * Cherche un résultat en cache pour la page et le hash donnés.
      *
      * @return le [OcrResult] si cache hit (hash match), null sinon
      *         (miss, pageId inconnu, hash différent, ou erreur stockage)
      */
-    fun lookup(pageId: String, sourceHash: String): OcrResult? {
-        val entry = try {
-            storage.read(pageId)
-        } catch (e: Exception) {
-            null
-        } ?: return null
+    fun lookup(
+        pageId: String,
+        sourceHash: String,
+    ): OcrResult? {
+        val entry =
+            try {
+                storage.read(pageId)
+            } catch (e: Exception) {
+                null
+            } ?: return null
         return if (entry.sourceHash == sourceHash) entry.result else null
     }
 
@@ -67,7 +74,11 @@ class OcrResultCache(private val storage: CacheStorage) {
      * En cas d'erreur de stockage, l'écriture est silencieusement ignorée
      * (dégradé — le pipeline continuera sans cache, pas de crash).
      */
-    fun store(pageId: String, sourceHash: String, result: OcrResult) {
+    fun store(
+        pageId: String,
+        sourceHash: String,
+        result: OcrResult,
+    ) {
         try {
             storage.write(pageId, CacheEntry(sourceHash, result))
         } catch (e: Exception) {
@@ -80,6 +91,8 @@ class OcrResultCache(private val storage: CacheStorage) {
      *
      * @return true si [lookup] retournerait un résultat non-null
      */
-    fun isReusable(pageId: String, sourceHash: String): Boolean =
-        lookup(pageId, sourceHash) != null
+    fun isReusable(
+        pageId: String,
+        sourceHash: String,
+    ): Boolean = lookup(pageId, sourceHash) != null
 }

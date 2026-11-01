@@ -27,10 +27,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-enrichment.html, json:build/reports/cucumber-enrichment.json"
+    value = "pretty, html:build/reports/cucumber-enrichment.html, json:build/reports/cucumber-enrichment.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@enrichment and not @wip and not @integration"
+    value = "@enrichment and not @wip and not @integration",
 )
 class CodexEnrichmentCucumberRunner

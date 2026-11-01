@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class CodexRetrieveTaskTest {
-
     @Test
     fun `task is registered and has correct type`() {
         val project = ProjectBuilder.builder().build()

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ExtractBookStructureTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -88,8 +87,10 @@ class ExtractBookStructureTaskTest {
         task.extract()
 
         assertTrue(outputFile.exists())
-        assertTrue(outputFile.readText().contains("[Empty document]") ||
-            outputFile.readText().contains("[Document vide]"))
+        assertTrue(
+            outputFile.readText().contains("[Empty document]") ||
+                outputFile.readText().contains("[Document vide]"),
+        )
     }
 
     @Test
@@ -176,8 +177,10 @@ class ExtractBookStructureTaskTest {
         task.extract()
 
         val content = outputFile.readText()
-        assertTrue(content.contains("= Main Title"),
-            "Expected h1 header, got:\n${content.lines().take(10).joinToString("\n")}")
+        assertTrue(
+            content.contains("= Main Title"),
+            "Expected h1 header, got:\n${content.lines().take(10).joinToString("\n")}",
+        )
         assertTrue(content.contains("== Chapter One"))
         assertTrue(content.contains("=== "), "Should have h3 sections")
         assertTrue(content.contains("This is regular body text"))
@@ -208,12 +211,17 @@ class ExtractBookStructureTaskTest {
         assertTrue(content.contains("`single_line_code`"), "Expected inline code, got:\n$content")
     }
 
-    private fun createExtractTask(pdfFile: File, outputFile: File): ExtractBookStructureTask {
+    private fun createExtractTask(
+        pdfFile: File,
+        outputFile: File,
+    ): ExtractBookStructureTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "collectBookStructure",
-            ExtractBookStructureTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "collectBookStructure",
+                    ExtractBookStructureTask::class.java,
+                ).get()
         task.pdfFile.set(pdfFile)
         task.outputFile.set(outputFile)
         return task

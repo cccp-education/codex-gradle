@@ -28,45 +28,62 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD RED -> GREEN -> REFACTOR.
  */
 class CodexCompositeContextDoubtTest {
-
     /** Recording in-memory subclass — no pgvector, no R2DBC, no Docker. */
     private class RecordingRagStore(
         private val results: List<RetrieveResult>,
     ) : RagVectorStore() {
         var searchWithDoubtCalled = false
 
-        override suspend fun searchWithDoubt(query: String, topK: Int): List<RetrieveResult> {
+        override suspend fun searchWithDoubt(
+            query: String,
+            topK: Int,
+        ): List<RetrieveResult> {
             searchWithDoubtCalled = true
             return results
         }
     }
 
     private fun task() =
-        ProjectBuilder.builder().build()
-            .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+            .get()
 
-    private fun result(text: String, doubtful: Boolean, confidence: Double = 1.0) =
-        RetrieveResult(
-            chunkId = 1L, chunkIndex = 0, chunkText = text,
-            sectionPath = "Ch1", headingLevel = 1, sourceDocument = "book",
-            similarity = 0.8, confidence = confidence, doubtful = doubtful,
-        )
+    private fun result(
+        text: String,
+        doubtful: Boolean,
+        confidence: Double = 1.0,
+    ) = RetrieveResult(
+        chunkId = 1L,
+        chunkIndex = 0,
+        chunkText = text,
+        sectionPath = "Ch1",
+        headingLevel = 1,
+        sourceDocument = "book",
+        similarity = 0.8,
+        confidence = confidence,
+        doubtful = doubtful,
+    )
 
     @Test
-    fun `retrieval delegates to the doubt-aware socle search`() = kotlinx.coroutines.runBlocking {
-        val store = RecordingRagStore(listOf(result("clean text", doubtful = false)))
+    fun `retrieval delegates to the doubt-aware socle search`() =
+        kotlinx.coroutines.runBlocking {
+            val store = RecordingRagStore(listOf(result("clean text", doubtful = false)))
 
-        task().searchDoubtAware(store, "query", 5)
+            task().searchDoubtAware(store, "query", 5)
 
-        assertTrue(store.searchWithDoubtCalled, "the doubt-aware searchWithDoubt must be used")
-    }
+            assertTrue(store.searchWithDoubtCalled, "the doubt-aware searchWithDoubt must be used")
+        }
 
     @Test
     fun `docs channel annotates a doubtful chunk by default`() {
-        val results = listOf(
-            result("clean section", doubtful = false),
-            result("shaky OCR section", doubtful = true, confidence = 0.0),
-        )
+        val results =
+            listOf(
+                result("clean section", doubtful = false),
+                result("shaky OCR section", doubtful = true, confidence = 0.0),
+            )
 
         val docs = task().buildDocsContent(results, excludeDoubtful = false)
 
@@ -77,10 +94,11 @@ class CodexCompositeContextDoubtTest {
 
     @Test
     fun `docs channel excludes a doubtful chunk when opted in`() {
-        val results = listOf(
-            result("clean section", doubtful = false),
-            result("shaky OCR section", doubtful = true, confidence = 0.0),
-        )
+        val results =
+            listOf(
+                result("clean section", doubtful = false),
+                result("shaky OCR section", doubtful = true, confidence = 0.0),
+            )
 
         val docs = task().buildDocsContent(results, excludeDoubtful = true)
 

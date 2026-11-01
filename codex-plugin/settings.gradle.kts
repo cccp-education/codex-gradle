@@ -13,10 +13,11 @@ plugins {
     id("com.gradleup.nmcp.settings").version("1.5.0")
 }
 
-val globalProps = java.util.Properties().also {
-    val globalFile = file(System.getProperty("user.home") + "/.gradle/gradle.properties")
-    if (globalFile.exists()) it.load(globalFile.inputStream())
-}
+val globalProps =
+    java.util.Properties().also {
+        val globalFile = file(System.getProperty("user.home") + "/.gradle/gradle.properties")
+        if (globalFile.exists()) it.load(globalFile.inputStream())
+    }
 
 nmcpSettings {
     centralPortal {

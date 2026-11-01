@@ -1,8 +1,8 @@
 package codex.bdd
 
+import codebase.store.RetrieveResult
 import codex.LicenseZone
 import codex.LicenseZoneDetector
-import codebase.store.RetrieveResult
 import io.cucumber.java.en.And
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
 
 class PipelineSteps {
-
     // Shared state between steps
     private val state = mutableMapOf<String, Any>()
 
@@ -34,11 +33,12 @@ class PipelineSteps {
 
     @And("the extracted text is chunked via ChunkDocumentTask")
     fun theExtractedTextIsChunkedViaChunkDocumentTask() {
-        val chunks = listOf(
-            mapOf("heading" to "Introduction", "content" to "Sample intro text.", "level" to 1),
-            mapOf("heading" to "Chapter 1", "content" to "Chapter content here.", "level" to 1),
-            mapOf("heading" to "Section 1.1", "content" to "Section details.", "level" to 2)
-        )
+        val chunks =
+            listOf(
+                mapOf("heading" to "Introduction", "content" to "Sample intro text.", "level" to 1),
+                mapOf("heading" to "Chapter 1", "content" to "Chapter content here.", "level" to 1),
+                mapOf("heading" to "Section 1.1", "content" to "Section details.", "level" to 2),
+            )
         state["chunks"] = chunks
     }
 
@@ -74,17 +74,18 @@ class PipelineSteps {
     @Given("a document split into {int} semantic chunks")
     fun aDocumentSplitIntoSemanticChunks(count: Int) {
         state["chunkCount"] = count
-        state["chunks"] = (1..count).map { i ->
-            RetrieveResult(
-                chunkId = i.toLong(),
-                chunkIndex = i - 1,
-                chunkText = "Chunk $i content",
-                sectionPath = "Section $i",
-                headingLevel = 1,
-                sourceDocument = "test-doc",
-                similarity = 0.0
-            )
-        }
+        state["chunks"] =
+            (1..count).map { i ->
+                RetrieveResult(
+                    chunkId = i.toLong(),
+                    chunkIndex = i - 1,
+                    chunkText = "Chunk $i content",
+                    sectionPath = "Section $i",
+                    headingLevel = 1,
+                    sourceDocument = "test-doc",
+                    similarity = 0.0,
+                )
+            }
     }
 
     @When("the chunks are vectorized via CodexIngestTask with ONNX AllMiniLmL6V2")
@@ -121,10 +122,11 @@ class PipelineSteps {
     @Given("pgvector contains documents about {string}")
     fun pgvectorContainsDocuments(topic: String) {
         state["topic"] = topic
-        state["retrieveResults"] = listOf(
-            RetrieveResult(1L, 0, "Gradient descent is an optimization algorithm.", "Math/Optimization", 1, "ml-book.pdf", 0.92),
-            RetrieveResult(2L, 1, "Learning rate is a hyperparameter.", "Math/Optimization", 2, "ml-book.pdf", 0.85)
-        )
+        state["retrieveResults"] =
+            listOf(
+                RetrieveResult(1L, 0, "Gradient descent is an optimization algorithm.", "Math/Optimization", 1, "ml-book.pdf", 0.92),
+                RetrieveResult(2L, 1, "Learning rate is a hyperparameter.", "Math/Optimization", 2, "ml-book.pdf", 0.85),
+            )
     }
 
     @When("a query {string} is performed via CodexRetrieveTask")
@@ -160,9 +162,10 @@ class PipelineSteps {
 
     @Given("pgvector contains indexed documents")
     fun pgvectorContainsIndexedDocuments() {
-        state["retrieveResults"] = listOf(
-            RetrieveResult(1L, 0, "Document content", "Chapter 1", 1, "doc.pdf", 0.75)
-        )
+        state["retrieveResults"] =
+            listOf(
+                RetrieveResult(1L, 0, "Document content", "Chapter 1", 1, "doc.pdf", 0.75),
+            )
     }
 
     @When("an empty query string is used")
@@ -181,7 +184,10 @@ class PipelineSteps {
     // ── Feature 4: pipeline-auto-detect ───────────────────────────────────
 
     @Given("a corpus directory containing {string} and {string}")
-    fun aCorpusDirectoryContaining(file1: String, file2: String) {
+    fun aCorpusDirectoryContaining(
+        file1: String,
+        file2: String,
+    ) {
         state["corpusFiles"] = listOf(file1, file2)
     }
 

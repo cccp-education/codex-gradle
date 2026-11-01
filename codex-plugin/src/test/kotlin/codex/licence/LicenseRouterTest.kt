@@ -21,7 +21,6 @@ import java.io.File
  * Baby-step TDD strict RED (type absent) -> GREEN -> REFACTOR.
  */
 class LicenseRouterTest {
-
     private val base = File("/workspace/output")
 
     @Test

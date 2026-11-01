@@ -34,7 +34,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "Knowledge base routed export — non-cacheable (license detection + multi-format write)")
 abstract class DeployKnowledgeBaseRoutedTask : ExportKnowledgeBaseTask() {
-
     /** Source PDF scanned for license markers (Apache/CC/copyright). */
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)

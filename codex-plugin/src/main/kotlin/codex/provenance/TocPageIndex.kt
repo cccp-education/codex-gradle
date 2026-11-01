@@ -14,7 +14,6 @@ import java.io.File
  * pure and deterministic — no file is mutated (Loi de l'Économie d'Encre).
  */
 object TocPageIndex {
-
     private val REF_PATTERN = Regex("""^\d+(\.\d+)*$""")
 
     /**
@@ -48,10 +47,12 @@ object TocPageIndex {
             if (!REF_PATTERN.matches(ref)) continue
             if (title.isBlank()) continue
 
-            val pages = cells[2].split(",")
-                .mapNotNull { it.trim().toIntOrNull() }
-                .filter { it > 0 }
-                .distinct()
+            val pages =
+                cells[2]
+                    .split(",")
+                    .mapNotNull { it.trim().toIntOrNull() }
+                    .filter { it > 0 }
+                    .distinct()
             if (pages.isEmpty()) continue
 
             sections += TocSection(ref = ref, title = title, pages = pages)

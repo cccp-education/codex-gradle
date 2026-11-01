@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test
  * `(learner_id, formation_id)`.
  */
 class ProfileStatementsTest {
-
     @Test
     fun `initSchema creates vector extension and dedicated learner_profiles table`() {
         val stmts = ProfileStatements.initSchema()
@@ -51,7 +50,7 @@ class ProfileStatementsTest {
         assertTrue(sql.contains("INSERT INTO codex_learner_profiles"), "insert: $sql")
         assertTrue(
             sql.contains("ON CONFLICT (learner_id, formation_id) DO UPDATE"),
-            "upsert on composite key: $sql"
+            "upsert on composite key: $sql",
         )
         assertTrue(sql.contains("$1"), "bind learner_id: $sql")
         assertTrue(sql.contains("$2"), "bind formation_id: $sql")

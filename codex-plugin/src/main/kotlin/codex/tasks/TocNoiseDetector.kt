@@ -30,7 +30,6 @@ import codebase.store.DoubtfulChunk
  * Pure object — no I/O, no Gradle, unit-testable in isolation.
  */
 object TocNoiseDetector {
-
     /** Doubtful TOC chunks carry zero confidence — pure typographic noise. */
     const val TOC_NOISE_CONFIDENCE = 0.0
 
@@ -50,8 +49,7 @@ object TocNoiseDetector {
     /**
      * True when any heading line of [chunk] is a TOC entry.
      */
-    fun isTocNoise(chunk: DocumentChunk): Boolean =
-        chunk.content.lineSequence().any { isTocHeading(it) }
+    fun isTocNoise(chunk: DocumentChunk): Boolean = chunk.content.lineSequence().any { isTocHeading(it) }
 
     /**
      * Derives the doubt metadata for [chunk]: a TOC-polluted chunk is doubtful

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
  * sans base de données.
  */
 class ProfileConfigTest {
-
     @Test
     fun `default config points at localhost codex`() {
         val config = ProfileConfig()
@@ -24,13 +23,14 @@ class ProfileConfigTest {
 
     @Test
     fun `custom config preserves all fields`() {
-        val config = ProfileConfig(
-            host = "db.example.com",
-            port = 6543,
-            database = "codex-test",
-            username = "admin",
-            password = "secret"
-        )
+        val config =
+            ProfileConfig(
+                host = "db.example.com",
+                port = 6543,
+                database = "codex-test",
+                username = "admin",
+                password = "secret",
+            )
         assertEquals("db.example.com", config.host)
         assertEquals(6543, config.port)
         assertEquals("codex-test", config.database)

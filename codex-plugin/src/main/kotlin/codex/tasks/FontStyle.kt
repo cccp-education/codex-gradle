@@ -8,7 +8,6 @@ package codex.tasks
  * Source Code Pro, Fira Code, DejaVu Sans Mono, Liberation Mono and similar.
  */
 object FontStyleDetector {
-
     /**
      * Detects the font style from a PDF font name string.
      *
@@ -18,20 +17,37 @@ object FontStyleDetector {
     fun detect(fontName: String): FontStyle {
         val name = fontName.lowercase()
 
-        val monospace = name.contains("courier") || name.contains("mono") ||
-            name.contains("consolas") || name.contains("typewriter") ||
-            name.contains("menlo") || name.contains("monaco") ||
-            name.contains("source code") || name.contains("fira code") ||
-            name.contains("jetbrains") || name.contains("droid sans mono") ||
-            name.contains("dejavu sans mono") || name.contains("liberation mono")
+        val monospace =
+            name.contains("courier") ||
+                name.contains("mono") ||
+                name.contains("consolas") ||
+                name.contains("typewriter") ||
+                name.contains("menlo") ||
+                name.contains("monaco") ||
+                name.contains("source code") ||
+                name.contains("fira code") ||
+                name.contains("jetbrains") ||
+                name.contains("droid sans mono") ||
+                name.contains("dejavu sans mono") ||
+                name.contains("liberation mono")
 
-        val bold = !monospace && (name.contains("bold") || name.contains("bd ") ||
-            name.contains("heavy") || name.contains("black") ||
-            name.matches(Regex(".*bold(mt)?$")))
+        val bold =
+            !monospace &&
+                (
+                    name.contains("bold") ||
+                        name.contains("bd ") ||
+                        name.contains("heavy") ||
+                        name.contains("black") ||
+                        name.matches(Regex(".*bold(mt)?$"))
+                )
 
-        val italic = (name.contains("italic") || name.contains("oblique") ||
-            name.contains("slanted") || name.contains("it ") ||
-            name.matches(Regex(".*italic(mt)?$")))
+        val italic = (
+            name.contains("italic") ||
+                name.contains("oblique") ||
+                name.contains("slanted") ||
+                name.contains("it ") ||
+                name.matches(Regex(".*italic(mt)?$"))
+        )
 
         return when {
             monospace -> FontStyle.MONOSPACE
@@ -53,12 +69,19 @@ object FontStyleDetector {
  * @property MONOSPACE fixed-width font (code blocks)
  */
 enum class FontStyle {
-    NORMAL, BOLD, ITALIC, BOLD_ITALIC, MONOSPACE;
+    NORMAL,
+    BOLD,
+    ITALIC,
+    BOLD_ITALIC,
+    MONOSPACE,
+    ;
 
     /** Returns true if this style represents a monospace font. */
     fun isMonospace() = this == MONOSPACE
+
     /** Returns true if this style has bold weight. */
     fun isBold() = this == BOLD || this == BOLD_ITALIC
+
     /** Returns true if this style is italic/oblique. */
     fun isItalic() = this == ITALIC || this == BOLD_ITALIC
 }

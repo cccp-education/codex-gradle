@@ -23,11 +23,11 @@ import java.io.File
  * Baby-step TDD strict RED (tâche inexistante) → GREEN → REFACTOR.
  */
 class DeriveOntologyTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
-    private val bookSql = """
+    private val bookSql =
+        """
         -- codex: collectBookSql
         CREATE TABLE IF NOT EXISTS book (
             id          SERIAL PRIMARY KEY,
@@ -50,7 +50,7 @@ class DeriveOntologyTaskTest {
             text        TEXT NOT NULL,
             position    INTEGER NOT NULL DEFAULT 0
         );
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun `deriveOntology task is registered with transform group`() {
@@ -65,9 +65,10 @@ class DeriveOntologyTaskTest {
     @Test
     fun `deriveOntology writes ontology mapping JSON from SQL DDL`() {
         val sqlFile = File(tempDir, "book.sql").apply { writeText(bookSql) }
-        val lddFile = File(tempDir, "book.ldd.json").apply {
-            writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), emptyList()))
-        }
+        val lddFile =
+            File(tempDir, "book.ldd.json").apply {
+                writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), emptyList()))
+            }
         val outputFile = File(tempDir, "ontology.json")
 
         val task = createTask(sqlFile, lddFile, outputFile)
@@ -85,9 +86,10 @@ class DeriveOntologyTaskTest {
     fun `deriveOntology uses LDD title to name bounded context`() {
         val sqlFile = File(tempDir, "book.sql").apply { writeText(bookSql) }
         val lddNodes = listOf(LddNode(title = "Applied AI for Enterprise Java", level = 1))
-        val lddFile = File(tempDir, "book.ldd.json").apply {
-            writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), lddNodes))
-        }
+        val lddFile =
+            File(tempDir, "book.ldd.json").apply {
+                writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), lddNodes))
+            }
         val outputFile = File(tempDir, "ontology.json")
 
         val task = createTask(sqlFile, lddFile, outputFile)
@@ -102,9 +104,10 @@ class DeriveOntologyTaskTest {
     @Test
     fun `deriveOntology with empty SQL produces empty mapping`() {
         val sqlFile = File(tempDir, "empty.sql").apply { writeText("-- nothing") }
-        val lddFile = File(tempDir, "empty.ldd.json").apply {
-            writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), emptyList()))
-        }
+        val lddFile =
+            File(tempDir, "empty.ldd.json").apply {
+                writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), emptyList()))
+            }
         val outputFile = File(tempDir, "ontology.json")
 
         val task = createTask(sqlFile, lddFile, outputFile)
@@ -119,13 +122,15 @@ class DeriveOntologyTaskTest {
     private fun createTask(
         sqlFile: File,
         lddFile: File,
-        outputFile: File
+        outputFile: File,
     ): DeriveOntologyTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "deriveOntology",
-            DeriveOntologyTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "deriveOntology",
+                    DeriveOntologyTask::class.java,
+                ).get()
         task.sqlFile.set(sqlFile)
         task.jsonFile.set(lddFile)
         task.outputFile.set(outputFile)

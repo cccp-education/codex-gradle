@@ -23,7 +23,6 @@ import java.io.File
  * Baby-step TDD RED → GREEN → REFACTOR.
  */
 class CollectOcrQualityReportTest {
-
     @Test
     fun `task exposes an optional qualityReportFile property`() {
         val project = ProjectBuilder.builder().build()
@@ -35,7 +34,9 @@ class CollectOcrQualityReportTest {
     }
 
     @Test
-    fun `collectOcr writes a quality report flagging a low-confidence page`(@TempDir tempDir: File) {
+    fun `collectOcr writes a quality report flagging a low-confidence page`(
+        @TempDir tempDir: File,
+    ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 
@@ -61,7 +62,9 @@ class CollectOcrQualityReportTest {
     }
 
     @Test
-    fun `collectOcr quality report flags a ghost image`(@TempDir tempDir: File) {
+    fun `collectOcr quality report flags a ghost image`(
+        @TempDir tempDir: File,
+    ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 
@@ -78,8 +81,8 @@ class CollectOcrQualityReportTest {
         task.aiEngine.set(
             fakeEngine(
                 "A long enough readable page body above the short threshold.\nimage::ghost.png[]",
-                0.95
-            )
+                0.95,
+            ),
         )
 
         task.collectOcr()
@@ -90,7 +93,9 @@ class CollectOcrQualityReportTest {
     }
 
     @Test
-    fun `collectOcr writes no quality report when the property is unset`(@TempDir tempDir: File) {
+    fun `collectOcr writes no quality report when the property is unset`(
+        @TempDir tempDir: File,
+    ) {
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("education.cccp.codex")
 
@@ -110,21 +115,55 @@ class CollectOcrQualityReportTest {
         assertEquals(0, outputDir.parentFile.listFiles { f -> f.name.contains("quality") }?.size ?: 0)
     }
 
-    private fun fakeEngine(text: String, confidence: Double): OcrEngine = object : OcrEngine {
-        override fun process(request: OcrRequest): OcrResult = OcrResult.of(
-            text = text,
-            confidence = confidence,
-            language = request.language,
-            model = "fake-ai",
-            metadata = mapOf("engine" to "fake-ai")
-        )
-    }
+    private fun fakeEngine(
+        text: String,
+        confidence: Double,
+    ): OcrEngine =
+        object : OcrEngine {
+            override fun process(request: OcrRequest): OcrResult =
+                OcrResult.of(
+                    text = text,
+                    confidence = confidence,
+                    language = request.language,
+                    model = "fake-ai",
+                    metadata = mapOf("engine" to "fake-ai"),
+                )
+        }
 
-    private fun minimalPng(): ByteArray = byteArrayOf(
-        0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15.toByte(), 0xC4.toByte(),
-        0x89.toByte(),
-    )
+    private fun minimalPng(): ByteArray =
+        byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15.toByte(),
+            0xC4.toByte(),
+            0x89.toByte(),
+        )
 }

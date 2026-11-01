@@ -1,7 +1,6 @@
 package codex.tasks
 
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ExportKnowledgeBaseTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -141,7 +139,7 @@ class ExportKnowledgeBaseTaskTest {
               {"id":"a","sourceDocument":"sort","sectionPath":"Chapter 1","headingLevel":2,"content":"## Chapter 1\nFirst","codeBlocks":[],"entities":[],"overlapNext":null,"license":"Apache-2.0"},
               {"id":"b","sourceDocument":"sort","sectionPath":"Chapter 1 > Section 1","headingLevel":3,"content":"### Section 1\nSecond","codeBlocks":[],"entities":[],"overlapNext":null,"license":"Apache-2.0"}
             ]
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(chunksFile, outputDir)
@@ -150,8 +148,10 @@ class ExportKnowledgeBaseTaskTest {
         val mdContent = outputDir.resolve("sort").resolve("knowledge-base.md").readText()
         val chapter1Pos = mdContent.indexOf("Chapter 1")
         val chapter2Pos = mdContent.indexOf("Chapter 2")
-        assertTrue(chapter1Pos < chapter2Pos,
-            "Chapter 1 should come before Chapter 2 in sorted output")
+        assertTrue(
+            chapter1Pos < chapter2Pos,
+            "Chapter 1 should come before Chapter 2 in sorted output",
+        )
     }
 
     @Test
@@ -173,7 +173,7 @@ class ExportKnowledgeBaseTaskTest {
                 "license": "Apache-2.0"
               }
             ]
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(chunksFile, outputDir)
@@ -181,26 +181,33 @@ class ExportKnowledgeBaseTaskTest {
 
         val mdContent = outputDir.resolve("nohead").resolve("knowledge-base.md").readText()
         assertTrue(mdContent.contains("Plain text without any heading"))
-        assertFalse(mdContent.contains("## nohead"),
-            "Should not render heading for headingLevel=0")
+        assertFalse(
+            mdContent.contains("## nohead"),
+            "Should not render heading for headingLevel=0",
+        )
     }
 
     private fun createTask(
         chunksFile: File,
-        outputDir: File
+        outputDir: File,
     ): ExportKnowledgeBaseTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "deployKnowledgeBase",
-            ExportKnowledgeBaseTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "deployKnowledgeBase",
+                    ExportKnowledgeBaseTask::class.java,
+                ).get()
         task.chunksFile.set(chunksFile)
         task.outputDir.set(outputDir)
         return task
     }
 
-    private fun createSimpleChunksJson(source: String, license: String): String {
-        return """
+    private fun createSimpleChunksJson(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-aaa",
@@ -237,10 +244,12 @@ class ExportKnowledgeBaseTaskTest {
           }
         ]
         """.trimIndent()
-    }
 
-    private fun chunksWithCodeBlock(source: String, license: String): String {
-        return """
+    private fun chunksWithCodeBlock(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-code",
@@ -255,10 +264,12 @@ class ExportKnowledgeBaseTaskTest {
           }
         ]
         """.trimIndent()
-    }
 
-    private fun chunksWithHierarchy(source: String, license: String): String {
-        return """
+    private fun chunksWithHierarchy(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-h1",
@@ -295,10 +306,12 @@ class ExportKnowledgeBaseTaskTest {
           }
         ]
         """.trimIndent()
-    }
 
-    private fun chunksWithOverlap(source: String, license: String): String {
-        return """
+    private fun chunksWithOverlap(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-overlap",
@@ -313,5 +326,4 @@ class ExportKnowledgeBaseTaskTest {
           }
         ]
         """.trimIndent()
-    }
 }

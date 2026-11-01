@@ -14,7 +14,6 @@ import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "PDFBox extraction + font analysis — external process, non-cacheable")
 abstract class ExtractBookStructureTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val pdfFile: RegularFileProperty
@@ -33,7 +32,7 @@ abstract class ExtractBookStructureTask : DefaultTask() {
 
         output.writeText(adocContent)
         logger.lifecycle(
-            "[codex] ✓ Structure extraite — ${adocContent.lines().size} lignes AsciiDoc"
+            "[codex] ✓ Structure extraite — ${adocContent.lines().size} lignes AsciiDoc",
         )
     }
 
@@ -54,7 +53,7 @@ abstract class ExtractBookStructureTask : DefaultTask() {
         logger.lifecycle(
             "[codex] Fontes: avg=${"%.1f".format(avg)}, max=${"%.1f".format(max)}, " +
                 "h1≥${"%.1f".format(headerThresholds.h1)}, h2≥${"%.1f".format(headerThresholds.h2)}, " +
-                "h3≥${"%.1f".format(headerThresholds.h3)}, h4≥${"%.1f".format(headerThresholds.h4)}"
+                "h3≥${"%.1f".format(headerThresholds.h3)}, h4≥${"%.1f".format(headerThresholds.h4)}",
         )
 
         val groups = groupTextPositionsByY(positionedLines)
@@ -63,14 +62,17 @@ abstract class ExtractBookStructureTask : DefaultTask() {
     }
 
     private fun computeHeaderThresholds(
-        avg: Double, max: Double, min: Double, range: Double
+        avg: Double,
+        max: Double,
+        min: Double,
+        range: Double,
     ): HeaderThresholds = TypographicAnalyzer.computeThresholds(avg, max, min, range)
 
     data class PositionedLine(
         val text: String,
         val fontSize: Float,
         val fontStyle: FontStyle,
-        val y: Float
+        val y: Float,
     )
 
     private fun extractTextPositions(pdfFile: java.io.File): List<PositionedLine> {
@@ -78,25 +80,27 @@ abstract class ExtractBookStructureTask : DefaultTask() {
         val lines = mutableListOf<PositionedLine>()
 
         Loader.loadPDF(pdfFile).use { document ->
-            val stripper = object : PDFTextStripper() {
-                override fun writeString(
-                    text: String,
-                    textPositions: List<TextPosition>
-                ) {
-                    if (textPositions.isEmpty()) return
-                    val first = textPositions.first()
-                    val style = FontStyleDetector.detect(first.font.name)
-                    val line = PositionedLine(
-                        text = text.trimEnd(),
-                        fontSize = first.fontSize,
-                        fontStyle = style,
-                        y = first.y
-                    )
-                    if (line.text.isNotBlank()) {
-                        lines.add(line)
+            val stripper =
+                object : PDFTextStripper() {
+                    override fun writeString(
+                        text: String,
+                        textPositions: List<TextPosition>,
+                    ) {
+                        if (textPositions.isEmpty()) return
+                        val first = textPositions.first()
+                        val style = FontStyleDetector.detect(first.font.name)
+                        val line =
+                            PositionedLine(
+                                text = text.trimEnd(),
+                                fontSize = first.fontSize,
+                                fontStyle = style,
+                                y = first.y,
+                            )
+                        if (line.text.isNotBlank()) {
+                            lines.add(line)
+                        }
                     }
                 }
-            }
             stripper.sortByPosition = true
             stripper.getText(document)
         }
@@ -105,7 +109,7 @@ abstract class ExtractBookStructureTask : DefaultTask() {
     }
 
     private data class TextGroup(
-        val lines: MutableList<PositionedLine> = mutableListOf()
+        val lines: MutableList<PositionedLine> = mutableListOf(),
     )
 
     private fun groupTextPositionsByY(lines: List<PositionedLine>): List<TextGroup> {
@@ -127,7 +131,7 @@ abstract class ExtractBookStructureTask : DefaultTask() {
 
     private fun buildAsciiDocFromGroups(
         groups: List<TextGroup>,
-        thresholds: HeaderThresholds
+        thresholds: HeaderThresholds,
     ): String {
         val sb = StringBuilder()
         var codeBuffer = mutableListOf<String>()
@@ -178,28 +182,33 @@ abstract class ExtractBookStructureTask : DefaultTask() {
                 val sizeBoost = if (bold) 0.5 else 0.0
                 val adjustedSize = first.fontSize + sizeBoost.toFloat()
 
-                val prefix = when {
-                    adjustedSize >= thresholds.h1 -> "= "
-                    adjustedSize >= thresholds.h2 -> "== "
-                    adjustedSize >= thresholds.h3 -> "=== "
-                    adjustedSize >= thresholds.h4 -> "==== "
-                    else -> null
-                }
+                val prefix =
+                    when {
+                        adjustedSize >= thresholds.h1 -> "= "
+                        adjustedSize >= thresholds.h2 -> "== "
+                        adjustedSize >= thresholds.h3 -> "=== "
+                        adjustedSize >= thresholds.h4 -> "==== "
+                        else -> null
+                    }
 
                 if (prefix != null) {
-                    if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n"))
+                    if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n")) {
                         sb.appendLine()
+                    }
                     sb.appendLine("$prefix${fullText.removePrefix("= ").removePrefix("== ").removePrefix("=== ").removePrefix("==== ")}")
                     sb.appendLine()
                     continue
                 }
             }
 
-            val paraText = group.lines.joinToString(" ") { it.text.trim() }
-                .replace(Regex("""\s+"""), " ")
+            val paraText =
+                group.lines
+                    .joinToString(" ") { it.text.trim() }
+                    .replace(Regex("""\s+"""), " ")
             if (paraText.isNotBlank()) {
-                if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n"))
+                if (idx > 0 && sb.isNotEmpty() && !sb.endsWith("\n\n")) {
                     sb.append(" ")
+                }
                 sb.append(paraText)
                 if (idx < groups.size - 1) sb.appendLine()
             }

@@ -30,7 +30,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "SQL LMD → ontology mapping — deterministic pure computation, non-cacheable")
 abstract class DeriveOntologyTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sqlFile: RegularFileProperty
@@ -55,12 +54,16 @@ abstract class DeriveOntologyTask : DefaultTask() {
 
         val mapping = OntologyDeriver.derive(lddNodes, sqlInput.readText())
 
-        val mappingJson = Json { prettyPrint = true; prettyPrintIndent = "  " }
+        val mappingJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
         output.writeText(mappingJson.encodeToString(OntologyMapping.serializer(), mapping))
 
         logger.lifecycle(
             "[codex] ontology : ${mapping.boundedContexts.size} bounded contexts, " +
-                "${mapping.aggregates.size} aggregates, ${mapping.valueObjects.size} value objects"
+                "${mapping.aggregates.size} aggregates, ${mapping.valueObjects.size} value objects",
         )
     }
 }

@@ -19,7 +19,6 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 @DisableCachingByDefault(because = "Apache Tika EPUB extraction — external process, non-cacheable")
 abstract class ExtractEpubStructureTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val epubFile: RegularFileProperty
@@ -37,7 +36,7 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
         val adocContent = buildAsciiDoc(input)
         output.writeText(adocContent)
         logger.lifecycle(
-            "[codex] ✓ EPUB structure done — ${adocContent.lines().size} AsciiDoc lines"
+            "[codex] ✓ EPUB structure done — ${adocContent.lines().size} AsciiDoc lines",
         )
     }
 
@@ -66,7 +65,11 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
         return sb.toString()
     }
 
-    private fun traverse(node: Node, sb: StringBuilder, depth: Int) {
+    private fun traverse(
+        node: Node,
+        sb: StringBuilder,
+        depth: Int,
+    ) {
         when (node.nodeType) {
             Node.ELEMENT_NODE -> {
                 val el = node as Element
@@ -142,9 +145,7 @@ abstract class ExtractEpubStructureTask : DefaultTask() {
         return sb.toString().trim()
     }
 
-    private fun Element.childNodes(): List<Node> =
-        (0 until this.childNodes.length).map { this.childNodes.item(it) }
+    private fun Element.childNodes(): List<Node> = (0 until this.childNodes.length).map { this.childNodes.item(it) }
 
-    private fun Node.childNodes(): List<Node> =
-        (0 until this.childNodes.length).map { this.childNodes.item(it) }
+    private fun Node.childNodes(): List<Node> = (0 until this.childNodes.length).map { this.childNodes.item(it) }
 }

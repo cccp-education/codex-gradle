@@ -26,7 +26,6 @@ import java.io.File
  * exist — characterization tests of the existing chained behavior).
  */
 class ConvertToMarkdownTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -51,7 +50,7 @@ class ConvertToMarkdownTaskTest {
             == Chapter Two
             
             Final text.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -91,7 +90,7 @@ class ConvertToMarkdownTaskTest {
                 println("Kotlin")
             }
             ----
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -125,7 +124,7 @@ class ConvertToMarkdownTaskTest {
             ====
             Try using the shortcut Ctrl+S.
             ====
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -153,7 +152,7 @@ class ConvertToMarkdownTaskTest {
             |===
             
             After the table.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -176,7 +175,7 @@ class ConvertToMarkdownTaskTest {
             image:screenshot.png[Screenshot of the application]
             
             Some text.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -195,7 +194,7 @@ class ConvertToMarkdownTaskTest {
             = Links
             
             Check https://example.com for more info.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -218,7 +217,7 @@ class ConvertToMarkdownTaskTest {
             * Third item
             
             Normal text after list.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -240,7 +239,7 @@ class ConvertToMarkdownTaskTest {
             = Formatting
             
             This text has **bold** and *italic* and `code` inline.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -265,7 +264,7 @@ class ConvertToMarkdownTaskTest {
             Visible content.
             
             // Another comment
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(adocFile, mdFile)
@@ -290,12 +289,17 @@ class ConvertToMarkdownTaskTest {
         assertTrue(md.length > 0, "Should produce non-empty output")
     }
 
-    private fun createTask(adocFile: File, mdFile: File): ConvertToMarkdownTask {
+    private fun createTask(
+        adocFile: File,
+        mdFile: File,
+    ): ConvertToMarkdownTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformToMarkdown",
-            ConvertToMarkdownTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformToMarkdown",
+                    ConvertToMarkdownTask::class.java,
+                ).get()
         task.adocFile.set(adocFile)
         task.markdownFile.set(mdFile)
         return task
@@ -305,12 +309,17 @@ class ConvertToMarkdownTaskTest {
     // Real extraction output (AsciiDoc from a synthetic PDF) is fed to the
     // converter instead of hand-crafted fragments. Validates the pipeline.
 
-    private fun createExtractTask(pdfFile: File, outputFile: File): ExtractBookStructureTask {
+    private fun createExtractTask(
+        pdfFile: File,
+        outputFile: File,
+    ): ExtractBookStructureTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "collectBookStructure",
-            ExtractBookStructureTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "collectBookStructure",
+                    ExtractBookStructureTask::class.java,
+                ).get()
         task.pdfFile.set(pdfFile)
         task.outputFile.set(outputFile)
         return task
@@ -382,7 +391,10 @@ class ConvertToMarkdownTaskTest {
         }
     }
 
-    private fun runChainedPipeline(pdfFile: File, mdFile: File): String {
+    private fun runChainedPipeline(
+        pdfFile: File,
+        mdFile: File,
+    ): String {
         val adocFile = File(tempDir, pdfFile.nameWithoutExtension + ".adoc")
         val extractTask = createExtractTask(pdfFile, adocFile)
         extractTask.extract()
@@ -413,7 +425,7 @@ class ConvertToMarkdownTaskTest {
 
         assertTrue(
             md.contains("# Introduction to Programming"),
-            "Chained output should preserve the extracted title as h1, got: $md"
+            "Chained output should preserve the extracted title as h1, got: $md",
         )
     }
 
@@ -429,11 +441,11 @@ class ConvertToMarkdownTaskTest {
         assertTrue(md.contains("Hello World Example"), "Should preserve sub-section heading text")
         assertTrue(
             md.contains("### Getting Started") || md.contains("## Getting Started"),
-            "Getting Started should map to a markdown heading, got: $md"
+            "Getting Started should map to a markdown heading, got: $md",
         )
         assertTrue(
             md.contains("#### Hello World Example") || md.contains("### Hello World Example"),
-            "Hello World Example should map to a deeper markdown heading, got: $md"
+            "Hello World Example should map to a deeper markdown heading, got: $md",
         )
     }
 
@@ -447,15 +459,15 @@ class ConvertToMarkdownTaskTest {
 
         assertTrue(
             md.contains("This chapter introduces programming concepts to beginners."),
-            "Should preserve first body paragraph from extraction"
+            "Should preserve first body paragraph from extraction",
         )
         assertTrue(
             md.contains("Let us write our first program."),
-            "Should preserve second body paragraph from extraction"
+            "Should preserve second body paragraph from extraction",
         )
         assertTrue(
             md.contains("The function keyword declares a new function."),
-            "Should preserve trailing body paragraph from extraction"
+            "Should preserve trailing body paragraph from extraction",
         )
     }
 
@@ -469,11 +481,11 @@ class ConvertToMarkdownTaskTest {
 
         assertTrue(
             md.contains("function main()"),
-            "Should preserve first code line extracted from mono font, got: $md"
+            "Should preserve first code line extracted from mono font, got: $md",
         )
         assertTrue(
             md.contains("println"),
-            "Should preserve println code line extracted from mono font, got: $md"
+            "Should preserve println code line extracted from mono font, got: $md",
         )
     }
 
@@ -489,7 +501,7 @@ class ConvertToMarkdownTaskTest {
         assertTrue(md.isNotBlank(), "Chained markdown for empty PDF should be non-blank")
         assertTrue(
             md.contains("Document vide") || md.contains("Empty document"),
-            "Should preserve empty-document marker from extraction, got: $md"
+            "Should preserve empty-document marker from extraction, got: $md",
         )
     }
 }

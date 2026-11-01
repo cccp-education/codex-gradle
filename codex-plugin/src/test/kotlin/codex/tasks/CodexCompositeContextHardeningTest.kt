@@ -39,22 +39,32 @@ import java.io.File
  * Baby-step TDD strict RED -> GREEN -> REFACTOR.
  */
 class CodexCompositeContextHardeningTest {
-
     @TempDir
     lateinit var tempDir: File
 
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
+        }
 
     /** Recording in-memory subclass — no pgvector, no R2DBC, no Docker. */
     private class RecordingRagStore(
         private val results: List<RetrieveResult>,
     ) : RagVectorStore() {
-        override suspend fun searchWithDoubt(query: String, topK: Int): List<RetrieveResult> = results
+        override suspend fun searchWithDoubt(
+            query: String,
+            topK: Int,
+        ): List<RetrieveResult> = results
     }
 
     private fun plainTask() =
-        ProjectBuilder.builder().build()
-            .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+            .get()
 
     private fun pluggedTask(): CodexCompositeContextTask {
         val project = ProjectBuilder.builder().build()
@@ -62,13 +72,25 @@ class CodexCompositeContextHardeningTest {
         return project.tasks.findByName("generateCompositeContext") as CodexCompositeContextTask
     }
 
-    private fun result(text: String, doubtful: Boolean = false) = RetrieveResult(
-        chunkId = 1L, chunkIndex = 0, chunkText = text,
-        sectionPath = "Ch1 > Sec", headingLevel = 2, sourceDocument = "book",
-        similarity = 0.8, confidence = 1.0, doubtful = doubtful,
+    private fun result(
+        text: String,
+        doubtful: Boolean = false,
+    ) = RetrieveResult(
+        chunkId = 1L,
+        chunkIndex = 0,
+        chunkText = text,
+        sectionPath = "Ch1 > Sec",
+        headingLevel = 2,
+        sourceDocument = "book",
+        similarity = 0.8,
+        confidence = 1.0,
+        doubtful = doubtful,
     )
 
-    private fun enrichedNode(title: String, vararg nodes: String): EnrichedLddNode =
+    private fun enrichedNode(
+        title: String,
+        vararg nodes: String,
+    ): EnrichedLddNode =
         EnrichedLddNode(
             ldd = LddNode(title = title, level = 1),
             ragChunks = emptyList(),
@@ -177,7 +199,7 @@ class CodexCompositeContextHardeningTest {
             json.encodeToString(
                 ListSerializer(EnrichedLddNode.serializer()),
                 listOf(enrichedNode("Architecture", "node-arch-1")),
-            )
+            ),
         )
         task.outputFile.set(out)
         task.storeOverride.set(RecordingRagStore(emptyList()))

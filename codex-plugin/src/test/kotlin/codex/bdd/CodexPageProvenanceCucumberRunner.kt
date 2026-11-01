@@ -29,10 +29,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-page-provenance.html, json:build/reports/cucumber-page-provenance.json"
+    value = "pretty, html:build/reports/cucumber-page-provenance.html, json:build/reports/cucumber-page-provenance.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@provenance and not @wip and not @integration"
+    value = "@provenance and not @wip and not @integration",
 )
 class CodexPageProvenanceCucumberRunner

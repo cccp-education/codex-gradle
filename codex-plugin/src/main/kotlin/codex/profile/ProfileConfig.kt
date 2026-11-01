@@ -21,5 +21,5 @@ data class ProfileConfig(
     val port: Int = 5432,
     val database: String = "codex",
     val username: String = "codex",
-    val password: String = "codex"
+    val password: String = "codex",
 )

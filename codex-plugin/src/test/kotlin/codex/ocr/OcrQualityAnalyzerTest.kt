@@ -19,16 +19,16 @@ import java.io.File
  * Baby-step TDD RED → GREEN → REFACTOR.
  */
 class OcrQualityAnalyzerTest {
-
     @Test
     fun `flags an illisible marker from the vision engine`() {
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "073",
-            imageFile = "073.png",
-            text = "Some text\n[ILLISIBLE]\nmore text",
-            confidence = 0.9,
-            pageDir = File("/nonexistent"),
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "073",
+                imageFile = "073.png",
+                text = "Some text\n[ILLISIBLE]\nmore text",
+                confidence = 0.9,
+                pageDir = File("/nonexistent"),
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.ILLISIBLE, issues.single().reason)
@@ -37,13 +37,14 @@ class OcrQualityAnalyzerTest {
 
     @Test
     fun `flags a near-empty page as too short`() {
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "074",
-            imageFile = "074.png",
-            text = "few",
-            confidence = 0.8,
-            pageDir = File("/nonexistent"),
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "074",
+                imageFile = "074.png",
+                text = "few",
+                confidence = 0.8,
+                pageDir = File("/nonexistent"),
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.TOO_SHORT, issues.single().reason)
@@ -51,13 +52,14 @@ class OcrQualityAnalyzerTest {
 
     @Test
     fun `flags a readable page whose real confidence is below the threshold`() {
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "075",
-            imageFile = "075.png",
-            text = "A long enough readable page body that is clearly above the short threshold.",
-            confidence = 0.32,
-            pageDir = File("/nonexistent"),
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "075",
+                imageFile = "075.png",
+                text = "A long enough readable page body that is clearly above the short threshold.",
+                confidence = 0.32,
+                pageDir = File("/nonexistent"),
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.LOW_CONFIDENCE, issues.single().reason)
@@ -66,30 +68,34 @@ class OcrQualityAnalyzerTest {
 
     @Test
     fun `does not flag a confident readable page`() {
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "076",
-            imageFile = "076.png",
-            text = "A long enough readable page body that is clearly above the short threshold.",
-            confidence = 0.91,
-            pageDir = File("/nonexistent"),
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "076",
+                imageFile = "076.png",
+                text = "A long enough readable page body that is clearly above the short threshold.",
+                confidence = 0.91,
+                pageDir = File("/nonexistent"),
+            )
 
         assertTrue(issues.isEmpty(), "a clean confident page must raise no issue")
     }
 
     @Test
-    fun `flags a ghost image referenced but not materialised next to the page`(@TempDir dir: File) {
+    fun `flags a ghost image referenced but not materialised next to the page`(
+        @TempDir dir: File,
+    ) {
         val pageDir = File(dir, "pages").apply { mkdirs() }
         // The referenced image does NOT exist in pageDir → ghost.
         val text = "Body\n\nimage::cerveau_gauche_vs_cerveau_droit.jpg[]\n\nmore"
 
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "061",
-            imageFile = "061.png",
-            text = text,
-            confidence = 0.9,
-            pageDir = pageDir,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "061",
+                imageFile = "061.png",
+                text = text,
+                confidence = 0.9,
+                pageDir = pageDir,
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.IMAGE_MISSING, issues.single().reason)
@@ -97,35 +103,42 @@ class OcrQualityAnalyzerTest {
     }
 
     @Test
-    fun `does not flag a materialised image`(@TempDir dir: File) {
+    fun `does not flag a materialised image`(
+        @TempDir dir: File,
+    ) {
         val pageDir = File(dir, "pages").apply { mkdirs() }
         File(pageDir, "diagram.png").writeBytes(ByteArray(4))
         val text = "A long enough readable page body above the short threshold.\n\nimage::diagram.png[]"
 
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "062",
-            imageFile = "062.png",
-            text = text,
-            confidence = 0.9,
-            pageDir = pageDir,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "062",
+                imageFile = "062.png",
+                text = text,
+                confidence = 0.9,
+                pageDir = pageDir,
+            )
 
         assertTrue(issues.isEmpty())
     }
 
     @Test
-    fun `detects the inline image macro form used by the real corpus`(@TempDir dir: File) {
+    fun `detects the inline image macro form used by the real corpus`(
+        @TempDir dir: File,
+    ) {
         val pageDir = File(dir, "pages").apply { mkdirs() }
-        val text = "A long enough readable page body above the short threshold.\n" +
-            "Body image:arrow-curved-left[] tail."
+        val text =
+            "A long enough readable page body above the short threshold.\n" +
+                "Body image:arrow-curved-left[] tail."
 
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "083_1",
-            imageFile = "083_1.png",
-            text = text,
-            confidence = 0.9,
-            pageDir = pageDir,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "083_1",
+                imageFile = "083_1.png",
+                text = text,
+                confidence = 0.9,
+                pageDir = pageDir,
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.IMAGE_MISSING, issues.single().reason)
@@ -133,18 +146,22 @@ class OcrQualityAnalyzerTest {
     }
 
     @Test
-    fun `a page can carry several structured issues at once`(@TempDir dir: File) {
+    fun `a page can carry several structured issues at once`(
+        @TempDir dir: File,
+    ) {
         val pageDir = File(dir, "pages").apply { mkdirs() }
-        val text = "A long enough readable page body above the short threshold.\n" +
-            "image::missing.png[]"
+        val text =
+            "A long enough readable page body above the short threshold.\n" +
+                "image::missing.png[]"
 
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "084",
-            imageFile = "084.png",
-            text = text,
-            confidence = 0.4,
-            pageDir = pageDir,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "084",
+                imageFile = "084.png",
+                text = text,
+                confidence = 0.4,
+                pageDir = pageDir,
+            )
 
         val reasons = issues.map { it.reason }.toSet()
         assertTrue(OcrQualityReason.LOW_CONFIDENCE in reasons)
@@ -152,17 +169,20 @@ class OcrQualityAnalyzerTest {
     }
 
     @Test
-    fun `whole-page reasons are exclusive-first - an illisible page is not probed further`(@TempDir dir: File) {
+    fun `whole-page reasons are exclusive-first - an illisible page is not probed further`(
+        @TempDir dir: File,
+    ) {
         val pageDir = File(dir, "pages").apply { mkdirs() }
         val text = "[ILLISIBLE] image::missing.png[]"
 
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "085",
-            imageFile = "085.png",
-            text = text,
-            confidence = 0.0,
-            pageDir = pageDir,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "085",
+                imageFile = "085.png",
+                text = text,
+                confidence = 0.0,
+                pageDir = pageDir,
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.ILLISIBLE, issues.single().reason)
@@ -171,14 +191,15 @@ class OcrQualityAnalyzerTest {
     @Test
     fun `low confidence threshold is configurable`() {
         val text = "A long enough readable page body that is clearly above the short threshold."
-        val issues = OcrQualityAnalyzer.analyze(
-            pageId = "086",
-            imageFile = "086.png",
-            text = text,
-            confidence = 0.55,
-            pageDir = File("/nonexistent"),
-            lowConfidenceThreshold = 0.6,
-        )
+        val issues =
+            OcrQualityAnalyzer.analyze(
+                pageId = "086",
+                imageFile = "086.png",
+                text = text,
+                confidence = 0.55,
+                pageDir = File("/nonexistent"),
+                lowConfidenceThreshold = 0.6,
+            )
 
         assertEquals(1, issues.size)
         assertEquals(OcrQualityReason.LOW_CONFIDENCE, issues.single().reason)
@@ -186,11 +207,12 @@ class OcrQualityAnalyzerTest {
 
     @Test
     fun `report aggregates issues and counts the images scanned`() {
-        val issues = listOf(
-            OcrQualityIssue("073", "073.png", OcrQualityReason.ILLISIBLE, null),
-            OcrQualityIssue("075", "075.png", OcrQualityReason.LOW_CONFIDENCE, "0.32"),
-            OcrQualityIssue("076", "076.png", OcrQualityReason.LOW_CONFIDENCE, "0.40"),
-        )
+        val issues =
+            listOf(
+                OcrQualityIssue("073", "073.png", OcrQualityReason.ILLISIBLE, null),
+                OcrQualityIssue("075", "075.png", OcrQualityReason.LOW_CONFIDENCE, "0.32"),
+                OcrQualityIssue("076", "076.png", OcrQualityReason.LOW_CONFIDENCE, "0.40"),
+            )
 
         val report = OcrQualityReport(imagesScanned = 10, issues = issues)
 

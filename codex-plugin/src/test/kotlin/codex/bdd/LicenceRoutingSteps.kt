@@ -26,7 +26,6 @@ import java.io.File
  * already validated in S-082; this is pure behaviour validation.
  */
 class LicenceRoutingSteps {
-
     private lateinit var tempDir: File
     private lateinit var chunksFile: File
     private lateinit var baseDir: File
@@ -35,8 +34,14 @@ class LicenceRoutingSteps {
     private var exportedRoot: File? = null
 
     @Given("a knowledge base chunks file with source {string} and license {string}")
-    fun aKnowledgeBaseChunksFileWithSourceAndLicense(source: String, license: String) {
-        tempDir = kotlin.io.path.createTempDirectory(prefix = "cdx-licence-bdd-").toFile()
+    fun aKnowledgeBaseChunksFileWithSourceAndLicense(
+        source: String,
+        license: String,
+    ) {
+        tempDir =
+            kotlin.io.path
+                .createTempDirectory(prefix = "cdx-licence-bdd-")
+                .toFile()
         chunksFile = File(tempDir, "chunks.json")
         chunksFile.writeText(simpleChunks(source, license))
     }
@@ -56,10 +61,12 @@ class LicenceRoutingSteps {
     fun theDeployKnowledgeBaseRoutedTaskRunsWithFallbackZone(zoneName: String) {
         fallbackZone = parseZone(zoneName)
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "deployKnowledgeBaseRouted",
-            DeployKnowledgeBaseRoutedTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "deployKnowledgeBaseRouted",
+                    DeployKnowledgeBaseRoutedTask::class.java,
+                ).get()
         task.chunksFile.set(chunksFile)
         task.pdfFile.set(pdfFile)
         task.baseDir.set(baseDir)
@@ -82,13 +89,17 @@ class LicenceRoutingSteps {
         assertTrue(found, "Expected a $fileName file somewhere under $root")
     }
 
-    private fun parseZone(name: String): LicenseZone = when (name.uppercase()) {
-        "OSS" -> LicenseZone.OSS
-        "CSS" -> LicenseZone.CSS
-        else -> LicenseZone.UNKNOWN
-    }
+    private fun parseZone(name: String): LicenseZone =
+        when (name.uppercase()) {
+            "OSS" -> LicenseZone.OSS
+            "CSS" -> LicenseZone.CSS
+            else -> LicenseZone.UNKNOWN
+        }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)
@@ -104,8 +115,11 @@ class LicenceRoutingSteps {
         }
     }
 
-    private fun simpleChunks(source: String, license: String): String {
-        return """
+    private fun simpleChunks(
+        source: String,
+        license: String,
+    ): String =
+        """
         [
           {
             "id": "chk-1",
@@ -120,5 +134,4 @@ class LicenceRoutingSteps {
           }
         ]
         """.trimIndent()
-    }
 }

@@ -4,16 +4,15 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class LicenseZoneDetectorTest {
-
     @Test
     fun `detects OSS zone from foundry OSS path`() {
         assertEquals(
             LicenseZone.OSS,
-            LicenseZoneDetector.detect("/home/user/foundry/public/codex-gradle")
+            LicenseZoneDetector.detect("/home/user/foundry/public/codex-gradle"),
         )
         assertEquals(
             LicenseZone.OSS,
-            LicenseZoneDetector.detect("C:\\Users\\dev\\foundry\\public\\codex-gradle")
+            LicenseZoneDetector.detect("C:\\Users\\dev\\foundry\\public\\codex-gradle"),
         )
     }
 
@@ -21,11 +20,11 @@ class LicenseZoneDetectorTest {
     fun `detects CSS zone from foundry private path`() {
         assertEquals(
             LicenseZone.CSS,
-            LicenseZoneDetector.detect("/home/user/foundry/private/internal-tool")
+            LicenseZoneDetector.detect("/home/user/foundry/private/internal-tool"),
         )
         assertEquals(
             LicenseZone.CSS,
-            LicenseZoneDetector.detect("C:\\Projects\\foundry\\private\\secret-project")
+            LicenseZoneDetector.detect("C:\\Projects\\foundry\\private\\secret-project"),
         )
     }
 
@@ -33,11 +32,11 @@ class LicenseZoneDetectorTest {
     fun `detects UNKNOWN zone for paths without foundry`() {
         assertEquals(
             LicenseZone.UNKNOWN,
-            LicenseZoneDetector.detect("/home/user/random/project")
+            LicenseZoneDetector.detect("/home/user/random/project"),
         )
         assertEquals(
             LicenseZone.UNKNOWN,
-            LicenseZoneDetector.detect("/tmp/build")
+            LicenseZoneDetector.detect("/tmp/build"),
         )
     }
 
@@ -45,7 +44,7 @@ class LicenseZoneDetectorTest {
     fun `detects UNKNOWN for foundry without OSS or CSS`() {
         assertEquals(
             LicenseZone.UNKNOWN,
-            LicenseZoneDetector.detect("/opt/foundry/something/else")
+            LicenseZoneDetector.detect("/opt/foundry/something/else"),
         )
     }
 

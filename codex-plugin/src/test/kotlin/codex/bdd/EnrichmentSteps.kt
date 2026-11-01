@@ -10,7 +10,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
 
@@ -29,7 +28,6 @@ import java.io.File
  * [codex.enrichment.GraphifyFileResolver].
  */
 class EnrichmentSteps {
-
     private lateinit var tempDir: File
     private lateinit var lddFile: File
     private lateinit var chunksFile: File
@@ -38,20 +36,31 @@ class EnrichmentSteps {
     private var secondOutput: File? = null
 
     @Given("a JSON LDD file with sections {string} and {string}")
-    fun aJsonLddFileWithSectionsAnd(s1: String, s2: String) {
-        tempDir = kotlin.io.path.createTempDirectory(prefix = "cdx-enrich-bdd-").toFile()
-        val lddJson = """
+    fun aJsonLddFileWithSectionsAnd(
+        s1: String,
+        s2: String,
+    ) {
+        tempDir =
+            kotlin.io.path
+                .createTempDirectory(prefix = "cdx-enrich-bdd-")
+                .toFile()
+        val lddJson =
+            """
             [
               {"title":"$s1","level":1,"type":null,"text":null,"children":[]},
               {"title":"$s2","level":1,"type":null,"text":null,"children":[]}
             ]
-        """.trimIndent()
+            """.trimIndent()
         lddFile = File(tempDir, "book.ldd.json").apply { writeText(lddJson) }
     }
 
     @Given("a chunks file with one chunk in section {string} and one chunk in section {string}")
-    fun aChunksFileWithOneChunkInSectionAndOneChunkInSection(s1: String, s2: String) {
-        val chunksJson = """
+    fun aChunksFileWithOneChunkInSectionAndOneChunkInSection(
+        s1: String,
+        s2: String,
+    ) {
+        val chunksJson =
+            """
             [
               {"id":"chk-1","sourceDocument":"book","sectionPath":"Chapter 1 > $s1",
                "headingLevel":2,"content":"Some content","codeBlocks":[],"entities":[],
@@ -60,13 +69,17 @@ class EnrichmentSteps {
                "headingLevel":2,"content":"Other content","codeBlocks":[],"entities":[],
                "overlapNext":null,"license":"UNKNOWN"}
             ]
-        """.trimIndent()
+            """.trimIndent()
         chunksFile = File(tempDir, "book.chunks.json").apply { writeText(chunksJson) }
     }
 
     @Given("a graph json file with nodes labelled {string} and {string}")
-    fun aGraphJsonFileWithNodesLabelledAnd(s1: String, s2: String) {
-        val graphJson = """
+    fun aGraphJsonFileWithNodesLabelledAnd(
+        s1: String,
+        s2: String,
+    ) {
+        val graphJson =
+            """
             {
               "nodes":[
                 {"id":"node-arch","label":"$s1","type":"section"},
@@ -75,7 +88,7 @@ class EnrichmentSteps {
               "edges":[],
               "communities":[]
             }
-        """.trimIndent()
+            """.trimIndent()
         graphFile = File(tempDir, "graph.json").apply { writeText(graphJson) }
     }
 
@@ -110,54 +123,78 @@ class EnrichmentSteps {
     }
 
     @And("the section {string} has {int} rag chunk attached")
-    fun theSectionHasRagChunkAttached(section: String, count: Int) {
+    fun theSectionHasRagChunkAttached(
+        section: String,
+        count: Int,
+    ) {
         val node = findSection(section)
         assertEquals(count, node.ragChunks.size, "section '$section' should have $count rag chunk(s)")
     }
 
     @And("the section {string} has the graphify node {string} resolved")
-    fun theSectionHasTheGraphifyNodeResolved(section: String, node: String) {
+    fun theSectionHasTheGraphifyNodeResolved(
+        section: String,
+        node: String,
+    ) {
         val s = findSection(section)
-        assertTrue(s.graphifyNodes.contains(node),
-            "section '$section' should have graphify node '$node' resolved, got: ${s.graphifyNodes}")
+        assertTrue(
+            s.graphifyNodes.contains(node),
+            "section '$section' should have graphify node '$node' resolved, got: ${s.graphifyNodes}",
+        )
     }
 
     @And("the section {string} has a semantic density of {double}")
-    fun theSectionHasASemanticDensityOf(section: String, density: Double) {
+    fun theSectionHasASemanticDensityOf(
+        section: String,
+        density: Double,
+    ) {
         val s = findSection(section)
-        assertEquals(density, s.semanticDensity, 0.0001,
-            "section '$section' should have semantic density $density")
+        assertEquals(
+            density,
+            s.semanticDensity,
+            0.0001,
+            "section '$section' should have semantic density $density",
+        )
     }
 
     @And("the section {string} has extracted entities")
     fun theSectionHasExtractedEntities(section: String) {
         val s = findSection(section)
-        assertTrue(s.entities.isNotEmpty(),
-            "section '$section' should have extracted entities from its title, got: ${s.entities}")
+        assertTrue(
+            s.entities.isNotEmpty(),
+            "section '$section' should have extracted entities from its title, got: ${s.entities}",
+        )
     }
 
     @And("every section has no graphify nodes resolved")
     fun everySectionHasNoGraphifyNodesResolved() {
         val enriched = parseEnriched(currentOutput())
-        assertTrue(enriched.all { it.graphifyNodes.isEmpty() },
-            "every section should have no graphify nodes resolved (degraded silent)")
+        assertTrue(
+            enriched.all { it.graphifyNodes.isEmpty() },
+            "every section should have no graphify nodes resolved (degraded silent)",
+        )
     }
 
     @Then("the two enriched outputs are identical")
     fun theTwoEnrichedOutputsAreIdentical() {
         val out1 = firstOutput ?: error("first run did not happen")
         val out2 = secondOutput ?: error("second run did not happen")
-        assertEquals(out1.readText(), out2.readText(),
-            "enrichment must be idempotent — same inputs yield same output")
+        assertEquals(
+            out1.readText(),
+            out2.readText(),
+            "enrichment must be idempotent — same inputs yield same output",
+        )
     }
 
     private fun runTask(output: File) {
         val graph = graphFile ?: error("graph json file was not set up")
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "enrichJsonLdd",
-            EnrichJsonLddTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "enrichJsonLdd",
+                    EnrichJsonLddTask::class.java,
+                ).get()
         task.jsonFile.set(lddFile)
         task.chunksFile.set(chunksFile)
         task.graphifyFile.set(graph)
@@ -177,7 +214,7 @@ class EnrichmentSteps {
         val json = Json { ignoreUnknownKeys = true }
         return json.decodeFromString(
             ListSerializer(EnrichedLddNode.serializer()),
-            file.readText()
+            file.readText(),
         )
     }
 }

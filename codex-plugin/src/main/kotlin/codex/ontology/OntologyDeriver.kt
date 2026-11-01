@@ -17,7 +17,6 @@ import codex.tasks.LddNode
  * always yield the same [OntologyMapping].
  */
 object OntologyDeriver {
-
     private val createTableRegex =
         Regex("""CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\((.*?)\)\s*;""", RegexOption.DOT_MATCHES_ALL)
 
@@ -41,7 +40,10 @@ object OntologyDeriver {
      * @return an immutable [OntologyMapping] with the three computed
      *         views.
      */
-    fun derive(lddNodes: List<LddNode>, sqlScript: String): OntologyMapping {
+    fun derive(
+        lddNodes: List<LddNode>,
+        sqlScript: String,
+    ): OntologyMapping {
         val tables = parseTables(sqlScript)
         if (tables.isEmpty()) {
             return OntologyMapping(emptyList(), emptyList(), emptyList())
@@ -59,14 +61,18 @@ object OntologyDeriver {
         for (match in createTableRegex.findAll(sql)) {
             val name = match.groupValues[1]
             val body = match.groupValues[2]
-            val columns = body.split(",")
-                .mapNotNull { line ->
-                    val trimmed = line.trim()
-                    if (trimmed.startsWith("--")) return@mapNotNull null
-                    columnDefRegex.find(trimmed)?.groupValues?.get(1)
-                        ?.takeIf { it.isNotBlank() }
-                }
-                .filter { it != "PRIMARY" && it != "FOREIGN" && it != "UNIQUE" && it != "CHECK" }
+            val columns =
+                body
+                    .split(",")
+                    .mapNotNull { line ->
+                        val trimmed = line.trim()
+                        if (trimmed.startsWith("--")) return@mapNotNull null
+                        columnDefRegex
+                            .find(trimmed)
+                            ?.groupValues
+                            ?.get(1)
+                            ?.takeIf { it.isNotBlank() }
+                    }.filter { it != "PRIMARY" && it != "FOREIGN" && it != "UNIQUE" && it != "CHECK" }
             result[name] = columns
         }
         return result
@@ -77,10 +83,12 @@ object OntologyDeriver {
         for (match in createTableRegex.findAll(sql)) {
             val table = match.groupValues[1]
             val body = match.groupValues[2]
-            val targets = fkRegex.findAll(body)
-                .map { it.groupValues[2] }
-                .distinct()
-                .toList()
+            val targets =
+                fkRegex
+                    .findAll(body)
+                    .map { it.groupValues[2] }
+                    .distinct()
+                    .toList()
             if (targets.isNotEmpty()) {
                 outgoing.getOrPut(table) { mutableListOf() }.addAll(targets)
             }
@@ -88,7 +96,10 @@ object OntologyDeriver {
         return outgoing
     }
 
-    private data class CascadeEdge(val from: String, val to: String)
+    private data class CascadeEdge(
+        val from: String,
+        val to: String,
+    )
 
     private fun parseCascadeRoots(sql: String): List<CascadeEdge> {
         val edges = mutableListOf<CascadeEdge>()
@@ -108,7 +119,7 @@ object OntologyDeriver {
     private fun computeBoundedContexts(
         tables: Map<String, List<String>>,
         outgoingFks: Map<String, List<String>>,
-        lddNodes: List<LddNode>
+        lddNodes: List<LddNode>,
     ): List<BoundedContext> {
         val tableNames = tables.keys
         val adjacency = mutableMapOf<String, MutableSet<String>>()
@@ -146,7 +157,7 @@ object OntologyDeriver {
 
     private fun computeAggregates(
         tables: Map<String, List<String>>,
-        cascadeEdges: List<CascadeEdge>
+        cascadeEdges: List<CascadeEdge>,
     ): List<Aggregate> {
         val dependentsByRoot = mutableMapOf<String, MutableSet<String>>()
         for (edge in cascadeEdges) {
@@ -160,10 +171,9 @@ object OntologyDeriver {
 
     private fun computeValueObjects(
         tables: Map<String, List<String>>,
-        outgoingFks: Map<String, List<String>>
-    ): List<ValueObject> {
-        return tables.entries
+        outgoingFks: Map<String, List<String>>,
+    ): List<ValueObject> =
+        tables.entries
             .filter { it.key !in outgoingFks }
             .map { (table, columns) -> ValueObject(table = table, columns = columns) }
-    }
 }

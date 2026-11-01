@@ -26,27 +26,30 @@ import java.util.concurrent.atomic.AtomicInteger
  *    — the metered LLM is not re-invoked on an unchanged image).
  */
 class OcrBoundarySteps {
-
     private val state = mutableMapOf<String, Any>()
 
     // ── Counting engines (track invocation count) ───────────────────────
 
     /** Counting AI engine — succeeds with the given text/confidence. */
     @Given("an AI engine that returns {string} with confidence {double}")
-    fun anAiEngineThatReturns(text: String, confidence: Double) {
+    fun anAiEngineThatReturns(
+        text: String,
+        confidence: Double,
+    ) {
         val calls = AtomicInteger(0)
-        val engine = object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult {
-                calls.incrementAndGet()
-                return OcrResult.of(
-                    text = text,
-                    confidence = confidence,
-                    language = request.language,
-                    model = "ai",
-                    metadata = mapOf("engine" to "ai")
-                )
+        val engine =
+            object : OcrEngine {
+                override fun process(request: OcrRequest): OcrResult {
+                    calls.incrementAndGet()
+                    return OcrResult.of(
+                        text = text,
+                        confidence = confidence,
+                        language = request.language,
+                        model = "ai",
+                        metadata = mapOf("engine" to "ai"),
+                    )
+                }
             }
-        }
         state["aiEngine"] = engine
         state["aiCalls"] = calls
     }
@@ -56,18 +59,19 @@ class OcrBoundarySteps {
     fun aCountingTesseractEngineThatReturns(text: String) {
         val calls = AtomicInteger(0)
         val confidence = if (text.isNotEmpty()) 0.7 else 0.0
-        val engine = object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult {
-                calls.incrementAndGet()
-                return OcrResult.of(
-                    text = text,
-                    confidence = confidence,
-                    language = request.language,
-                    model = "tesseract",
-                    metadata = mapOf("engine" to "tesseract")
-                )
+        val engine =
+            object : OcrEngine {
+                override fun process(request: OcrRequest): OcrResult {
+                    calls.incrementAndGet()
+                    return OcrResult.of(
+                        text = text,
+                        confidence = confidence,
+                        language = request.language,
+                        model = "tesseract",
+                        metadata = mapOf("engine" to "tesseract"),
+                    )
+                }
             }
-        }
         state["tesseractEngine"] = engine
         state["tesseractCalls"] = calls
     }
@@ -76,35 +80,40 @@ class OcrBoundarySteps {
     @Given("a boundary Tesseract engine that returns {string}")
     fun aBoundaryTesseractEngineThatReturns(text: String) {
         val confidence = if (text.isNotEmpty()) 0.7 else 0.0
-        val engine = object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult =
-                OcrResult.of(
-                    text = text,
-                    confidence = confidence,
-                    language = request.language,
-                    model = "tesseract",
-                    metadata = mapOf("engine" to "tesseract")
-                )
-        }
+        val engine =
+            object : OcrEngine {
+                override fun process(request: OcrRequest): OcrResult =
+                    OcrResult.of(
+                        text = text,
+                        confidence = confidence,
+                        language = request.language,
+                        model = "tesseract",
+                        metadata = mapOf("engine" to "tesseract"),
+                    )
+            }
         state["tesseractEngine"] = engine
     }
 
     /** Counting OCR engine (generic — used for cache hit scenario). */
     @Given("a counting OCR engine that returns {string} with confidence {double}")
-    fun aCountingOcrEngineThatReturns(text: String, confidence: Double) {
+    fun aCountingOcrEngineThatReturns(
+        text: String,
+        confidence: Double,
+    ) {
         val calls = AtomicInteger(0)
-        val engine = object : OcrEngine {
-            override fun process(request: OcrRequest): OcrResult {
-                calls.incrementAndGet()
-                return OcrResult.of(
-                    text = text,
-                    confidence = confidence,
-                    language = request.language,
-                    model = "ai",
-                    metadata = mapOf("engine" to "ai")
-                )
+        val engine =
+            object : OcrEngine {
+                override fun process(request: OcrRequest): OcrResult {
+                    calls.incrementAndGet()
+                    return OcrResult.of(
+                        text = text,
+                        confidence = confidence,
+                        language = request.language,
+                        model = "ai",
+                        metadata = mapOf("engine" to "ai"),
+                    )
+                }
             }
-        }
         state["countingEngine"] = engine
         state["countingCalls"] = calls
     }
@@ -134,15 +143,19 @@ class OcrBoundarySteps {
     // ── Cache hit scenario (Économie d'Encre) ────────────────────────────
 
     @Given("an OCR cache pre-populated for page {string} with text {string}")
-    fun anOcrCachePrePopulated(pageId: String, text: String) {
+    fun anOcrCachePrePopulated(
+        pageId: String,
+        text: String,
+    ) {
         val storage = InMemoryCacheStorage()
-        val result = OcrResult.of(
-            text = text,
-            confidence = 0.9,
-            language = "fr",
-            model = "ai",
-            metadata = mapOf("engine" to "ai")
-        )
+        val result =
+            OcrResult.of(
+                text = text,
+                confidence = 0.9,
+                language = "fr",
+                model = "ai",
+                metadata = mapOf("engine" to "ai"),
+            )
         storage.write(pageId, codex.ocr.CacheEntry(sourceHash = "known-hash", result = result))
         state["cache"] = OcrResultCache(storage)
         state["cachePageId"] = pageId
@@ -208,7 +221,10 @@ class OcrBoundarySteps {
 
         override fun read(pageId: String): codex.ocr.CacheEntry? = store[pageId]
 
-        override fun write(pageId: String, entry: codex.ocr.CacheEntry) {
+        override fun write(
+            pageId: String,
+            entry: codex.ocr.CacheEntry,
+        ) {
             store[pageId] = entry
         }
     }

@@ -26,40 +26,51 @@ import org.testcontainers.containers.PostgreSQLContainer
  */
 @Tag("integration")
 class PgVectorSessionMemoryIT {
-
     companion object {
-        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("pgvector/pgvector:pg16")
-            .withDatabaseName("codex").withUsername("codex").withPassword("codex")
+        private val postgres: PostgreSQLContainer<*> =
+            PostgreSQLContainer("pgvector/pgvector:pg16")
+                .withDatabaseName("codex")
+                .withUsername("codex")
+                .withPassword("codex")
 
-        @JvmStatic @BeforeAll fun start() { postgres.start() }
-        @JvmStatic @AfterAll fun stop() { postgres.stop() }
+        @JvmStatic @BeforeAll
+        fun start() {
+            postgres.start()
+        }
+
+        @JvmStatic @AfterAll
+        fun stop() {
+            postgres.stop()
+        }
     }
 
-    private fun memory() = PgVectorSessionMemory(
-        ProfileConfig(
-            host = postgres.host,
-            port = postgres.firstMappedPort,
-            database = postgres.databaseName,
-            username = postgres.username,
-            password = postgres.password
+    private fun memory() =
+        PgVectorSessionMemory(
+            ProfileConfig(
+                host = postgres.host,
+                port = postgres.firstMappedPort,
+                database = postgres.databaseName,
+                username = postgres.username,
+                password = postgres.password,
+            ),
         )
-    )
 
     @Test
     fun `save then load round-trips the full profile`() {
         val memory = memory()
         memory.initSchema()
-        val profile = LearnerProfile(
-            learnerId = "learner-1",
-            formationId = "formation-A",
-            completedModules = listOf("mod-1", "mod-2"),
-            currentModule = "mod-3",
-            progressionPct = 50.0,
-            comprehensionScore = 72.0,
-            weakPoints = listOf("gradients", "backprop"),
-            lastInteractionAt = "2026-08-21T10:00:00Z",
-            annotations = mapOf("mod-3" to "struggled with regularization")
-        )
+        val profile =
+            LearnerProfile(
+                learnerId = "learner-1",
+                formationId = "formation-A",
+                completedModules = listOf("mod-1", "mod-2"),
+                currentModule = "mod-3",
+                progressionPct = 50.0,
+                comprehensionScore = 72.0,
+                weakPoints = listOf("gradients", "backprop"),
+                lastInteractionAt = "2026-08-21T10:00:00Z",
+                annotations = mapOf("mod-3" to "struggled with regularization"),
+            )
         memory.save(profile)
 
         val loaded = memory.load("learner-1", "formation-A")
@@ -79,19 +90,21 @@ class PgVectorSessionMemoryIT {
     fun `save is an upsert — second save overwrites the first`() {
         val memory = memory()
         memory.initSchema()
-        val first = LearnerProfile(
-            learnerId = "learner-2",
-            formationId = "formation-B",
-            weakPoints = listOf("gradients")
-        )
+        val first =
+            LearnerProfile(
+                learnerId = "learner-2",
+                formationId = "formation-B",
+                weakPoints = listOf("gradients"),
+            )
         memory.save(first)
 
-        val second = LearnerProfile(
-            learnerId = "learner-2",
-            formationId = "formation-B",
-            weakPoints = listOf("backprop", "regularization"),
-            progressionPct = 30.0
-        )
+        val second =
+            LearnerProfile(
+                learnerId = "learner-2",
+                formationId = "formation-B",
+                weakPoints = listOf("backprop", "regularization"),
+                progressionPct = 30.0,
+            )
         memory.save(second)
 
         val loaded = memory.load("learner-2", "formation-B")
@@ -117,7 +130,8 @@ class PgVectorSessionMemoryIT {
 
         val x = memory.load("learner-3", "formation-X")
         val y = memory.load("learner-3", "formation-Y")
-        assertNotNull(x); assertNotNull(y)
+        assertNotNull(x)
+        assertNotNull(y)
         assertEquals(listOf("alpha"), x!!.weakPoints)
         assertEquals(listOf("beta"), y!!.weakPoints)
     }

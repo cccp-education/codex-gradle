@@ -8,7 +8,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class OcrRequestTest {
-
     @Test
     fun `request with byte array equals same content`() {
         val bytes = "image-data".toByteArray()
@@ -77,7 +76,9 @@ class OcrRequestTest {
     }
 
     @Test
-    fun `writeTo creates json file with metadata only`(@TempDir tempDir: File) {
+    fun `writeTo creates json file with metadata only`(
+        @TempDir tempDir: File,
+    ) {
         val request = OcrRequest(ByteArray(10), "image/jpeg", "en", prompt = "test")
         val file = writeOcrRequestToJsonFile(tempDir, request)
         assertTrue(file.exists())
@@ -86,7 +87,9 @@ class OcrRequestTest {
     }
 
     @Test
-    fun `fromFile roundtrip preserves metadata fields`(@TempDir tempDir: File) {
+    fun `fromFile roundtrip preserves metadata fields`(
+        @TempDir tempDir: File,
+    ) {
         val original = OcrRequest(ByteArray(64), "image/tiff", "de", prompt = "ocr this")
         writeOcrRequestToJsonFile(tempDir, original)
         val reloaded = readOcrRequestFromJsonFile(File(tempDir, "ocr-request.json"))

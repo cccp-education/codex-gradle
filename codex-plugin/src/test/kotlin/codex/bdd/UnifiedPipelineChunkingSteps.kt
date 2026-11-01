@@ -32,7 +32,6 @@ import java.io.File
  * was implemented in CDX-UNIFY-1 (refactor delegation).
  */
 class UnifiedPipelineChunkingSteps {
-
     private lateinit var tempDir: File
     private lateinit var pdfFile: File
     private var baseDir: File? = null
@@ -44,7 +43,10 @@ class UnifiedPipelineChunkingSteps {
 
     @Given("a unified pipeline source PDF containing the text {string}")
     fun aUnifiedPipelineSourcePdfContainingTheText(text: String) {
-        tempDir = kotlin.io.path.createTempDirectory(prefix = "cdx-unify-bdd-").toFile()
+        tempDir =
+            kotlin.io.path
+                .createTempDirectory(prefix = "cdx-unify-bdd-")
+                .toFile()
         pdfFile = File(tempDir, "book.pdf")
         createPdf(pdfFile, text)
     }
@@ -84,7 +86,7 @@ class UnifiedPipelineChunkingSteps {
         val output = actualOutput ?: error("No output file found")
         assertTrue(
             output.absolutePath.startsWith(dir.absolutePath),
-            "Output $output should be under $dir"
+            "Output $output should be under $dir",
         )
     }
 
@@ -95,7 +97,7 @@ class UnifiedPipelineChunkingSteps {
         val output = actualOutput ?: error("No output file found")
         assertTrue(
             output.absolutePath == expected.absolutePath,
-            "Output $output should be the configured outputFile $expected"
+            "Output $output should be the configured outputFile $expected",
         )
     }
 
@@ -106,7 +108,7 @@ class UnifiedPipelineChunkingSteps {
         assertTrue(content.isNotBlank(), "Output content should not be blank")
         assertTrue(
             content.trimStart().startsWith("="),
-            "Output should be AsciiDoc (starts with '=')"
+            "Output should be AsciiDoc (starts with '=')",
         )
     }
 
@@ -118,7 +120,7 @@ class UnifiedPipelineChunkingSteps {
         assertEquals(
             first.readText(),
             second.readText(),
-            "Pipeline outputs should be identical across two runs on the same input"
+            "Pipeline outputs should be identical across two runs on the same input",
         )
     }
 
@@ -126,10 +128,12 @@ class UnifiedPipelineChunkingSteps {
 
     private fun runPipeline(suffix: String = ""): File {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformCorpusToPdf",
-            CodexPipelineTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformCorpusToPdf",
+                    CodexPipelineTask::class.java,
+                ).get()
         task.sourceFile.set(pdfFile)
         task.pgHost.set("localhost")
         task.pgPort.set("5432")
@@ -156,13 +160,17 @@ class UnifiedPipelineChunkingSteps {
         }
     }
 
-    private fun parseZone(name: String): LicenseZone = when (name.uppercase()) {
-        "OSS" -> LicenseZone.OSS
-        "CSS" -> LicenseZone.CSS
-        else -> LicenseZone.UNKNOWN
-    }
+    private fun parseZone(name: String): LicenseZone =
+        when (name.uppercase()) {
+            "OSS" -> LicenseZone.OSS
+            "CSS" -> LicenseZone.CSS
+            else -> LicenseZone.UNKNOWN
+        }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)

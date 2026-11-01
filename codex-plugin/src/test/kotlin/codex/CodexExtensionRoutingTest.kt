@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict : RED → GREEN → REFACTOR.
  */
 class CodexExtensionRoutingTest {
-
     @Test
     fun `extension exposes licenceRouting property`() {
         val project = ProjectBuilder.builder().build()

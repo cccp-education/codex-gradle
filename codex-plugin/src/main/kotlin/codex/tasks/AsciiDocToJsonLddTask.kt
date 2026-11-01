@@ -29,10 +29,13 @@ import java.io.File
  */
 @DisableCachingByDefault(because = "AsciidoctorJ AST parsing — external process, non-cacheable")
 abstract class AsciiDocToJsonLddTask : DefaultTask() {
-
     companion object {
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        private val jsonFormat = Json { prettyPrint = true; prettyPrintIndent = "  " }
+        private val jsonFormat =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
     }
 
     @get:InputFile
@@ -63,21 +66,26 @@ abstract class AsciiDocToJsonLddTask : DefaultTask() {
         traverse(document, root)
 
         val lddNodes = root.children.map { it.toLddNode() }
+
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
         val json = jsonFormat.encodeToString(ListSerializer(LddNode.serializer()), lddNodes)
         asciidoctor.close()
         return json
     }
 
-    private fun traverse(node: StructuralNode, parent: DocNode) {
+    private fun traverse(
+        node: StructuralNode,
+        parent: DocNode,
+    ) {
         for (block in node.blocks) {
             when {
                 block is Section -> {
-                    val sectionNode = DocNode(
-                        title = block.title ?: "",
-                        level = block.level,
-                        children = mutableListOf()
-                    )
+                    val sectionNode =
+                        DocNode(
+                            title = block.title ?: "",
+                            level = block.level,
+                            children = mutableListOf(),
+                        )
                     parent.children.add(sectionNode)
                     traverse(block, sectionNode)
                 }

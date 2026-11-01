@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class CodexPluginTest {
-
     @Test
     fun `plugin applies successfully and registers extension`() {
         val project = ProjectBuilder.builder().build()

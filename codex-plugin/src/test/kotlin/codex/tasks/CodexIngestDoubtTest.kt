@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD RED -> GREEN -> REFACTOR.
  */
 class CodexIngestDoubtTest {
-
     /** Recording in-memory subclass — no pgvector, no R2DBC, no Docker. */
     private class RecordingRagStore : RagVectorStore() {
         var received: List<DoubtfulChunk>? = null
@@ -42,22 +41,35 @@ class CodexIngestDoubtTest {
     }
 
     private fun task() =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectIngest", CodexIngestTask::class.java)
+            .get()
 
     @Test
     fun `ingestInto delegates to the N1 socle with doubt-marked chunks`() {
         val store = RecordingRagStore()
-        val chunks = listOf(
-            codebase.store.DocumentChunk(
-                id = "chk-clean", sourceDocument = "book", sectionPath = "Ch1",
-                headingLevel = 1, content = "A clean readable section.", license = "PROPRIETARY",
-            ),
-            codebase.store.DocumentChunk(
-                id = "chk-doubt", sourceDocument = "book", sectionPath = "Ch2",
-                headingLevel = 1, content = "Text\n[ILLISIBLE]\nmore", license = "PROPRIETARY",
-            ),
-        )
+        val chunks =
+            listOf(
+                codebase.store.DocumentChunk(
+                    id = "chk-clean",
+                    sourceDocument = "book",
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    content = "A clean readable section.",
+                    license = "PROPRIETARY",
+                ),
+                codebase.store.DocumentChunk(
+                    id = "chk-doubt",
+                    sourceDocument = "book",
+                    sectionPath = "Ch2",
+                    headingLevel = 1,
+                    content = "Text\n[ILLISIBLE]\nmore",
+                    license = "PROPRIETARY",
+                ),
+            )
 
         val docCount = runBlocking { task().ingestInto(store, chunks) }
 
@@ -68,12 +80,17 @@ class CodexIngestDoubtTest {
     @Test
     fun `ingestInto marks an illisible chunk doubtful with zero confidence`() {
         val store = RecordingRagStore()
-        val chunks = listOf(
-            codebase.store.DocumentChunk(
-                id = "chk-doubt", sourceDocument = "book", sectionPath = "Ch2",
-                headingLevel = 1, content = "Text\n[ILLISIBLE]\nmore", license = "PROPRIETARY",
-            ),
-        )
+        val chunks =
+            listOf(
+                codebase.store.DocumentChunk(
+                    id = "chk-doubt",
+                    sourceDocument = "book",
+                    sectionPath = "Ch2",
+                    headingLevel = 1,
+                    content = "Text\n[ILLISIBLE]\nmore",
+                    license = "PROPRIETARY",
+                ),
+            )
 
         runBlocking { task().ingestInto(store, chunks) }
 
@@ -85,12 +102,17 @@ class CodexIngestDoubtTest {
     @Test
     fun `ingestInto keeps a clean chunk at full confidence`() {
         val store = RecordingRagStore()
-        val chunks = listOf(
-            codebase.store.DocumentChunk(
-                id = "chk-clean", sourceDocument = "book", sectionPath = "Ch1",
-                headingLevel = 1, content = "A clean readable section.", license = "PROPRIETARY",
-            ),
-        )
+        val chunks =
+            listOf(
+                codebase.store.DocumentChunk(
+                    id = "chk-clean",
+                    sourceDocument = "book",
+                    sectionPath = "Ch1",
+                    headingLevel = 1,
+                    content = "A clean readable section.",
+                    license = "PROPRIETARY",
+                ),
+            )
 
         runBlocking { task().ingestInto(store, chunks) }
 
@@ -102,16 +124,25 @@ class CodexIngestDoubtTest {
     @Test
     fun `ingestInto detects the doubt marker in the section path too`() {
         val store = RecordingRagStore()
-        val chunks = listOf(
-            codebase.store.DocumentChunk(
-                id = "chk-path", sourceDocument = "book", sectionPath = "Ch1 > [ILLISIBLE]",
-                headingLevel = 2, content = "Body that is long enough to be above the short threshold.",
-                license = "PROPRIETARY",
-            ),
-        )
+        val chunks =
+            listOf(
+                codebase.store.DocumentChunk(
+                    id = "chk-path",
+                    sourceDocument = "book",
+                    sectionPath = "Ch1 > [ILLISIBLE]",
+                    headingLevel = 2,
+                    content = "Body that is long enough to be above the short threshold.",
+                    license = "PROPRIETARY",
+                ),
+            )
 
         runBlocking { task().ingestInto(store, chunks) }
 
-        assertTrue(store.received!!.single().doubt.doubtful, "the marker in sectionPath must flag doubt")
+        assertTrue(
+            store.received!!
+                .single()
+                .doubt.doubtful,
+            "the marker in sectionPath must flag doubt",
+        )
     }
 }

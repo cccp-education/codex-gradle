@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
 class CodexExtensionTest {
-
     @Test
     fun `extension is created with default zone convention`() {
         val project = ProjectBuilder.builder().build()

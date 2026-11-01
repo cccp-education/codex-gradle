@@ -20,7 +20,6 @@ package codex.enrichment
  * Graphify section.
  */
 object GraphifySectionBuilder {
-
     /**
      * Builds the Graphify channel text from the enriched LDD nodes.
      *

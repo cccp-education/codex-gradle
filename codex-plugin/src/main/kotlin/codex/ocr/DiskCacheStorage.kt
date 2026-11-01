@@ -22,11 +22,13 @@ import java.io.File
  * [read] retourne null (dégradé miss) — le pipeline re-OCRoisera
  * l'image plutôt que de crasher.
  */
-class DiskCacheStorage(private val cacheDir: File) : CacheStorage {
-
-    private val mapper: ObjectMapper = ObjectMapper()
-        .registerModule(KotlinModule.Builder().build())
-        .enable(SerializationFeature.INDENT_OUTPUT)
+class DiskCacheStorage(
+    private val cacheDir: File,
+) : CacheStorage {
+    private val mapper: ObjectMapper =
+        ObjectMapper()
+            .registerModule(KotlinModule.Builder().build())
+            .enable(SerializationFeature.INDENT_OUTPUT)
 
     init {
         if (!cacheDir.exists()) {
@@ -44,11 +46,13 @@ class DiskCacheStorage(private val cacheDir: File) : CacheStorage {
         }
     }
 
-    override fun write(pageId: String, entry: CacheEntry) {
+    override fun write(
+        pageId: String,
+        entry: CacheEntry,
+    ) {
         val file = cacheFile(pageId)
         mapper.writeValue(file, entry)
     }
 
-    private fun cacheFile(pageId: String): File =
-        File(cacheDir, "$pageId.ocr-cache.json")
+    private fun cacheFile(pageId: String): File = File(cacheDir, "$pageId.ocr-cache.json")
 }

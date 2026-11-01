@@ -10,7 +10,7 @@ package codex.ocr
  */
 data class ParsedTesseractConfidence(
     val meanConfidence: Double,
-    val wordCount: Int
+    val wordCount: Int,
 )
 
 /**
@@ -34,7 +34,6 @@ data class ParsedTesseractConfidence(
  * Pure, deterministic, unit-testable.
  */
 object TesseractTsvParser {
-
     private const val WORD_LEVEL = "5"
     private const val CONFIDENCE_COLUMN = 10
     private const val TEXT_COLUMN = 11
@@ -43,7 +42,8 @@ object TesseractTsvParser {
         var sum = 0.0
         var count = 0
 
-        tsv.lineSequence()
+        tsv
+            .lineSequence()
             .drop(1) // header row
             .forEach { line ->
                 if (line.isBlank()) return@forEach
@@ -62,7 +62,7 @@ object TesseractTsvParser {
         val mean = if (count == 0) 0.0 else sum / count / 100.0
         return ParsedTesseractConfidence(
             meanConfidence = mean.coerceIn(0.0, 1.0),
-            wordCount = count
+            wordCount = count,
         )
     }
 }

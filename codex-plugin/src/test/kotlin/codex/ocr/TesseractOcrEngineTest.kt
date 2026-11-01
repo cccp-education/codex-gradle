@@ -9,7 +9,6 @@ import java.io.File
 import java.nio.file.Path
 
 class TesseractOcrEngineTest {
-
     /**
      * C-3 (S-232) — the `tesseract` binary is not installed on the GitHub Actions
      * runner. Tests that exercise the *real* engine (clean image → real TSV
@@ -37,7 +36,9 @@ class TesseractOcrEngineTest {
     }
 
     @Test
-    fun `TesseractOcrEngine processes minimal image without throwing`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine processes minimal image without throwing`(
+        @TempDir dir: Path,
+    ) {
         assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "test.png")
         createMinimalPng(imageFile)
@@ -46,8 +47,10 @@ class TesseractOcrEngineTest {
         val request = OcrRequest(imageFile.readBytes(), "image/png", "eng")
         val result = engine.process(request)
 
-        assertTrue(result.structuredText != null || result.structuredText == "",
-            "Tesseract should return a result (may be empty for textless image)")
+        assertTrue(
+            result.structuredText != null || result.structuredText == "",
+            "Tesseract should return a result (may be empty for textless image)",
+        )
         assertEquals("tesseract", result.model)
     }
 
@@ -62,7 +65,9 @@ class TesseractOcrEngineTest {
     }
 
     @Test
-    fun `TesseractOcrEngine maps language codes to tesseract format`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine maps language codes to tesseract format`(
+        @TempDir dir: Path,
+    ) {
         assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "lang.png")
         createMinimalPng(imageFile)
@@ -75,7 +80,9 @@ class TesseractOcrEngineTest {
     }
 
     @Test
-    fun `TesseractOcrEngine returns result with sourceFormat from request`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine returns result with sourceFormat from request`(
+        @TempDir dir: Path,
+    ) {
         assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "fmt.jpg")
         createMinimalPng(imageFile)
@@ -90,7 +97,9 @@ class TesseractOcrEngineTest {
     // ── OCR-QUALITY-1 — true confidence (not the historical 0.7 placeholder) ──
 
     @Test
-    fun `TesseractOcrEngine reports real confidence from TSV word scores`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine reports real confidence from TSV word scores`(
+        @TempDir dir: Path,
+    ) {
         assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "quality.png")
         writeTextPng(imageFile, "OCR QUALITY")
@@ -100,14 +109,21 @@ class TesseractOcrEngineTest {
 
         assertTrue(result.structuredText.isNotEmpty(), "recognised text must not be empty")
         assertTrue(result.confidence in 0.0..1.0, "confidence must be in [0,1]")
-        assertTrue(result.confidence > 0.5,
-            "a clean rendered image must yield a real confidence > 0.5 (was hardcoded 0.7), got ${result.confidence}")
-        assertEquals("tsv", result.metadata["confidenceSource"],
-            "confidence must come from the parsed TSV, not a placeholder")
+        assertTrue(
+            result.confidence > 0.5,
+            "a clean rendered image must yield a real confidence > 0.5 (was hardcoded 0.7), got ${result.confidence}",
+        )
+        assertEquals(
+            "tsv",
+            result.metadata["confidenceSource"],
+            "confidence must come from the parsed TSV, not a placeholder",
+        )
     }
 
     @Test
-    fun `TesseractOcrEngine marks a textless image with zero confidence`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine marks a textless image with zero confidence`(
+        @TempDir dir: Path,
+    ) {
         assumeTesseractAvailable()
         val imageFile = File(dir.toFile(), "blank.png")
         createMinimalPng(imageFile)
@@ -115,12 +131,17 @@ class TesseractOcrEngineTest {
         val engine = TesseractOcrEngine(tesseractPath = "tesseract")
         val result = engine.process(OcrRequest(imageFile.readBytes(), "image/png", "eng"))
 
-        assertEquals(0.0, result.confidence,
-            "an image with no recognised word must carry zero confidence (doubt signal)")
+        assertEquals(
+            0.0,
+            result.confidence,
+            "an image with no recognised word must carry zero confidence (doubt signal)",
+        )
     }
 
     @Test
-    fun `TesseractOcrEngine degrades to text-only confidence when tesseract emits no TSV`(@TempDir dir: Path) {
+    fun `TesseractOcrEngine degrades to text-only confidence when tesseract emits no TSV`(
+        @TempDir dir: Path,
+    ) {
         // A stub tesseract that writes the plain .txt but no .tsv — simulates an
         // old tesseract build without the TSV config. The engine must stay
         // functional (text preserved) and honestly mark the confidence source.
@@ -130,7 +151,7 @@ class TesseractOcrEngineTest {
             #!/bin/sh
             # $1=input $2=outputBase
             echo "stub text" > "${'$'}2.txt"
-            """.trimIndent()
+            """.trimIndent(),
         )
         stub.setExecutable(true)
 
@@ -141,15 +162,19 @@ class TesseractOcrEngineTest {
         val result = engine.process(OcrRequest(imageFile.readBytes(), "image/png", "eng"))
 
         assertEquals("stub text", result.structuredText.trim(), "text must be preserved in degraded mode")
-        assertEquals("degraded", result.metadata["confidenceSource"],
-            "missing TSV must be flagged as degraded, not silently trusted")
+        assertEquals(
+            "degraded",
+            result.metadata["confidenceSource"],
+            "missing TSV must be flagged as degraded, not silently trusted",
+        )
         assertTrue(result.confidence in 0.0..1.0)
     }
 
     private fun createMinimalPng(file: File) {
-        val pngHex = "89504E470D0A1A0A0000000D4948445200000001000000010802000000907" +
-            "71DE0000000C4944415408D763F8FFFF3F000005005E018246A4B10000000049" +
-            "454E44AE426082"
+        val pngHex =
+            "89504E470D0A1A0A0000000D4948445200000001000000010802000000907" +
+                "71DE0000000C4944415408D763F8FFFF3F000005005E018246A4B10000000049" +
+                "454E44AE426082"
         val cleaned = pngHex.replace(Regex("[^0-9A-Fa-f]"), "")
         val bytes = ByteArray(cleaned.length / 2)
         for (i in bytes.indices) {
@@ -164,7 +189,10 @@ class TesseractOcrEngineTest {
      * resulting image is legible enough for Tesseract to return a meaningful
      * word-level confidence.
      */
-    private fun writeTextPng(file: File, text: String) {
+    private fun writeTextPng(
+        file: File,
+        text: String,
+    ) {
         val image = java.awt.image.BufferedImage(500, 120, java.awt.image.BufferedImage.TYPE_INT_RGB)
         val g = image.createGraphics()
         try {

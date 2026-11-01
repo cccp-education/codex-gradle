@@ -27,29 +27,43 @@ import java.io.File
  * is pinned here. Baby-step TDD RED -> GREEN -> REFACTOR.
  */
 class CodexIngestPageProvenanceTest {
-
     private fun task() =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectIngest", CodexIngestTask::class.java)
+            .get()
 
-    private fun chunk(id: String) = DocumentChunk(
-        id = id, sourceDocument = "livre", sectionPath = "Chapitre 1 > Section",
-        headingLevel = 2, content = "body", license = "PROPRIETARY",
-    )
+    private fun chunk(id: String) =
+        DocumentChunk(
+            id = id,
+            sourceDocument = "livre",
+            sectionPath = "Chapitre 1 > Section",
+            headingLevel = 2,
+            content = "body",
+            license = "PROPRIETARY",
+        )
 
-    private fun sidecar(dir: File, vararg entries: Pair<String, List<Int>>): File =
+    private fun sidecar(
+        dir: File,
+        vararg entries: Pair<String, List<Int>>,
+    ): File =
         File(dir, "page-provenance.json").apply {
-            val report = PageProvenanceReport.of(
-                "livre",
-                entries.map { (id, pages) ->
-                    ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = pages)
-                },
-            )
+            val report =
+                PageProvenanceReport.of(
+                    "livre",
+                    entries.map { (id, pages) ->
+                        ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = pages)
+                    },
+                )
             writeText(Json { prettyPrint = true }.encodeToString(report))
         }
 
     @Test
-    fun `attachPages resolves the page of a chunk from the sidecar`(@TempDir dir: File) {
+    fun `attachPages resolves the page of a chunk from the sidecar`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "chk-1" to listOf(40)))
 
@@ -59,7 +73,9 @@ class CodexIngestPageProvenanceTest {
     }
 
     @Test
-    fun `attachPages preserves all pages of a multi-page section`(@TempDir dir: File) {
+    fun `attachPages preserves all pages of a multi-page section`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "chk-1" to listOf(5, 6, 7, 8)))
 
@@ -78,7 +94,9 @@ class CodexIngestPageProvenanceTest {
     }
 
     @Test
-    fun `attachPages leaves an unmatched chunk untouched`(@TempDir dir: File) {
+    fun `attachPages leaves an unmatched chunk untouched`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "chk-other" to listOf(40)))
 
@@ -88,7 +106,9 @@ class CodexIngestPageProvenanceTest {
     }
 
     @Test
-    fun `attachPages degrades silently on an unreadable sidecar`(@TempDir dir: File) {
+    fun `attachPages degrades silently on an unreadable sidecar`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         val corrupt = File(dir, "page-provenance.json").apply { writeText("{ not json") }
         t.pageProvenanceFile.setFrom(corrupt)
@@ -107,7 +127,9 @@ class CodexIngestPageProvenanceTest {
 
         assertEquals(
             "page-provenance.json",
-            ingest.pageProvenanceFile.files.singleOrNull()?.name,
+            ingest.pageProvenanceFile.files
+                .singleOrNull()
+                ?.name,
             "the plugin must target the page provenance sidecar by default",
         )
     }

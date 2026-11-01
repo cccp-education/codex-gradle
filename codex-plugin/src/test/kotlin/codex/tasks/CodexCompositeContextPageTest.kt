@@ -33,63 +33,102 @@ import java.io.File
  * Baby-step TDD strict RED → GREEN → REFACTOR.
  */
 class CodexCompositeContextPageTest {
-
     private fun task() =
-        ProjectBuilder.builder().build()
-            .tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("generateCompositeContext", CodexCompositeContextTask::class.java)
+            .get()
 
-    private fun result(sectionPath: String) = RetrieveResult(
-        chunkId = 1L, chunkIndex = 0, chunkText = "body",
-        sectionPath = sectionPath, headingLevel = 2, sourceDocument = "livre",
-        similarity = 0.8, confidence = 1.0, doubtful = false,
-    )
+    private fun result(sectionPath: String) =
+        RetrieveResult(
+            chunkId = 1L,
+            chunkIndex = 0,
+            chunkText = "body",
+            sectionPath = sectionPath,
+            headingLevel = 2,
+            sourceDocument = "livre",
+            similarity = 0.8,
+            confidence = 1.0,
+            doubtful = false,
+        )
 
-    private fun sidecar(dir: File, vararg entries: Pair<String, List<Int>>): File {
-        val provenance = entries.map { (path, pages) ->
-            ChunkPageProvenance(chunkId = "chk-x", sectionPath = path, pages = pages)
-        }
+    private fun sidecar(
+        dir: File,
+        vararg entries: Pair<String, List<Int>>,
+    ): File {
+        val provenance =
+            entries.map { (path, pages) ->
+                ChunkPageProvenance(chunkId = "chk-x", sectionPath = path, pages = pages)
+            }
         val file = File(dir, "page-provenance.json")
         file.writeText(
             Json.encodeToString(
                 PageProvenanceReport.serializer(),
                 PageProvenanceReport.of("livre", provenance),
-            )
+            ),
         )
         return file
     }
 
     @Test
-    fun `composite entry exposes the pages joined by sectionPath`(@TempDir dir: File) {
+    fun `composite entry exposes the pages joined by sectionPath`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "Chapitre 1 > Organiser le contenu du scénario" to listOf(40)))
 
-        val raw = t.buildCompositeJson(
-            listOf(result("Chapitre 1 > Organiser le contenu du scénario")), "q", 5, t.buildPageIndex()
-        )
+        val raw =
+            t.buildCompositeJson(
+                listOf(result("Chapitre 1 > Organiser le contenu du scénario")),
+                "q",
+                5,
+                t.buildPageIndex(),
+            )
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertEquals(listOf("40"), entry["pages"]!!.jsonArray.map { it.jsonPrimitive.content })
     }
 
     @Test
-    fun `composite entry exposes a multi-page list`(@TempDir dir: File) {
+    fun `composite entry exposes a multi-page list`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "Maîtriser l'architecture logicielle" to listOf(5, 6, 7, 8)))
 
         val raw = t.buildCompositeJson(listOf(result("Maîtriser l'architecture logicielle")), "q", 5, t.buildPageIndex())
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertEquals(listOf("5", "6", "7", "8"), entry["pages"]!!.jsonArray.map { it.jsonPrimitive.content })
     }
 
     @Test
-    fun `pages field is omitted when the section is not in the sidecar`(@TempDir dir: File) {
+    fun `pages field is omitted when the section is not in the sidecar`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "Chapitre 1 > Autre section" to listOf(40)))
 
         val raw = t.buildCompositeJson(listOf(result("Chapitre 1 > Inconnue")), "q", 5)
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertFalse(entry.containsKey("pages"), "an unresolved entry must not carry an empty pages field")
     }
 
@@ -99,30 +138,49 @@ class CodexCompositeContextPageTest {
 
         val raw = t.buildCompositeJson(listOf(result("Chapitre 1 > Organiser le contenu du scénario")), "q", 5)
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertFalse(entry.containsKey("pages"), "no sidecar → no pages field (byte-identical JSON)")
     }
 
     @Test
-    fun `invalid sidecar degrades silently to no pages`(@TempDir dir: File) {
+    fun `invalid sidecar degrades silently to no pages`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         val bad = File(dir, "page-provenance.json").apply { writeText("{ not json") }
         t.pageProvenanceFile.setFrom(bad)
 
         val raw = t.buildCompositeJson(listOf(result("Chapitre 1 > Organiser le contenu du scénario")), "q", 5)
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertFalse(entry.containsKey("pages"))
     }
 
     @Test
-    fun `doubtful and confidence fields survive the page enrichment`(@TempDir dir: File) {
+    fun `doubtful and confidence fields survive the page enrichment`(
+        @TempDir dir: File,
+    ) {
         val t = task()
         t.pageProvenanceFile.setFrom(sidecar(dir, "Chapitre 1 > Organiser le contenu du scénario" to listOf(40)))
 
         val raw = t.buildCompositeJson(listOf(result("Chapitre 1 > Organiser le contenu du scénario")), "q", 5)
 
-        val entry = Json.parseToJsonElement(raw).jsonObject["entries"]!!.jsonArray[0].jsonObject
+        val entry =
+            Json
+                .parseToJsonElement(raw)
+                .jsonObject["entries"]!!
+                .jsonArray[0]
+                .jsonObject
         assertEquals("false", entry["doubtful"]!!.jsonPrimitive.content)
         assertTrue(entry.containsKey("confidence"))
         assertTrue(entry.containsKey("chunkId"))

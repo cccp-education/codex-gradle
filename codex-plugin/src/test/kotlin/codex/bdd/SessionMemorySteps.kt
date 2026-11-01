@@ -6,7 +6,6 @@ import contracts.runtime.LearnerProfile
 import contracts.runtime.SessionMemoryContract
 import io.cucumber.java8.En
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
  * with other codex BDD suites (bug S-088).
  */
 class SessionMemorySteps : En {
-
     private val store: MutableMap<String, LearnerProfile> = mutableMapOf()
     private val memory: SessionMemoryContract = FakeSessionMemory(store)
     private var currentProfile: LearnerProfile? = null
@@ -72,11 +70,16 @@ class SessionMemorySteps : En {
         // ── Save/load scenarios ──────────────────────────────────────────
 
         Given("a learner profile for learner {string} in formation {string} with weak points {string}") {
-            learnerId: String, formationId: String, weakPoints: String ->
-            currentProfile = LearnerProfile(
-                learnerId, formationId,
-                weakPoints = weakPoints.split(", ").map { it.trim() }
-            )
+            learnerId: String,
+            formationId: String,
+            weakPoints: String,
+            ->
+            currentProfile =
+                LearnerProfile(
+                    learnerId,
+                    formationId,
+                    weakPoints = weakPoints.split(", ").map { it.trim() },
+                )
         }
 
         When("the profile is saved via the session memory bridge") {
@@ -84,13 +87,15 @@ class SessionMemorySteps : En {
         }
 
         When("a learner profile for learner {string} in formation {string} with weak points {string} is saved") {
-            learnerId: String, formationId: String, weakPoints: String ->
+            learnerId: String,
+            formationId: String,
+            weakPoints: String,
+            ->
             val p = LearnerProfile(learnerId, formationId, weakPoints = listOf(weakPoints))
             memory.save(p)
         }
 
-        When("the profile is loaded for learner {string} and formation {string}") {
-            learnerId: String, formationId: String ->
+        When("the profile is loaded for learner {string} and formation {string}") { learnerId: String, formationId: String ->
             loadedProfile = memory.load(learnerId, formationId)
         }
 
@@ -100,8 +105,7 @@ class SessionMemorySteps : En {
             assertEquals(expected, loadedProfile!!.weakPoints)
         }
 
-        Then("loading for learner {string} and formation {string} returns weak points {string}") {
-            learnerId: String, formationId: String, weakPoints: String ->
+        Then("loading for learner {string} and formation {string} returns weak points {string}") { learnerId: String, formationId: String, weakPoints: String ->
             val loaded = memory.load(learnerId, formationId)
             assertNotNull(loaded)
             val expected = weakPoints.split(", ").map { it.trim() }
@@ -148,18 +152,24 @@ class SessionMemorySteps : En {
         }
     }
 
-    private fun key(learnerId: String, formationId: String) = "$learnerId|$formationId"
+    private fun key(
+        learnerId: String,
+        formationId: String,
+    ) = "$learnerId|$formationId"
 }
 
 /**
  * In-memory fake implementing [SessionMemoryContract] — pure BDD, no DB.
  */
-private class FakeSessionMemory(private val store: MutableMap<String, LearnerProfile>) : SessionMemoryContract {
+private class FakeSessionMemory(
+    private val store: MutableMap<String, LearnerProfile>,
+) : SessionMemoryContract {
     override fun save(profile: LearnerProfile) {
         store["${profile.learnerId}|${profile.formationId}"] = profile
     }
 
-    override fun load(learnerId: String, formationId: String): LearnerProfile? {
-        return store["$learnerId|$formationId"]
-    }
+    override fun load(
+        learnerId: String,
+        formationId: String,
+    ): LearnerProfile? = store["$learnerId|$formationId"]
 }

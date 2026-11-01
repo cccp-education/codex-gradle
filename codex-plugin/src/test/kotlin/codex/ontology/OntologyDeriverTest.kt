@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test
  * RED (types inexistants) → GREEN → REFACTOR.
  */
 class OntologyDeriverTest {
-
-    private val bookSql = """
+    private val bookSql =
+        """
         -- codex: collectBookSql
         CREATE TABLE IF NOT EXISTS book (
             id          SERIAL PRIMARY KEY,
@@ -46,7 +46,7 @@ class OntologyDeriverTest {
             text        TEXT NOT NULL,
             position    INTEGER NOT NULL DEFAULT 0
         );
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun `derive with empty sql and empty nodes returns empty mapping`() {
@@ -76,7 +76,8 @@ class OntologyDeriverTest {
 
     @Test
     fun `bounded contexts separates disconnected table groups`() {
-        val disconnectedSql = """
+        val disconnectedSql =
+            """
             CREATE TABLE IF NOT EXISTS orders (
                 id          SERIAL PRIMARY KEY,
                 customer_id INTEGER REFERENCES customers(id)
@@ -89,7 +90,7 @@ class OntologyDeriverTest {
                 id          SERIAL PRIMARY KEY,
                 event       TEXT
             );
-        """.trimIndent()
+            """.trimIndent()
         val mapping = OntologyDeriver.derive(emptyList(), disconnectedSql)
         assertEquals(2, mapping.boundedContexts.size, "audit_log is disconnected → 2 contexts")
         val tablesByContext = mapping.boundedContexts.map { it.tables.toSet() }
@@ -109,16 +110,21 @@ class OntologyDeriverTest {
     fun `aggregates collects dependent tables of each root`() {
         val mapping = OntologyDeriver.derive(emptyList(), bookSql)
         val bookAggregate = mapping.aggregates.first { it.rootTable == "book" }
-        assertTrue("documents" in bookAggregate.dependentTables,
-            "documents depends on book via CASCADE")
+        assertTrue(
+            "documents" in bookAggregate.dependentTables,
+            "documents depends on book via CASCADE",
+        )
         val documentsAggregate = mapping.aggregates.first { it.rootTable == "documents" }
-        assertTrue("paragraphs" in documentsAggregate.dependentTables,
-            "paragraphs depends on documents via CASCADE")
+        assertTrue(
+            "paragraphs" in documentsAggregate.dependentTables,
+            "paragraphs depends on documents via CASCADE",
+        )
     }
 
     @Test
     fun `aggregates excludes FK without ON DELETE CASCADE`() {
-        val noCascadeSql = """
+        val noCascadeSql =
+            """
             CREATE TABLE IF NOT EXISTS parent (
                 id SERIAL PRIMARY KEY
             );
@@ -126,10 +132,12 @@ class OntologyDeriverTest {
                 id SERIAL PRIMARY KEY,
                 parent_id INTEGER REFERENCES parent(id)
             );
-        """.trimIndent()
+            """.trimIndent()
         val mapping = OntologyDeriver.derive(emptyList(), noCascadeSql)
-        assertTrue(mapping.aggregates.isEmpty(),
-            "FK without CASCADE does not define an aggregate root")
+        assertTrue(
+            mapping.aggregates.isEmpty(),
+            "FK without CASCADE does not define an aggregate root",
+        )
     }
 
     @Test
@@ -173,9 +181,10 @@ class OntologyDeriverTest {
 
     @Test
     fun `derive uses lddNodes titles to name bounded contexts when available`() {
-        val nodes = listOf(
-            LddNode(title = "Applied AI for Enterprise Java", level = 1)
-        )
+        val nodes =
+            listOf(
+                LddNode(title = "Applied AI for Enterprise Java", level = 1),
+            )
         val mapping = OntologyDeriver.derive(nodes, bookSql)
         assertEquals(1, mapping.boundedContexts.size)
         val ctx = mapping.boundedContexts.first()

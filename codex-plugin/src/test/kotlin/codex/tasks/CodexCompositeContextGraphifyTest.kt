@@ -1,7 +1,6 @@
 package codex.tasks
 
 import codex.enrichment.EnrichedLddNode
-import codebase.store.DocumentChunk
 import codex.tasks.LddNode
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -25,19 +24,25 @@ import java.io.File
  * Baby-step TDD strict RED → GREEN → REFACTOR.
  */
 class CodexCompositeContextGraphifyTest {
-
     @TempDir
     lateinit var tempDir: File
 
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
+        }
 
-    private fun enrichedNode(title: String, vararg nodes: String): EnrichedLddNode =
+    private fun enrichedNode(
+        title: String,
+        vararg nodes: String,
+    ): EnrichedLddNode =
         EnrichedLddNode(
             ldd = LddNode(title = title, level = 1),
             ragChunks = emptyList(),
             graphifyNodes = nodes.toList(),
             semanticDensity = 0.0,
-            entities = emptyList()
+            entities = emptyList(),
         )
 
     @Test
@@ -67,10 +72,11 @@ class CodexCompositeContextGraphifyTest {
         val project = ProjectBuilder.builder().build()
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
         val enrichedFile = File(tempDir, "enriched.json")
-        val enriched = listOf(
-            enrichedNode("Architecture", "node-arch-1", "node-arch-2"),
-            enrichedNode("Intro") // sans nœuds graphify → omis
-        )
+        val enriched =
+            listOf(
+                enrichedNode("Architecture", "node-arch-1", "node-arch-2"),
+                enrichedNode("Intro"), // sans nœuds graphify → omis
+            )
         enrichedFile.writeText(json.encodeToString(ListSerializer(EnrichedLddNode.serializer()), enriched))
         task.enrichedJsonFile.setFrom(enrichedFile)
 

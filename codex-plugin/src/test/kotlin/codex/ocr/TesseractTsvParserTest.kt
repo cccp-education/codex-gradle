@@ -16,16 +16,16 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD RED → GREEN → REFACTOR.
  */
 class TesseractTsvParserTest {
-
     @Test
     fun `parses mean confidence of word level rows`() {
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             1	1	0	0	0	0	0	0	400	80	-1	
             2	1	1	0	0	0	12	26	330	29	-1	
             5	1	1	1	1	1	12	26	112	29	96.323288	HELLO
             5	1	1	1	1	2	139	26	126	29	94.551613	WORLD
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 
@@ -35,11 +35,12 @@ class TesseractTsvParserTest {
 
     @Test
     fun `returns zero confidence when no word level rows`() {
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             1	1	0	0	0	0	0	0	400	80	-1	
             2	1	1	0	0	0	12	26	330	29	-1	
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 
@@ -60,10 +61,11 @@ class TesseractTsvParserTest {
         // Tesseract can emit a word row with a high confidence but whitespace
         // text on garbage images — counting it would inflate the confidence of
         // a page that read nothing (the very signal OCR-QUALITY must catch).
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             5	1	1	1	1	1	0	0	10	10	95.000000	 
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 
@@ -73,11 +75,12 @@ class TesseractTsvParserTest {
 
     @Test
     fun `ignores word rows with negative confidence`() {
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             5	1	1	1	1	1	12	26	112	29	-1	NOISE
             5	1	1	1	1	2	139	26	126	29	80.0	REAL
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 
@@ -87,11 +90,12 @@ class TesseractTsvParserTest {
 
     @Test
     fun `skips malformed rows without failing`() {
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             5	1	1	1	1	1	12	26	112	29	not-a-number	BROKEN
             5	1	1	1	1	2	139	26	126	29	90.0	OK
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 
@@ -101,10 +105,11 @@ class TesseractTsvParserTest {
 
     @Test
     fun `mean confidence stays within zero and one`() {
-        val tsv = """
+        val tsv =
+            """
             level	page_num	block_num	par_num	line_num	word_num	left	top	width	height	conf	text
             5	1	1	1	1	1	12	26	112	29	100.0	PERFECT
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = TesseractTsvParser.parse(tsv)
 

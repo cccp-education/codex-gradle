@@ -26,7 +26,6 @@ import java.io.File
  * the routing wired in CDX-6-1/CDX-6-2.
  */
 class LicencePipelineRoutingSteps {
-
     private lateinit var tempDir: File
     private lateinit var pdfFile: File
     private var baseDir: File? = null
@@ -37,7 +36,10 @@ class LicencePipelineRoutingSteps {
 
     @Given("a pipeline source PDF containing the text {string}")
     fun aPipelineSourcePdfContainingTheText(text: String) {
-        tempDir = kotlin.io.path.createTempDirectory(prefix = "cdx-routing-bdd-").toFile()
+        tempDir =
+            kotlin.io.path
+                .createTempDirectory(prefix = "cdx-routing-bdd-")
+                .toFile()
         pdfFile = File(tempDir, "book.pdf")
         createPdf(pdfFile, text)
     }
@@ -61,10 +63,12 @@ class LicencePipelineRoutingSteps {
     @When("the transform corpus to pdf pipeline runs")
     fun theTransformCorpusToPdfPipelineRuns() {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformCorpusToPdf",
-            CodexPipelineTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformCorpusToPdf",
+                    CodexPipelineTask::class.java,
+                ).get()
         task.sourceFile.set(pdfFile)
         task.pgHost.set("localhost")
         task.pgPort.set("5432")
@@ -94,8 +98,10 @@ class LicencePipelineRoutingSteps {
         val dir = File(root, zoneName)
         assertTrue(dir.isDirectory, "Expected directory $zoneName to exist under $root")
         val output = actualOutput ?: error("No output file found")
-        assertTrue(output.absolutePath.startsWith(dir.absolutePath),
-            "Output $output should be under $dir")
+        assertTrue(
+            output.absolutePath.startsWith(dir.absolutePath),
+            "Output $output should be under $dir",
+        )
     }
 
     @Then("the pipeline output is written to the configured output file")
@@ -103,8 +109,10 @@ class LicencePipelineRoutingSteps {
         val expected = outputFile ?: error("outputFile not configured for non-routing scenario")
         assertTrue(expected.exists(), "Configured output file $expected should exist")
         val output = actualOutput ?: error("No output file found")
-        assertTrue(output.absolutePath == expected.absolutePath,
-            "Output $output should be the configured outputFile $expected")
+        assertTrue(
+            output.absolutePath == expected.absolutePath,
+            "Output $output should be the configured outputFile $expected",
+        )
     }
 
     @And("the pipeline output file has a non-blank content")
@@ -121,13 +129,17 @@ class LicencePipelineRoutingSteps {
         return root.walkTopDown().first { it.isFile && it.extension == "adoc" }
     }
 
-    private fun parseZone(name: String): LicenseZone = when (name.uppercase()) {
-        "OSS" -> LicenseZone.OSS
-        "CSS" -> LicenseZone.CSS
-        else -> LicenseZone.UNKNOWN
-    }
+    private fun parseZone(name: String): LicenseZone =
+        when (name.uppercase()) {
+            "OSS" -> LicenseZone.OSS
+            "CSS" -> LicenseZone.CSS
+            else -> LicenseZone.UNKNOWN
+        }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)

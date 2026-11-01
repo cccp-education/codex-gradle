@@ -35,7 +35,6 @@ import java.io.File
  * current code) → REFACTOR (delegate, tests stay green).
  */
 class CodexPipelineChunkingTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -53,7 +52,7 @@ class CodexPipelineChunkingTest {
         assertTrue(content.isNotBlank(), "Output AsciiDoc should not be blank")
         assertTrue(
             content.trimStart().startsWith("="),
-            "Output should be AsciiDoc (starts with '=')"
+            "Output should be AsciiDoc (starts with '=')",
         )
     }
 
@@ -69,7 +68,7 @@ class CodexPipelineChunkingTest {
         val content = outputFile.readText()
         assertTrue(
             content.contains("Apache License") || content.contains("Heading"),
-            "Output AsciiDoc should contain the extracted PDF text — got: $content"
+            "Output AsciiDoc should contain the extracted PDF text — got: $content",
         )
     }
 
@@ -101,13 +100,17 @@ class CodexPipelineChunkingTest {
         assertTrue(out1.exists() && out2.exists(), "Both outputs should exist")
         assertTrue(
             out1.readText() == out2.readText(),
-            "Pipeline output should be deterministic across runs on same input"
+            "Pipeline output should be deterministic across runs on same input",
         )
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private fun runPipeline(pdfFile: File, outputFile: File, routing: Boolean) {
+    private fun runPipeline(
+        pdfFile: File,
+        outputFile: File,
+        routing: Boolean,
+    ) {
         val project = ProjectBuilder.builder().build()
         val task = project.tasks.register("transformCorpusToPdf", CodexPipelineTask::class.java).get()
         task.sourceFile.set(pdfFile)
@@ -125,7 +128,10 @@ class CodexPipelineChunkingTest {
         task.pipeline()
     }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)

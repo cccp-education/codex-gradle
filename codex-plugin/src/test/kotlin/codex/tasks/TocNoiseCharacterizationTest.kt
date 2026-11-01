@@ -26,8 +26,8 @@ import java.io.File
  * Reads only — never mutates the corpus (Loi de l'Économie d'Encre).
  */
 class TocNoiseCharacterizationTest {
-
-    private val synthetic = """
+    private val synthetic =
+        """
         # Guide
 
         ## Introduction
@@ -45,7 +45,7 @@ class TocNoiseCharacterizationTest {
         ## Vue synoptique
 
         See chapter 1.1.2 and section 3.3.6 for the details of the approach.
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun `chunker plus detector isolate the toc entries on a synthetic document`() {
@@ -57,19 +57,19 @@ class TocNoiseCharacterizationTest {
         assertTrue(noisy.isNotEmpty(), "the synthetic TOC entries must be detected")
         assertTrue(
             noisy.all { it.sectionPath.contains("..........") || it.content.contains("..........") },
-            "every flagged chunk must be a dot-leader heading, was ${noisy.map { it.sectionPath }}"
+            "every flagged chunk must be a dot-leader heading, was ${noisy.map { it.sectionPath }}",
         )
         assertTrue(
             clean.any { it.sectionPath.contains("Introduction") },
-            "a clean heading must not be flagged"
+            "a clean heading must not be flagged",
         )
         assertTrue(
             clean.any { it.sectionPath.contains("Différencier") },
-            "a real title with an ellipsis must not be flagged"
+            "a real title with an ellipsis must not be flagged",
         )
         assertTrue(
             clean.any { it.sectionPath.contains("Vue synoptique") },
-            "dotted prose must not be flagged"
+            "dotted prose must not be flagged",
         )
     }
 
@@ -79,24 +79,27 @@ class TocNoiseCharacterizationTest {
         val file = locate(System.getProperty("codex.tocNoise.chunks"))
         assumeTrue(
             file != null,
-            "corpus absent (set codex.tocNoise.chunks) — skipping real TOC-noise measurement"
+            "corpus absent (set codex.tocNoise.chunks) — skipping real TOC-noise measurement",
         )
 
-        val chunks: List<DocumentChunk> = Json { ignoreUnknownKeys = true }
-            .decodeFromString(ListSerializer(DocumentChunk.serializer()), file!!.readText())
+        val chunks: List<DocumentChunk> =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(ListSerializer(DocumentChunk.serializer()), file!!.readText())
         val noisy = chunks.filter { TocNoiseDetector.isTocNoise(it) }
 
-        println("[codex] TOC noise: ${noisy.size}/${chunks.size} chunks flagged doubtful " +
-            "(floor 25, all thin)")
+        println(
+            "[codex] TOC noise: ${noisy.size}/${chunks.size} chunks flagged doubtful " +
+                "(floor 25, all thin)",
+        )
 
         assertTrue(chunks.isNotEmpty(), "the real corpus must yield chunks")
         assertTrue(
             noisy.size >= 25,
-            "at least 25 TOC-polluted chunks must be detected — got ${noisy.size}"
+            "at least 25 TOC-polluted chunks must be detected — got ${noisy.size}",
         )
         assertTrue(
             noisy.all { it.content.length < 150 },
-            "a TOC entry is near-empty; a substantive chunk must never be flagged"
+            "a TOC entry is near-empty; a substantive chunk must never be flagged",
         )
     }
 

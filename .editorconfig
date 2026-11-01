@@ -1,0 +1,46 @@
+root = true
+
+# MEM-LINT-ADOPTION (S-327) — repository-self-contained ktlint/EditorConfig.
+# `root = true` makes the rules deterministic: an isolated CI checkout no longer
+# inherits a workspace-root `.editorconfig` that a local run would apply.
+
+[*]
+charset = utf-8
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 160
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{adoc,asciidoc}]
+indent_size = 0
+trim_trailing_whitespace = false
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.{xml,html,xhtml}]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.toml]
+indent_size = 2
+
+[*.properties]
+indent_size = 4
+
+[*.{gradle,gradle.kts}]
+indent_size = 4
+
+[{gradlew,*.sh}]
+indent_style = tab
+indent_size = 4

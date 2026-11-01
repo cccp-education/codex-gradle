@@ -19,7 +19,6 @@ import contracts.runtime.LearnerProfile
  * Pure object (stateless, side-effect free) — unit-testable without ONNX.
  */
 object ProfileEmbedding {
-
     /**
      * Computes the text to embed from a [LearnerProfile].
      *

@@ -36,7 +36,10 @@ data class PageProvenanceReport(
 
     companion object {
         /** Builds the report from a resolved provenance list (derives the counts). */
-        fun of(sourceDocument: String, provenance: List<ChunkPageProvenance>): PageProvenanceReport {
+        fun of(
+            sourceDocument: String,
+            provenance: List<ChunkPageProvenance>,
+        ): PageProvenanceReport {
             val resolved = provenance.count { it.pages.isNotEmpty() }
             val rate = if (provenance.isEmpty()) 0.0 else resolved.toDouble() / provenance.size.toDouble()
             return PageProvenanceReport(

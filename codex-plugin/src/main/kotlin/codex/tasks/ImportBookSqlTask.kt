@@ -9,7 +9,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
-import java.io.File
 
 /**
  * Converts JSON LDD to PostgreSQL DDL and INSERT statements.
@@ -24,7 +23,6 @@ import java.io.File
  */
 @DisableCachingByDefault(because = "JSON LDD → SQL DDL/INSERT — non-cacheable")
 abstract class ImportBookSqlTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val jsonFile: RegularFileProperty
@@ -103,7 +101,7 @@ abstract class ImportBookSqlTask : DefaultTask() {
         parentDocId: Int,
         sb: StringBuilder,
         currentDocCounter: Int,
-        currentParaCounter: Int
+        currentParaCounter: Int,
     ): Pair<Int, Int> {
         var docCounter = currentDocCounter
         var paraCounter = currentParaCounter
@@ -126,9 +124,8 @@ abstract class ImportBookSqlTask : DefaultTask() {
         return docCounter to paraCounter
     }
 
-    private fun escSql(s: String): String {
-        return s
+    private fun escSql(s: String): String =
+        s
             .replace("'", "''")
             .replace("\\", "\\\\")
-    }
 }

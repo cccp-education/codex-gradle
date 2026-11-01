@@ -10,7 +10,6 @@ import java.io.File
 import java.nio.file.Files
 
 class CollectOcrTaskTest {
-
     @Test
     fun `plugin registers collectOcr task with correct type`() {
         val project = ProjectBuilder.builder().build()

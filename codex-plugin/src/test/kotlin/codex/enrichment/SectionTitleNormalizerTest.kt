@@ -22,12 +22,11 @@ import org.junit.jupiter.api.Test
  * Baby-step TDD strict RED (type inexistant) → GREEN → REFACTOR.
  */
 class SectionTitleNormalizerTest {
-
     @Test
     fun `normalizes simple title unchanged`() {
         assertEquals(
             "architecture",
-            SectionTitleNormalizer.normalize("Architecture")
+            SectionTitleNormalizer.normalize("Architecture"),
         )
     }
 
@@ -35,7 +34,7 @@ class SectionTitleNormalizerTest {
     fun `lowercases and trims whitespace`() {
         assertEquals(
             "domain-driven design",
-            SectionTitleNormalizer.normalize("  Domain-Driven Design  ")
+            SectionTitleNormalizer.normalize("  Domain-Driven Design  "),
         )
     }
 
@@ -43,7 +42,7 @@ class SectionTitleNormalizerTest {
     fun `collapses internal whitespace runs`() {
         assertEquals(
             "a b",
-            SectionTitleNormalizer.normalize("a \t \n b")
+            SectionTitleNormalizer.normalize("a \t \n b"),
         )
     }
 
@@ -51,7 +50,7 @@ class SectionTitleNormalizerTest {
     fun `unescapes html entities`() {
         assertEquals(
             "maîtriser l'architecture logicielle",
-            SectionTitleNormalizer.normalize("Maîtriser l&#8217;architecture logicielle")
+            SectionTitleNormalizer.normalize("Maîtriser l&#8217;architecture logicielle"),
         )
     }
 
@@ -59,7 +58,7 @@ class SectionTitleNormalizerTest {
     fun `unescapes ellipsis html entity`() {
         assertEquals(
             "section",
-            SectionTitleNormalizer.normalize("Section&#8230;&#8203;")
+            SectionTitleNormalizer.normalize("Section&#8230;&#8203;"),
         )
     }
 
@@ -67,7 +66,7 @@ class SectionTitleNormalizerTest {
     fun `strips asciidoc footnote macro`() {
         assertEquals(
             "2-3.2 développer son état d'esprit, le mind set",
-            SectionTitleNormalizer.normalize("2-3.2 Développer son état d'esprit, le Mind Set.footnote:[102]")
+            SectionTitleNormalizer.normalize("2-3.2 Développer son état d'esprit, le Mind Set.footnote:[102]"),
         )
     }
 
@@ -75,7 +74,7 @@ class SectionTitleNormalizerTest {
     fun `strips html tags from title`() {
         assertEquals(
             "points clés de l'analyse",
-            SectionTitleNormalizer.normalize("Points clés de l'analyse<sup class=\"footnote\">[<a id=\"_footnote\">1</a>]</sup>")
+            SectionTitleNormalizer.normalize("Points clés de l'analyse<sup class=\"footnote\">[<a id=\"_footnote\">1</a>]</sup>"),
         )
     }
 
@@ -83,7 +82,7 @@ class SectionTitleNormalizerTest {
     fun `strips trailing dot leaders with page number`() {
         assertEquals(
             "1-1.2 différencier : activité et modules, compétences et séquences",
-            SectionTitleNormalizer.normalize("1-1.2 Différencier : activité et modules, compétences et séquences..........24")
+            SectionTitleNormalizer.normalize("1-1.2 Différencier : activité et modules, compétences et séquences..........24"),
         )
     }
 
@@ -91,7 +90,9 @@ class SectionTitleNormalizerTest {
     fun `strips trailing dot leaders with internal spaces before page number`() {
         assertEquals(
             "1-1.2 différencier : activité et modules, compétences et séquences",
-            SectionTitleNormalizer.normalize("1-1.2 Différencier : activité et modules, compétences et séquences&#8230;&#8203; &#8230;&#8203;&#8230;&#8203;&#8230;&#8203;.24")
+            SectionTitleNormalizer.normalize(
+                "1-1.2 Différencier : activité et modules, compétences et séquences&#8230;&#8203; &#8230;&#8203;&#8230;&#8203;&#8230;&#8203;.24",
+            ),
         )
     }
 
@@ -99,7 +100,7 @@ class SectionTitleNormalizerTest {
     fun `strips trailing dot leaders without page number`() {
         assertEquals(
             "organiser le contenu du scénario",
-            SectionTitleNormalizer.normalize("Organiser le contenu du scénario .............................")
+            SectionTitleNormalizer.normalize("Organiser le contenu du scénario ............................."),
         )
     }
 
@@ -107,7 +108,7 @@ class SectionTitleNormalizerTest {
     fun `strips trailing unicode ellipsis runs`() {
         assertEquals(
             "maîtriser l'architecture logicielle",
-            SectionTitleNormalizer.normalize("Maîtriser l'architecture logicielle \u2026\u200b\u2026\u200b\u2026\u200b")
+            SectionTitleNormalizer.normalize("Maîtriser l'architecture logicielle \u2026\u200b\u2026\u200b\u2026\u200b"),
         )
     }
 
@@ -115,7 +116,7 @@ class SectionTitleNormalizerTest {
     fun `strips asciidoc footnote macro with dots after`() {
         assertEquals(
             "1-1.5 utiliser un vocabulaire (in)approprié aux objectifs",
-            SectionTitleNormalizer.normalize("1-1.5 Utiliser un vocabulaire (in)approprié aux objectifs.footnote:[83]. ......")
+            SectionTitleNormalizer.normalize("1-1.5 Utiliser un vocabulaire (in)approprié aux objectifs.footnote:[83]. ......"),
         )
     }
 
@@ -133,7 +134,7 @@ class SectionTitleNormalizerTest {
     fun `dot-only title normalizes to empty string`() {
         assertEquals(
             "",
-            SectionTitleNormalizer.normalize(".........................")
+            SectionTitleNormalizer.normalize("........................."),
         )
     }
 
@@ -159,7 +160,7 @@ class SectionTitleNormalizerTest {
         assertEquals(
             SectionTitleNormalizer.normalize(chunkLastSegment),
             SectionTitleNormalizer.normalize(lddTitle),
-            "both encodings of the same section must share one normal form"
+            "both encodings of the same section must share one normal form",
         )
     }
 
@@ -170,7 +171,7 @@ class SectionTitleNormalizerTest {
         assertEquals(
             SectionTitleNormalizer.normalize(chunkLastSegment),
             SectionTitleNormalizer.normalize(lddTitle),
-            "footnote encoded by AsciidoctorJ vs AsciiDoc macro must share one normal form"
+            "footnote encoded by AsciidoctorJ vs AsciiDoc macro must share one normal form",
         )
     }
 }

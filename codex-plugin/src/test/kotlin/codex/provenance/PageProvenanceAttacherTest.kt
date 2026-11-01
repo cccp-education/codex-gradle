@@ -20,18 +20,26 @@ import org.junit.jupiter.api.Test
  * untouched. Baby-step TDD RED -> GREEN -> REFACTOR.
  */
 class PageProvenanceAttacherTest {
-
-    private fun chunk(id: String, pages: List<Int> = emptyList()) = DocumentChunk(
-        id = id, sourceDocument = "livre", sectionPath = "Chapitre 1 > Section",
-        headingLevel = 2, content = "body", license = "PROPRIETARY", pages = pages,
+    private fun chunk(
+        id: String,
+        pages: List<Int> = emptyList(),
+    ) = DocumentChunk(
+        id = id,
+        sourceDocument = "livre",
+        sectionPath = "Chapitre 1 > Section",
+        headingLevel = 2,
+        content = "body",
+        license = "PROPRIETARY",
+        pages = pages,
     )
 
-    private fun report(vararg entries: Pair<String, List<Int>>) = PageProvenanceReport.of(
-        "livre",
-        entries.map { (id, pages) ->
-            ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = pages)
-        },
-    )
+    private fun report(vararg entries: Pair<String, List<Int>>) =
+        PageProvenanceReport.of(
+            "livre",
+            entries.map { (id, pages) ->
+                ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = pages)
+            },
+        )
 
     @Test
     fun `attaches the page of a chunk by exact sha-256 id`() {
@@ -42,20 +50,22 @@ class PageProvenanceAttacherTest {
 
     @Test
     fun `preserves all pages of a multi-page section`() {
-        val attached = PageProvenanceAttacher.attach(
-            listOf(chunk("chk-1")),
-            report("chk-1" to listOf(5, 6, 7, 8)),
-        )
+        val attached =
+            PageProvenanceAttacher.attach(
+                listOf(chunk("chk-1")),
+                report("chk-1" to listOf(5, 6, 7, 8)),
+            )
 
         assertEquals(listOf(5, 6, 7, 8), attached.single().pages)
     }
 
     @Test
     fun `leaves an unmatched chunk untouched`() {
-        val attached = PageProvenanceAttacher.attach(
-            listOf(chunk("chk-1"), chunk("chk-2")),
-            report("chk-1" to listOf(40)),
-        )
+        val attached =
+            PageProvenanceAttacher.attach(
+                listOf(chunk("chk-1"), chunk("chk-2")),
+                report("chk-1" to listOf(40)),
+            )
 
         assertEquals(listOf(40), attached[0].pages)
         assertTrue(attached[1].pages.isEmpty(), "a chunk absent from the sidecar keeps no page")
@@ -63,10 +73,11 @@ class PageProvenanceAttacherTest {
 
     @Test
     fun `preserves pages already carried by a chunk absent from the sidecar`() {
-        val attached = PageProvenanceAttacher.attach(
-            listOf(chunk("chk-1", pages = listOf(9))),
-            report("chk-other" to listOf(40)),
-        )
+        val attached =
+            PageProvenanceAttacher.attach(
+                listOf(chunk("chk-1", pages = listOf(9))),
+                report("chk-other" to listOf(40)),
+            )
 
         assertEquals(listOf(9), attached.single().pages)
     }

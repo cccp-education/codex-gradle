@@ -31,7 +31,6 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "ONNX pgvector search (R2DBC) — external dependencies, non-cacheable")
 abstract class CodexRetrieveTask : DefaultTask() {
-
     @get:Input
     abstract val query: Property<String>
 
@@ -63,13 +62,14 @@ abstract class CodexRetrieveTask : DefaultTask() {
 
         logger.lifecycle("[codex] collectRetrieve : \"${q.take(80)}\" → pgvector (top-$k)")
 
-        val store = RagVectorStore(
-            host = pgHost.get(),
-            port = pgPort.get().toInt(),
-            database = pgDatabase.get(),
-            username = pgUser.get(),
-            password = pgPassword.get()
-        )
+        val store =
+            RagVectorStore(
+                host = pgHost.get(),
+                port = pgPort.get().toInt(),
+                database = pgDatabase.get(),
+                username = pgUser.get(),
+                password = pgPassword.get(),
+            )
         val results: List<RetrieveResult> = store.searchBlocking(q, k)
 
         val json = Json { prettyPrint = true }

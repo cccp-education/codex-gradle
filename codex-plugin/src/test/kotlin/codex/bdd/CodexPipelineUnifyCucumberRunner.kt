@@ -31,10 +31,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-pipeline-unified.html, json:build/reports/cucumber-pipeline-unified.json"
+    value = "pretty, html:build/reports/cucumber-pipeline-unified.html, json:build/reports/cucumber-pipeline-unified.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@pipeline and @unify and not @wip and not @integration"
+    value = "@pipeline and @unify and not @wip and not @integration",
 )
 class CodexPipelineUnifyCucumberRunner

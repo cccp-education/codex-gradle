@@ -19,7 +19,6 @@ import java.security.MessageDigest
  * former since CDX-7-3, the latter since EPIC CDX-UNIFY).
  */
 object SemanticChunker {
-
     /**
      * A parsed heading section : heading line, numeric level, title, and
      * accumulated content lines. Public so tests can construct sections
@@ -29,7 +28,7 @@ object SemanticChunker {
         val headingLine: String,
         val headingLevel: Int,
         val headingText: String,
-        val contentLines: MutableList<String> = mutableListOf()
+        val contentLines: MutableList<String> = mutableListOf(),
     )
 
     /**
@@ -43,14 +42,20 @@ object SemanticChunker {
      * @param sourceDocument name of the source document (used in chunk ids + sectionPath)
      * @param license license tag to apply to all chunks
      */
-    fun chunk(text: String, sourceDocument: String, license: String): List<DocumentChunk> =
-        buildChunks(text, sourceDocument, license)
+    fun chunk(
+        text: String,
+        sourceDocument: String,
+        license: String,
+    ): List<DocumentChunk> = buildChunks(text, sourceDocument, license)
 
     /**
      * Builds a hierarchical section path for the section at [currentIndex]
      * by walking ancestors with a strictly lower heading level.
      */
-    fun buildSectionPath(sections: List<Section>, currentIndex: Int): String {
+    fun buildSectionPath(
+        sections: List<Section>,
+        currentIndex: Int,
+    ): String {
         val path = mutableListOf<String>()
         val target = sections[currentIndex]
 
@@ -73,10 +78,11 @@ object SemanticChunker {
      * text is found.
      */
     fun extractFirstTwoSentences(lines: List<String>): String? {
-        val textLines = lines.filter { l ->
-            val t = l.trim()
-            !t.startsWith("#") && !t.startsWith("```") && t.isNotBlank()
-        }
+        val textLines =
+            lines.filter { l ->
+                val t = l.trim()
+                !t.startsWith("#") && !t.startsWith("```") && t.isNotBlank()
+            }
         if (textLines.isEmpty()) return null
 
         val combined = textLines.take(3).joinToString(" ")
@@ -85,7 +91,11 @@ object SemanticChunker {
         return result.ifBlank { null }
     }
 
-    private fun buildChunks(text: String, sourceDocument: String, license: String): List<DocumentChunk> {
+    private fun buildChunks(
+        text: String,
+        sourceDocument: String,
+        license: String,
+    ): List<DocumentChunk> {
         val lines = text.lines()
         val headingPattern = Regex("""^(#{1,6})\s+(.+)$""")
 
@@ -102,11 +112,12 @@ object SemanticChunker {
                 }
                 val level = match.groupValues[1].length
                 val title = match.groupValues[2].trim()
-                currentSection = Section(
-                    headingLine = line,
-                    headingLevel = level,
-                    headingText = title
-                )
+                currentSection =
+                    Section(
+                        headingLine = line,
+                        headingLevel = level,
+                        headingText = title,
+                    )
                 pendingLines.clear()
             } else {
                 pendingLines.add(line)
@@ -122,8 +133,8 @@ object SemanticChunker {
                     headingLine = "",
                     headingLevel = 0,
                     headingText = sourceDocument,
-                    contentLines = pendingLines.toMutableList()
-                )
+                    contentLines = pendingLines.toMutableList(),
+                ),
             )
         }
 
@@ -137,9 +148,12 @@ object SemanticChunker {
             val codeBlocks = extractCodeBlocks(section.contentLines)
             val sectionPath = buildSectionPath(sections, i)
 
-            val nextContent = if (i + 1 < sections.size) {
-                extractFirstTwoSentences(sections[i + 1].contentLines)
-            } else null
+            val nextContent =
+                if (i + 1 < sections.size) {
+                    extractFirstTwoSentences(sections[i + 1].contentLines)
+                } else {
+                    null
+                }
 
             val id = generateChunkId(sourceDocument, sectionPath)
 
@@ -153,15 +167,18 @@ object SemanticChunker {
                     codeBlocks = codeBlocks,
                     entities = emptyList(),
                     overlapNext = nextContent,
-                    license = license
-                )
+                    license = license,
+                ),
             )
         }
 
         return chunks
     }
 
-    private fun mergePendingIntoContent(pendingLines: MutableList<String>, section: Section) {
+    private fun mergePendingIntoContent(
+        pendingLines: MutableList<String>,
+        section: Section,
+    ) {
         val trimmed = trimLeadingAndTrailingBlanks(pendingLines)
         section.contentLines.addAll(trimmed)
     }
@@ -199,12 +216,16 @@ object SemanticChunker {
         return blocks
     }
 
-    private fun generateChunkId(source: String, sectionPath: String): String {
+    private fun generateChunkId(
+        source: String,
+        sectionPath: String,
+    ): String {
         val input = "$source:$sectionPath"
         val digest = MessageDigest.getInstance("SHA-256")
-        val hash = digest.digest(input.toByteArray()).take(8).joinToString("") {
-            "%02x".format(it)
-        }
+        val hash =
+            digest.digest(input.toByteArray()).take(8).joinToString("") {
+                "%02x".format(it)
+            }
         return "chk-$hash"
     }
 }

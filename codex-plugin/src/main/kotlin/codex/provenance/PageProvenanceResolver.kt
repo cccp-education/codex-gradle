@@ -23,7 +23,6 @@ import codex.ocr.OcrQualityReport
  * — the chunk simply carries no page and no doubt.
  */
 object PageProvenanceResolver {
-
     /**
      * Resolves the page provenance of every chunk.
      *
@@ -62,7 +61,10 @@ object PageProvenanceResolver {
         return provenance.count { it.pages.isNotEmpty() }.toDouble() / provenance.size.toDouble()
     }
 
-    private fun pagesOf(sectionPath: String, titleIndex: Map<String, List<Int>>): List<Int> {
+    private fun pagesOf(
+        sectionPath: String,
+        titleIndex: Map<String, List<Int>>,
+    ): List<Int> {
         val trimmed = sectionPath.trim()
         if (trimmed.isEmpty()) return emptyList()
         // Deepest-first walk: the most precise matching segment (closest to the

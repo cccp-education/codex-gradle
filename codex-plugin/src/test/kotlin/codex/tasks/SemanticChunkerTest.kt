@@ -16,10 +16,10 @@ import org.junit.jupiter.api.Test
  * behaviour is locked before any unification with `CodexPipelineTask.chunkMd`.
  */
 class SemanticChunkerTest {
-
     @Test
     fun `chunk splits simple markdown into heading sections`() {
-        val text = """
+        val text =
+            """
             # Main Title
 
             Intro paragraph text.
@@ -31,7 +31,7 @@ class SemanticChunkerTest {
             ## Chapter Two
 
             Chapter two content.
-        """.trimIndent()
+            """.trimIndent()
 
         val chunks = SemanticChunker.chunk(text, "doc", "Apache-2.0")
 
@@ -45,11 +45,12 @@ class SemanticChunkerTest {
 
     @Test
     fun `chunk produces single chunk for no-heading document`() {
-        val text = """
+        val text =
+            """
             This document has no headings.
             Just plain text everywhere.
             Multiple lines of content.
-        """.trimIndent()
+            """.trimIndent()
 
         val chunks = SemanticChunker.chunk(text, "nohead", "Apache-2.0")
 
@@ -60,7 +61,8 @@ class SemanticChunkerTest {
 
     @Test
     fun `chunk extracts code blocks from sections`() {
-        val text = """
+        val text =
+            """
             # Code Examples
 
             Here is some javascript:
@@ -79,7 +81,7 @@ class SemanticChunkerTest {
             def greet():
                 print("Hi")
             ```
-        """.trimIndent()
+            """.trimIndent()
 
         val chunks = SemanticChunker.chunk(text, "code", "Apache-2.0")
 
@@ -94,11 +96,12 @@ class SemanticChunkerTest {
 
     @Test
     fun `chunk generates deterministic IDs for the same input`() {
-        val text = """
+        val text =
+            """
             # Test
 
             Content here.
-        """.trimIndent()
+            """.trimIndent()
 
         val ids1 = SemanticChunker.chunk(text, "idtest", "Apache-2.0").map { it.id }
         val ids2 = SemanticChunker.chunk(text, "idtest", "Apache-2.0").map { it.id }
@@ -109,13 +112,14 @@ class SemanticChunkerTest {
 
     @Test
     fun `buildSectionPath builds hierarchy from ancestor headings`() {
-        val sections = listOf(
-            SemanticChunker.Section("= Part One", 1, "Part One"),
-            SemanticChunker.Section("== Chapter A", 2, "Chapter A"),
-            SemanticChunker.Section("=== Section A.1", 3, "Section A.1"),
-            SemanticChunker.Section("=== Section A.2", 3, "Section A.2"),
-            SemanticChunker.Section("== Chapter B", 2, "Chapter B"),
-        )
+        val sections =
+            listOf(
+                SemanticChunker.Section("= Part One", 1, "Part One"),
+                SemanticChunker.Section("== Chapter A", 2, "Chapter A"),
+                SemanticChunker.Section("=== Section A.1", 3, "Section A.1"),
+                SemanticChunker.Section("=== Section A.2", 3, "Section A.2"),
+                SemanticChunker.Section("== Chapter B", 2, "Chapter B"),
+            )
 
         val pathA1 = SemanticChunker.buildSectionPath(sections, 2)
         assertTrue(pathA1.contains("Part One"))
@@ -131,11 +135,12 @@ class SemanticChunkerTest {
 
     @Test
     fun `extractFirstTwoSentences returns first two sentences from lines`() {
-        val lines = listOf(
-            "Second section starts here.",
-            "More second section text.",
-            "And a third sentence to fill it up.",
-        )
+        val lines =
+            listOf(
+                "Second section starts here.",
+                "More second section text.",
+                "And a third sentence to fill it up.",
+            )
 
         val result = SemanticChunker.extractFirstTwoSentences(lines)
 

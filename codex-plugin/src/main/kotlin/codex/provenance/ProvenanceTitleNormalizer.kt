@@ -25,7 +25,6 @@ import codex.enrichment.SectionTitleNormalizer
  * side-effect free, idempotent — never fails.
  */
 object ProvenanceTitleNormalizer {
-
     private val leadingRef = Regex("""^(?:\d+(?:[-\u2013.]\d+)+\.?\s*|\d+\.?\s+)""")
     private val trailingPunctuation = Regex("""[\s:.\u2026\u00b7]+$""")
 

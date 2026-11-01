@@ -24,9 +24,8 @@ package codex.ocr
  * @property engines ordered list of OCR engines (fallback chain)
  */
 class OcrPipeline(
-    private val engines: List<OcrEngine>
+    private val engines: List<OcrEngine>,
 ) {
-
     /**
      * Runs the fallback chain on the given [request].
      *
@@ -44,7 +43,7 @@ class OcrPipeline(
             confidence = 0.0,
             language = request.language,
             model = "pipeline",
-            metadata = mapOf("engine" to "pipeline", "status" to "all-engines-failed")
+            metadata = mapOf("engine" to "pipeline", "status" to "all-engines-failed"),
         )
     }
 }

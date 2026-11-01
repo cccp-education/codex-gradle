@@ -11,7 +11,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ChunkDocumentTaskTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -36,7 +35,7 @@ class ChunkDocumentTaskTest {
             ## Chapter Two
             
             Chapter two content.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -63,7 +62,7 @@ class ChunkDocumentTaskTest {
             # Only Title
             
             Just one section of text.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -85,7 +84,7 @@ class ChunkDocumentTaskTest {
             This document has no headings.
             Just plain text everywhere.
             Multiple lines of content.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -121,7 +120,7 @@ class ChunkDocumentTaskTest {
             def greet():
                 print("Hi")
             ```
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -149,7 +148,7 @@ class ChunkDocumentTaskTest {
             # Test
             
             Content here.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task1 = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -184,7 +183,7 @@ class ChunkDocumentTaskTest {
             ## Chapter B
             
             Content B.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -214,7 +213,7 @@ class ChunkDocumentTaskTest {
             
             Second section starts here.
             More second section text.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -241,7 +240,7 @@ class ChunkDocumentTaskTest {
             ## Last Section
             
             Final content here.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -268,7 +267,7 @@ class ChunkDocumentTaskTest {
             ## Valid Section
             
             Valid content.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -295,7 +294,7 @@ class ChunkDocumentTaskTest {
             ## B
             
             Text B.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "PROPRIETARY")
@@ -315,7 +314,7 @@ class ChunkDocumentTaskTest {
             # Entity Test
             
             Some content about artificial intelligence and machine learning.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val task = createTask(mdFile, chunksFile, "Apache-2.0")
@@ -329,13 +328,15 @@ class ChunkDocumentTaskTest {
     private fun createTask(
         mdFile: File,
         chunksFile: File,
-        license: String
+        license: String,
     ): ChunkDocumentTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformChunk",
-            ChunkDocumentTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformChunk",
+                    ChunkDocumentTask::class.java,
+                ).get()
         task.markdownFile.set(mdFile)
         task.chunksFile.set(chunksFile)
         task.licenseName.set(license)
@@ -343,7 +344,11 @@ class ChunkDocumentTaskTest {
     }
 
     private fun parseChunks(json: String): List<DocumentChunk> {
-        val j = Json { ignoreUnknownKeys = true; isLenient = true }
+        val j =
+            Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
         return j.decodeFromString<List<DocumentChunk>>(json)
     }
 }

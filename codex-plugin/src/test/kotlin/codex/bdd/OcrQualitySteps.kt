@@ -26,17 +26,20 @@ import java.nio.file.Files
  *    (confidence is a doubt signal, not a fallback gate).
  */
 class OcrQualitySteps {
-
     private val state = mutableMapOf<String, Any>()
 
     // ── TSV confidence parsing ──────────────────────────────────────────
 
     @Given("a Tesseract TSV output with word confidences {string} and {string}")
-    fun aTesseractTsvWithWordConfidences(first: String, second: String) {
-        state["tsv"] = tsv(
-            "5\t1\t1\t1\t1\t1\t12\t26\t112\t29\t$first\tHELLO",
-            "5\t1\t1\t1\t1\t2\t139\t26\t126\t29\t$second\tWORLD",
-        )
+    fun aTesseractTsvWithWordConfidences(
+        first: String,
+        second: String,
+    ) {
+        state["tsv"] =
+            tsv(
+                "5\t1\t1\t1\t1\t1\t12\t26\t112\t29\t$first\tHELLO",
+                "5\t1\t1\t1\t1\t2\t139\t26\t126\t29\t$second\tWORLD",
+            )
     }
 
     @Given("a Tesseract TSV output with only a blank word at confidence {string}")
@@ -73,7 +76,7 @@ class OcrQualitySteps {
             #!/bin/sh
             # ${'$'}1=input ${'$'}2=outputBase
             echo "$text" > "${'$'}2.txt"
-            """.trimIndent()
+            """.trimIndent(),
         )
         stub.setExecutable(true)
         state["stub"] = stub
@@ -87,9 +90,10 @@ class OcrQualitySteps {
         image.writeBytes(minimalPng())
 
         val engine = codex.ocr.TesseractOcrEngine(tesseractPath = stub.absolutePath)
-        state["engineResult"] = engine.process(
-            codex.ocr.OcrRequest(image.readBytes(), "image/png", "eng")
-        )
+        state["engineResult"] =
+            engine.process(
+                codex.ocr.OcrRequest(image.readBytes(), "image/png", "eng"),
+            )
     }
 
     @Then("the engine text is {string}")
@@ -113,26 +117,31 @@ class OcrQualitySteps {
     // ── Pipeline preserves degraded text ────────────────────────────────
 
     @Given("a degraded OCR engine that returns {string} at confidence {double}")
-    fun aDegradedOcrEngineThatReturns(text: String, confidence: Double) {
-        state["degradedEngine"] = object : codex.ocr.OcrEngine {
-            override fun process(request: codex.ocr.OcrRequest): codex.ocr.OcrResult =
-                codex.ocr.OcrResult.of(
-                    text = text,
-                    confidence = confidence,
-                    language = request.language,
-                    model = "tesseract",
-                    metadata = mapOf("engine" to "tesseract", "confidenceSource" to "degraded")
-                )
-        }
+    fun aDegradedOcrEngineThatReturns(
+        text: String,
+        confidence: Double,
+    ) {
+        state["degradedEngine"] =
+            object : codex.ocr.OcrEngine {
+                override fun process(request: codex.ocr.OcrRequest): codex.ocr.OcrResult =
+                    codex.ocr.OcrResult.of(
+                        text = text,
+                        confidence = confidence,
+                        language = request.language,
+                        model = "tesseract",
+                        metadata = mapOf("engine" to "tesseract", "confidenceSource" to "degraded"),
+                    )
+            }
     }
 
     @When("the pipeline processes an image with that degraded engine")
     fun thePipelineProcessesWithDegradedEngine() {
         val engine = state["degradedEngine"] as codex.ocr.OcrEngine
         val pipeline = codex.ocr.OcrPipeline(listOf(engine))
-        state["pipelineResult"] = pipeline.process(
-            codex.ocr.OcrRequest(ByteArray(8), "image/png", "fr")
-        )
+        state["pipelineResult"] =
+            pipeline.process(
+                codex.ocr.OcrRequest(ByteArray(8), "image/png", "fr"),
+            )
     }
 
     @Then("the pipeline text is {string}")
@@ -150,7 +159,11 @@ class OcrQualitySteps {
     // ── Acquisition quality (OCR-QUALITY-2) ─────────────────────────────
 
     @Given("an acquisition page {string} with text {string} and confidence {double}")
-    fun anAcquisitionPage(pageId: String, text: String, confidence: Double) {
+    fun anAcquisitionPage(
+        pageId: String,
+        text: String,
+        confidence: Double,
+    ) {
         val dir = Files.createTempDirectory("ocr-quality-acq").toFile()
         state["acqPageId"] = pageId
         state["acqText"] = text.replace("\\n", "\n")
@@ -160,13 +173,14 @@ class OcrQualitySteps {
 
     @When("the acquisition quality is analysed")
     fun theAcquisitionQualityIsAnalysed() {
-        state["acqIssues"] = codex.ocr.OcrQualityAnalyzer.analyze(
-            pageId = state["acqPageId"] as String,
-            imageFile = "${state["acqPageId"]}.png",
-            text = state["acqText"] as String,
-            confidence = state["acqConfidence"] as Double,
-            pageDir = state["acqDir"] as File,
-        )
+        state["acqIssues"] =
+            codex.ocr.OcrQualityAnalyzer.analyze(
+                pageId = state["acqPageId"] as String,
+                imageFile = "${state["acqPageId"]}.png",
+                text = state["acqText"] as String,
+                confidence = state["acqConfidence"] as Double,
+                pageDir = state["acqDir"] as File,
+            )
     }
 
     @Then("the acquisition issue reasons are {string}")
@@ -197,11 +211,40 @@ class OcrQualitySteps {
         (listOf("level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext") + rows)
             .joinToString("\n")
 
-    private fun minimalPng(): ByteArray = byteArrayOf(
-        0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15.toByte(), 0xC4.toByte(),
-        0x89.toByte(),
-    )
+    private fun minimalPng(): ByteArray =
+        byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15.toByte(),
+            0xC4.toByte(),
+            0x89.toByte(),
+        )
 }

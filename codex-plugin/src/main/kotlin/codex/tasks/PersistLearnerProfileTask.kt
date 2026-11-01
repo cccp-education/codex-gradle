@@ -2,8 +2,8 @@ package codex.tasks
 
 import codex.profile.PgVectorSessionMemory
 import codex.profile.ProfileConfig
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import contracts.runtime.LearnerProfile
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -35,19 +35,23 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "pgvector persistence (R2DBC) — external state, non-cacheable")
 abstract class PersistLearnerProfileTask : DefaultTask() {
-
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val profileFile: RegularFileProperty
 
     @get:Input abstract val pgHost: Property<String>
+
     @get:Input abstract val pgPort: Property<String>
+
     @get:Input abstract val pgDatabase: Property<String>
+
     @get:Input abstract val pgUser: Property<String>
+
     @get:Input abstract val pgPassword: Property<String>
 
-    private val mapper: ObjectMapper = ObjectMapper()
-        .registerModule(KotlinModule.Builder().build())
+    private val mapper: ObjectMapper =
+        ObjectMapper()
+            .registerModule(KotlinModule.Builder().build())
 
     @TaskAction
     fun persist() {
@@ -62,14 +66,15 @@ abstract class PersistLearnerProfileTask : DefaultTask() {
 
         val profile = mapper.readValue(input, LearnerProfile::class.java)
 
-        val memory = PgVectorSessionMemory(
-            ProfileConfig(host = host, port = port, database = db, username = user, password = pass)
-        )
+        val memory =
+            PgVectorSessionMemory(
+                ProfileConfig(host = host, port = port, database = db, username = user, password = pass),
+            )
         memory.initSchema()
         memory.save(profile)
 
         logger.lifecycle(
-            "[codex] ✓ persistLearnerProfile — profile ${profile.learnerId}/${profile.formationId} persisted"
+            "[codex] ✓ persistLearnerProfile — profile ${profile.learnerId}/${profile.formationId} persisted",
         )
     }
 }

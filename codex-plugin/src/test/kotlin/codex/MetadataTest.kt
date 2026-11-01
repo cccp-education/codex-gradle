@@ -8,7 +8,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class MetadataTest {
-
     @Test
     fun `forBrooklyn creates metadata with correct source`() {
         val metadata = Metadata.forBrooklyn()
@@ -21,12 +20,13 @@ class MetadataTest {
 
     @Test
     fun `forBrooklyn accepts custom parameters`() {
-        val metadata = Metadata.forBrooklyn(
-            type = "ingest",
-            model = "test-model",
-            sessions = 5,
-            dependencies = listOf("queens", "brooklyn")
-        )
+        val metadata =
+            Metadata.forBrooklyn(
+                type = "ingest",
+                model = "test-model",
+                sessions = 5,
+                dependencies = listOf("queens", "brooklyn"),
+            )
         assertEquals("brooklyn", metadata.source)
         assertEquals("ingest", metadata.type)
         assertEquals("test-model", metadata.model)
@@ -35,14 +35,18 @@ class MetadataTest {
     }
 
     @Test
-    fun `forBrooklyn generates non-null timestamp`(@TempDir tempDir: File) {
+    fun `forBrooklyn generates non-null timestamp`(
+        @TempDir tempDir: File,
+    ) {
         val metadata = Metadata.forBrooklyn()
         assertNotNull(metadata.generatedAt)
         assertTrue(metadata.generatedAt.isNotEmpty())
     }
 
     @Test
-    fun `writeTo creates metadata JSON file`(@TempDir tempDir: File) {
+    fun `writeTo creates metadata JSON file`(
+        @TempDir tempDir: File,
+    ) {
         val metadata = Metadata.forBrooklyn(type = "test-write")
         val resultFile = Metadata.writeTo(tempDir, metadata)
 
@@ -52,7 +56,9 @@ class MetadataTest {
     }
 
     @Test
-    fun `writeTo JSON contains expected fields`(@TempDir tempDir: File) {
+    fun `writeTo JSON contains expected fields`(
+        @TempDir tempDir: File,
+    ) {
         val metadata = Metadata.forBrooklyn()
         Metadata.writeTo(tempDir, metadata)
 
@@ -66,7 +72,9 @@ class MetadataTest {
     }
 
     @Test
-    fun `writeTo creates parent directories`(@TempDir tempDir: File) {
+    fun `writeTo creates parent directories`(
+        @TempDir tempDir: File,
+    ) {
         val nestedDir = File(tempDir, "a/b/c")
         val metadata = Metadata.forBrooklyn()
         val resultFile = Metadata.writeTo(nestedDir, metadata)

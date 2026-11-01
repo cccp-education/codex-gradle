@@ -24,11 +24,14 @@ import java.io.File
  * `chunks.json` artefacts on disk.
  */
 class ChunkDocumentJsonContractTest {
-
     @TempDir
     lateinit var tempDir: File
 
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
     @Test
     fun `producer output decodes as the N1 store type with all fields preserved`() {
@@ -47,15 +50,16 @@ class ChunkDocumentJsonContractTest {
             ```kotlin
             val x = 1
             ```
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         createTask(mdFile, chunksFile, "Apache-2.0").chunk()
 
-        val chunks = json.decodeFromString(
-            ListSerializer(DocumentChunk.serializer()),
-            chunksFile.readText()
-        )
+        val chunks =
+            json.decodeFromString(
+                ListSerializer(DocumentChunk.serializer()),
+                chunksFile.readText(),
+            )
 
         assertTrue(chunks.size >= 2, "expected the producer sections, got ${chunks.size}")
         val chapter = chunks.first { it.sectionPath.contains("Chapter A") }
@@ -81,29 +85,32 @@ class ChunkDocumentJsonContractTest {
             ## Next
 
             Next content.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         createTask(mdFile, chunksFile, "UNKNOWN").chunk()
-        val written = json.decodeFromString(
-            ListSerializer(DocumentChunk.serializer()),
-            chunksFile.readText()
-        )
+        val written =
+            json.decodeFromString(
+                ListSerializer(DocumentChunk.serializer()),
+                chunksFile.readText(),
+            )
 
         @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-        val producerJson = Json {
-            prettyPrint = true
-            prettyPrintIndent = "  "
-        }
-        val reEncoded = producerJson.encodeToString(
-            ListSerializer(DocumentChunk.serializer()),
-            written
-        )
+        val producerJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
+        val reEncoded =
+            producerJson.encodeToString(
+                ListSerializer(DocumentChunk.serializer()),
+                written,
+            )
 
         assertEquals(
             chunksFile.readText(),
             reEncoded,
-            "chunks.json must round-trip through the store type with the producer's settings"
+            "chunks.json must round-trip through the store type with the producer's settings",
         )
     }
 
@@ -116,15 +123,17 @@ class ChunkDocumentJsonContractTest {
             # Only Section
 
             Final content, no next section.
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         createTask(mdFile, chunksFile, "UNKNOWN").chunk()
 
-        val chunk = json.decodeFromString(
-            ListSerializer(DocumentChunk.serializer()),
-            chunksFile.readText()
-        ).single()
+        val chunk =
+            json
+                .decodeFromString(
+                    ListSerializer(DocumentChunk.serializer()),
+                    chunksFile.readText(),
+                ).single()
 
         assertEquals(null, chunk.overlapNext, "last section keeps null overlap through the store type")
         assertTrue(chunk.entities.isEmpty())
@@ -134,13 +143,15 @@ class ChunkDocumentJsonContractTest {
     private fun createTask(
         mdFile: File,
         chunksFile: File,
-        license: String
+        license: String,
     ): ChunkDocumentTask {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "transformChunk",
-            ChunkDocumentTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "transformChunk",
+                    ChunkDocumentTask::class.java,
+                ).get()
         task.markdownFile.set(mdFile)
         task.chunksFile.set(chunksFile)
         task.licenseName.set(license)

@@ -16,7 +16,6 @@ package codex.profile
  * `(learner_id, formation_id)`.
  */
 object ProfileStatements {
-
     /**
      * DDL d'initialisation du schéma session memory (extension + table dédiée).
      *
@@ -24,26 +23,27 @@ object ProfileStatements {
      * si le pipeline documentaire (`IngestStatements.initSchema`) a déjà tourné
      * sur la même base `codex`.
      */
-    fun initSchema(): List<String> = listOf(
-        "CREATE EXTENSION IF NOT EXISTS vector",
-        """
-        CREATE TABLE IF NOT EXISTS codex_learner_profiles (
-            learner_id TEXT NOT NULL,
-            formation_id TEXT NOT NULL,
-            completed_modules JSONB NOT NULL DEFAULT '[]',
-            current_module TEXT,
-            progression_pct DOUBLE PRECISION NOT NULL DEFAULT 0.0,
-            comprehension_score DOUBLE PRECISION NOT NULL DEFAULT 0.0,
-            weak_points JSONB NOT NULL DEFAULT '[]',
-            last_interaction_at TEXT,
-            annotations JSONB NOT NULL DEFAULT '{}',
-            embedding vector(384),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            PRIMARY KEY (learner_id, formation_id)
+    fun initSchema(): List<String> =
+        listOf(
+            "CREATE EXTENSION IF NOT EXISTS vector",
+            """
+            CREATE TABLE IF NOT EXISTS codex_learner_profiles (
+                learner_id TEXT NOT NULL,
+                formation_id TEXT NOT NULL,
+                completed_modules JSONB NOT NULL DEFAULT '[]',
+                current_module TEXT,
+                progression_pct DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+                comprehension_score DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+                weak_points JSONB NOT NULL DEFAULT '[]',
+                last_interaction_at TEXT,
+                annotations JSONB NOT NULL DEFAULT '{}',
+                embedding vector(384),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                PRIMARY KEY (learner_id, formation_id)
+            )
+            """.trimIndent(),
         )
-        """.trimIndent()
-    )
 
     /**
      * UPSERT of the learner profile on the composite key `(learner_id, formation_id)`.
@@ -88,7 +88,11 @@ object ProfileStatements {
      * @param learnerId the learner id (String validated non-blank)
      * @param formationId the formation id (String validated non-blank)
      */
-    fun updateEmbedding(vectorLiteral: String, learnerId: String, formationId: String): String =
+    fun updateEmbedding(
+        vectorLiteral: String,
+        learnerId: String,
+        formationId: String,
+    ): String =
         "UPDATE codex_learner_profiles SET embedding = '[$vectorLiteral]'::vector, updated_at = NOW() WHERE learner_id = '$learnerId' AND formation_id = '$formationId'"
 
     /** Nombre de binds attendus pour [updateEmbedding] (aucun — littéraux safe). */

@@ -21,7 +21,6 @@ import codebase.store.DocumentChunk
  * d'Encre — a sidecar that adds nothing is not even allocated around).
  */
 object PageProvenanceAttacher {
-
     /**
      * Attaches to every chunk the page(s) the sidecar resolves for its
      * `id`, preserving the pages already carried.
@@ -32,23 +31,29 @@ object PageProvenanceAttacher {
      * @return the chunks with their resolved pages; the **same** list instance
      *   when the sidecar adds nothing (no needless allocation)
      */
-    fun attach(chunks: List<DocumentChunk>, report: PageProvenanceReport?): List<DocumentChunk> {
+    fun attach(
+        chunks: List<DocumentChunk>,
+        report: PageProvenanceReport?,
+    ): List<DocumentChunk> {
         if (chunks.isEmpty()) return chunks
-        val pagesById = report?.chunks
-            ?.filter { it.pages.isNotEmpty() }
-            ?.associate { it.chunkId to it.pages }
-            ?: return chunks
+        val pagesById =
+            report
+                ?.chunks
+                ?.filter { it.pages.isNotEmpty() }
+                ?.associate { it.chunkId to it.pages }
+                ?: return chunks
         if (pagesById.isEmpty()) return chunks
         var changed = false
-        val attached = chunks.map { chunk ->
-            val pages = pagesById[chunk.id]
-            if (pages == null || pages == chunk.pages) {
-                chunk
-            } else {
-                changed = true
-                chunk.copy(pages = pages)
+        val attached =
+            chunks.map { chunk ->
+                val pages = pagesById[chunk.id]
+                if (pages == null || pages == chunk.pages) {
+                    chunk
+                } else {
+                    changed = true
+                    chunk.copy(pages = pages)
+                }
             }
-        }
         return if (changed) attached else chunks
     }
 }

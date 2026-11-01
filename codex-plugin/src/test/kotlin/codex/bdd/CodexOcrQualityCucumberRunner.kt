@@ -27,10 +27,10 @@ import org.junit.platform.suite.api.Suite
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "codex.bdd")
 @ConfigurationParameter(
     key = PLUGIN_PROPERTY_NAME,
-    value = "pretty, html:build/reports/cucumber-ocr-quality.html, json:build/reports/cucumber-ocr-quality.json"
+    value = "pretty, html:build/reports/cucumber-ocr-quality.html, json:build/reports/cucumber-ocr-quality.json",
 )
 @ConfigurationParameter(
     key = FILTER_TAGS_PROPERTY_NAME,
-    value = "@ocr-quality and not @wip and not @integration"
+    value = "@ocr-quality and not @wip and not @integration",
 )
 class CodexOcrQualityCucumberRunner

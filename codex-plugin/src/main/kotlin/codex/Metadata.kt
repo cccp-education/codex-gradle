@@ -27,12 +27,13 @@ data class Metadata(
     val generatedAt: String,
     val model: String,
     val version: String,
-    val dependencies: List<String>
+    val dependencies: List<String>,
 ) {
     companion object {
-        private val mapper: ObjectMapper = ObjectMapper()
-            .registerModule(KotlinModule.Builder().build())
-            .enable(SerializationFeature.INDENT_OUTPUT)
+        private val mapper: ObjectMapper =
+            ObjectMapper()
+                .registerModule(KotlinModule.Builder().build())
+                .enable(SerializationFeature.INDENT_OUTPUT)
 
         /**
          * Writes metadata as a pretty-printed JSON file to the given directory.
@@ -41,7 +42,10 @@ data class Metadata(
          * @param metadata the metadata to persist
          * @return the created [File] handle
          */
-        fun writeTo(dir: File, metadata: Metadata): File {
+        fun writeTo(
+            dir: File,
+            metadata: Metadata,
+        ): File {
             dir.mkdirs()
             val file = File(dir, "metadata.json")
             file.writeText(mapper.writeValueAsString(metadata))
@@ -61,15 +65,16 @@ data class Metadata(
             type: String = "pipeline",
             model: String = "onnx-local",
             sessions: Int = 0,
-            dependencies: List<String> = listOf("queens")
-        ): Metadata = Metadata(
-            source = "brooklyn",
-            type = type,
-            sessions = sessions,
-            generatedAt = Instant.now().toString(),
-            model = model,
-            version = "1.0",
-            dependencies = dependencies
-        )
+            dependencies: List<String> = listOf("queens"),
+        ): Metadata =
+            Metadata(
+                source = "brooklyn",
+                type = type,
+                sessions = sessions,
+                generatedAt = Instant.now().toString(),
+                model = model,
+                version = "1.0",
+                dependencies = dependencies,
+            )
     }
 }

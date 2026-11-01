@@ -9,7 +9,6 @@ import io.cucumber.java.en.When
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
@@ -24,14 +23,14 @@ import java.io.File
  * validated in S-084; this is pure behaviour validation.
  */
 class OntologySteps {
-
     private lateinit var tempDir: File
     private lateinit var sqlFile: File
     private lateinit var lddFile: File
     private lateinit var outputFile: File
     private var mapping: OntologyMapping? = null
 
-    private val bookSql = """
+    private val bookSql =
+        """
         -- codex: collectBookSql
         CREATE TABLE IF NOT EXISTS book (
             id          SERIAL PRIMARY KEY,
@@ -54,30 +53,36 @@ class OntologySteps {
             text        TEXT NOT NULL,
             position    INTEGER NOT NULL DEFAULT 0
         );
-    """.trimIndent()
+        """.trimIndent()
 
     @Given("a SQL DDL script with tables linked by foreign keys")
     fun aSqlDdlScriptWithTablesLinkedByForeignKeys() {
-        tempDir = kotlin.io.path.createTempDirectory(prefix = "cdx-ontology-bdd-").toFile()
+        tempDir =
+            kotlin.io.path
+                .createTempDirectory(prefix = "cdx-ontology-bdd-")
+                .toFile()
         sqlFile = File(tempDir, "book.sql").apply { writeText(bookSql) }
     }
 
     @Given("a JSON LDD file with a section title {string}")
     fun aJsonLddFileWithASectionTitle(title: String) {
         val lddNodes = listOf(LddNode(title = title, level = 1))
-        lddFile = File(tempDir, "book.ldd.json").apply {
-            writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), lddNodes))
-        }
+        lddFile =
+            File(tempDir, "book.ldd.json").apply {
+                writeText(Json.encodeToString(ListSerializer(LddNode.serializer()), lddNodes))
+            }
         outputFile = File(tempDir, "ontology.json")
     }
 
     @When("the derive ontology task runs")
     fun theDeriveOntologyTaskRuns() {
         val project = ProjectBuilder.builder().build()
-        val task = project.tasks.register(
-            "deriveOntology",
-            DeriveOntologyTask::class.java
-        ).get()
+        val task =
+            project.tasks
+                .register(
+                    "deriveOntology",
+                    DeriveOntologyTask::class.java,
+                ).get()
         task.sqlFile.set(sqlFile)
         task.jsonFile.set(lddFile)
         task.outputFile.set(outputFile)
@@ -93,7 +98,11 @@ class OntologySteps {
     }
 
     @Then("the bounded context contains the tables {string}, {string} and {string}")
-    fun theBoundedContextContainsTheTablesAnd(t1: String, t2: String, t3: String) {
+    fun theBoundedContextContainsTheTablesAnd(
+        t1: String,
+        t2: String,
+        t3: String,
+    ) {
         val m = mapping ?: error("Task did not run")
         val allTables = m.boundedContexts.flatMap { it.tables }.toSet()
         assertTrue(t1 in allTables, "Expected '$t1' in bounded context tables")
@@ -102,13 +111,16 @@ class OntologySteps {
     }
 
     @Then("the ontology mapping contains an aggregate with root table {string} and dependent {string}")
-    fun theOntologyMappingContainsAnAggregateWithRootTableAndDependent(root: String, dependent: String) {
+    fun theOntologyMappingContainsAnAggregateWithRootTableAndDependent(
+        root: String,
+        dependent: String,
+    ) {
         val m = mapping ?: error("Task did not run")
         val agg = m.aggregates.find { it.rootTable == root }
         assertNotNull(agg, "Expected an aggregate with root '$root', got: ${m.aggregates.map { it.rootTable }}")
         assertTrue(
             dependent in (agg?.dependentTables ?: emptyList()),
-            "Expected dependent '$dependent' in aggregate '$root', got: ${agg?.dependentTables}"
+            "Expected dependent '$dependent' in aggregate '$root', got: ${agg?.dependentTables}",
         )
     }
 
@@ -120,10 +132,16 @@ class OntologySteps {
     }
 
     @Then("the value object {string} has the columns {string}, {string} and {string}")
-    fun theValueObjectHasTheColumnsAnd(table: String, c1: String, c2: String, c3: String) {
+    fun theValueObjectHasTheColumnsAnd(
+        table: String,
+        c1: String,
+        c2: String,
+        c3: String,
+    ) {
         val m = mapping ?: error("Task did not run")
-        val vo = m.valueObjects.find { it.table == table }
-            ?: error("Value object '$table' not found")
+        val vo =
+            m.valueObjects.find { it.table == table }
+                ?: error("Value object '$table' not found")
         val cols = vo.columns
         assertTrue(c1 in cols, "Expected column '$c1' in '$table', got: $cols")
         assertTrue(c2 in cols, "Expected column '$c2' in '$table', got: $cols")

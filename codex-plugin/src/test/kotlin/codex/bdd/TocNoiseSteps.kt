@@ -23,14 +23,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
  * other codex BDD suites (bug S-088).
  */
 class TocNoiseSteps : En {
-
     private val store = RecordingRagStore()
     private val chunks = mutableListOf<DocumentChunk>()
     private var titleIsTocNoise: Boolean = false
 
     private fun ingestTask(): CodexIngestTask =
-        ProjectBuilder.builder().build()
-            .tasks.register("collectIngest", CodexIngestTask::class.java).get()
+        ProjectBuilder
+            .builder()
+            .build()
+            .tasks
+            .register("collectIngest", CodexIngestTask::class.java)
+            .get()
 
     init {
 
@@ -56,19 +59,35 @@ class TocNoiseSteps : En {
         }
 
         Then("the toc noise ingested doubt is doubtful") {
-            assertTrue(store.received!!.single().doubt.doubtful)
+            assertTrue(
+                store.received!!
+                    .single()
+                    .doubt.doubtful,
+            )
         }
 
         Then("the toc noise ingested doubt is not doubtful") {
-            assertFalse(store.received!!.single().doubt.doubtful)
+            assertFalse(
+                store.received!!
+                    .single()
+                    .doubt.doubtful,
+            )
         }
 
         Then("the toc noise ingested confidence is zero") {
-            assertTrue(store.received!!.single().doubt.confidence == TocNoiseDetector.TOC_NOISE_CONFIDENCE)
+            assertTrue(
+                store.received!!
+                    .single()
+                    .doubt.confidence == TocNoiseDetector.TOC_NOISE_CONFIDENCE,
+            )
         }
 
         Then("the toc noise ingested confidence is full") {
-            assertTrue(store.received!!.single().doubt.confidence == codebase.store.DoubtMetadata.MAX_CONFIDENCE)
+            assertTrue(
+                store.received!!
+                    .single()
+                    .doubt.confidence == codebase.store.DoubtMetadata.MAX_CONFIDENCE,
+            )
         }
 
         Then("the toc noise title is a table-of-contents heading") {
@@ -80,10 +99,15 @@ class TocNoiseSteps : En {
         }
     }
 
-    private fun chunk(content: String) = DocumentChunk(
-        id = "chk-toc", sourceDocument = "livre", sectionPath = "Book > Section",
-        headingLevel = 2, content = content, license = "PROPRIETARY",
-    )
+    private fun chunk(content: String) =
+        DocumentChunk(
+            id = "chk-toc",
+            sourceDocument = "livre",
+            sectionPath = "Book > Section",
+            headingLevel = 2,
+            content = content,
+            license = "PROPRIETARY",
+        )
 
     private class RecordingRagStore : RagVectorStore() {
         var received: List<DoubtfulChunk>? = null

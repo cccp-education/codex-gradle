@@ -20,40 +20,43 @@ import java.io.File
  * passed — before the fix the build failed before `doFirst`.
  */
 class CodexCompositeContextGradleValidationTest {
-
     @TempDir
     lateinit var projectDir: File
 
-    private fun settingsFile() = File(projectDir, "settings.gradle.kts").apply {
-        writeText("""rootProject.name = "codex-hardening-probe"""")
-    }
+    private fun settingsFile() =
+        File(projectDir, "settings.gradle.kts").apply {
+            writeText("""rootProject.name = "codex-hardening-probe"""")
+        }
 
-    private fun buildFile() = File(projectDir, "build.gradle.kts").apply {
-        writeText(
-            """
-            plugins {
-                id("education.cccp.codex")
-            }
+    private fun buildFile() =
+        File(projectDir, "build.gradle.kts").apply {
+            writeText(
+                """
+                plugins {
+                    id("education.cccp.codex")
+                }
 
-            // Probe: reaching the action proves Gradle input validation passed.
-            // The real action needs pgvector — it is never reached.
-            tasks.named("generateCompositeContext") {
-                doFirst { throw GradleException("HARDENING_PROBE_REACHED") }
-            }
-            """.trimIndent()
-        )
-    }
+                // Probe: reaching the action proves Gradle input validation passed.
+                // The real action needs pgvector — it is never reached.
+                tasks.named("generateCompositeContext") {
+                    doFirst { throw GradleException("HARDENING_PROBE_REACHED") }
+                }
+                """.trimIndent(),
+            )
+        }
 
     @Test
     fun `standalone generateCompositeContext passes input validation without enrichJsonLdd`() {
         settingsFile()
         buildFile()
 
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withPluginClasspath()
-            .withArguments("generateCompositeContext", "--stacktrace")
-            .buildAndFail()
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(projectDir)
+                .withPluginClasspath()
+                .withArguments("generateCompositeContext", "--stacktrace")
+                .buildAndFail()
 
         val output = result.output
         assertTrue(
@@ -71,11 +74,13 @@ class CodexCompositeContextGradleValidationTest {
         settingsFile()
         buildFile()
 
-        val result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withPluginClasspath()
-            .withArguments("generateCompositeContext", "--dry-run")
-            .build()
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(projectDir)
+                .withPluginClasspath()
+                .withArguments("generateCompositeContext", "--dry-run")
+                .build()
 
         val output = result.output
         assertTrue(

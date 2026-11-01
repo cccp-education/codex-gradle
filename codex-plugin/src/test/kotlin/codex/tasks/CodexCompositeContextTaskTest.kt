@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test
  * Le plugin wire ces propriétés depuis `CodexExtension` (convention).
  */
 class CodexCompositeContextTaskTest {
-
     @Test
     fun `task is registered and has correct type`() {
         val project = ProjectBuilder.builder().build()

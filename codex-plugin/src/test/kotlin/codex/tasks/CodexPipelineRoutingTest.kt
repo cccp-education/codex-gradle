@@ -8,7 +8,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -30,7 +29,6 @@ import java.io.File
  * Baby-step TDD strict : RED (propriétés/methodes inexistantes) → GREEN → REFACTOR.
  */
 class CodexPipelineRoutingTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -133,7 +131,7 @@ class CodexPipelineRoutingTest {
         pdfFile: File,
         baseDir: File,
         routing: Boolean,
-        fallback: LicenseZone
+        fallback: LicenseZone,
     ): CodexPipelineTask {
         val project = ProjectBuilder.builder().build()
         val task = project.tasks.register("transformCorpusToPdf", CodexPipelineTask::class.java).get()
@@ -150,7 +148,10 @@ class CodexPipelineRoutingTest {
         return task
     }
 
-    private fun createPdf(file: File, text: String) {
+    private fun createPdf(
+        file: File,
+        text: String,
+    ) {
         PDDocument().use { doc ->
             val page = PDPage(PDRectangle.A4)
             doc.addPage(page)

@@ -16,20 +16,20 @@ import org.junit.jupiter.api.Test
  * [ChunkDocumentJsonContractTest] (GREEN both before and after the switch).
  */
 class DocumentChunkUnificationTest {
-
     @Test
     fun `chunker emits the N1 store type`() {
-        val chunks = SemanticChunker.chunk(
-            "# Title\n\nSome content here.",
-            "doc",
-            "Apache-2.0"
-        )
+        val chunks =
+            SemanticChunker.chunk(
+                "# Title\n\nSome content here.",
+                "doc",
+                "Apache-2.0",
+            )
 
         assertTrue(chunks.isNotEmpty(), "chunker must produce chunks")
         val first: Any = chunks.first()
         assertTrue(
             first is codebase.store.DocumentChunk,
-            "chunks must be codebase.store.DocumentChunk, was ${first::class}"
+            "chunks must be codebase.store.DocumentChunk, was ${first::class}",
         )
     }
 }
