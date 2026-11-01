@@ -28,8 +28,13 @@ import java.io.File
  * Baby-step TDD strict RED → GREEN → REFACTOR.
  */
 class CollectPageProvenanceTaskTest {
+    companion object {
+        private val prettyJson: Json = Json { prettyPrint = true }
+        private val lenientJson: Json = Json { ignoreUnknownKeys = true }
+    }
+
     private fun chunkJson(vararg chunks: Pair<String, String>): String =
-        Json { prettyPrint = true }.encodeToString(
+        prettyJson.encodeToString(
             ListSerializer(DocumentChunk.serializer()),
             chunks.map { (id, path) ->
                 DocumentChunk(
@@ -77,7 +82,7 @@ class CollectPageProvenanceTaskTest {
 
         assertTrue(out.exists(), "the sidecar must be written")
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(1, report.chunkCount)
         assertEquals(1, report.resolvedCount)
@@ -102,7 +107,7 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(listOf(5, 6, 7, 8), report.chunks[0].pages)
     }
@@ -138,7 +143,7 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertTrue(report.chunks[0].doubtful)
         assertEquals(OcrQualityReason.ILLISIBLE, report.chunks[0].doubts[0].reason)
@@ -162,7 +167,7 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertFalse(report.chunks[0].doubtful)
         assertTrue(report.chunks[0].doubts.isEmpty())
@@ -185,7 +190,7 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(1, report.chunkCount)
         assertEquals(0, report.resolvedCount)
@@ -207,7 +212,7 @@ class CollectPageProvenanceTaskTest {
         t.collectPageProvenance()
 
         val report =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(PageProvenanceReport.serializer(), out.readText())
         assertEquals(0, report.chunkCount)
         assertEquals(0.0, report.joinRate)

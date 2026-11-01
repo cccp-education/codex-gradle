@@ -34,9 +34,16 @@ class CollectOcrPagesContractTest {
 
         val task = project.tasks.findByName("collectOcr") as CollectOcrTask
         assertNotNull(task.outputDir, "outputDir property must exist")
-        assertTrue(
-            task.outputDir is org.gradle.api.file.DirectoryProperty,
-            "outputDir must be a DirectoryProperty",
+        // Behavioural proof that outputDir is a real DirectoryProperty
+        // (settable/readable), not just a compile-time supertype check.
+        task.outputDir.set(project.layout.buildDirectory.dir("ocr-output"))
+        assertEquals(
+            project.layout.buildDirectory
+                .dir("ocr-output")
+                .get()
+                .asFile,
+            task.outputDir.get().asFile,
+            "outputDir must behave as a DirectoryProperty",
         )
     }
 

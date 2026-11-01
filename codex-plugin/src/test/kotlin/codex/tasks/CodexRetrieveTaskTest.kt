@@ -13,7 +13,9 @@ class CodexRetrieveTaskTest {
         val task = project.tasks.register("collectRetrieve", CodexRetrieveTask::class.java).get()
 
         assertNotNull(task)
-        assertTrue(task is CodexRetrieveTask)
+        // Typed through the untyped container handle: asserts the registered
+        // task really is a CodexRetrieveTask (not statically tautological).
+        assertTrue(project.tasks.getByName("collectRetrieve") is CodexRetrieveTask)
     }
 
     @Test

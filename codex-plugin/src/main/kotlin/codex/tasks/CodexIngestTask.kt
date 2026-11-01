@@ -148,8 +148,8 @@ abstract class CodexIngestTask : DefaultTask() {
         val file = pageProvenanceFile.singleOrNull() ?: return null
         if (!file.exists()) return null
         return try {
-            Json { ignoreUnknownKeys = true }
-                .decodeFromString(PageProvenanceReport.serializer(), file.readText())
+            val json = Json { ignoreUnknownKeys = true }
+            json.decodeFromString(PageProvenanceReport.serializer(), file.readText())
         } catch (e: Exception) {
             logger.warn("[codex] page provenance unreadable ({}), degrading to no page", e.message)
             null

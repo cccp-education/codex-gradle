@@ -46,8 +46,15 @@ class CodexIngestRetrieveIT {
         fun user() = postgres.username
 
         fun pass() = postgres.password
+
+        private val lenientJson: Json =
+            Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
     }
 
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     private val json =
         Json {
             prettyPrint = true
@@ -105,10 +112,7 @@ class CodexIngestRetrieveIT {
 
         assertTrue(outputFile.exists())
         val results =
-            Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            }.decodeFromString<List<RetrieveResult>>(outputFile.readText())
+            lenientJson.decodeFromString<List<RetrieveResult>>(outputFile.readText())
         assertFalse(results.isEmpty(), "Should return results but got ${results.size}")
     }
 
@@ -136,10 +140,7 @@ class CodexIngestRetrieveIT {
         val outputFile = tempDir.resolve("batch-retrieve.json").toFile()
         makeRetrieveTask(project, "Content", "3", outputFile).retrieve()
         val results =
-            Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            }.decodeFromString<List<RetrieveResult>>(outputFile.readText())
+            lenientJson.decodeFromString<List<RetrieveResult>>(outputFile.readText())
         assertEquals(3, results.size, "Expected 3 results, got ${results.size}")
     }
 

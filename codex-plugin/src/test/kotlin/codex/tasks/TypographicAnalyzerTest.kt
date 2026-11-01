@@ -16,25 +16,25 @@ class TypographicAnalyzerTest {
     // ── computeHeaderThresholds — dynamic mode (range > thresholds) ────────────
 
     @Test
-    fun `large range uses dynamic h1 = max - range * 0_05`() {
+    fun `large range uses dynamic h1 = max - range times 0_05`() {
         val t = TypographicAnalyzer.computeThresholds(avg = 12.0, max = 24.0, min = 10.0, range = 14.0)
         assertEquals(24.0 - 14.0 * 0.05, t.h1, 0.0001)
     }
 
     @Test
-    fun `large range uses dynamic h2 = max - range * 0_25`() {
+    fun `large range uses dynamic h2 = max - range times 0_25`() {
         val t = TypographicAnalyzer.computeThresholds(avg = 12.0, max = 24.0, min = 10.0, range = 14.0)
         assertEquals(24.0 - 14.0 * 0.25, t.h2, 0.0001)
     }
 
     @Test
-    fun `large range uses dynamic h3 = max - range * 0_50`() {
+    fun `large range uses dynamic h3 = max - range times 0_50`() {
         val t = TypographicAnalyzer.computeThresholds(avg = 12.0, max = 24.0, min = 10.0, range = 14.0)
         assertEquals(24.0 - 14.0 * 0.50, t.h3, 0.0001)
     }
 
     @Test
-    fun `large range uses dynamic h4 = max - range * 0_70`() {
+    fun `large range uses dynamic h4 = max - range times 0_70`() {
         val t = TypographicAnalyzer.computeThresholds(avg = 12.0, max = 24.0, min = 10.0, range = 14.0)
         assertEquals(24.0 - 14.0 * 0.70, t.h4, 0.0001)
     }
@@ -42,7 +42,7 @@ class TypographicAnalyzerTest {
     // ── computeHeaderThresholds — fallback mode (small range) ─────────────────
 
     @Test
-    fun `range below 1_0 uses h1 = max * 0_95 fallback`() {
+    fun `range below 1_0 uses h1 = max times 0_95 fallback`() {
         val t = TypographicAnalyzer.computeThresholds(avg = 12.0, max = 20.0, min = 19.5, range = 0.5)
         assertEquals(20.0 * 0.95, t.h1, 0.0001)
         // h2 threshold falls through (range > 2.0 false → fallback)

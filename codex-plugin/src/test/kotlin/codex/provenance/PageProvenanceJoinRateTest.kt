@@ -28,6 +28,10 @@ import java.io.File
  */
 @Tag("integration")
 class PageProvenanceJoinRateTest {
+    companion object {
+        private val lenientJson: Json = Json { ignoreUnknownKeys = true }
+    }
+
     private val chunksFile: File? = locate(System.getProperty("codex.pageProvenance.chunks"))
     private val tocFile: File? = locate(System.getProperty("codex.pageProvenance.toc"))
 
@@ -52,7 +56,7 @@ class PageProvenanceJoinRateTest {
         )
 
         val chunks =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(ListSerializer(DocumentChunk.serializer()), chunksFile!!.readText())
         val sections = TocPageIndex.parse(tocFile!!)
 

@@ -26,6 +26,10 @@ import java.io.File
  * Reads only — never mutates the corpus (Loi de l'Économie d'Encre).
  */
 class TocNoiseCharacterizationTest {
+    companion object {
+        private val lenientJson: Json = Json { ignoreUnknownKeys = true }
+    }
+
     private val synthetic =
         """
         # Guide
@@ -83,7 +87,7 @@ class TocNoiseCharacterizationTest {
         )
 
         val chunks: List<DocumentChunk> =
-            Json { ignoreUnknownKeys = true }
+            lenientJson
                 .decodeFromString(ListSerializer(DocumentChunk.serializer()), file!!.readText())
         val noisy = chunks.filter { TocNoiseDetector.isTocNoise(it) }
 

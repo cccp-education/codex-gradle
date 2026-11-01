@@ -30,6 +30,18 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault(because = "SQL LMD → ontology mapping — deterministic pure computation, non-cacheable")
 abstract class DeriveOntologyTask : DefaultTask() {
+    companion object {
+        // `prettyPrintIndent` is still experimental in kotlinx.serialization
+        // (no stable equivalent preserves the 2-space indent), so the format
+        // is opted-in once here and reused — pattern AsciiDocToJsonLddTask.
+        @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+        private val prettyJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
+    }
+
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sqlFile: RegularFileProperty
@@ -54,12 +66,7 @@ abstract class DeriveOntologyTask : DefaultTask() {
 
         val mapping = OntologyDeriver.derive(lddNodes, sqlInput.readText())
 
-        val mappingJson =
-            Json {
-                prettyPrint = true
-                prettyPrintIndent = "  "
-            }
-        output.writeText(mappingJson.encodeToString(OntologyMapping.serializer(), mapping))
+        output.writeText(prettyJson.encodeToString(OntologyMapping.serializer(), mapping))
 
         logger.lifecycle(
             "[codex] ontology : ${mapping.boundedContexts.size} bounded contexts, " +

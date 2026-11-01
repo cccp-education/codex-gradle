@@ -60,6 +60,18 @@ import java.security.MessageDigest
  */
 @DisableCachingByDefault(because = "LLM OCR call — external metered API, non-cacheable (Loi de l'Économie d'Encre)")
 abstract class CollectOcrTask : DefaultTask() {
+    companion object {
+        // `prettyPrintIndent` is still experimental in kotlinx.serialization
+        // (no stable equivalent preserves the 2-space indent), so the format
+        // is opted-in once here and reused — pattern AsciiDocToJsonLddTask.
+        @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+        private val prettyJson =
+            Json {
+                prettyPrint = true
+                prettyPrintIndent = "  "
+            }
+    }
+
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDir: DirectoryProperty
@@ -223,13 +235,8 @@ abstract class CollectOcrTask : DefaultTask() {
         // OCR-QUALITY-2 : write the JSON quality report when requested.
         qualityReportFile.orNull?.asFile?.let { reportFile ->
             val report = OcrQualityReport(imagesScanned = images.size, issues = qualityIssues)
-            val json =
-                Json {
-                    prettyPrint = true
-                    prettyPrintIndent = "  "
-                }
             reportFile.parentFile?.mkdirs()
-            reportFile.writeText(json.encodeToString(OcrQualityReport.serializer(), report))
+            reportFile.writeText(prettyJson.encodeToString(OcrQualityReport.serializer(), report))
             logger.lifecycle(
                 "[codex] quality report : ${qualityIssues.size} issue(s) over ${images.size} page(s)" +
                     " → ${reportFile.name}",

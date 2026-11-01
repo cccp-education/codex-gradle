@@ -26,7 +26,9 @@ class CodexCompositeContextTaskTest {
         val task = project.tasks.register("generateCompositeContext", CodexCompositeContextTask::class.java).get()
 
         assertNotNull(task)
-        assertTrue(task is CodexCompositeContextTask)
+        // Typed through the untyped container handle: asserts the registered
+        // task really is a CodexCompositeContextTask (not statically tautological).
+        assertTrue(project.tasks.getByName("generateCompositeContext") is CodexCompositeContextTask)
     }
 
     @Test

@@ -33,6 +33,10 @@ import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "pgvector RAG + LLM call — external dependencies, non-cacheable")
 abstract class CodexCompositeContextTask : DefaultTask() {
+    companion object {
+        private val prettyJson = Json { prettyPrint = true }
+    }
+
     @get:Input
     @get:Optional
     abstract val query: Property<String>
@@ -234,7 +238,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
                 put("entries", JsonArray(entries))
                 put("count", JsonPrimitive(entries.size))
             }
-        return Json { prettyPrint = true }.encodeToString(composite)
+        return prettyJson.encodeToString(composite)
     }
 
     /**
@@ -264,7 +268,7 @@ abstract class CodexCompositeContextTask : DefaultTask() {
                 put("budget", budget)
                 put("count", JsonPrimitive(count))
             }
-        return Json { prettyPrint = true }.encodeToString(vibecodingJson)
+        return prettyJson.encodeToString(vibecodingJson)
     }
 
     @TaskAction

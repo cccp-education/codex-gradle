@@ -75,7 +75,7 @@ class CodexCompositeContextTypedTest {
     }
 
     @Test
-    fun `ChannelBudget allocates 10% to Docs`() {
+    fun `ChannelBudget allocates 10 percent to Docs`() {
         val budget =
             ChannelBudget(
                 totalTokenBudget = 10_000,
@@ -93,7 +93,7 @@ class CodexCompositeContextTypedTest {
     }
 
     @Test
-    fun `applyBudget truncates Docs channel to 10%`() {
+    fun `applyBudget truncates Docs channel to 10 percent`() {
         val longDocs = "doc ".repeat(5000) // ~10k chars
         val channels =
             listOf(

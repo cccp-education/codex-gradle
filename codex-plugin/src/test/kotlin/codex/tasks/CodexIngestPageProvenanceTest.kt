@@ -27,6 +27,10 @@ import java.io.File
  * is pinned here. Baby-step TDD RED -> GREEN -> REFACTOR.
  */
 class CodexIngestPageProvenanceTest {
+    companion object {
+        private val prettyJson: Json = Json { prettyPrint = true }
+    }
+
     private fun task() =
         ProjectBuilder
             .builder()
@@ -57,7 +61,7 @@ class CodexIngestPageProvenanceTest {
                         ChunkPageProvenance(chunkId = id, sectionPath = "Chapitre 1 > Section", pages = pages)
                     },
                 )
-            writeText(Json { prettyPrint = true }.encodeToString(report))
+            writeText(prettyJson.encodeToString(report))
         }
 
     @Test

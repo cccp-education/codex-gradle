@@ -31,8 +31,12 @@ class TesseractOcrEngineTest {
 
     @Test
     fun `TesseractOcrEngine implements OcrEngine`() {
-        val engine = TesseractOcrEngine()
-        assertTrue(engine is OcrEngine)
+        // Polymorphic use of the port: the engine is held as OcrEngine and its
+        // contract is exercised (a missing binary degrades to an empty result).
+        val engine: OcrEngine = TesseractOcrEngine(tesseractPath = "nonexistent-tesseract-binary")
+        val result = engine.process(OcrRequest(ByteArray(0), "image/png", "eng"))
+
+        assertEquals("", result.structuredText, "the OcrEngine contract must be usable polymorphically")
     }
 
     @Test
@@ -47,9 +51,11 @@ class TesseractOcrEngineTest {
         val request = OcrRequest(imageFile.readBytes(), "image/png", "eng")
         val result = engine.process(request)
 
+        // A textless image must yield no text (consistent with the sibling
+        // zero-confidence test): stronger than the previous always-true check.
         assertTrue(
-            result.structuredText != null || result.structuredText == "",
-            "Tesseract should return a result (may be empty for textless image)",
+            result.structuredText.isBlank(),
+            "Tesseract should return no text for a textless image — got '${result.structuredText}'",
         )
         assertEquals("tesseract", result.model)
     }
