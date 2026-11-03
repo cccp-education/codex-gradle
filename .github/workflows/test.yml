@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Gradle wrapper version
+        uses: cccp-education/conventions-gradle/.github/actions/verify-gradle-wrapper@main
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4
