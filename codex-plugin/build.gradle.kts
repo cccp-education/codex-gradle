@@ -1,11 +1,11 @@
 plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.plugin.publish)
-    alias(libs.plugins.kover)
     alias(libs.plugins.codebase)
-    id("education.cccp.build.gradle-plugin") version "0.0.10"
-    id("education.cccp.build.publishing") version "0.0.10"
-    id("education.cccp.build.lint") version "0.0.10"
+    id("education.cccp.build.gradle-plugin") version "0.0.11"
+    id("education.cccp.build.publishing") version "0.0.11"
+    id("education.cccp.build.lint") version "0.0.11"
+    id("education.cccp.build.kover") version "0.0.11"
 }
 
 // ── buildscript resolutionStrategy ────────────────────────────────────────────────
@@ -182,13 +182,13 @@ kotlin {
     }
 }
 
-kover {
-    reports {
-        total {
-            xml { onCheck = false }
-            html { onCheck = false }
-        }
-    }
+koverConventions {
+    enabled = true
+    // Kover 0.9.8 cannot instrument the TestKit (on-fly agent): keep the
+    // reports off `check` (documented limitation) while still configuring the
+    // measured source sets centrally.
+    htmlOnCheck = false
+    xmlOnCheck = false
 }
 
 // NOTE: Kover 0.9.8 does not support offline instrumentation (same limitation as 0.9.1).
