@@ -7,7 +7,7 @@ ocr-contracts = "0.0.1"
 
 # ── Outillage Gradle/Kotlin ───────────────────────────────────────────────────
 kotlin = "2.4.10"
-plugin-publish = "1.3.1"
+plugin-publish = "2.2.1"
 
 # ── PDF/Extraction ────────────────────────────────────────────────────────────
 pdfbox = "3.0.4"

@@ -1,3 +1,5 @@
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.plugin.publish)
@@ -150,6 +152,12 @@ gradlePlugin {
                     "chunking",
                     "kotlin",
                 )
+            compatibility {
+                features {
+                    configurationCache.set(false)
+                    isolatedProjects.set(false)
+                }
+            }
         }
     }
 }
