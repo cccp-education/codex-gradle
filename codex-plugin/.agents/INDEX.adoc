@@ -190,3 +190,7 @@ _Session en cours_ : —
 | `.agents/archives/` | Archives taches | LAZY
 | `.agents/sessions/` | Archives par session | LAZY
 |===
+
+== Session 234 — JitPack mirror (CNV-16)
+
+Publication JitPack de codex-plugin 0.0.12. JitPack : 0.0.12 — POM/jar HTTP 200.
