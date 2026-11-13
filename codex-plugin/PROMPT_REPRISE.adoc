@@ -1,8 +1,16 @@
-= PROMPT_REPRISE — Codex — Session 234
-:session: 234
-:date: 2026-10-02
+= PROMPT_REPRISE — Codex — Session 235
+:session: 235
+:date: 2026-11-13
 :status: PRET
-:mission: Bloc C clos — prochaine orientation à la demande du pilote
+:mission: Bloc C clos — gouvernance synchronisée (PUB 0.0.12), prochaine orientation à la demande du pilote
+
+== Session 235 (TERMINÉE) — synchronisation backlog
+
+* EPIC PUB : dernière release **0.0.11 → 0.0.12** (S-231, bundle `79d0ad3d`)
+  + MEMPHIS BOM/catalog 0.0.62.
+* `settings.gradle.kts` : commentaire de pin `0.0.62 → 0.0.78` (pin effectif
+  inchangé).
+* Aucun EPIC/US ouvert. Rapport `.agents/sessions/235-sync-backlog-pub-pin.adoc`.
 
 == Quick Start
 ----

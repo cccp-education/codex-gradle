@@ -408,18 +408,19 @@ codebase N1 (S-097/S-201).
 
 _Source : configuration/EPIC_PUB.adoc (Session 096)_
 
-*Publication la plus récente* : **codex-plugin 0.0.11** (S-226, bundle
-`ad4b1717`) + MEMPHIS BOM/catalog 0.0.49 (bundle `3d85cc54`).
+*Publication la plus récente* : **codex-plugin 0.0.12** (S-231, bloc B — contenu
+`DocumentChunk.pages` + page provenance, bundle `79d0ad3d`) + MEMPHIS
+BOM/catalog 0.0.62 (bundle `7baf6567`).
 
 _Source : `CADRAGE_EPIC_P1_CORPUS_ENRICHMENT.adoc` (S-077)_
 
 '''
-== EPIC PUB — Publication Maven Central ✅ TERMINÉ (dernière release 0.0.11 S-226)
+== EPIC PUB — Publication Maven Central ✅ TERMINÉ (dernière release 0.0.12 S-231)
 
 Plugin N2 de pipeline documentaire (Asciidoctor → PDF). VAGUE 4 (plugins metier).
 Historique releases : 0.0.1 S-029 · 0.0.2 S-070 · 0.0.3 S-074 · 0.0.4 S-076 ·
 0.0.5 S-095 · 0.0.6 S-104 · 0.0.7 S-217 · 0.0.8 S-220 · 0.0.9 S-220 (corrective) ·
-0.0.10 S-222 · **0.0.11 S-226**.
+0.0.10 S-222 · 0.0.11 S-226 · **0.0.12 S-231**.
 
 == EPIC OCR-3 — LLM OCR Pipeline (DOC-11 alignement) ✅ TERMINÉ (session 072)
 

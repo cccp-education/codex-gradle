@@ -1,0 +1,42 @@
+= Session 235 — Synchronisation backlog (PUB 0.0.12, pin catalogue)
+:toc:
+
+:_date_: 2026-11-13
+:_borough_: Brooklyn (codex-gradle, N2)
+:_session_precedente_: 234
+:_statut_: ✅ gouvernance synchronisée — aucun EPIC/US ouvert
+
+'''
+
+== Contexte
+
+Reprise du backlog de codex à la demande du pilote. La séquence pilote
+**C → A → B** est close (bloc C 4/4, CB-PAGE-PROVENANCE 5/5, publication
+`codex-plugin 0.0.12`) ; deux traces documentaires étaient périmées.
+
+== Corrigé
+
+* `.agents/BACKLOG.adoc` — EPIC PUB : « dernière release **0.0.11** (S-226) »
+  → **0.0.12** (S-231, bloc B : `DocumentChunk.pages` + provenance, bundle
+  `79d0ad3d`) + MEMPHIS BOM/catalog 0.0.62 (bundle `7baf6567`). Historique des
+  releases complété (`0.0.11` puis `0.0.12`).
+* `settings.gradle.kts` — commentaire du pin catalogue
+  `workspace-catalog:0.0.62` → **`0.0.78`** (le pin effectif était déjà 0.0.78 ;
+  seul le commentaire mentait).
+
+== État réel
+
+* **Aucun EPIC/US ouvert**. La séquence C → A → B est close.
+* Version locale **0.0.12** = Central 0.0.12. BOM/catalog 0.0.78.
+* CI codex : preuve de référence S-232 (verrous JDK 25 / `working-directory` /
+  fallback nmcp levés).
+
+== Candidats (accord pilote requis)
+
+1. MEMPHIS resync releases + CI-1.4 (`qwen3:0.6b`).
+2. Drift de pins : pin catalogue `0.0.78` vs catalogue courant `0.0.129` ;
+   toml local `codebase = 0.0.14` (Central `0.0.18`).
+3. `document DOC-SEMANTIC` US-3→6 (cross-borough).
+4. Dormants (filler) : capsule gems JRuby, slider hygiène.
+
+Zéro code, zéro bump, zéro publication, zéro secret, zéro Python.
