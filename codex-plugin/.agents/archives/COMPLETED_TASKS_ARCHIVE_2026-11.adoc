@@ -15,3 +15,4 @@
 * Run `43501419129` VERT (commit `85e0699`).
 * Rapport `.agents/sessions/239-gbl-013-wave2.adoc`.
 
+* Session 240 — EAGER : publication JitPack canal unique (AGENT/PROMPT_REPRISE alignés ; Central/Portal retirés) — 2026-11-14.
