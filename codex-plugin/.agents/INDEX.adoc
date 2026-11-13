@@ -3,6 +3,7 @@
 
 _Regles absolues_ : voir `AGENT.adoc`
 _Ontologie spatiale_ : voir `configuration/.agents/AGENT_GOVERNANCE.adoc`
+_Derniere mise a jour_ : 2026-11-13 (Session 236 — pins alignés sur **JitPack** : catalogue `workspace-catalog:v0.0.133` (était Central 0.0.78), `codebase 0.0.18`, plateforme BOM littérale Central `0.0.115` ; version build `0.0.12` == publiée ; compiles + `ktlintCheck` VERTS. Rapport `.agents/sessions/236-jitpack-catalog-codebase-0.0.18.adoc`.)
 _DAG_ : N2 — Plugin Gradle d'acquisition de documents READ (Regle 4bis)
 _Boundary_ : Codex = READ (acquisition documentaire → corpus + chunks). Le RAG appartient a codebase N1 (socle du contexte augmente). Document (New Orleans) = WRITE + PUBLISH. Paralleles N2, pas empiles.
 

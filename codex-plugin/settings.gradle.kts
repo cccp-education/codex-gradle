@@ -40,15 +40,19 @@ dependencyResolutionManagement {
     repositories {
         mavenLocal()
         mavenCentral()
+        // CNV-16 — JitPack channel (Central suspended until 2026-12-01).
+        maven("https://jitpack.io")
     }
 }
 
 // ── MEM-CAT-ROLLOUT-2 — Catalog workspace published (MEMPHIS): single pin per borough (D4) ──
-// education.cccp:workspace-catalog:0.0.78 — cross-borough source of truth for plugin versions.
+// CNV-16 — version source = the catalogue **deployed on JitPack** (tag `v0.0.133`),
+// so the build version equals the published artefact version.
+// `com.github.cccp-education.workspace-bom:workspace-catalog`.
 dependencyResolutionManagement {
     versionCatalogs {
         create("ws") {
-            from("education.cccp:workspace-catalog:0.0.78")
+            from("com.github.cccp-education.workspace-bom:workspace-catalog:v0.0.133")
         }
     }
 }

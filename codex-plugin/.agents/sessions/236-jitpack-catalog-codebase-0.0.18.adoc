@@ -1,0 +1,52 @@
+= Session 236 — catalogue JitPack `v0.0.133` + `codebase 0.0.18` (pins alignés)
+:toc:
+
+:_date_: 2026-11-13
+:_borough_: Brooklyn (codex-gradle, N2)
+:_session_precedente_: 235 (synchronisation backlog PUB 0.0.12)
+:_statut_: ✅ versions de build = artefacts déployés sur JitPack
+
+'''
+
+== Contexte
+
+Suite du P1 de la session hyperframes S-059 : le canal de publication est
+**JitPack uniquement** (Central suspendu jusqu'au 2026-12-01) et les versions
+des build scripts doivent être celles **réellement déployées**.
+
+'''
+
+== Livré
+
+* `settings.gradle.kts` : catalogue `ws` ← **JitPack**
+  `com.github.cccp-education.workspace-bom:workspace-catalog:v0.0.133`
+  (au lieu de `education.cccp:workspace-catalog:0.0.78`, Central) ; ajout du
+  dépôt `https://jitpack.io` à `dependencyResolutionManagement.repositories`
+  (le catalogue est résolu là, pas dans les repositories projet).
+* `build.gradle.kts` :
+  - plateforme BOM `0.0.78 → 0.0.115` (**Central**, dernière release valide) —
+    le BOM JitPack n'est pas importable en `platform(...)` (POM réécrit en
+    `<dependencies>`, pas de `.module`) ;
+  - la version injectée dans la garde (`codex.publishedCatalog.bomVersion`) est
+    le **même littéral** `0.0.115` : la garde détecte toute dérive build ↔ pin.
+* `gradle/libs.versions.toml` : `codebase 0.0.14 → 0.0.18` (plugin id
+  `education.cccp.codebase`) et `codebase-plugin 0.0.17 → 0.0.18` (lib N1),
+  alignés sur la release N1 publiée.
+* Version build : `codex-plugin 0.0.12` (== artefact publié, catalogue v0.0.133).
+
+'''
+
+== Gates
+
+* Local = Build : `compileKotlin`, `compileTestKotlin`, `ktlintCheck` —
+  **VERTS** ; `properties` → `version: 0.0.12`.
+* Tests : CI du commit poussé (preuve).
+* Zéro secret, zéro publication (aucun changement de code produit).
+
+'''
+
+== Reste (inchangé)
+
+* Bloc C clos, `CB-PAGE-PROVENANCE` 5/5, PUB 0.0.12. Aucun EPIC ouvert.
+* Candidats documentés : MEMPHIS resync, CI-1.4 (`qwen3:0.6b`), document
+  `DOC-SEMANTIC US-3→6`, dormants (capsule gems JRuby, slider hygiène).

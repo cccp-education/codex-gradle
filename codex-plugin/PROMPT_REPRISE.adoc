@@ -1,8 +1,18 @@
-= PROMPT_REPRISE — Codex — Session 235
-:session: 235
+= PROMPT_REPRISE — Codex — Session 236
+:session: 236
 :date: 2026-11-13
 :status: PRET
-:mission: Bloc C clos — gouvernance synchronisée (PUB 0.0.12), prochaine orientation à la demande du pilote
+:mission: Pins alignés sur les artefacts JitPack (catalogue v0.0.133, codebase 0.0.18)
+
+== Session 236 (TERMINÉE) — catalogue JitPack + `codebase 0.0.18`
+
+* `ws` catalogue ← JitPack `workspace-catalog:v0.0.133` (était Central 0.0.78) ;
+  dépôt `https://jitpack.io` ajouté à `dependencyResolutionManagement`.
+* Plateforme BOM : littéral Central `0.0.115` (le BOM JitPack n'est pas une
+  `platform` valide) + injection du même littéral dans la garde.
+* `codebase 0.0.14 → 0.0.18` (plugin id) et `codebase-plugin 0.0.17 → 0.0.18`.
+* Version build `codex-plugin 0.0.12` == artefact publié. Aucun EPIC/US ouvert.
+* Rapport `.agents/sessions/236-jitpack-catalog-codebase-0.0.18.adoc`.
 
 == Session 235 (TERMINÉE) — synchronisation backlog
 
