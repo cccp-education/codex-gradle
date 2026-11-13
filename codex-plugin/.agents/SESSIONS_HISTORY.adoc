@@ -3941,3 +3941,9 @@ Rapport `.agents/sessions/238-cnv-17-jitpack-channel.adoc`.
 supprimé. Run `43501419129` **VERT** (commit `85e0699`). Rapport
 `.agents/sessions/239-gbl-013-wave2.adoc`.
 
+
+== Session 240 — EAGER : publication JitPack canal unique — 2026-11-14
+
+Alignement EAGER : JitPack canal unique ; Maven Central/Sonatype et
+Gradle Plugin Portal **retirés**. Aucun code, aucun test, aucune
+publication. Rapport `.agents/sessions/240-eager-publication-jitpack-only.adoc`.

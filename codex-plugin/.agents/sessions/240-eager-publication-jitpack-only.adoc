@@ -1,0 +1,26 @@
+= Session 240 — EAGER : publication JitPack canal unique
+:session: 240
+:date: 2026-11-14
+
+== Contexte
+
+Décision pilote (2026-11-13/14) : **JitPack est le canal unique** de publication
+des artefacts publics. Maven Central (Sonatype/nmcp) et le Gradle Plugin Portal
+sont **retirés** (ni suspendus, ni réactivables) ; toute procédure
+`publishPlugins` / `publishAggregationToCentralPortal` est caduque.
+
+== Livré (gouvernance pure, zéro code)
+
+* Documents EAGER alignés : `AGENT.adoc` et/ou `PROMPT_REPRISE.adoc`
+  (selon le borough) — cible JitPack, mentions Central/Portal corrigées.
+* Référence racine : `AGENTS.adoc` § « Publication (Règle 2) » et
+  « Méthode de Publication — JitPack (canal unique, définitif) ».
+
+== Preuves
+
+* Diff limité aux documents de gouvernance ciblés.
+* Zéro code source, zéro test, zéro publication, zéro secret.
+
+== Suivant
+
+Poursuivre la mission du borough (voir `PROMPT_REPRISE.adoc`).

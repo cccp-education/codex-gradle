@@ -200,3 +200,9 @@ _Session en cours_ : —
 == Session 234 — JitPack mirror (CNV-16)
 
 Publication JitPack de codex-plugin 0.0.12. JitPack : 0.0.12 — POM/jar HTTP 200.
+
+== Session 240 — EAGER : publication JitPack canal unique (2026-11-14)
+
+Alignement EAGER (AGENT/PROMPT_REPRISE) : JitPack canal unique ;
+Central/Portal retirés. Zéro code. Rapport
+`.agents/sessions/240-eager-publication-jitpack-only.adoc`.
