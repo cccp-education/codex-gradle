@@ -1,8 +1,17 @@
-= PROMPT_REPRISE — Codex — Session 236
-:session: 236
+= PROMPT_REPRISE — Codex — Session 237
+:session: 237
 :date: 2026-11-13
 :status: PRET
-:mission: Pins alignés sur les artefacts JitPack (catalogue v0.0.133, codebase 0.0.18)
+:mission: MEM-WARN-ZERO US-1 livrée (délégués `registering` supprimés)
+
+== Session 237 (TERMINÉE) — `MEM-WARN-ZERO` US-1 (`codex`)
+
+* **11** délégués dépréciés `val x by tasks.registering(Test::class)` →
+  `tasks.register<Test>("x") { }` (Gradle 9.6 → 10 ; 33 warnings CI → 0).
+  Tâches Cucumber dédiées inchangées (graphe, filtres, propriétés, `shouldRunAfter`).
+* EPIC transverse : `workspace-bom/.agents/CADRAGE_EPIC_MEM_WARN_ZERO.adoc`.
+* Local = Build : compiles + `ktlintCheck` VERTS ; preuve = CI du commit.
+* Rapport `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`.
 
 == Session 236 (TERMINÉE) — catalogue JitPack + `codebase 0.0.18`
 

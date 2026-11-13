@@ -1,0 +1,58 @@
+= Session 237 — `MEM-WARN-ZERO` US-1 : `registering` → `register<Test>` (codex)
+:toc:
+
+:_date_: 2026-11-13
+:_borough_: Brooklyn (codex-gradle, N2)
+:_session_precedente_: 236 (catalogue JitPack + codebase 0.0.18)
+:_statut_: ✅ 11 délégués dépréciés supprimés — iso-comportement
+
+'''
+
+== EPIC rattaché
+
+`MEM-WARN-ZERO` US-1 (porteur MEMPHIS, cadrage
+`workspace-bom/.agents/CADRAGE_EPIC_MEM_WARN_ZERO.adoc`). Déclencheur : les
+warnings CI de la session 236.
+
+'''
+
+== Livré
+
+`codex-plugin/build.gradle.kts` — **11** délégués dépréciés (Gradle 9.6 → 10),
+3 warnings chacun (33 au total), remplacés par l'API recommandée :
+
+[source,kotlin]
+----
+// avant
+val cucumberTestLicence by tasks.registering(Test::class) { … }
+// après
+tasks.register<Test>("cucumberTestLicence") { … }
+----
+
+Tâches concernées : `cucumberTestLicence`, `Ontology`, `Enrichment`,
+`PipelineRouting`, `PipelineUnify`, `SessionMemory`, `Ocr`, `OcrQuality`,
+`DoubtBridge`, `PageProvenance`, `TocNoise`.
+
+*Aucune* variable n'était référencée ensuite (vérifié par `grep`) : le `val`
+disparaît, le `TaskProvider` n'est pas nécessaire. Graphe, propriétés,
+`useJUnitPlatform`, `filter`, `systemProperty`, `shouldRunAfter` et
+`outputs.upToDateWhen` sont **inchangés** (iso-comportement).
+
+'''
+
+== Mesure
+
+* **Avant** (log CI S-236) : 3 warnings × 11 occurrences = **33** lignes `w:`
+  sur `build.gradle.kts`.
+* **Après** : `grep -c "by tasks.registering(Test::class)"` = **0** ;
+  `grep -n "by tasks\\.\\(registering\\|named\\)"` = **0** (plus aucun délégué
+  déprécié dans le script). Preuve définitive = log CI du commit (le script est
+  recompilé dans le job).
+* Local = Build : `compileKotlin`, `compileTestKotlin`, `ktlintCheck` — VERTS.
+
+'''
+
+== Reste `MEM-WARN-ZERO`
+
+US-2 `academy` (10), US-3 `conventions` (3), US-4 `plantuml` (2), US-5/US-6
+`buildDir`, US-7 gate statique `verifyNoDeprecatedBuildScripts`.

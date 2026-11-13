@@ -213,7 +213,7 @@ koverConventions {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestLicence by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestLicence") {
     group = "verification"
     description = "Runs the codex_export_routed.feature Cucumber suite (CDX-5-3 licence routing)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -238,7 +238,7 @@ val cucumberTestLicence by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestOntology by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestOntology") {
     group = "verification"
     description = "Runs the codex_derive_ontology.feature Cucumber suite (CDX-3-3 ontology derivation)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -263,7 +263,7 @@ val cucumberTestOntology by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestEnrichment by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestEnrichment") {
     group = "verification"
     description = "Runs the codex_enrich_json_ldd.feature Cucumber suite (CDX-4-4 enrichment)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -288,7 +288,7 @@ val cucumberTestEnrichment by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestPipelineRouting by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestPipelineRouting") {
     group = "verification"
     description = "Runs the codex_licence_routing.feature Cucumber suite (CDX-6-3 pipeline routing)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -312,7 +312,7 @@ val cucumberTestPipelineRouting by tasks.registering(Test::class) {
 // Scoped to CodexPipelineUnifyCucumberRunner so only the unified-chunking feature runs,
 // not the full src/test/resources/features/*.feature suite.
 // Pattern S-082 inline — mirrors cucumberTestPipelineRouting above.
-val cucumberTestPipelineUnify by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestPipelineUnify") {
     group = "verification"
     description = "Runs the codex_pipeline_unified_chunking.feature Cucumber suite (CDX-UNIFY-2)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -337,7 +337,7 @@ val cucumberTestPipelineUnify by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestSessionMemory by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestSessionMemory") {
     group = "verification"
     description = "Runs the codex_session_memory.feature Cucumber suite (CDX-RC-04-4 session memory)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -362,7 +362,7 @@ val cucumberTestSessionMemory by tasks.registering(Test::class) {
 // scenarios run, not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestOcr by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestOcr") {
     group = "verification"
     description = "Runs the ocr-pipeline.feature @ocr-boundary Cucumber suite (CDX-OCR-4 boundary)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -387,7 +387,7 @@ val cucumberTestOcr by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestOcrQuality by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestOcrQuality") {
     group = "verification"
     description = "Runs the codex_ocr_quality.feature Cucumber suite (OCR-QUALITY-1 true confidence)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -412,7 +412,7 @@ val cucumberTestOcrQuality by tasks.registering(Test::class) {
 // not the full src/test/resources/features/*.feature suite.
 // Overrides cucumber.features from junit-platform.properties (which points to
 // the full features dir for the default cucumberTest task).
-val cucumberTestDoubtBridge by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestDoubtBridge") {
     group = "verification"
     description = "Runs the codex_doubt_bridge.feature Cucumber suite (CDX-DOUBT-BRIDGE)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -435,7 +435,7 @@ val cucumberTestDoubtBridge by tasks.registering(Test::class) {
 // ── CDX-PAGE-PROVENANCE-4 — Dedicated Cucumber runner for page provenance (pattern S-082) ──
 // Scoped to CodexPageProvenanceCucumberRunner so only codex_page_provenance.feature
 // runs, not the full src/test/resources/features/*.feature suite.
-val cucumberTestPageProvenance by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestPageProvenance") {
     group = "verification"
     description = "Runs the codex_page_provenance.feature Cucumber suite (CDX-PAGE-PROVENANCE-4)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
@@ -458,7 +458,7 @@ val cucumberTestPageProvenance by tasks.registering(Test::class) {
 // ── C-4 (S-233) — Dedicated Cucumber runner for TOC noise (pattern S-082) ───────
 // Scoped to CodexTocNoiseCucumberRunner so only codex_toc_noise.feature
 // runs, not the full src/test/resources/features/*.feature suite.
-val cucumberTestTocNoise by tasks.registering(Test::class) {
+tasks.register<Test>("cucumberTestTocNoise") {
     group = "verification"
     description = "Runs the codex_toc_noise.feature Cucumber suite (C-4 TOC noise)"
     testClassesDirs = sourceSets.getByName("test").output.classesDirs
