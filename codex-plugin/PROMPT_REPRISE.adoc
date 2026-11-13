@@ -2,7 +2,7 @@
 :session: 237
 :date: 2026-11-13
 :status: PRET
-:mission: MEM-WARN-ZERO US-1 livrée (délégués `registering` supprimés)
+:mission: Aucun EPIC ouvert — maintenance à la demande du pilote ; EPIC transverse MEM-WARN-ZERO (US-5 buildDir) côté MEMPHIS.
 
 == Session 237 (TERMINÉE) — `MEM-WARN-ZERO` US-1 (`codex`)
 
