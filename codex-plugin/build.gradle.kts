@@ -112,7 +112,8 @@ tasks.test {
     )
     systemProperty(
         "codex.publishedCatalog.bomVersion",
-        ws.versions.workspace.bom.get(),
+        ws.versions.workspace.bom
+            .get(),
     )
 }
 
