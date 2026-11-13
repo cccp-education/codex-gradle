@@ -1,0 +1,57 @@
+= Session 238 — CNV-17 : JitPack canal unique (codex)
+:toc:
+
+:_date_: 2026-11-13
+:_borough_: Brooklyn (codex-gradle, N2 — READ acquisition documentaire)
+:_session_precedente_: 237 (`MEM-WARN-ZERO` US-1)
+:_statut_: ✅ migration CNV-17
+
+== Contexte
+
+Décision pilote S-045 : JitPack devient le canal **unique** des artefacts
+publics `education.cccp` — un artefact = un canal = un nom = une version.
+Maven Central et le Gradle Plugin Portal cessent d'être publiés pour
+`foundry/public/**` ; `foundry/private/**` et `office/**` restent hors périmètre.
+Cadrage : `conventions-gradle/conventions-plugin/.agents/CADRAGE_EPIC_CNV_17_JITPACK_PRIMARY.adoc`.
+
+N0 de référence : `workspace-bom 0.0.136` (BOM + catalogue + 10 contrats) et
+`conventions-plugin 0.0.17`.
+
+== Mission
+
+Aligner le borough sur le canal unique : coordonnées JitPack, BOM `0.0.136`,
+garde de publication et injection de versions ; zéro modification métier.
+
+== Changements
+
+* `gradle/libs.versions.toml` — `codebase-plugin` et `ocr-contracts` au groupe
+  JitPack (`com.github.cccp-education.*:0.0.136` / `codebase-plugin:0.0.18`).
+* `build.gradle.kts` — plateforme
+  `com.github.cccp-education.workspace-bom:workspace-bom:0.0.136` ; contrats N0
+  `codebase-contracts` et `runtime-contracts` en coordonnées JitPack `0.0.136` ;
+  version injectée `ws.versions.workspace.bom`.
+* `settings.gradle.kts` — catalogue `ws` lu depuis JitPack `0.0.136`.
+* `CodexPluginPublicationTest` — la garde de plateforme attend la coordonnée
+  JitPack (`com.github.cccp-education.workspace-bom:workspace-bom:$wsBomVersion`).
+* Correctif ktlint (`chain-method-continuation`).
+* Aucun code de production métier modifié ; aucun test exécuté en local.
+
+== Preuves CI
+
+* `Test` run `43474991765` ✅ — commit `d9409201` (correctif ktlint ; le commit
+  `b558052` de la garde avait la CI rouge).
+* Local = Build : compiles + `ktlintCheck` VERTS ; preuve = CI du commit poussé.
+* Zéro secret, zéro publication, zéro bump.
+
+== Fichiers touchés
+
+* `settings.gradle.kts`
+* `build.gradle.kts`
+* `gradle/libs.versions.toml`
+* `src/test/kotlin/codex/CodexPluginPublicationTest.kt`
+
+== Suite
+
+Maintenance. Aucun EPIC/US ouvert. Candidat transverse : `MEM-WARN-ZERO` F2
+(`buildDir` déprécié, côté MEMPHIS). Bloc C → A → B clos ; le canal public est
+JitPack uniquement.

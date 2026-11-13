@@ -1,96 +1,69 @@
-= PROMPT_REPRISE — Codex — Session 237
-:session: 237
+= PROMPT_REPRISE — Codex — Session 239
+:session: 239
 :date: 2026-11-13
 :status: PRET
-:mission: Aucun EPIC ouvert — maintenance à la demande du pilote ; EPIC transverse MEM-WARN-ZERO (US-5 buildDir) côté MEMPHIS.
+:mission: Aucun EPIC ouvert — maintenance à la demande du pilote ; canal public = JitPack uniquement (CNV-17).
+
+== Session 238 (TERMINÉE) — CNV-17 : JitPack canal unique
+
+* Décision pilote S-045 : JitPack = canal **unique** des artefacts publics
+  (`foundry/private/**` et `office/**` exclus) — un artefact = un canal = un nom
+  = une version.
+* `codebase-plugin` (`0.0.18`) et contrats N0 (`ocr-contracts`,
+  `codebase-contracts`, `runtime-contracts`) en coordonnées JitPack `0.0.136` ;
+  plateforme BOM `0.0.136` ; `CodexPluginPublicationTest` aligné sur la
+  coordonnée JitPack ; version injectée `ws.versions.workspace.bom`.
+* Correctif ktlint (`chain-method-continuation`).
+* **CI verte** : `Test` `43474991765` (commit `d9409201`).
+* Rapport `.agents/sessions/238-cnv-17-jitpack-channel.adoc`.
 
 == Session 237 (TERMINÉE) — `MEM-WARN-ZERO` US-1 (`codex`)
 
-* **11** délégués dépréciés `val x by tasks.registering(Test::class)` →
+* 11 délégués dépréciés `val x by tasks.registering(Test::class)` →
   `tasks.register<Test>("x") { }` (Gradle 9.6 → 10 ; 33 warnings CI → 0).
-  Tâches Cucumber dédiées inchangées (graphe, filtres, propriétés, `shouldRunAfter`).
-* EPIC transverse : `workspace-bom/.agents/CADRAGE_EPIC_MEM_WARN_ZERO.adoc`.
-* Local = Build : compiles + `ktlintCheck` VERTS ; preuve = CI du commit.
-* Rapport `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`.
-
-== Session 236 (TERMINÉE) — catalogue JitPack + `codebase 0.0.18`
-
-* `ws` catalogue ← JitPack `workspace-catalog:v0.0.133` (était Central 0.0.78) ;
-  dépôt `https://jitpack.io` ajouté à `dependencyResolutionManagement`.
-* Plateforme BOM : littéral Central `0.0.115` (le BOM JitPack n'est pas une
-  `platform` valide) + injection du même littéral dans la garde.
-* `codebase 0.0.14 → 0.0.18` (plugin id) et `codebase-plugin 0.0.17 → 0.0.18`.
-* Version build `codex-plugin 0.0.12` == artefact publié. Aucun EPIC/US ouvert.
-* Rapport `.agents/sessions/236-jitpack-catalog-codebase-0.0.18.adoc`.
-
-== Session 235 (TERMINÉE) — synchronisation backlog
-
-* EPIC PUB : dernière release **0.0.11 → 0.0.12** (S-231, bundle `79d0ad3d`)
-  + MEMPHIS BOM/catalog 0.0.62.
-* `settings.gradle.kts` : commentaire de pin `0.0.62 → 0.0.78` (pin effectif
-  inchangé).
-* Aucun EPIC/US ouvert. Rapport `.agents/sessions/235-sync-backlog-pub-pin.adoc`.
+* Tâches Cucumber dédiées inchangées (graphe, filtres, propriétés,
+  `shouldRunAfter`). Rapport `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`.
 
 == Quick Start
 ----
 cd /home/cheroliv/workspace/foundry/public/codex-gradle/codex-plugin
 git status --porcelain -- src/    # vide ? → règle EAGER
-./gradlew compileKotlin compileTestKotlin   # environnement (projet racine = codex-plugin)
+./gradlew compileKotlin compileTestKotlin   # projet racine = codex-plugin
 ----
 
 == ✅ Bloc C TERMINÉ 4/4 (C-4 clôturé S-233)
 
-* *C-1 (S-228)* ✅ drift MEMPHIS + baseline · *C-2 (S-229)* ✅ split-brain
-  `DocumentChunk` · *C-3 (S-232)* ✅ désync gouvernance + 6 tests CI (CI verte)
-  · *C-4 (S-233)* ✅ **pollution TOC au chunking**.
-* *Bloc A* ✅ (CB-PAGE-PROVENANCE 5/5) · *Bloc B* ✅ (publication 0.0.12).
-* La séquence pilote **C → A → B est close**.
+* *C-1 (S-228)* drift MEMPHIS + baseline · *C-2 (S-229)* split-brain
+  `DocumentChunk` · *C-3 (S-232)* désync gouvernance + tests CI · *C-4 (S-233)*
+  pollution TOC au chunking. *Bloc A* ✅ (CB-PAGE-PROVENANCE 5/5) · *Bloc B* ✅
+  (publication 0.0.12). La séquence pilote **C → A → B est close**.
 
-== C-4 (S-233) — ce qui a été livré
-
-* `codex.tasks.TocNoiseDetector` (N2, objet pur) : une ligne de titre portant
-  une suite de ≥ 4 points est une entrée TOC. Seuil étroit — ellipse `...`,
-  coordonnées `3.3.6` et prose pointée **non** flaggées.
-* `CodexIngestTask.ingestInto` superpose `TocNoiseDetector.markDoubt` au
-  `DoubtPolicy` N1 → l'entrée TOC est ingérée **`doubtful` zéro confiance**
-  (transport existant, zéro re-chunking, zéro re-vectorisation).
-* **Décision** : détecteur en N2, pas N1 — la CI résout `codebase-plugin`
-  depuis Central, toute modif N1 forcerait une publication + bump BOM
-  (incompatible « zéro publication »). Le N1 reste agnostique du scan.
-* Mesure corpus FPA réel : **33 chunks flaggés** (entrées TOC pures, 81–132
-  chars), **0 chunk substantiel**. Les 66 chunks « ancêtre TOC pollué » mais au
-  contenu réel ne sont **pas** flaggés (contenu retrievable).
-* BDD `@toc-noise` 6 scénarios + 11e runner dédié `cucumberTestTocNoise`.
-* Zéro publication, zéro bump. **Preuve = CI verte** (run post-push).
-
-== Contexte technique (S-233)
+== Contexte technique
 
 * Build autonome : `cd codex-plugin && ./gradlew ...` (JDK 25). Version locale
-  **0.0.12** (Central 0.0.12). Conventions 0.0.7. BOM/catalog 0.0.62.
-* `check` = projet racine `codex-plugin` (PAS `:codex-plugin:check`).
-* `check` exécute **tous** les runners `cucumberTest*` (11 désormais).
+  **0.0.12**. Conventions 0.0.17. N0/BOM JitPack `0.0.136`.
+* `check` = projet racine `codex-plugin` (PAS `:codex-plugin:check`) et exécute
+  **tous** les runners `cucumberTest*` (11).
 * Pièges : mavenLocal partagé entre boroughs (course S-226) — vérifier par
-  stash. Une version Central est immuable.
+  stash. Un artefact JitPack est **relabellé au tag du dépôt** (une version par
+  dépôt) ; un artefact Central est immuable.
 
 == Règles absolues
 
 * Baby-step TDD/BDD/DDD strict (RED → GREEN → REFACTOR), 1 fichier à la fois.
 * **Local = Build, Tests = CI** : compiler/builder en local seulement ;
   `test`/`cucumberTest`/`check` s'exécutent en CI après push.
-* Git autorisé — zéro secret commité. Publication Central = accord pilote.
+* Git autorisé — zéro secret commité. Publication = JitPack (CNV-17).
 * Vérifier le working tree avant toute mission (`git status`).
 * **Hors scope** : EPICs de traduction engageant un LLM (consigne pilote).
 
 == Candidats (accord pilote requis)
 
-* MEMPHIS resync releases + CI-1.4 (qwen3:0.6b, 1 pt).
-* codebase → conventions 0.0.7 + dette self-application (versions
-  0.0.10/0.0.11/0.0.17).
-* document DOC-SEMANTIC US-3→6.
-* Dormants (filler) : capsule gems JRuby, slider hygiène.
+* `MEM-WARN-ZERO` F2 (`buildDir` déprécié, côté MEMPHIS).
+* MEMPHIS resync releases ; dormants (capsule gems JRuby, slider hygiène).
 
 == References
 
-* `.agents/sessions/233-c4-toc-noise-cloture-bloc-c.adoc` (rapport S-233)
-* `.agents/CADRAGE_ROADMAP_S227_C_A_B.adoc` (séquence C → A → B, § Hors scope)
-* `src/main/kotlin/codex/tasks/TocNoiseDetector.kt` · `CodexIngestTask.kt`
+* `.agents/sessions/238-cnv-17-jitpack-channel.adoc` (rapport S-238)
+* `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`
+* `conventions-gradle/conventions-plugin/.agents/CADRAGE_EPIC_CNV_17_JITPACK_PRIMARY.adoc`

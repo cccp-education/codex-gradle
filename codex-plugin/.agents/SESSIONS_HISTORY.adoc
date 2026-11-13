@@ -3922,3 +3922,14 @@ et `codebase-plugin 0.0.17 → 0.0.18`. Version build `0.0.12` == publiée.
 11 délégués dépréciés (Gradle 9.6 → 10, 33 warnings) → `tasks.register<Test>("…")`.
 Iso-comportement. **0** `is deprecated` sur `build.gradle.kts` dans le log CI
 `43356231857`. Rapport `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`.
+
+== Session 238 — CNV-17 : JitPack canal unique — 2026-11-13
+
+Décision pilote S-045 : JitPack = canal unique des artefacts publics
+(`foundry/private/**` et `office/**` exclus). `codebase-plugin` et les contrats
+N0 (`ocr-contracts`, `codebase-contracts`, `runtime-contracts`) passent au
+groupe `com.github.cccp-education...` ; plateforme BOM JitPack `0.0.136` ;
+`CodexPluginPublicationTest` attend la coordonnée JitPack ; version injectée
+`ws.versions.workspace.bom`. Correctif ktlint. **CI verte** : `Test`
+`43474991765` (commit `d9409201`). Zéro bump, zéro publication, zéro secret.
+Rapport `.agents/sessions/238-cnv-17-jitpack-channel.adoc`.

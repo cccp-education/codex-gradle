@@ -1425,3 +1425,18 @@ Version du plugin depuis la source unique de vérité (`ws.versions.*`)
 - [x] Gate : `./gradlew check` VERT — 754 tests 0 FAIL (baseline S-104 679 + 75 tests postérieurs, 0 régression)
 - [x] `publishToMavenLocal` VERT — POM `0.0.6` + platform `0.0.30` vérifiés
 - [x] Baby-step TDD : test hygiène version dérivée d'abord (pattern bakery S-026)
+
+'''
+
+== Session 238 — CNV-17 (JitPack canal unique)
+
+_Note de gouvernance (aucune US créée)._ Décision pilote S-045 : JitPack devient
+le **canal unique** des artefacts publics `education.cccp` (`foundry/private/**`
+et `office/**` exclus) — un artefact = un canal = un nom = une version. Le
+borough est aligné sur le N0 `workspace-bom 0.0.136` et
+`conventions-plugin 0.0.17` : `codebase-plugin` et contrats N0 en coordonnées
+JitPack `0.0.136`, plateforme BOM JitPack, `CodexPluginPublicationTest` aligné,
+version injectée `ws.versions.workspace.bom`. CI verte `43474991765` (commit
+`d9409201`). Zéro bump, zéro publication. Rapport
+`.agents/sessions/238-cnv-17-jitpack-channel.adoc`. EPIC transversal :
+`conventions-plugin/.agents/CADRAGE_EPIC_CNV_17_JITPACK_PRIMARY.adoc`.
