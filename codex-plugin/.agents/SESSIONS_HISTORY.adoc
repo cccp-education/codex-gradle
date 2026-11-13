@@ -3933,3 +3933,11 @@ groupe `com.github.cccp-education...` ; plateforme BOM JitPack `0.0.136` ;
 `ws.versions.workspace.bom`. Correctif ktlint. **CI verte** : `Test`
 `43474991765` (commit `d9409201`). Zéro bump, zéro publication, zéro secret.
 Rapport `.agents/sessions/238-cnv-17-jitpack-channel.adoc`.
+
+== Session 239 — GBL-013 vague 2 : gate CI sur l'image de runtime — 2026-11-14
+
+`ci/run.sh` (`fast`/`test` = `publishToMavenLocal` puis `check`) et `test.yml`
+épinglé sur `cccpeducation/cccp-ci-base@sha256:4722c1bc…` ; `setup-java`
+supprimé. Run `43501419129` **VERT** (commit `85e0699`). Rapport
+`.agents/sessions/239-gbl-013-wave2.adoc`.
+

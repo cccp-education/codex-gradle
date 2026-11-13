@@ -1,8 +1,16 @@
-= PROMPT_REPRISE — Codex — Session 239
-:session: 239
-:date: 2026-11-13
+= PROMPT_REPRISE — Codex — Session 240
+:session: 240
+:date: 2026-11-14
 :status: PRET
 :mission: Aucun EPIC ouvert — maintenance à la demande du pilote ; canal public = JitPack uniquement (CNV-17).
+
+== Session 239 (TERMINÉE) — GBL-013 vague 2 : CI sur l'image de runtime
+
+* `ci/run.sh` (`fast`/`test` = `publishToMavenLocal` puis `check`).
+* `test.yml` épinglé sur `cccpeducation/cccp-ci-base@sha256:4722c1bc…` ;
+  `setup-java` et `defaults.working-directory` supprimés.
+* Run `43501419129` **VERT** (commit `85e0699`). Rapport
+  `.agents/sessions/239-gbl-013-wave2.adoc`.
 
 == Session 238 (TERMINÉE) — CNV-17 : JitPack canal unique
 

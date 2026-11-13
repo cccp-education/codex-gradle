@@ -6,3 +6,12 @@
   Central `0.0.115`, `codebase 0.0.18` ; version build `0.0.12`.
 * 11 `registering` → `register<Test>` (33 warnings Gradle 9.6 → 0).
 * CI `43363073557` + `43356231857` vertes.
+
+== S-239 — GBL-013 vague 2 : CI sur l'image de runtime ✅
+
+* `ci/run.sh` (`publishToMavenLocal` puis `check`).
+* `test.yml` épinglé sur `cccpeducation/cccp-ci-base@sha256:4722c1bc…` ;
+  `setup-java` et `defaults.working-directory` supprimés.
+* Run `43501419129` VERT (commit `85e0699`).
+* Rapport `.agents/sessions/239-gbl-013-wave2.adoc`.
+

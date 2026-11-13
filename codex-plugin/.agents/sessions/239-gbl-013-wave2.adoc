@@ -1,0 +1,20 @@
+= Session 239 — GBL-013 vague 2 : gate CI sur l'image de runtime
+:date: 2026-11-14
+:borough: Brooklyn (codex-gradle)
+
+== Livré
+
+* `ci/run.sh` — `fast`/`test` = `publishToMavenLocal` puis `check`.
+* `.github/workflows/test.yml` migré : `container:` épinglé sur
+  `cccpeducation/cccp-ci-base@sha256:4722c1bc…`, `defaults.run.working-directory`
+  supprimé, `setup-java` remplacé par `setup-gradle`, `ci/run.sh test`.
+* Run `43501419129` **VERT** (commit `85e0699`).
+
+== Notes
+
+La publication locale du plugin reste indispensable avant `check`
+(auto-application du plugin). Aucune publication Central, zéro bump.
+
+== Suivant
+
+US-5 se poursuit sur les dépôts restants de la vague 2.
