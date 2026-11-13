@@ -36,7 +36,7 @@ dependencies {
     // (rewritten as plain dependencies, no module metadata), so the platform
     // stays on the last Maven Central release; the guard's injected value is the
     // same literal (no drift).
-    implementation(platform("education.cccp:workspace-bom:0.0.115"))
+    implementation(platform("com.github.cccp-education.workspace-bom:workspace-bom:0.0.136"))
 
     implementation(libs.kotlinx.serialization.json)
 
@@ -57,14 +57,14 @@ dependencies {
     // implementation(libs.koog.agents)
 
     // N0 codebase contracts — source unique de vérité (ContextChannel, ChannelBudget, CompositeContext, CompositeContextConfig)
-    implementation("education.cccp:codebase-contracts:0.0.2")
+    implementation("com.github.cccp-education.workspace-bom:codebase-contracts:0.0.136")
 
     // N1 codebase socle — RAG store (RagVectorStore + StoreStatements + RetrieveResult + DocumentChunk + IngestIndexing).
     // EPIC CDX-RAG-3: codex delegates the vector store to the N1 socle (single N2->N1 edge).
     implementation(libs.codebase.plugin)
 
     // N0 runtime contracts — SessionMemoryContract + LearnerProfile (CDX-RC-04 pont RAG session memory)
-    implementation("education.cccp:runtime-contracts:0.0.1")
+    implementation("com.github.cccp-education.workspace-bom:runtime-contracts:0.0.136")
 
     // N0 OCR contracts — cross-borough port (EPIC CDX-OCR-CONTRACTS US-2 typealiases)
     implementation(libs.ocr.contracts)
