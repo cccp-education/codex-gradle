@@ -63,7 +63,7 @@ contenu via son hub de contexte augmente.
 *Apres CDX-RAG-SOCLE (RAG-1→4)* : `implementation(libs.codebase.plugin)` — codex
   delegue le RAG au socle N1. Le store vectoriel (`RagVectorStore`) vit dans
   `codebase.store`, plus dans `codex.store`.
-*Publie* : MavenLocal + Sonatype (Apache 2.0)
+*Publie* : MavenLocal + JitPack (Apache 2.0)
 *NE JAMAIS IMPORTER* : N3 runner-gradle (dependance cyclique interdite)
 *NE JAMAIS IMPORTER document-gradle* : Codex et Document sont paralleles en N2.
   Codex = READ (acquisition documentaire), Document = WRITE + PUBLISH. Aucune
