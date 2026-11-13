@@ -1,0 +1,8 @@
+= COMPLETED_TASKS_ARCHIVE — 2026-11 — codex-gradle
+
+== S-236/237 — catalogue JitPack + MEM-WARN-ZERO US-1 ✅
+
+* Catalogue `workspace-catalog:v0.0.133` (JitPack), plateforme BOM littérale
+  Central `0.0.115`, `codebase 0.0.18` ; version build `0.0.12`.
+* 11 `registering` → `register<Test>` (33 warnings Gradle 9.6 → 0).
+* CI `43363073557` + `43356231857` vertes.

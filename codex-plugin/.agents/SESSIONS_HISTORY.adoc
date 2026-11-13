@@ -3901,3 +3901,24 @@ compatible). Zéro bump/publication/secret. Rapport `.agents/sessions/bump-catal
 Publication JitPack de codex-plugin 0.0.12. JitPack : 0.0.12 — POM/jar HTTP 200. Shim `useModule` pour
 `education.cccp.build.*` (tag JitPack `0.0.15`). Rapport
 `codex-plugin/.agents/sessions/234-jitpack-mirror.adoc`.
+
+== Session 235 — synchronisation backlog (PUB 0.0.12, pin catalogue) — 2026-11-13
+
+EPIC PUB : dernière release `0.0.11 → 0.0.12` (S-231) + commentaire de pin
+catalogue `0.0.62 → 0.0.78`. Aucun code. Rapport
+`.agents/sessions/235-sync-backlog-pub-pin.adoc`.
+
+== Session 236 — catalogue JitPack `v0.0.133` + `codebase 0.0.18` — 2026-11-13
+
+Catalogue `ws` ← JitPack `workspace-catalog:v0.0.133` (était Central `0.0.78`) ;
+plateforme BOM littérale Central `0.0.115` (le BOM JitPack n'est pas une
+`platform`) + injection du même littéral dans la garde ; `codebase 0.0.14 → 0.0.18`
+et `codebase-plugin 0.0.17 → 0.0.18`. Version build `0.0.12` == publiée.
+`🟡 EN COURS` de la séquence C→A→B soldés. CI `43363073557` verte. Rapport
+`.agents/sessions/236-jitpack-catalog-codebase-0.0.18.adoc`.
+
+== Session 237 — `MEM-WARN-ZERO` US-1 (`registering` → `register<Test>`) — 2026-11-13
+
+11 délégués dépréciés (Gradle 9.6 → 10, 33 warnings) → `tasks.register<Test>("…")`.
+Iso-comportement. **0** `is deprecated` sur `build.gradle.kts` dans le log CI
+`43356231857`. Rapport `.agents/sessions/237-mem-warn-zero-us1-codex.adoc`.
