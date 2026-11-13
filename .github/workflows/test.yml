@@ -11,26 +11,20 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: codex-plugin
+    container:
+      image: cccpeducation/cccp-ci-base@sha256:4722c1bcc71c0343c05257842b774715fc2574ff79182599a29fe8c1361cbeb3
 
     steps:
       - uses: actions/checkout@v4
       - name: Verify Gradle wrapper version
         uses: cccp-education/conventions-gradle/.github/actions/verify-gradle-wrapper@main
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Publish plugin to Maven Local
-        run: ./gradlew publishToMavenLocal
-
+      # GBL-013 US-5 — the runtime image provides JDK 25; `ci/run.sh test`
+      # publishes the plugin locally, then runs `check` in the same daemon.
       - name: Check codex-plugin
-        run: ./gradlew check
+        run: ci/run.sh test
         env:
           CI: "true"
